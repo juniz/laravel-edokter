@@ -61,6 +61,36 @@
             </div>
         </div>
         <div class="row">
+            <div class="col-md-3">
+                <x-ui.select label="Jenis operasi" id="jenis_operasi" model="jenis_operasi">
+                    @foreach($jns_operasi as $key => $value)
+                        <option value="{{ $value }}">{{ $value }}</option>
+                    @endforeach
+                </x-ui.select>
+            </div>
+            <div class="col-md-3">
+                <x-ui.select label="Jenis Anestesi" id="jenis_anestesi" model="jenis_anestesi">
+                    @foreach($jns_anestesi as $key => $value)
+                        <option value="{{ $value }}">{{ $value }}</option>
+                    @endforeach
+                </x-ui.select>
+            </div>
+            <div class="col-md-3">
+                <x-ui.select label="Histopatologi" id="histopatologi" model="histo">
+                    @foreach($histopatologi as $key => $value)
+                        <option value="{{ $value }}">{{ $value }}</option>
+                    @endforeach
+                </x-ui.select>
+            </div>
+            <div class="col-md-3">
+                <x-ui.select label="Ruang OK" id="ruang_ok" model="kd_ruang_ok">
+                    @foreach($kd_ok as $value)
+                        <option value="{{ $value->kd_ruang_ok }}">{{ $value->nm_ruang_ok }}</option>
+                    @endforeach
+                </x-ui.select>
+            </div>
+        </div>
+        <div class="row">
             <div class="col-4 col-md-4">
                 <button type="button" class="btn btn-block btn-warning" data-toggle="modal" data-target="#modal-template-operasi">
                     Template
