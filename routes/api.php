@@ -56,3 +56,5 @@ Route::get('/pemeriksaan', [RiwayatController::class, 'getPemeriksaan']);
 Route::get('/pemeriksaan/{noRawat}', [PemeriksaanController::class, 'getPemeriksaan']);
 
 Route::post('/icare', [App\Http\Controllers\API\BPJSController::class, 'icare']);
+
+Route::get('/master-ekg/{id}', [App\Http\Controllers\API\PemeriksaanController::class, 'getEcho']);

@@ -288,6 +288,11 @@ return [
             'icon'        => 'fas fa-fw fa-stethoscope',
         ],
         [
+            'text'        => 'Template Echo',
+            'url'         => '/master-ekg',
+            'icon'        => 'fas fa-fw fa-file',
+        ],
+        [
             'text'        => 'Master Obat',
             'url'         => '/master_obat',
             'icon'        => 'fas fa-fw fa-pills',
@@ -538,6 +543,21 @@ return [
                     'type' => 'css',
                     'asset' => true,
                     'location' => 'vendor/jquery-ui/jquery-ui.min.css',
+                ],
+            ],
+        ],
+        'Summernote' => [
+            'active' => false,
+            'files' => [
+                [
+                    'type' => 'js',
+                    'asset' => true,
+                    'location' => 'vendor/summernote/summernote-bs4.min.js',
+                ],
+                [
+                    'type' => 'css',
+                    'asset' => true,
+                    'location' => 'vendor/summernote/summernote-bs4.min.css',
                 ],
             ],
         ],

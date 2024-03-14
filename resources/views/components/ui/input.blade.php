@@ -4,6 +4,7 @@
     'id' => null,
     'type' => 'text',
     'model' => null,
+    'value' => null,
 ])
 
 {{-- @php $wireModel = $attributes->get('wire:model'); @endphp --}}
@@ -17,6 +18,7 @@
         id="{{ $id }}"
         name="{{ $id }}"
         type="{{ $type }}"
+        @if($value) value="{{ $value }}" @endif
         {{ $attributes->merge(['class' => 'form-control']) }}
         @if ($model)
             @if($attributes->has('live'))

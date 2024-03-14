@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\TemplateEKG;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Traits\EnkripsiData;
@@ -55,5 +56,22 @@ class PemeriksaanController extends Controller
             ->selectRaw('nip AS id, nama AS text')
             ->get();
         return response()->json($pegawai, 200);
+    }
+
+    public function getEcho($id)
+    {
+        try {
+            $echo = TemplateEKG::find($id);
+            return response()->json([
+                'status' => 'sukses',
+                'pesan' => 'Data berhasil diambil',
+                'data' => $echo
+            ]);
+        } catch (\Illuminate\Database\QueryException $ex) {
+            return response()->json([
+                'status' => 'gagal',
+                'pesan' => $ex->getMessage()
+            ]);
+        }
     }
 }

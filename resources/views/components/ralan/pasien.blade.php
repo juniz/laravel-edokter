@@ -57,6 +57,9 @@
                         onclick="getBerkasRetensi()" />
                 </div>
             </span>
+            <div class="nav-link">
+                <x-adminlte-button label="ECHO" icon="fas fa-file" id="echo-button" data-toggle="modal" data-target="#modalEcho" theme="info" />
+            </div>
         </div>
         <span class="nav-link">
             <x-adminlte-input-file id="fileupload" name="fileupload" igroup-size="sm" accept="image/*,application/pdf"
@@ -73,6 +76,27 @@
         </span>
     </x-adminlte-profile-widget>
 </div>
+
+@section('plugins.Summernote', true)
+
+<x-adminlte-modal id="modalEcho" title="ECHO" size="lg" theme="info"
+    icon="fas fa-file" v-centered static-backdrop scrollable>
+    <form id="form-echo" method="POST" action="{{ url('print-ekg') }}">
+        @csrf
+        <input type="hidden" name="no_rm" value="{{ $data->no_rkm_medis }}" >
+        <x-adminlte-select2 name="echo-select" id="echo-select" label="Template Echo" data-placeholder="Pilih template...">
+            <option value=""></option>
+            @foreach($echo as $item)
+                <option value="{{$item->id}}">{{$item->nama_template}}</option>
+            @endforeach
+        </x-adminlte-select2>
+        <x-adminlte-text-editor name="isi" id="isi-echo" :config='["height" => "300"]' label="Isi Template"/>
+        <x-adminlte-button label="Cetak" type="submit" theme="success" />
+    </form>
+    <x-slot name="footerSlot">
+        <x-adminlte-button theme="danger" label="Tutup" data-dismiss="modal"/>
+    </x-slot>
+</x-adminlte-modal>
 
 <x-adminlte-modal id="modalBerkasRM" class="modal-lg" title="Berkas RM" size="lg" theme="info" icon="fas fa-bell"
     v-centered static-backdrop scrollable>
@@ -117,6 +141,21 @@
 @push('js')
 {{-- <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script> --}}
 <script>
+    $('#echo-select').on('change', function(){
+        let id = $(this).val();
+        $.ajax({
+            url: '/api/master-ekg/'+id,
+            type: 'GET',
+            success: function(response){
+                console.log(response);
+                $('#isi-echo').summernote('code', response.data.template);
+            },
+            error: function(data){
+                console.log(data);
+            }
+        })
+    });
+
     $('#btn-phone').on('click', function(event){
         event.preventDefault();
         var phone = $('#data-phone').text();

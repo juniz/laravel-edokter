@@ -187,8 +187,13 @@ Route::get('/master-operasi', fn () => view('master-laporan-operasi'))->name(
     'master-operasi'
 )->middleware('loginauth');
 
+Route::resource('master-ekg', App\Http\Controllers\MasterEkgController::class)->middleware('loginauth');
+Route::post('/print-ekg', [App\Http\Controllers\MasterEkgController::class, 'cetakEkg'])->name('print-ekg')->middleware('loginauth');
+
 Route::get('/pegawai', [App\Http\Controllers\API\PemeriksaanController::class, 'getPegawai'])->name('pegawai');
 
 Route::get('/offline', function () {
     return view('modules/laravelpwa/offline');
 });
+
+Route::get('/echo-ar', fn () => view('prints.echo-ar'))->name('echo-ar');

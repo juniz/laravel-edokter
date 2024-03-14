@@ -4,6 +4,7 @@ namespace App\View\Components\ralan;
 
 use Illuminate\View\Component;
 use Illuminate\Support\Facades\DB;
+use App\Models\TemplateEKG;
 
 class Pasien extends Component
 {
@@ -46,6 +47,7 @@ class Pasien extends Component
      */
     public function render()
     {
-        return view('components.ralan.pasien')->with('data', $this->data)->with('dokter', session()->get('username'));
+        $echo = TemplateEKG::all();
+        return view('components.ralan.pasien')->with('data', $this->data)->with('dokter', session()->get('username'))->with('echo', $echo);
     }
 }
