@@ -763,4 +763,16 @@ class PemeriksaanRalanController extends Controller
     {
         return DB::table('pemeriksaan_tono')->where('no_rawat', $noRawat)->first();
     }
+
+    public static function getRujukInternal($noRawat)
+    {
+        $data = DB::table('rujukan_internal_poli')
+            ->join('poliklinik', 'rujukan_internal_poli.kd_poli', '=', 'poliklinik.kd_poli')
+            ->join('dokter', 'rujukan_internal_poli.kd_dokter', '=', 'dokter.kd_dokter')
+            ->leftJoin('rujukan_internal_poli_detail', 'rujukan_internal_poli.no_rawat', '=', 'rujukan_internal_poli_detail.no_rawat')
+            ->where('rujukan_internal_poli.no_rawat', $noRawat)
+            ->select('poliklinik.nm_poli', 'dokter.nm_dokter', 'rujukan_internal_poli_detail.konsul', 'rujukan_internal_poli_detail.pemeriksaan', 'rujukan_internal_poli_detail.diagnosa', 'rujukan_internal_poli_detail.saran')
+            ->first();
+        return $data;
+    }
 }

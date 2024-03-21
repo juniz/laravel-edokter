@@ -20,6 +20,14 @@
             <x-adminlte-card title="Konsul / Rujukan Internal" theme="dark" theme-mode="outline" class="mt-4">
                 <table class="table table-bordered table-striped mb-4">
                     <tr>
+                        <th>No. Rawat</th>
+                        <th>{{$data->no_rawat}}</th>
+                    </tr>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>{{$data->tgl_registrasi}}</th>
+                    </tr>
+                    <tr>
                         <th>Poli Tujuan</th>
                         <th>{{$data->nm_poli}}</th>
                     </tr>

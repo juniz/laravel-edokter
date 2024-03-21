@@ -1,19 +1,14 @@
 <div>
-    <x-adminlte-modal wire:ignore.self id="modalRiwayatPemeriksaanRalan" title="Riwayat Pemeriksaan" size="xl" theme="info" v-centered
-        static-backdrop scrollable>
-        {{-- <livewire:component.riwayat :noRawat="request()->get('no_rawat')" /> --}}
-        <div class="timeline">
+    <div class="timeline">
             @foreach($data as $row)
             @php
-            $pemeriksaan =
-            App\Http\Controllers\Ralan\PemeriksaanRalanController::getPemeriksaanRalan($row->no_rawat,$row->status_lanjut);
-            $diagnosa = App\Http\Controllers\Ralan\PemeriksaanRalanController::getDiagnosa($row->no_rawat);
-            $tono = App\Http\Controllers\Ralan\PemeriksaanRalanController::getTono($row->no_rawat);
-            $laboratorium = App\Http\Controllers\Ralan\PemeriksaanRalanController::getPemeriksaanLab($row->no_rawat);
+            $pemeriksaan = $this->getPemeriksaanRalan($row->no_rawat,$row->status_lanjut);
+            $diagnosa = $this->getDiagnosa($row->no_rawat);
+            $tono = $this->getTono($row->no_rawat);
+            $laboratorium = $this->getPemeriksaanLab($row->no_rawat);
             $resume = App\Http\Controllers\Ralan\PemeriksaanRalanController::getResume($row->no_rawat);
             $radiologi = App\Http\Controllers\Ralan\PemeriksaanRalanController::getRadiologi($row->no_rawat);
             $gambarRadiologi = App\Http\Controllers\Ralan\PemeriksaanRalanController::getFotoRadiologi($row->no_rawat);
-            $rujuk = App\Http\Controllers\Ralan\PemeriksaanRalanController::getRujukInternal($row->no_rawat);
             $tgl = date_create($row->tgl_registrasi ?? '0000-00-00');
             $date = date_format($tgl,"d M Y");
             @endphp
@@ -108,21 +103,6 @@
                                                 <li>Nadi : {{$tono->nadi}}</li>
                                                 <li>Kanan : {{$tono->tonokanan}}</li>
                                                 <li>Kiri : {{$tono->tonokiri}}</li>
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                    @endif
-                                    @if($rujuk)
-                                    <tr>
-                                        <td colspan="2"><b>Rujuk Internal</b></td>
-                                        <td colspan="9">
-                                            <ul>
-                                                <li>Poli        : {{$rujuk->nm_poli}}</li>
-                                                <li>Dokter      : {{$rujuk->nm_dokter}}</li>
-                                                <li>Konsul      : {{$rujuk->konsul}}</li>
-                                                <li>Pemeriksaan : {{$rujuk->pemeriksaan}}</li>
-                                                <li>Diagnosa    : {{$rujuk->diagnosa}}</li>
-                                                <li>Saran       : {{$rujuk->saran}}</li>
                                             </ul>
                                         </td>
                                     </tr>
@@ -303,6 +283,10 @@
                             <x-adminlte-card title="{{$radiologi->jam}}" theme="dark"
                                 footer-class="bg-dark border-top rounded border-light">
                                 <pre>{{$radiologi->hasil}}</pre>
+                                {{-- <x-slot name="footerSlot">
+                                    <x-adminlte-button class="d-flex ml-auto" theme="light" label="Foto"
+                                        icon="fas fa-sign-in" />
+                                </x-slot> --}}
                             </x-adminlte-card>
                             @endforeach
                         </x-adminlte-card>
@@ -358,21 +342,4 @@
             </div>
             @endforeach
         </div>
-        <x-slot name="footerSlot">
-            <x-adminlte-button theme="danger" label="Tutup" data-dismiss="modal" />
-        </x-slot>
-    </x-adminlte-modal>
 </div>
-
-@push('js')
-<script>
-    $(document).ready(function () {
-            $('#example').DataTable();
-        });
-
-        $(document).on('click', '[data-toggle="lightbox"]', function(event) {
-                event.preventDefault();
-                $(this).ekkoLightbox();
-        });
-</script>
-@endpush

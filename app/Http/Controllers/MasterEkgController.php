@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BacaanEcho;
 use Illuminate\Http\Request;
 use App\Models\TemplateEKG;
 use Illuminate\Support\Facades\DB;
@@ -126,13 +127,29 @@ class MasterEkgController extends Controller
         $dokter = DB::table('dokter')
             ->where('kd_dokter', session()->get('username'))
             ->first();
+        $dokter_pengirim = DB::table('dokter')
+            ->where('kd_dokter', $request->dokter_pengirim)
+            ->first();
         $isi = $request->isi;
         $data = [
             'isi' => $request->isi,
-            'dokter' => json_encode($dokter),
-            'pasien' => json_encode($pasien),
+            'pengirim' => $dokter_pengirim->nm_dokter,
+            'dokter' => $dokter,
+            'pasien' => $pasien,
         ];
-        $pdf = SnappyPdf::loadView('prints.echo', $data);
-        return $pdf->inline('ekg.pdf');
+
+        BacaanEcho::upsert(
+            [
+                'no_rawat' => $request->no_rawat,
+                'kd_dokter' => session()->get('username'),
+                'dokter_pengirim' => $request->dokter_pengirim,
+                'hasil_bacaan' => strip_tags($request->isi),
+            ],
+            ['no_rawat'],
+            ['kd_dokter', 'dokter_pengirim', 'hasil_bacaan']
+        );
+        // $pdf = SnappyPdf::loadView('prints.echo', $data);
+        // return $pdf->inline('ekg.pdf');
+        return view('prints.echo', $data);
     }
 }

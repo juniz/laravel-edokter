@@ -48,6 +48,7 @@ class Pasien extends Component
     public function render()
     {
         $echo = TemplateEKG::all();
-        return view('components.ralan.pasien')->with('data', $this->data)->with('dokter', session()->get('username'))->with('echo', $echo);
+        $dokter = DB::table('dokter')->where('status', '1')->get();
+        return view('components.ralan.pasien')->with('data', $this->data)->with('dokter', session()->get('username'))->with('echo', $echo)->with('dokter', $dokter);
     }
 }

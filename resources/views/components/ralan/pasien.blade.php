@@ -84,12 +84,25 @@
     <form id="form-echo" method="POST" action="{{ url('print-ekg') }}">
         @csrf
         <input type="hidden" name="no_rm" value="{{ $data->no_rkm_medis }}" >
-        <x-adminlte-select2 name="echo-select" id="echo-select" label="Template Echo" data-placeholder="Pilih template...">
-            <option value=""></option>
-            @foreach($echo as $item)
-                <option value="{{$item->id}}">{{$item->nama_template}}</option>
-            @endforeach
-        </x-adminlte-select2>
+        <input type="hidden" name="no_rawat" value="{{ $data->no_rawat }}" >
+        <div class="row">
+            <div class="col-md-6">
+                <x-adminlte-select2 name="echo-select" id="echo-select" label="Template Echo" data-placeholder="Pilih template...">
+                    <option value=""></option>
+                    @foreach($echo as $item)
+                        <option value="{{$item->id}}">{{$item->nama_template}}</option>
+                    @endforeach
+                </x-adminlte-select2>
+            </div>
+            <div class="col-md-6">
+                <x-adminlte-select2 name="dokter_pengirim" id="dokter_pengirim" label="Dokter pengirim" data-placeholder="Pilih dokter...">
+                    <option value=""></option>
+                    @foreach($dokter as $item)
+                        <option value="{{$item->kd_dokter}}">{{$item->nm_dokter}}</option>
+                    @endforeach
+                </x-adminlte-select2>
+            </div>
+        </div>
         <x-adminlte-text-editor name="isi" id="isi-echo" :config='["height" => "300"]' label="Isi Template"/>
         <x-adminlte-button label="Cetak" type="submit" theme="success" />
     </form>
