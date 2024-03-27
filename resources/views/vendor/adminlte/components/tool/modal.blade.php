@@ -1,4 +1,6 @@
-<div {{ $attributes->merge(['class' => $makeModalClass(), 'id' => $id]) }}
+<div 
+    @if($attributes->has('wire:ignore.self')) wire:ignore.self @endif
+    {{ $attributes->merge(['class' => $makeModalClass(), 'id' => $id]) }}
      @isset($staticBackdrop) data-backdrop="static" data-keyboard="false" @endisset>
 
     <div class="{{ $makeModalDialogClass() }}">

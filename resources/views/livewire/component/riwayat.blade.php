@@ -1,4 +1,24 @@
 <div>
+    <div wire:init='init' class="d-flex flex-row">
+        <div wire:ignore class="ml-auto">
+            <select name="dokter" id="riwayat-dokter" class="form-control">
+                <option value="">Pilih Dokter</option>
+                @foreach($dokter as $dok)
+                <option value="{{$dok->kd_dokter}}">{{$dok->nm_dokter}}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+
+    <div wire:loading>
+        <div class="d-flex flex-row">
+            <div class="mx-auto">
+                Loading ...
+            </div>
+        </div>
+    </div>
+
+    @if(count($data)>0)
     <div class="timeline">
             @foreach($data as $row)
             @php
@@ -6,9 +26,9 @@
             $diagnosa = $this->getDiagnosa($row->no_rawat);
             $tono = $this->getTono($row->no_rawat);
             $laboratorium = $this->getPemeriksaanLab($row->no_rawat);
-            $resume = App\Http\Controllers\Ralan\PemeriksaanRalanController::getResume($row->no_rawat);
-            $radiologi = App\Http\Controllers\Ralan\PemeriksaanRalanController::getRadiologi($row->no_rawat);
-            $gambarRadiologi = App\Http\Controllers\Ralan\PemeriksaanRalanController::getFotoRadiologi($row->no_rawat);
+            $resume = $this->getResume($row->no_rawat);
+            $radiologi = $this->getRadiologi($row->no_rawat);
+            $gambarRadiologi = $this->getFotoRadiologi($row->no_rawat);
             $tgl = date_create($row->tgl_registrasi ?? '0000-00-00');
             $date = date_format($tgl,"d M Y");
             @endphp
@@ -23,7 +43,7 @@
                         <b>{{$row->nm_dokter}}</b>
                     </h3>
                     <div class="timeline-body">
-                        @if(count($pemeriksaan)>0)
+                        @if(count($this->getPemeriksaanRalan($row->no_rawat,$row->status_lanjut))>0)
                         <x-adminlte-card theme="dark" title="Pemeriksaan" collapsible maximizable>
                             <div class="table-responsive">
                                 @foreach($pemeriksaan as $pemeriksaan)
@@ -92,7 +112,7 @@
                                         <td colspan="2"><b>Evaluasi</b></td>
                                         <td colspan="9">{{ $pemeriksaan->evaluasi ?? '' }}</td>
                                     </tr>
-                                    @if($tono)
+                                    @if($this->getTono($row->no_rawat))
                                     <tr>
                                         <td colspan="2"><b>Pemeriksaan Tonometri</b></td>
                                         <td colspan="9">
@@ -250,7 +270,7 @@
                                         <td colspan="2"><b>Diagnosa</b></td>
                                         <td colspan="9">
                                             <ol>
-                                                @forelse($diagnosa as $diag)
+                                                @forelse($this->getDiagnosa($row->no_rawat) as $diag)
                                                 <li>{{$diag->nm_penyakit}} ({{$diag->kd_penyakit}})</li>
                                                 @empty
                                                 <li>-</li>
@@ -342,4 +362,26 @@
             </div>
             @endforeach
         </div>
+    @else
+    <div class="d-flex flex-row">
+        <div class="mx-auto">
+            <h3>Data Tidak Ditemukan</h3>
+        </div>
+    </div>
+    @endif
 </div>
+
+@push('js')
+<script>
+    $("#riwayat-dokter").select2({
+        placeholder: "Pilih Dokter",
+        theme: 'bootstrap4',
+        width: '300px',
+        allowClear: true
+    });
+
+    $('#riwayat-dokter').on('change', function () {
+        @this.set('selectDokter', $(this).val());
+    });
+</script>
+@endpush

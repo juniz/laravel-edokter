@@ -97,7 +97,7 @@
             <div class="col-md-6">
                 <x-adminlte-select2 name="dokter_pengirim" id="dokter_pengirim" label="Dokter pengirim" data-placeholder="Pilih dokter...">
                     <option value=""></option>
-                    @foreach($dokter as $item)
+                    @foreach($dokterlist as $item)
                         <option value="{{$item->kd_dokter}}">{{$item->nm_dokter}}</option>
                     @endforeach
                 </x-adminlte-select2>

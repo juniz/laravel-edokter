@@ -66,8 +66,9 @@ class DetailSbar extends Component
                     'no_sbar' => $this->noSbar,
                     'tanggal_validasi' => date('Y-m-d H:i:s'),
                     'advis' => $this->advis,
-                    'nip' => $this->petugas
-                ], ['no_sbar'], ['advis', 'nip']);
+                    'nip' => $this->petugas,
+                    'kd_dokter' => session()->get('username'),
+                ], ['no_sbar'], ['advis', 'nip', 'kd_dokter', 'tanggal_validasi']);
 
             $this->reset();
             $this->emit('loadSbar');
