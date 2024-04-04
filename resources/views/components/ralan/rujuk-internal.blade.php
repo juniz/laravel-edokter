@@ -28,6 +28,10 @@
                         <th>{{$data->tgl_registrasi}}</th>
                     </tr>
                     <tr>
+                        <th>Dokter Perujuk</th>
+                        <th>{{ $getPerujuk($data->no_rawat) }}</th>
+                    </tr>
+                    <tr>
                         <th>Poli Tujuan</th>
                         <th>{{$data->nm_poli}}</th>
                     </tr>

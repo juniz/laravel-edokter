@@ -50,4 +50,14 @@ class RujukInternal extends Component
             ->orderByDesc('reg_periksa.tgl_registrasi')
             ->get();
     }
+
+    public function getPerujuk($noRawat)
+    {
+        $data = DB::table('reg_periksa')
+            ->join('dokter', 'dokter.kd_dokter', '=', 'reg_periksa.kd_dokter')
+            ->where('reg_periksa.no_rawat', $noRawat)
+            ->select('dokter.nm_dokter')
+            ->first();
+        return $data->nm_dokter;
+    }
 }
