@@ -1,6 +1,7 @@
 <?php
 
 namespace App\View\Components\Ranap;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Illuminate\View\Component;
@@ -19,7 +20,7 @@ class PemeriksaanRanap extends Component
         $this->noRM = Request::get('no_rm');
         $this->encryptNoRawat = $this->encryptData($noRawat);
         $this->noRawat = $noRawat;
-        $this->heads = ['Tgl', 'Jam', 'Keluhan', 'Suhu', 'tensi', 'Nadi', 'Aksi'];
+        $this->heads = ['PPA', 'Tgl', 'Jam', 'Keluhan', 'Suhu', 'tensi', 'Nadi', 'Aksi'];
         $this->riwayat = $this->getRiwayat($this->noRM);
         // $this->pemeriksaan = DB::table('pemeriksaan_ranap')->where('no_rawat', $this->noRawat)->get();
     }
@@ -43,11 +44,13 @@ class PemeriksaanRanap extends Component
     public function getRiwayat($noRM)
     {
         $data = DB::table('pemeriksaan_ranap')
-                            ->join('reg_periksa', 'reg_periksa.no_rawat', '=', 'pemeriksaan_ranap.no_rawat')
-                            ->where('reg_periksa.no_rkm_medis', $noRM)
-                            ->select('pemeriksaan_ranap.*')
-                            ->orderBy('pemeriksaan_ranap.tgl_perawatan', 'DESC')
-                            ->get();
+            ->join('reg_periksa', 'reg_periksa.no_rawat', '=', 'pemeriksaan_ranap.no_rawat')
+            ->join('pegawai', 'pemeriksaan_ranap.nip', '=', 'pegawai.nik')
+            ->where('reg_periksa.no_rkm_medis', $noRM)
+            ->select('pemeriksaan_ranap.*', 'pegawai.nama')
+            ->orderBy('pemeriksaan_ranap.tgl_perawatan', 'DESC')
+            ->orderByDesc('pemeriksaan_ranap.jam_rawat')
+            ->get();
         return $data;
     }
 

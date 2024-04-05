@@ -51,16 +51,15 @@
         <x-adminlte-card theme="info" title="Riwayat" theme-mode="outline" header-class="rounded-bottom" collapsible>
             @php
                 $config["responsive"] = true;
-                $config['order'] = [[0, 'desc']];
+                $config['order'] = [[1, 'desc'], [2, 'desc']];
             @endphp
             <x-adminlte-datatable id="tableRiwayatPemeriksaanRanap" :heads="$heads" head-theme="dark" :config="$config" striped hoverable bordered compressed>
                 @foreach($riwayat as $row)
                     <tr>
+                        <td>{{ $row->nama }}</td>
                         <td>{{ $row->tgl_perawatan }}</td>
                         <td>{{ $row->jam_rawat }}</td>
                         <td>{{ $row->keluhan }}</td>
-                        {{-- <td>{{ $row->pemeriksaan }}</td>
-                        <td>{{ $row->penilaian }}</td> --}}
                         <td>{{ $row->suhu_tubuh }}</td>
                         <td>{{ $row->tensi }}</td>
                         <td>{{ $row->nadi }}</td>
@@ -99,9 +98,9 @@
                     });
                 },
                 success: function(response){
-                    console.log(response);
                     Swal.close();
                     var html = '' + 
+                                    '<input id="nip" name="nip" type="hidden" value="'+response.data.nip+'" class="form-control">' +
                                     '<input id="editjam" name="editjam" type="hidden" value="'+response.data.jam_rawat+'" class="form-control">' +                    
                                     '<input id="edittgl" name="edittgl" type="hidden" value="'+response.data.tgl_perawatan+'" class="form-control">' + 
                                     '<div class="row">' + 
