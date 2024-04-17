@@ -197,3 +197,13 @@ Route::get('/offline', function () {
 });
 
 Route::get('/echo-ar', fn () => view('prints.echo-ar'))->name('echo-ar');
+
+Route::get('/persetujuan-penolakan-tindakan', [
+    App\Http\Controllers\PersetujuanPenolakanTindakan::class,
+    'index',
+])->name('persetujuan-penolakan-tindakan');
+
+Route::post('/persetujuan-penolakan-tindakan', [
+    App\Http\Controllers\PersetujuanPenolakanTindakan::class,
+    'simpan',
+])->name('persetujuan-penolakan-tindaka.store');

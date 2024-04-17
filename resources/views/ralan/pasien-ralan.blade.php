@@ -46,6 +46,8 @@
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-kandungan">Penilaian Awal Medis Kandungan</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-dalam">Penilaian Awal Medis Penyakit Dalam</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-psikiatri">Penilaian Awal Medis Psikiatri</button>
+                                            <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-mata">Penilaian Awal Medis Mata</button>
+                                            <button id="{{$row->no_rawat}}" class="dropdown-item btn-persetujuan-penolakan-tindakan">Persetujuan/Penilakan Tindakan</button>
                                         </div>
                                     </div>
                                 </td>
@@ -122,6 +124,14 @@
 
     <x-adminlte-modal wire:ignore.self id="modal-awal-medis-psikiatri" title="Penilaian Awal Medis Psikiatri" size="xl" v-centered static-backdrop scrollable>
         <livewire:component.awal-psikiatri.form-psikiatri  />
+    </x-adminlte-modal>
+
+    <x-adminlte-modal wire:ignore.self id="modal-awal-medis-mata" title="Penilaian Awal Medis Mata" size="xl" v-centered static-backdrop scrollable>
+        <livewire:component.awal-mata.form-mata  />
+    </x-adminlte-modal>
+
+    <x-adminlte-modal wire:ignore.self id="modal-persetujuan-penolakan-tindakan" title="Persetujuan/Penolakan Tindakan" size="xl" v-centered static-backdrop scrollable>
+        <livewire:component.persetujuan-penolakan-tindakan.form />
     </x-adminlte-modal>
 @stop
 
