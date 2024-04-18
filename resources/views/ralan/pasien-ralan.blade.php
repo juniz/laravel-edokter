@@ -47,7 +47,7 @@
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-dalam">Penilaian Awal Medis Penyakit Dalam</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-psikiatri">Penilaian Awal Medis Psikiatri</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-mata">Penilaian Awal Medis Mata</button>
-                                            <button id="{{$row->no_rawat}}" class="dropdown-item btn-persetujuan-penolakan-tindakan">Persetujuan/Penilakan Tindakan</button>
+                                            <button id="{{$row->no_rawat}}" class="dropdown-item btn-persetujuan-penolakan-tindakan">Persetujuan/Penolakan Tindakan</button>
                                         </div>
                                     </div>
                                 </td>
