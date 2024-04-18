@@ -43,7 +43,7 @@ class PersetujuanPenolakanTindakan extends Controller
 
     public function simpan(Request $request)
     {
-        // $data = Http::post('https://simrs.rsbhayangkaranganjuk.com/webapps/persetujuantindakan/pages/storeImage.php', $request->all());
+        $data = Http::post('https://simrs.rsbhayangkaranganjuk.com/webapps/persetujuantindakan/pages/storeImage.php', $request->all());
         dd($request);
         // return redirect()->to('/ralan/pasien');
     }

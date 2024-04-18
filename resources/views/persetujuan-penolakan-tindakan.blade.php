@@ -11,9 +11,9 @@
 </head>
 <body>
     <div class="container">
-        <h5 class="text-dark"><center><button class="btn btn-secondary" onclick="window.location.reload();">Refresh</button><br/><br/>Pernyataan Persetujuan/Penolakan Tindakan No. {{ $nopernyataan }}></center></h5>
+        <h5 class="text-dark"><center><button class="btn btn-secondary" onclick="window.location.reload();">Refresh</button><br/><br/>Pernyataan Persetujuan/Penolakan Tindakan No. {{ $nopernyataan }}</center></h5>
         <h7 class="text-dark"><center>Tanggal {{$tindakan->tanggal}}</center></h7><br/>
-        <form method="POST" action="{{ route('persetujuan-penolakan-tindaka.store') }}" enctype=multipart/form-data>
+        <form method="POST" action="https://simrs.rsbhayangkaranganjuk.com/webapps/persetujuantindakan/pages/storeImage.php" enctype=multipart/form-data>
             @csrf
             <input type="hidden" name="nopernyataan" value="{{$nopernyataan}}">
             <h7 class="text-dark">
