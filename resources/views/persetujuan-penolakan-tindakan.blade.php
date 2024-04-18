@@ -14,6 +14,7 @@
         <h5 class="text-dark"><center><button class="btn btn-secondary" onclick="window.location.reload();">Refresh</button><br/><br/>Pernyataan Persetujuan/Penolakan Tindakan No. {{ $nopernyataan }}></center></h5>
         <h7 class="text-dark"><center>Tanggal {{$tindakan->tanggal}}</center></h7><br/>
         <form method="POST" action="{{ route('persetujuan-penolakan-tindaka.store') }}" enctype=multipart/form-data>
+            @csrf
             <input type="hidden" name="nopernyataan" value="{{$nopernyataan}}">
             <h7 class="text-dark">
                 Apabila pasien berusia dibawah 18 tahun atau tidak dapat memberikan persetujuan karena alasan lain (**) tidak dapat menandatangani surat pernyataan ini, 
