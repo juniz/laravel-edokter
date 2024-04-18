@@ -29,7 +29,7 @@ class PasienRanapController extends Controller
         $kd_dokter = session()->get('username');
         $heads = ['Nama', 'No. RM', 'Kamar', 'Bed', 'Tanggal Masuk', 'Cara Bayar'];
 
-        if ($kd_dokter == '86062112' || $kd_dokter == 'SP0000005' || $kd_dokter == 'SP0000002') {
+        if ($kd_dokter == '86062112' || $kd_dokter == 'SP0000005' || $kd_dokter == 'SP0000002' || $kd_dokter == 'SP0000006') {
 
             $data = DB::table('kamar_inap')
                 ->join('reg_periksa', 'reg_periksa.no_rawat', '=', 'kamar_inap.no_rawat')
@@ -54,6 +54,7 @@ class PasienRanapController extends Controller
                 ->select('pasien.nm_pasien', 'reg_periksa.no_rkm_medis', 'bangsal.nm_bangsal', 'kamar_inap.kd_kamar', 'kamar_inap.tgl_masuk', 'penjab.png_jawab', 'reg_periksa.no_rawat', 'bangsal.kd_bangsal')
                 ->get();
         }
+
         return view('ranap.pasien-ranap', [
             'heads' => $heads,
             'data' => $data,
