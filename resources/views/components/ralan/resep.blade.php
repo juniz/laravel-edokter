@@ -111,6 +111,7 @@
                         @foreach($riwayatPeresepan as $r)
                         <tr>
                             <td class="align-middle text-center">{{$r->no_resep}}</td>
+                            <td class="align-middle text-center">{{$r->nm_dokter}}</td>
                             <td class="align-middle text-center">{{$r->tgl_peresepan}}</td>
                             <td>
                                 <ul class="p-4">

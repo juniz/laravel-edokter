@@ -22,14 +22,15 @@ class Resep extends Component
         $this->encryptNoRawat = $this->encryptData($this->noRawat);
         $this->encryptNoRM = $this->encryptData($this->noRM);
         $this->dokter = session()->get('username');
-        $this->heads = ['Nomor Resep', 'Tanggal', 'Detail Resep', 'Aksi'];
+        $this->heads = ['Nomor Resep', 'Dokter', 'Tanggal', 'Detail Resep', 'Aksi'];
         $this->riwayatPeresepan = DB::table('reg_periksa')
             ->join('resep_obat', 'reg_periksa.no_rawat', '=', 'resep_obat.no_rawat')
-            ->where('resep_obat.kd_dokter', $this->dokter)
+            ->join('dokter', 'resep_obat.kd_dokter', '=', 'dokter.kd_dokter')
+            // ->where('resep_obat.kd_dokter', $this->dokter)
             ->where('reg_periksa.no_rkm_medis', $this->noRM)
             ->where('reg_periksa.status_lanjut', 'Ralan')
             ->orderBy('resep_obat.tgl_peresepan', 'desc')
-            ->select('resep_obat.no_resep', 'resep_obat.tgl_peresepan')
+            ->select('resep_obat.no_resep', 'resep_obat.tgl_peresepan', 'dokter.nm_dokter')
             ->limit(5)
             ->get();
 
