@@ -143,7 +143,7 @@ class MasterEkgController extends Controller
                 'no_rawat' => $request->no_rawat,
                 'kd_dokter' => session()->get('username'),
                 'dokter_pengirim' => $request->dokter_pengirim,
-                'hasil_bacaan' => strip_tags($request->isi),
+                'hasil_bacaan' => $request->isi,
             ],
             ['no_rawat'],
             ['kd_dokter', 'dokter_pengirim', 'hasil_bacaan']
