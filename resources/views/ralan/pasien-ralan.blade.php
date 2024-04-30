@@ -40,6 +40,7 @@
                                     <div class="dropdown">
                                         <button id="my-dropdown" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">{{$row->no_rawat}}</button>
                                         <div class="dropdown-menu" aria-labelledby="my-dropdown">
+                                            <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-igd">Penilaian Awal Medis IGD</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-medis" wire:click="$emit('awalMedis')">Penilaian Awal Medis Umum</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-tht">Penilaian Awal Medis THT</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-anak">Penilaian Awal Medis Bayi/Anak</button>
@@ -132,6 +133,10 @@
 
     <x-adminlte-modal wire:ignore.self id="modal-persetujuan-penolakan-tindakan" title="Persetujuan/Penolakan Tindakan" size="xl" v-centered static-backdrop scrollable>
         <livewire:component.persetujuan-penolakan-tindakan.form />
+    </x-adminlte-modal>
+
+    <x-adminlte-modal wire:ignore.self id="modal-awal-medis-igd" title="Penilaian Awal Medis IGD" size="xl" v-centered static-backdrop scrollable>
+        <livewire:component.awal-igd.form />
     </x-adminlte-modal>
 @stop
 
