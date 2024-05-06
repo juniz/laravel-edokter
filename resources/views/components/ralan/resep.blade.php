@@ -103,7 +103,7 @@
             <x-adminlte-callout theme="info" title="Riwayat Peresepan">
                 @php
                 $config["responsive"] = true;
-                $config['order'] = [[1, 'desc']];
+                $config['order'] = [[2, 'desc']];
                 @endphp
                 <x-adminlte-datatable id="tableRiwayatResep" :heads="$heads" :config="$config" head-theme="dark" striped
                     hoverable bordered compressed>
