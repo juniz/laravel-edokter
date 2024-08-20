@@ -20,7 +20,7 @@ Route::get('/', function () {
 // Auth::routes();
 Route::get('/', [App\Http\Controllers\LoginController::class, 'index'])->name(
     'login'
-);
+)->middleware('sudahlogin');
 Route::post('/customlogin', [
     App\Http\Controllers\LoginController::class,
     'customLogin',
@@ -183,7 +183,7 @@ Route::post('/diagnosa', [
     'simpanDiagnosa',
 ])->name('diagnosa.simpan');
 
-Route::get('/master-operasi', fn () => view('master-laporan-operasi'))->name(
+Route::get('/master-operasi', fn() => view('master-laporan-operasi'))->name(
     'master-operasi'
 )->middleware('loginauth');
 
@@ -196,7 +196,7 @@ Route::get('/offline', function () {
     return view('modules/laravelpwa/offline');
 });
 
-Route::get('/echo-ar', fn () => view('prints.echo-ar'))->name('echo-ar');
+Route::get('/echo-ar', fn() => view('prints.echo-ar'))->name('echo-ar');
 
 Route::get('/persetujuan-penolakan-tindakan', [
     App\Http\Controllers\PersetujuanPenolakanTindakan::class,
