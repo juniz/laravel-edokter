@@ -1,5 +1,5 @@
 <div>
-    <x-adminlte-modal wire:ignore.self id="modalRiwayatPemeriksaanRalan" title="Riwayat Pemeriksaan" size="xl" theme="info" v-centered
+    <x-adminlte-modal wire:ignore.self id="modalRiwayatPemeriksaanRalan" title="Riwayat Pemeriksaan" size="lg" theme="info" v-centered
         static-backdrop scrollable>
         <livewire:component.riwayat :noRawat="request()->get('no_rawat')" />
         

@@ -97,8 +97,9 @@
             <label for="">Evaluasi</label>
             <textarea wire:model.defer='evaluasi' class="form-control" name="" id="" rows="1"></textarea>
         </div>
-        <div class="d-flex flex-row-reverse">
+        <div class="d-flex flex-row-reverse" style="gap: 10px">
             <button type="submit" class="btn btn-primary">Simpan</button>
+            {{-- <button type="button" wire:click='geminiSoap' class="btn btn-secondary">AI</button> --}}
         </div>
     </form>
     <h5 class="pt-4">Riwayat Pemeriksaan</h5>

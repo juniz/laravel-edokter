@@ -366,6 +366,16 @@ return [
                 ],
             ]
         ],
+        'Webcam' => [
+            'active' => false,
+            'files' => [
+                [
+                    'type' => 'js',
+                    'asset' => true,
+                    'location' => 'vendor/webcam/webcam.min.js',
+                ],
+            ]
+        ],
         'Datatables' => [
             'active' => true,
             'files' => [

@@ -6,6 +6,7 @@ use App\Traits\SwalResponse;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
+use Gemini\Laravel\Facades\Gemini;
 
 class Pemeriksaan extends Component
 {
@@ -32,6 +33,20 @@ class Pemeriksaan extends Component
     public function render()
     {
         return view('livewire.ralan.pemeriksaan');
+    }
+
+    public function geminiSoap()
+    {
+        $resume = DB::table('resume_pasien')
+            ->where('no_rawat', $this->noRawat)
+            ->select('diagnosa_utama')
+            ->first();
+
+        $promp = 'Objek Pasien dengan dengan subjek MUAL KADANG BATUK';
+        $result = Gemini::geminiPro()->generateContent($promp);
+
+        $hasil = $result->text();
+        dd($hasil);
     }
 
     public function hydrate()

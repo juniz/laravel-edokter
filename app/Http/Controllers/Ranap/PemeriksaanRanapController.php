@@ -505,7 +505,7 @@ class PemeriksaanRanapController extends Controller
     {
         $no_rawat =  $this->decryptData($noRawat);
         $data = [
-            'nip' => session()->get('username'),
+            // 'nip' => session()->get('username'),
             'suhu_tubuh' => Request::get('suhu'),
             'tensi' => Request::get('tensi'),
             'nadi' => Request::get('nadi'),

@@ -5,7 +5,10 @@
 @section('content_header')
 <div class="d-flex flex-row justify-content-between">
     <h1>Pemeriksaan Ralan</h1>
-    <a name="" id="" class="btn btn-primary" href="{{ url('ralan/pasien') }}" role="button">Daftar Pasien</a>
+    <div class="d-flex flex-row" style="gap: 10px">
+        <button type="button" data-toggle="modal" data-target="#modalPurple" class="btn btn-sm btn-secondary">Tanya AI</button>
+        <a name="" id="" class="btn btn-sm btn-primary" href="{{ url('ralan/pasien') }}" role="button">Daftar Pasien</a>
+    </div>
 </div>
 
 @stop
@@ -110,7 +113,10 @@
                 </x-adminlte-card>
     </div>
 </div>
-
+<x-adminlte-modal id="modalPurple" title="Tanya AI" theme="secondary"
+    icon="fas fa-bolt" size='xl' v-centered static-backdrop scrollable>
+    <livewire:component.modal-ai />
+</x-adminlte-modal>
 @stop
 
 @section('plugins.TempusDominusBs4', true)

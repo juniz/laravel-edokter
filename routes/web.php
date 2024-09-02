@@ -207,3 +207,5 @@ Route::post('/persetujuan-penolakan-tindakan', [
     App\Http\Controllers\PersetujuanPenolakanTindakan::class,
     'simpan',
 ])->name('persetujuan-penolakan-tindaka.store');
+
+Route::match(['get', 'post'], '/botman', [App\Http\Controllers\BotManController::class, 'bot']);
