@@ -110,6 +110,15 @@ class Pemeriksaan extends Component
 
     public function simpanPemeriksaan()
     {
+        $this->validate([
+            'keluhan' => 'required|min:3',
+            'pemeriksaan' => 'required|min:3',
+        ], [
+            'keluhan.required' => 'Subjek tidak boleh kosong',
+            'keluhan.min' => 'Subjek minimal 3 karakter',
+            'pemeriksaan.required' => 'Objek tidak boleh kosong',
+            'pemeriksaan.min' => 'Objek minimal 3 karakter',
+        ]);
         try {
             DB::beginTransaction();
             DB::table('pemeriksaan_ralan')

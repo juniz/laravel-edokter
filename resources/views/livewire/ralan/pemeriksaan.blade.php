@@ -3,11 +3,13 @@
         <div class="row">
             <div class="form-group col-md-6">
                 <label for="">Subjek</label>
-                <textarea wire:model.defer='keluhan' class="form-control" name="" id="" rows="2"></textarea>
+                <textarea wire:model.defer='keluhan' class="form-control @error('keluhan') is-invalid @enderror" name="" id="" rows="2"></textarea>
+                @error('keluhan') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
             <div class="form-group col-md-6">
                 <label for="">Objek</label>
-                <textarea wire:model.defer='pemeriksaan' class="form-control" name="" id="" rows="2"></textarea>
+                <textarea wire:model.defer='pemeriksaan' class="form-control  @error('pemeriksaan') is-invalid @enderror" name="" id="" rows="2"></textarea>
+                @error('pemeriksaan') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
         </div>
         <div class="row">
