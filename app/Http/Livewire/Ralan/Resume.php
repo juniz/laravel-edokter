@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Ralan;
 
 use App\Traits\SwalResponse;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -252,8 +253,14 @@ class Resume extends Component
         ];
 
         try {
+            $cek = DB::table('resume_pasien')->where('no_rawat', $this->noRawat)->first();
             DB::beginTransaction();
-            DB::table('resume_pasien')->insert($data);
+            if ($cek) {
+                DB::table('resume_pasien')->where('no_rawat', $this->noRawat)->update(Arr::except($data, ['no_rawat']));
+            } else {
+                DB::table('resume_pasien')->insert($data);
+            }
+            // DB::table('resume_pasien')->insert($data);
             DB::commit();
             $this->listResume = DB::table('resume_pasien')->where('no_rawat', $this->noRawat)->get();
             $this->dispatchBrowserEvent('swal', $this->toastResponse("Resume pasien berhasil disimpan"));
