@@ -204,6 +204,7 @@ class LapOperasi extends Component
             'jenis_operasi' => 'Bersih',
             'sifat_operasi' => 'Elektif',
             'kategori_anestesi' => 'Umum',
+            'kategori_operasi' => 'Elektif',
             'jenis_anestesi' => $this->jenis_anestesi,
             'histopatologi' => $this->histo,
             'nip_asisten_bedah' => '-',
