@@ -106,10 +106,14 @@ class Riwayat extends Component
         if ($status == 'Ralan') {
             $data = DB::table('pemeriksaan_ralan')
                 ->where('no_rawat', $noRawat)
+                ->orderByDesc('tgl_perawatan')
+                ->orderByDesc('jam_rawat')
                 ->get();
         } else {
             $data = DB::table('pemeriksaan_ranap')
                 ->where('no_rawat', $noRawat)
+                ->orderByDesc('tgl_perawatan')
+                ->orderByDesc('jam_rawat')
                 ->get();
         }
         return $data;
