@@ -148,7 +148,7 @@ class ResepController extends Controller
                     continue;
                 }
 
-                $resep = DB::table('resep_obat')->where('no_rawat', $noRawat)->where('tgl_peresepan', date('Y-m-d'))->first();
+                $resep = DB::table('resep_obat')->where('no_rawat', $noRawat)->where('tgl_peresepan', date('Y-m-d'))->where('kd_dokter', $dokter)->first();
                 if (!empty($resep)) {
                     if ($resep->tgl_perawatan != '0000-00-00') {
                         return response()->json([
