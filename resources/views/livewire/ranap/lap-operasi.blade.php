@@ -30,14 +30,14 @@
             <div class="col-sm-6">
                 <div class="form-group">
                     <label for="diagnosa_pra_bedah">Diagnosa Pra Bedah</label>
-                    <textarea wire:model.defer='diagnosa_pra_bedah' rows="3" id="diagnosa_pra_bedah" class="form-control @error('diagnosa_pra_bedah') is-invalid @enderror" type="text" name="diagnosa_pra_bedah"></textarea>
+                    <textarea wire:model.defer='diagnosa_pra_bedah' rows="1" id="diagnosa_pra_bedah" class="form-control @error('diagnosa_pra_bedah') is-invalid @enderror" type="text" name="diagnosa_pra_bedah"></textarea>
                     @error('diagnosa_pra_bedah') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
             </div>
             <div class="col-sm-6">
                 <div class="form-group">
                     <label for="diagnosa_pasca_bedah">Diagnosa Pasca Bedah</label>
-                    <textarea wire:model.defer='diagnosa_pasca_bedah' id="diagnosa_pasca_bedah" class="form-control @error('diagnosa_pasca_bedah') is-invalid @enderror" type="text" name="diagnosa_pasca_bedah" rows="3"></textarea>
+                    <textarea wire:model.defer='diagnosa_pasca_bedah' id="diagnosa_pasca_bedah" class="form-control @error('diagnosa_pasca_bedah') is-invalid @enderror" type="text" name="diagnosa_pasca_bedah" rows="1"></textarea>
                     @error('diagnosa_pasca_bedah') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
             </div>
@@ -46,7 +46,7 @@
             <div class="col-sm-12">
                 <div class="form-group">
                   <label for="uraian_bedah">Uraian Bedah</label>
-                  <textarea wire:model.defer='uraian_bedah' class="form-control @error('uraian_bedah') is-invalid @enderror" name="uraian_bedah" id="uraian_bedah" rows="3"></textarea>
+                  <textarea wire:model.defer='uraian_bedah' class="form-control @error('uraian_bedah') is-invalid @enderror" name="uraian_bedah" id="uraian_bedah" rows="14"></textarea>
                     @error('uraian_bedah') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
             </div>
@@ -55,12 +55,12 @@
             <div class="col-sm-12">
                 <div class="form-group">
                   <label for="tindakan_bedah">Tindakan Bedah</label>
-                  <textarea wire:model.defer='tindakan_bedah' class="form-control @error('tindakan_bedah') is-invalid @enderror" name="tindakan_bedah" id="tindakan_bedah" rows="3"></textarea>
+                  <textarea wire:model.defer='tindakan_bedah' class="form-control @error('tindakan_bedah') is-invalid @enderror" name="tindakan_bedah" id="tindakan_bedah" rows="1"></textarea>
                     @error('tindakan_bedah') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
             </div>
         </div>
-        <div class="row">
+        {{-- <div class="row">
             <div class="col-md-3">
                 <x-ui.select label="Jenis operasi" id="jenis_operasi" model="jenis_operasi">
                     @foreach($jns_operasi as $key => $value)
@@ -89,7 +89,7 @@
                     @endforeach
                 </x-ui.select>
             </div>
-        </div>
+        </div> --}}
         <div class="row">
             <div class="col-4 col-md-4">
                 <button type="button" class="btn btn-block btn-warning" data-toggle="modal" data-target="#modal-template-operasi">
