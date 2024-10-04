@@ -30,6 +30,7 @@ class Resep extends Component
             ->where('reg_periksa.no_rkm_medis', $this->noRM)
             ->where('reg_periksa.status_lanjut', 'Ralan')
             ->orderBy('resep_obat.tgl_peresepan', 'desc')
+            ->orderByDesc('resep_obat.jam_peresepan')
             ->select('resep_obat.no_resep', 'resep_obat.tgl_peresepan', 'dokter.nm_dokter')
             ->limit(5)
             ->get();

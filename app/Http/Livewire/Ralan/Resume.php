@@ -144,6 +144,7 @@ class Resume extends Component
             ->join('databarang', 'resep_dokter.kode_brng', '=', 'databarang.kode_brng')
             ->join('reg_periksa', 'resep_obat.no_rawat', '=', 'reg_periksa.no_rawat')
             ->where('resep_obat.no_rawat', $this->noRawat)
+            ->where('resep_obat.kd_dokter', session()->get('username'))
             ->where('reg_periksa.status_lanjut', 'Ralan')
             ->select(DB::raw("GROUP_CONCAT( databarang.nama_brng,'-', resep_dokter.jml SEPARATOR '\r\n') AS nama_brng"))
             ->first();
@@ -153,6 +154,7 @@ class Resume extends Component
             ->join('databarang', 'resep_dokter_racikan_detail.kode_brng', '=', 'databarang.kode_brng')
             ->join('reg_periksa', 'resep_obat.no_rawat', '=', 'reg_periksa.no_rawat')
             ->where('resep_obat.no_rawat', $this->noRawat)
+            ->where('resep_obat.kd_dokter', session()->get('username'))
             ->where('reg_periksa.status_lanjut', 'Ralan')
             ->select(DB::raw("GROUP_CONCAT( databarang.nama_brng, ' - ', resep_dokter_racikan_detail.p1, '/', resep_dokter_racikan_detail.p2, ' - ', resep_dokter_racikan_detail.kandungan, ' - ', resep_dokter_racikan_detail.jml SEPARATOR '\r\n') AS nama_racik"))
             ->first();
