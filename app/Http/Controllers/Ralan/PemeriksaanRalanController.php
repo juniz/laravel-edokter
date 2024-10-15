@@ -652,44 +652,23 @@ class PemeriksaanRalanController extends Controller
                 'kd_poli' => Request::get('kd_poli'),
                 'kd_dokter' => Request::get('kd_dokter'),
             ];
-            $insert = DB::table('rujukan_internal_poli')
+            DB::beginTransaction();
+            DB::table('rujukan_internal_poli')
                 ->insert($data);
-            if ($insert) {
-                $insert = DB::table('rujukan_internal_poli_detail')
-                    ->insert([
-                        'no_rawat' => Request::get('no_rawat'),
-                        'konsul' => Request::get('catatan'),
-                    ]);
-                if ($insert) {
-                    return response()->json([
-                        'status' => 'success',
-                        'message' => 'Data berhasil disimpan'
-                    ], 200);
-                } else {
-                    $delete = DB::table('rujuk_internal_poli')
-                        ->where('no_rawat', Request::get('no_rawat'))
-                        ->delete();
-                    if ($delete) {
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Data gagal disimpan'
-                        ], 500);
-                    } else {
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Gagal menghapus data'
-                        ], 500);
-                    }
-                }
-            }
+            DB::table('rujukan_internal_poli_detail')
+                ->insert([
+                    'no_rawat' => Request::get('no_rawat'),
+                    'konsul' => Request::get('catatan'),
+                ]);
+            DB::commit();
             return response()->json([
-                'status' => 'error',
-                'message' => 'Data gagal disimpan'
-            ], 500);
+                'status' => 'success',
+                'message' => 'Data berhasil disimpan'
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => 'Gagagl menyimpan data'
             ], 500);
         }
     }
