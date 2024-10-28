@@ -208,4 +208,19 @@ Route::post('/persetujuan-penolakan-tindakan', [
     'simpan',
 ])->name('persetujuan-penolakan-tindaka.store');
 
+Route::get('/radiologi/ralan', [
+    App\Http\Controllers\RadiologiController::class,
+    'ralan',
+])->name('permintaan-radiologi-ralan')->middleware('loginauth');
+
+Route::get('/radiologi/ranap', [
+    App\Http\Controllers\RadiologiController::class,
+    'ranap',
+])->name('permintaan-radiologi-ranap')->middleware('loginauth');
+
+Route::get('/radiologi/pemeriksaan/{no_rawat}', [
+    App\Http\Controllers\RadiologiController::class,
+    'pemeriksaan',
+])->name('radiologi.pemeriksaan')->middleware('loginauth');
+
 Route::match(['get', 'post'], '/botman', [App\Http\Controllers\BotManController::class, 'bot']);

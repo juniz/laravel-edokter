@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Traits;
+
 use Illuminate\Support\Facades\Crypt;
 
 trait EnkripsiData
@@ -13,6 +14,7 @@ trait EnkripsiData
 
     public function decryptData($data)
     {
+        // dd($data);
         $data = Crypt::decrypt($data);
         return $data;
     }

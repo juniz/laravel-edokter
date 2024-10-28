@@ -23,6 +23,7 @@
         "livewire/livewire": "^2.11",
         "lucianotonet/groq-php": "^0.0.8",
         "nullpunkt/lz-string-php": "^1.3",
+        "rappasoft/laravel-livewire-tables": "^2.15",
         "silviolleite/laravelpwa": "^2.0",
         "yajra/laravel-datatables": "^9.0"
     },

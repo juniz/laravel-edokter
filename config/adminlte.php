@@ -283,6 +283,20 @@ return [
             'url'        => '/ranap/pasien',
         ],
         [
+            'text'        => 'Radiologi',
+            'icon'        => 'fas fa-fw fa-x-ray',
+            'submenu'     => [
+                [
+                    'text' => 'Ralan',
+                    'url'  => '/radiologi/ralan',
+                ],
+                [
+                    'text' => 'Ranap',
+                    'url'  => '/radiologi/ranap',
+                ],
+            ],
+        ],
+        [
             'text'        => 'Template Operasi',
             'url'         => '/master-operasi',
             'icon'        => 'fas fa-fw fa-stethoscope',
@@ -527,7 +541,7 @@ return [
             ],
         ],
         'EkkoLightBox' => [
-            'active' => false,
+            'active' => true,
             'files' => [
                 [
                     'type' => 'js',
