@@ -107,6 +107,10 @@
                 <x-ralan.permintaan-radiologi :no-rawat="request()->get('no_rawat')" /> --}}
                 <livewire:ralan.permintaan-radiologi :no-rawat="request()->get('no_rawat')" />
 
+                <x-adminlte-card title="Konsultasi Medik" icon='fas fa-stethoscope' theme="info" maximizable collapsible="collapsed">
+                    <livewire:component.konsultasi-medik :no-rawat="request()->get('no_rawat')" />
+                </x-adminlte-card>
+
                 <x-adminlte-card title="Laporan Operasi" icon='fas fa-stethoscope' theme="info" maximizable collapsible="collapsed">
                     <livewire:ranap.lap-operasi :no-rawat="request()->get('no_rawat')" />
                     <livewire:ranap.template-lap-operasi />
