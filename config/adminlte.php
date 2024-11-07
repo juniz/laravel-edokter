@@ -283,6 +283,11 @@ return [
             'url'        => '/ranap/pasien',
         ],
         [
+            'text'       => 'Konsultasi Medik',
+            'icon'       => 'fas fa-fw fa-user',
+            'url'        => '/konsultasi',
+        ],
+        [
             'text'        => 'Radiologi',
             'icon'        => 'fas fa-fw fa-x-ray',
             'submenu'     => [

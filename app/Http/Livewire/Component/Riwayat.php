@@ -16,6 +16,7 @@ class Riwayat extends Component
     {
         $this->noRawat = $noRawat;
         $this->pasien = $this->getPasien($noRawat);
+        // dd($noRawat);
     }
 
     public function hydrate()

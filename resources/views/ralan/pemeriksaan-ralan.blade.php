@@ -99,17 +99,16 @@
                 {{--
                 <x-ralan.catatan :no-rawat="request()->get('no_rawat')" /> --}}
                 <livewire:ralan.catatan :noRawat="request()->get('no_rawat')" :noRm="request()->get('no_rm')" />
-                <x-ralan.rujuk-internal :no-rawat="request()->get('no_rawat')" />
+                <x-adminlte-card title="Konsultasi Medik" icon='fas fa-user' theme="info" maximizable collapsible="collapsed">
+                    <livewire:component.konsultasi-medik :no-rawat="request()->get('no_rawat')" />
+                </x-adminlte-card>
+                {{-- <x-ralan.rujuk-internal :no-rawat="request()->get('no_rawat')" /> --}}
                 {{--
                 <x-ralan.permintaan-lab :no-rawat="request()->get('no_rawat')" /> --}}
                 <livewire:ralan.permintaan-lab :no-rawat="request()->get('no_rawat')" />
                 {{--
                 <x-ralan.permintaan-radiologi :no-rawat="request()->get('no_rawat')" /> --}}
                 <livewire:ralan.permintaan-radiologi :no-rawat="request()->get('no_rawat')" />
-
-                <x-adminlte-card title="Konsultasi Medik" icon='fas fa-stethoscope' theme="info" maximizable collapsible="collapsed">
-                    <livewire:component.konsultasi-medik :no-rawat="request()->get('no_rawat')" />
-                </x-adminlte-card>
 
                 <x-adminlte-card title="Laporan Operasi" icon='fas fa-stethoscope' theme="info" maximizable collapsible="collapsed">
                     <livewire:ranap.lap-operasi :no-rawat="request()->get('no_rawat')" />

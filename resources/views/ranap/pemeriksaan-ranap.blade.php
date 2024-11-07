@@ -17,6 +17,9 @@
             <x-ranap.resep-ranap />
             <livewire:ranap.resume-pasien :no-rawat="request()->get('no_rawat')" />
             <livewire:ranap.catatan-pasien :noRawat="request()->get('no_rawat')" :noRm="request()->get('no_rm')" />
+            <x-adminlte-card title="Konsultasi Medik" icon='fas fa-user' theme="info" maximizable collapsible="collapsed">
+                <livewire:component.konsultasi-medik :no-rawat="request()->get('no_rawat')" />
+            </x-adminlte-card>
             <livewire:ranap.permintaan-lab :no-rawat="request()->get('no_rawat')" />
             <livewire:ranap.permintaan-radiologi :no-rawat="request()->get('no_rawat')" />
             <x-adminlte-card title="Laporan Operasi" icon='fas fa-stethoscope' theme="info" maximizable collapsible="collapsed">

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\TemplateEKG;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\Snappy\Facades\SnappyPdf;
+use Illuminate\Support\Str;
 
 class MasterEkgController extends Controller
 {
@@ -143,7 +144,7 @@ class MasterEkgController extends Controller
                 'no_rawat' => $request->no_rawat,
                 'kd_dokter' => session()->get('username'),
                 'dokter_pengirim' => $request->dokter_pengirim,
-                'hasil_bacaan' => $request->isi,
+                'hasil_bacaan' => Str::markdown($isi),
             ],
             ['no_rawat'],
             ['kd_dokter', 'dokter_pengirim', 'hasil_bacaan']

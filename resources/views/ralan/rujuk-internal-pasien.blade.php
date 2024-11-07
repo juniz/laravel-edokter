@@ -7,10 +7,11 @@
 @stop
 
 @section('content')
-<x-ralan.riwayat :no-rawat="$noRawat" />
+{{-- <x-ralan.riwayat :no-rawat="$noRawat" /> --}}
+<x-ralan.riwayat :no-rawat="request()->get('no_rawat')" />
 <div class="row">
     <div class="col-md-4">
-        <x-ralan.pasien :no-rawat="$noRawat" />
+        <x-ralan.pasien :no-rawat="request()->get('no_rawat')" />
     </div>
     <div class="col-md-8">
         <x-adminlte-card title="Konsul Rujukan Internal" theme="dark" theme-mode="outline" >

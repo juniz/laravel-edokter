@@ -14,10 +14,12 @@ class RujukInternalPasien extends Controller
     public function __construct(Request $request)
     {
         $this->middleware('loginauth');
-        $this->encryptNoRawat = $request->get('no_rawat');
-        $this->noRawat = $this->decryptData($request->get('no_rawat'));
+        $this->middleware('decrypt');
+        // dd($request->get('no_rawat'));
+        $this->encryptNoRawat = $this->encryptData($request->get('no_rawat'));
+        $this->noRawat = $request->get('no_rawat');
         // dd($this->noRawat);
-        $this->noRM = $this->decryptData($request->get('no_rm'));
+        $this->noRM = $request->get('no_rm');
         // dd($this->noRM);
     }
 
@@ -34,6 +36,7 @@ class RujukInternalPasien extends Controller
 
     public function getRujukanInternal($noRawat)
     {
+        dd($noRawat);
         return DB::table('rujukan_internal_poli')
             ->join('rujukan_internal_poli_detail', 'rujukan_internal_poli.no_rawat', '=', 'rujukan_internal_poli_detail.no_rawat')
             ->join('poliklinik', 'rujukan_internal_poli.kd_poli', '=', 'poliklinik.kd_poli')
