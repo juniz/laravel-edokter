@@ -190,28 +190,12 @@
                                     '	</div>' + 
                                     '	<div class="form-group col-md-3">' + 
                                     '		<label for="editkesadaran"> Kesadaran </label>' + 
-                                    '		<div class="input-group">' + 
-                                    '			<div class="dropdown bootstrap-select form-control">' + 
                                     '				<select id="editkesadaran" name="editkesadaran" class="form-control" tabindex="-98">' + 
                                     '					<option>Compos Mentis</option>' + 
                                     '					<option>Somnolence</option>' + 
                                     '					<option>Sopor</option>' + 
                                     '					<option>Coma</option>' + 
                                     '				</select>' + 
-                                    '				<button type="button" class="btn dropdown-toggle btn-light" data-toggle="dropdown" role="combobox" aria-owns="bs-select-2" aria-haspopup="listbox" aria-expanded="false" data-id="editkesadaran" title="Compos Mentis">' + 
-                                    '					<div class="filter-option">' + 
-                                    '						<div class="filter-option-inner">' + 
-                                    '							<div class="filter-option-inner-inner">Compos Mentis</div>' + 
-                                    '						</div>' + 
-                                    '					</div>' + 
-                                    '				</button>' + 
-                                    '				<div class="dropdown-menu ">' + 
-                                    '					<div class="inner show" role="listbox" id="bs-select-2" tabindex="-1">' + 
-                                    '						<ul class="dropdown-menu inner show" role="presentation"></ul>' + 
-                                    '					</div>' + 
-                                    '				</div>' + 
-                                    '			</div>' + 
-                                    '		</div>' + 
                                     '	</div>' + 
                                     '</div>' + 
                                     '<div class="form-group col-md-12">' + 
