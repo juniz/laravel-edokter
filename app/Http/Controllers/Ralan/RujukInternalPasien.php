@@ -36,7 +36,7 @@ class RujukInternalPasien extends Controller
 
     public function getRujukanInternal($noRawat)
     {
-        dd($noRawat);
+        // dd($noRawat);
         return DB::table('rujukan_internal_poli')
             ->join('rujukan_internal_poli_detail', 'rujukan_internal_poli.no_rawat', '=', 'rujukan_internal_poli_detail.no_rawat')
             ->join('poliklinik', 'rujukan_internal_poli.kd_poli', '=', 'poliklinik.kd_poli')
