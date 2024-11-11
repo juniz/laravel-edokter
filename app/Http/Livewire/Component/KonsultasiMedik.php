@@ -10,6 +10,7 @@ class KonsultasiMedik extends Component
 {
     use LivewireAlert;
     public $noRawat;
+    public $noRm;
     public $tanggal;
     public $jenis_permintaan;
     public $list_jenis_permintaan;
@@ -20,11 +21,13 @@ class KonsultasiMedik extends Component
     public $list_data_konsultasi = [];
     public $list_dokter;
     public $no_permintaan;
+    public $riwayatRujukan;
     public $modeEdit = false;
 
-    public function mount($noRawat)
+    public function mount($noRawat, $noRm)
     {
         $this->noRawat = $noRawat;
+        $this->noRm = $noRm;
         $this->tanggal = date('Y-m-d H:i:s');
         $this->list_jenis_permintaan = [
             'Konsultasi',
@@ -37,6 +40,7 @@ class KonsultasiMedik extends Component
         $this->kd_dokter = session()->get('username');
         // $this->getDataListKonsultasi();
         $this->getListDokter();
+        $this->getRujukan();
         // dd($this->generateNoPermintaan());
     }
 
@@ -44,6 +48,35 @@ class KonsultasiMedik extends Component
     {
         $this->getDataListKonsultasi();
         $this->getListDokter();
+        $this->getRujukan();
+    }
+
+    public function getRujukan()
+    {
+        $rm = $this->noRawat;
+        $data = DB::table('rujukan_internal_poli')
+            ->join('poliklinik', 'poliklinik.kd_poli', '=', 'rujukan_internal_poli.kd_poli')
+            ->join('dokter', 'dokter.kd_dokter', '=', 'rujukan_internal_poli.kd_dokter')
+            ->join('rujukan_internal_poli_detail', 'rujukan_internal_poli_detail.no_rawat', '=', 'rujukan_internal_poli.no_rawat')
+            ->join('reg_periksa', 'reg_periksa.no_rawat', '=', 'rujukan_internal_poli.no_rawat')
+            ->where('reg_periksa.no_rkm_medis', $this->noRm)
+            // ->where('rujukan_internal_poli.kd_dokter', $kdDokter)
+            // ->where('rujukan_internal_poli.kd_poli', $kdPoli)
+            ->select('rujukan_internal_poli.no_rawat', 'poliklinik.nm_poli', 'dokter.nm_dokter', 'rujukan_internal_poli_detail.konsul', 'rujukan_internal_poli_detail.pemeriksaan', 'rujukan_internal_poli_detail.diagnosa', 'rujukan_internal_poli_detail.saran', 'reg_periksa.tgl_registrasi')
+            ->orderByDesc('reg_periksa.tgl_registrasi')
+            ->get();
+        // dd($data);
+        $this->riwayatRujukan = $data;
+    }
+
+    public function getPerujuk($noRawat)
+    {
+        $data = DB::table('reg_periksa')
+            ->join('dokter', 'dokter.kd_dokter', '=', 'reg_periksa.kd_dokter')
+            ->where('reg_periksa.no_rawat', $noRawat)
+            ->select('dokter.nm_dokter')
+            ->first();
+        return $data->nm_dokter;
     }
 
     public function render()

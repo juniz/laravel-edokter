@@ -22,6 +22,52 @@
         <x-ui.textarea id="uraian_konsultasi" label="Uraian Konsultasi" model="uraian_konsultasi" rows='5' />
         <button type="submit" class="btn btn-primary">Simpan</button>
     </form>
+    @if(count($riwayatRujukan) != 0)
+    <h5 class="mt-4">Riwayat Rujukan Internal</h5>
+    @foreach($riwayatRujukan as $data)
+            <x-adminlte-card title="Konsul / Rujukan Internal" theme="dark" theme-mode="outline" class="mt-4">
+                <table class="table table-bordered table-striped mb-4">
+                    <tr>
+                        <th>No. Rawat</th>
+                        <th>{{$data->no_rawat}}</th>
+                    </tr>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>{{$data->tgl_registrasi}}</th>
+                    </tr>
+                    <tr>
+                        <th>Dokter Perujuk</th>
+                        <th>{{ $this->getPerujuk($data->no_rawat) }}</th>
+                    </tr>
+                    <tr>
+                        <th>Poli Tujuan</th>
+                        <th>{{$data->nm_poli}}</th>
+                    </tr>
+                    <tr>
+                        <th>Dokter Tujuan</th>
+                        <th>{{$data->nm_dokter}}</th>
+                    </tr>
+                    <tr>
+                        <th>Konsul</th>
+                        <th>{{$data->konsul}}</th>
+                    </tr>
+                    <tr>
+                        <th>Pemeriksaan</th>
+                        <th>{{$data->pemeriksaan}}</th>
+                    </tr>
+                    <tr>
+                        <th>Diagnosa</th>
+                        <th>{{$data->diagnosa}}</th>
+                    </tr>
+                    <tr>
+                        <th>Saran</th>
+                        <th>{{$data->saran}}</th>
+                    </tr>
+                </table>
+                <x-adminlte-button class="d-flex ml-auto" id="rujukButtonHapus" theme="danger" label="Hapus" onclick="deleteRujukan()" />
+            </x-adminlte-card>
+        @endforeach
+    @endif
     <h5 class="mt-3">Data Permintaan Konsultasi Medik</h5>
     <div wire:init='getDataListKonsultasi' class="table-responsive">
         <table class="table">

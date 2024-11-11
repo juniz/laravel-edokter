@@ -100,7 +100,7 @@
                 <x-ralan.catatan :no-rawat="request()->get('no_rawat')" /> --}}
                 <livewire:ralan.catatan :noRawat="request()->get('no_rawat')" :noRm="request()->get('no_rm')" />
                 <x-adminlte-card title="Konsultasi Medik" icon='fas fa-user' theme="info" maximizable collapsible="collapsed">
-                    <livewire:component.konsultasi-medik :no-rawat="request()->get('no_rawat')" />
+                    <livewire:component.konsultasi-medik :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" />
                 </x-adminlte-card>
                 {{-- <x-ralan.rujuk-internal :no-rawat="request()->get('no_rawat')" /> --}}
                 {{--
