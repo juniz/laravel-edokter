@@ -8,7 +8,7 @@
 
 @section('content')
 {{-- <x-ralan.riwayat :no-rawat="$noRawat" /> --}}
-<x-ralan.riwayat :no-rawat="request()->get('no_rawat')" />
+{{-- <x-ralan.riwayat :no-rawat="request()->get('no_rawat')" /> --}}
 <div class="row">
     <div class="col-md-4">
         <x-ralan.pasien :no-rawat="request()->get('no_rawat')" />
@@ -68,6 +68,14 @@
             </div>
         </x-adminlte-card>
     </div>
+    {{-- <x-adminlte-modal wire:ignore.self id="modalRiwayatPemeriksaanRalan" title="Riwayat Pemeriksaan" size="lg" theme="info" v-centered
+    static-backdrop scrollable>
+    <livewire:component.riwayat :noRawat="$noRawat" />
+    
+    <x-slot name="footerSlot">
+        <x-adminlte-button theme="danger" label="Tutup" data-dismiss="modal" />
+    </x-slot>
+</x-adminlte-modal> --}}
 </div>
 @stop
 
@@ -83,6 +91,10 @@
 
 @push('js')
 <script>
+    $(document).on('click', '[data-toggle="lightbox"]', function(event) {
+                event.preventDefault();
+                $(this).ekkoLightbox();
+        });
     function updateRujukan(e){
         e.preventDefault();
         let data = {

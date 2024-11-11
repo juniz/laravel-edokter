@@ -16,9 +16,9 @@ class RujukInternalPasien extends Controller
         $this->middleware('loginauth');
         $this->middleware('decrypt');
         // dd($request->get('no_rawat'));
-        $this->encryptNoRawat = $this->encryptData($request->get('no_rawat'));
-        $this->noRawat = $request->get('no_rawat');
-        // dd($this->noRawat);
+        $this->encryptNoRawat = $request->get('no_rawat');
+        $this->noRawat = @$this->decryptData($request->get('no_rawat'));
+        // dd($this->encryptNoRawat);
         $this->noRM = $request->get('no_rm');
         // dd($this->noRM);
     }
@@ -37,13 +37,14 @@ class RujukInternalPasien extends Controller
     public function getRujukanInternal($noRawat)
     {
         // dd($noRawat);
-        return DB::table('rujukan_internal_poli')
+        $data = DB::table('rujukan_internal_poli')
             ->join('rujukan_internal_poli_detail', 'rujukan_internal_poli.no_rawat', '=', 'rujukan_internal_poli_detail.no_rawat')
             ->join('poliklinik', 'rujukan_internal_poli.kd_poli', '=', 'poliklinik.kd_poli')
             ->join('dokter', 'rujukan_internal_poli.kd_dokter', '=', 'dokter.kd_dokter')
             ->where('rujukan_internal_poli.no_rawat', $noRawat)
             ->select('rujukan_internal_poli.no_rawat', 'dokter.nm_dokter', 'poliklinik.nm_poli', 'rujukan_internal_poli_detail.konsul', 'rujukan_internal_poli_detail.pemeriksaan', 'rujukan_internal_poli_detail.diagnosa', 'rujukan_internal_poli_detail.saran')
             ->first();
+        return $data;
     }
 
 
