@@ -33,7 +33,7 @@ class PasienRalanController extends Controller
         $tanggal = Request::get('tanggal') ?? date('Y-m-d');
         $heads = ['No. Reg', 'Nama Pasien', 'No Rawat', 'Telp', 'Dokter', 'Status'];
         $headsInternal = ['No. Reg', 'No. RM', 'Nama Pasien', 'Dokter', 'Status'];
-        if ($kd_dokter == '86062112' || $kd_dokter == 'SP0000005' || $kd_dokter == 'SP0000002' || $kd_dokter == 'SP0000006' || $kd_sps == 'S004') {
+        if ($kd_dokter == '86062112' || $kd_dokter == 'SP0000005' || $kd_dokter == 'SP0000002' || $kd_dokter == 'SP0000006') {
             $data = DB::table('reg_periksa')
                 ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
                 ->join('dokter', 'dokter.kd_dokter', '=', 'reg_periksa.kd_dokter')
