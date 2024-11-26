@@ -82,7 +82,7 @@
             Salam Sejawat,<br>
             <br><br><br>
             <u>({{ $dokter->nm_dokter }})</u><br>
-            STR. {{ $dokter->no_ijn_praktek }}
+            SIP. {{ $dokter->no_ijn_praktek }}
         </div>
     </div>
     <script>
