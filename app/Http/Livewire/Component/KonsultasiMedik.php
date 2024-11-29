@@ -23,6 +23,8 @@ class KonsultasiMedik extends Component
     public $no_permintaan;
     public $riwayatRujukan;
     public $modeEdit = false;
+    public $jawaban_diagnosa_kerja;
+    public $jawaban_uraian_konsultasi;
 
     public function mount($noRawat, $noRm)
     {
@@ -98,7 +100,8 @@ class KonsultasiMedik extends Component
             ->join('reg_periksa', 'konsultasi_medik.no_rawat', '=', 'reg_periksa.no_rawat')
             ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
             ->join('dokter', 'konsultasi_medik.kd_dokter_dikonsuli', '=', 'dokter.kd_dokter')
-            ->where('konsultasi_medik.no_rawat', $this->noRawat)
+            ->where('pasien.no_rkm_medis', $this->noRm)
+            ->where('konsultasi_medik.kd_dokter', session()->get('username'))
             ->select('konsultasi_medik.*', 'pasien.nm_pasien', 'dokter.nm_dokter')
             ->get();
         $this->list_data_konsultasi = $data;
@@ -139,6 +142,20 @@ class KonsultasiMedik extends Component
         $this->diagnosa_kerja = $data->diagnosa_kerja;
         $this->uraian_konsultasi = $data->uraian_konsultasi;
         $this->modeEdit = true;
+    }
+
+    public function getJawaban($no_permintaan)
+    {
+        $this->jawaban_diagnosa_kerja = '';
+        $this->jawaban_uraian_konsultasi = '';
+
+        $data = DB::table('jawaban_konsultasi_medik')
+            ->where('no_permintaan', $no_permintaan)
+            ->first();
+
+        $this->jawaban_diagnosa_kerja = $data->diagnosa_kerja;
+        $this->jawaban_uraian_konsultasi = $data->uraian_jawaban;
+        $this->emit('openJawabanKonsultasi', $no_permintaan);
     }
 
     public function simpan()

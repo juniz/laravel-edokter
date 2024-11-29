@@ -85,7 +85,7 @@
             <tbody>
                 @forelse($list_data_konsultasi as $item)
                 <tr>
-                    <td>{{ $item->no_permintaan }}</td>
+                    <td><button class="btn btn-secondary" wire:click='getJawaban("{{$item->no_permintaan}}")'>{{ $item->no_permintaan }}</button></td>
                     <td>{{ $item->nm_pasien }}</td>
                     <td>{{ $item->nm_dokter }}</td>
                     <td>{{ $item->jenis_permintaan }}</td>
@@ -106,4 +106,19 @@
             </tbody>
         </table>
     </div>
+    <x-adminlte-modal wire:ignore.self id="modal-jawaban-konsul" title="Jawaban Konsultasi Medik" size="xl" v-centered static-backdrop scrollable>
+        {{-- <livewire:component.skrining.tbc /> --}}
+        <h5 class="text-bold">Diagnosa Kerja</h5>
+        <p>{{ $jawaban_diagnosa_kerja ?? '-' }}</p>
+        <h5 class="text-bold">Uraian Jawaban</h5>
+        <p>{{ $jawaban_uraian_konsultasi ?? '-' }}</p>
+    </x-adminlte-modal>
 </div>
+
+@push('js')
+<script>
+    Livewire.on('openJawabanKonsultasi', function(event){
+        $('#modal-jawaban-konsul').modal('show');
+    })
+</script>
+@endpush
