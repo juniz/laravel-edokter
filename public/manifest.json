@@ -1,17 +1,17 @@
 {
-    "name": "E-DOKTER",
-    "short_name": "E-DOKTER",
-    "start_url": "/",
-    "background_color": "#0275d8",
-    "description": "E-DOKTER",
-    "display": "fullscreen",
-    "theme_color": "#0275d8",
-    "icons": [
-        {
-            "src": "assets/logo.PNG",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
-        }
-    ]
+	"name": "E-DOKTER",
+	"short_name": "E-DOKTER",
+	"start_url": "/",
+	"background_color": "#0275d8",
+	"description": "E-DOKTER",
+	"display": "minimal-ui",
+	"theme_color": "#0275d8",
+	"icons": [
+		{
+			"src": "assets/logo.PNG",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+		}
+	]
 }

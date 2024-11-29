@@ -147,6 +147,10 @@
     $('.btn-foto-persetujuan-penolakan').on('click', function(event){
         var nopernyataan = @this.nopernyataan;
         var no_rawat = @this.no_rawat;
+        if(nopernyataan == null || no_rawat == null){
+            alert('Data tidak ditemukan');
+            return;
+        }
         window.open("{{ url('/persetujuan-penolakan-tindakan') }}?nopernyataan="+nopernyataan+"&no_rawat="+no_rawat, '_blank');
     })
 </script>
