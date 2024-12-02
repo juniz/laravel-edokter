@@ -16,7 +16,7 @@ class KonsultasiMedikTable extends DataTableComponent
 
     public function mount()
     {
-        $this->setFilter('tanggal', date('Y-m-d'));
+        // $this->setFilter('tanggal', date('Y-m-d'));
     }
 
     public function configure(): void
@@ -38,6 +38,7 @@ class KonsultasiMedikTable extends DataTableComponent
             ->with('jawaban')
             ->with('dokter')
             ->with('regPeriksa')
+            ->orderBy('konsultasi_medik.tanggal', 'desc')
             ->where(function ($query) {
                 $query->where('konsultasi_medik.kd_dokter', session()->get('username'))
                     ->orWhere('konsultasi_medik.kd_dokter_dikonsuli', session()->get('username'));
@@ -58,8 +59,10 @@ class KonsultasiMedikTable extends DataTableComponent
     {
         return [
             Column::make("No permintaan", "no_permintaan")
+                ->searchable()
                 ->sortable(),
             Column::make("Pasien", "regPeriksa.pasien.nm_pasien")
+                ->searchable()
                 ->sortable(),
             Column::make("Tanggal", "tanggal")
                 ->sortable(),
