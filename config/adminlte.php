@@ -283,6 +283,11 @@ return [
             'url'        => '/ranap/pasien',
         ],
         [
+            'text'       => 'IGD',
+            'icon'       => 'fas fa-fw fa-bed',
+            'url'        => '/igd',
+        ],
+        [
             'text'       => 'Konsultasi Medik',
             'icon'       => 'fas fa-fw fa-user',
             'url'        => '/konsultasi',

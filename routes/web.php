@@ -41,6 +41,10 @@ Route::get('/ralan/pasien', [
     App\Http\Controllers\Ralan\PasienRalanController::class,
     'index',
 ])->name('ralan.pasien');
+Route::get('/igd', [
+    App\Http\Controllers\Ralan\PasienRalanController::class,
+    'igd',
+])->name('igd');
 Route::get('/ralan/pemeriksaan', [
     App\Http\Controllers\Ralan\PemeriksaanRalanController::class,
     'index',

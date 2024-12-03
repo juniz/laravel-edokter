@@ -89,7 +89,8 @@ class Resume extends Component
             ->orderByDesc('jam_rawat')
             ->orderByDesc('tgl_perawatan')
             ->first();
-        $this->perawatan = $data->pemeriksaan ?? '';
+        $perawatan = $data?->pemeriksaan . "\r\n" . $data?->instruksi;
+        $this->perawatan = $perawatan ?? '';
     }
 
     public function getKeluhanUtama()
