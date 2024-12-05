@@ -76,7 +76,7 @@
                                     $noRM = App\Http\Controllers\Ralan\PasienRalanController::encryptData($row->no_rkm_medis);
                                     @endphp
                                     @if(session()->get('kd_poli') == 'IGDK')
-                                    <a @if(!empty($row->diagnosa_utama)) class="text-white" @else class="text-white" @endif href="{{route('ralan.pemeriksaan', ['no_rawat' => $noRawat, 'no_rm' => $noRM])}} ">{{$row->nm_pasien}}</a>
+                                    <a @if(!empty($row->diagnosa_utama)) class="text-white" @else class="text-white" @endif @if($row->status_lanjut == 'Ralan') href="{{route('ralan.pemeriksaan', ['no_rawat' => $noRawat, 'no_rm' => $noRM])}} " @else href="{{route('ranap.pemeriksaan', ['no_rawat' => $noRawat, 'no_rm' => $noRM, 'bangsal' => $row->kd_bangsal])}}" @endif>{{$row->nm_pasien}}</a>
                                     @else
                                     <a @if($row->stts == 'Sudah') class="text-white" @else class="text-primary" @endif href="{{route('ralan.rujuk-internal', ['no_rawat' => $noRawat, 'no_rm' => $noRM])}} ">{{$row->nm_pasien}}
                                     </a>

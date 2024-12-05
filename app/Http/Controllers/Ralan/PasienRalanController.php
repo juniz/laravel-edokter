@@ -106,9 +106,11 @@ class PasienRalanController extends Controller
             ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
             ->join('rujukan_internal_poli', 'reg_periksa.no_rawat', '=', 'rujukan_internal_poli.no_rawat')
             ->join('dokter', 'dokter.kd_dokter', '=', 'rujukan_internal_poli.kd_dokter')
+            ->leftJoin('kamar_inap', 'reg_periksa.no_rawat', '=', 'kamar_inap.no_rawat')
+            ->leftJoin('kamar', 'kamar.kd_kamar', '=', 'kamar_inap.kd_kamar')
             ->where('rujukan_internal_poli.kd_poli', session()->get('kd_poli'))
             ->where('reg_periksa.tgl_registrasi', $tanggal)
-            ->select('reg_periksa.no_reg', 'reg_periksa.no_rkm_medis', 'reg_periksa.no_rawat', 'pasien.nm_pasien', 'dokter.nm_dokter', 'reg_periksa.stts')
+            ->select('reg_periksa.no_reg', 'reg_periksa.no_rkm_medis', 'reg_periksa.no_rawat', 'pasien.nm_pasien', 'dokter.nm_dokter', 'reg_periksa.stts', 'reg_periksa.status_lanjut', 'kamar.kd_bangsal')
             ->get();
     }
 
