@@ -59,8 +59,6 @@ class BacaanRadiologi extends Component
                     ->where('no_rawat', $this->no_rawat)
                     ->update([
                         'hasil' => $this->bacaanRadiologi,
-                        'tgl_periksa' => date('Y-m-d'),
-                        'jam' => date('H:i:s')
                     ]);
             } else {
                 DB::table('hasil_radiologi')
