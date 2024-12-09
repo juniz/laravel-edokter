@@ -112,7 +112,7 @@
 
         function getBerkasRM() {
             $.ajax({
-                url: "/berkas/{{$data->no_rawat}}",
+                url: "/berkas/{{$data->no_rawat}}/{{$data->no_rkm_medis}}",
                 type: "GET",
                 beforeSend:function() {
                 Swal.fire({
