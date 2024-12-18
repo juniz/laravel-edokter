@@ -109,6 +109,7 @@ class Resume extends Component
             ->join('reg_periksa', 'resume_pasien.no_rawat', '=', 'reg_periksa.no_rawat')
             ->join('pasien', 'pasien.no_rkm_medis', '=', 'reg_periksa.no_rkm_medis')
             ->where('pasien.no_rkm_medis', $this->noRm)
+            ->orderByDesc('reg_periksa.tgl_registrasi')
             ->first();
 
         $this->diagnosa = $diagnosa->diagnosa_utama ?? '';

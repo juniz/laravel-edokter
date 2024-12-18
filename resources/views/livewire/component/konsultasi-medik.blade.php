@@ -106,7 +106,7 @@
             </tbody>
         </table>
     </div>
-    <x-adminlte-modal wire:ignore.self id="modal-jawaban-konsul" title="Jawaban Konsultasi Medik" size="xl" v-centered static-backdrop scrollable>
+    <x-adminlte-modal wire:ignore.self id="modal-jawaban-konsul" title="Jawaban Konsultasi Medik" size="xl" v-centered scrollable>
         {{-- <livewire:component.skrining.tbc /> --}}
         <h5 class="text-bold">Diagnosa Kerja</h5>
         <p>{{ $jawaban_diagnosa_kerja ?? '-' }}</p>

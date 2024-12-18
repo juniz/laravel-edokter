@@ -1,5 +1,5 @@
 <div>
-    <div wire:init='init' class="d-flex flex-row">
+    <div class="d-flex flex-row">
         <div wire:ignore class="ml-auto">
             <select name="dokter" id="riwayat-dokter" class="form-control">
                 <option value="">Pilih Dokter</option>
@@ -10,7 +10,7 @@
         </div>
     </div>
 
-    <div wire:loading>
+    <div wire:loading wire:target='init'>
         <div class="d-flex flex-row">
             <div class="mx-auto">
                 Loading ...
@@ -383,5 +383,9 @@
     $('#riwayat-dokter').on('change', function () {
         @this.set('selectDokter', $(this).val());
     });
+
+    $('#modalRiwayatPemeriksaanRalan').on('show.bs.modal', function(){
+        Livewire.emit('loadRiwayatPasien');
+    })
 </script>
 @endpush

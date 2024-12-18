@@ -11,6 +11,7 @@ class Riwayat extends Component
     protected $pasien;
     public $data = [];
     public $selectDokter = "";
+    protected $listeners = ['loadRiwayatPasien' => 'init'];
 
     public function mount($noRawat)
     {
