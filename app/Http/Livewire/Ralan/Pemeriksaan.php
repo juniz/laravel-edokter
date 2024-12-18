@@ -61,6 +61,8 @@ class Pemeriksaan extends Component
             ->join('pegawai', 'pemeriksaan_ralan.nip', '=', 'pegawai.nik')
             ->where('no_rawat', $this->noRawat)
             ->select('pemeriksaan_ralan.*', 'pegawai.nama')
+            ->orderByDesc('tgl_perawatan')
+            ->orderByDesc('jam_rawat')
             ->get();
     }
 
