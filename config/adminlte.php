@@ -247,6 +247,19 @@ return [
             'topnav_right' => true,
         ],
         [
+            'type' => 'navbar-notification',
+            'id' => 'my-notification',
+            'icon' => 'fas fa-bell',
+            'url' => 'konsultasi',
+            'topnav_right' => true,
+            'dropdown_mode' => true,
+            'dropdown_flabel' => 'Semua Konsultasi Medik',
+            'update_cfg' => [
+                'url' => 'notifications/get',
+                'period' => 60,
+            ],
+        ],
+        [
             'type'         => 'fullscreen-widget',
             'topnav_right' => true,
         ],

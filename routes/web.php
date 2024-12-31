@@ -236,3 +236,8 @@ Route::get('/konsultasi/jawaban/{no_permintaan}', [App\Http\Controllers\Konsulta
 Route::post('/konsultasi/jawaban/{no_permintaan}', [App\Http\Controllers\KonsultasiMedikController::class, 'simpan'])->name('konsultasi.jawaban.simpan')->middleware('loginauth');
 
 Route::match(['get', 'post'], '/botman', [App\Http\Controllers\BotManController::class, 'bot']);
+
+Route::get(
+    'notifications/get',
+    [App\Http\Controllers\NotificationController::class, 'getNotificationsData']
+)->name('notifications.get');

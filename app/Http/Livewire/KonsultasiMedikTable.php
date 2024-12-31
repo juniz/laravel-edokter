@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Rappasoft\LaravelLivewireTables\Views\Filters\DateFilter;
 use App\Models\Dokter;
 use Illuminate\Support\Str;
+use Rappasoft\LaravelLivewireTables\Views\Filters\SelectFilter;
 
 class KonsultasiMedikTable extends DataTableComponent
 {
