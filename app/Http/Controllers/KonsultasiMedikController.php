@@ -10,7 +10,7 @@ class KonsultasiMedikController extends Controller
 {
     public function jawaban($no_permintaan)
     {
-        $konsultasi = KonsultasiMedik::find($no_permintaan);
+        $konsultasi = KonsultasiMedik::with('dokter')->find($no_permintaan);
         $jawaban = JawabanKonsultasiMedik::find($no_permintaan);
         return view('konsultasi.jawab', compact('konsultasi', 'jawaban'));
     }

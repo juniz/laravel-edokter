@@ -21,6 +21,8 @@
         <x-adminlte-card theme="info" theme-mode="outline">
             <form method="POST" action="{{ route('konsultasi.jawaban.simpan', $konsultasi->no_permintaan) }}">
                 @csrf
+                <x-adminlte-input name="dokter" label="Dari Dokter" value="{{ $konsultasi->dokter->nm_dokter }}" disabled />
+                <x-adminlte-input name="jenis_permintaan" label="Jenis Permintaan" value="{{ $konsultasi->jenis_permintaan }}" disabled />
                 <x-adminlte-input name="diagnosa_kerja" label="Diagnosa Kerja" value="{{ $konsultasi->diagnosa_kerja }}" disabled />
                 <x-adminlte-textarea name="uraian_konsultasi" label="Uraian Konsultasi" rows='10' disabled>
                     {{ $konsultasi->uraian_konsultasi }}
