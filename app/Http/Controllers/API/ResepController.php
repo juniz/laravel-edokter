@@ -118,7 +118,7 @@ class ResepController extends Controller
                     DB::table('resep_iter')->upsert(
                         [
                             'no_rawat' => $noRawat,
-                            'catatan_iter' => $iter,
+                            'catatan_iter' => $iter ?? 'Na',
                         ],
                         ['no_rawat'],
                         ['catatan_iter']
