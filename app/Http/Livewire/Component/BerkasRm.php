@@ -29,8 +29,8 @@ class BerkasRm extends Component
     {
         return DB::table('berkas_digital_perawatan')
             ->whereRaw(
-                "no_rawat IN (SELECT no_rawat FROM reg_periksa WHERE no_rkm_medis = :noRM) AND lokasi_file <> :file AND (kode = :kode OR kode = :lab)",
-                ['noRM' => $this->rm, 'file' => 'pages/upload/', 'kode' => 'B00', 'lab' => 'B05']
+                "no_rawat IN (SELECT no_rawat FROM reg_periksa WHERE no_rkm_medis = :noRM) AND lokasi_file <> :file AND (kode = :kode OR kode = :lab OR kode = :rad)",
+                ['noRM' => $this->rm, 'file' => 'pages/upload/', 'kode' => 'B00', 'lab' => 'B05', 'rad' => 'B06']
             )
             ->orderBy('no_rawat', 'desc')
             ->get();
