@@ -24,13 +24,13 @@
                             </button>
                         </div>
                     </div>
-                    {{-- @error('keluhan') <span class="text-danger">{{ $message }}</span> @enderror --}}
+                    @error('keluhan') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-6">
                     <label for="perawatan">Jalannya Penyakit Selama Perawatan</label>
                     <textarea type="text" rows="3" class="form-control" wire:model.defer='perawatan' id="perawatan"
                         name="perawatan"></textarea>
-                    {{-- @error('perawatan') <span class="text-danger">{{ $message }}</span> @enderror --}}
+                    @error('perawatan') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
             </div>
             <div class="row">

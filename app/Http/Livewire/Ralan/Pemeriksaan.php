@@ -115,11 +115,17 @@ class Pemeriksaan extends Component
         $this->validate([
             'keluhan' => 'required|min:3',
             'pemeriksaan' => 'required|min:3',
+            'penilaian' => 'required',
+            'instruksi' => 'required',
+            'rtl' => 'required',
         ], [
             'keluhan.required' => 'Subjek tidak boleh kosong',
             'keluhan.min' => 'Subjek minimal 3 karakter',
             'pemeriksaan.required' => 'Objek tidak boleh kosong',
             'pemeriksaan.min' => 'Objek minimal 3 karakter',
+            'penilaian.required' => 'Penilaian tidak boleh kosong',
+            'instruksi.required' => 'Instruksi tidak boleh kosong',
+            'rtl.required' => 'RTL tidak boleh kosong',
         ]);
         try {
             DB::beginTransaction();
@@ -151,7 +157,7 @@ class Pemeriksaan extends Component
             DB::commit();
             $this->getListPemeriksaan();
             // $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse('Pemeriksaan berhasil ditambahkan'));
-        } catch (\Illuminate\Database\QueryException $ex) {
+        } catch (\Exception $ex) {
             DB::rollback();
             $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse($ex->getMessage() ?? 'Pemeriksaan gagal ditambahkan', 'error'));
         }

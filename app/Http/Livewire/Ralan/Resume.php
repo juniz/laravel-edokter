@@ -89,7 +89,14 @@ class Resume extends Component
             ->orderByDesc('jam_rawat')
             ->orderByDesc('tgl_perawatan')
             ->first();
-        $perawatan = $data?->pemeriksaan . "\r\n" . $data?->instruksi;
+        $nyeri = DB::table('penilaian_ulang_nyeri')
+            ->where('no_rawat', $this->noRawat)
+            ->first();
+        $isi_nyeri = ", nyeri : " . $nyeri?->nyeri . ", provokes : " . $nyeri?->provokes . " " . $nyeri?->ket_provokes . ", quality : " . $nyeri?->quality . " " . $nyeri?->ket_quality . ", lokasi : " . $nyeri?->lokasi . ", durasi : " . $nyeri?->durasi . ", nyeri_hilang : " . $nyeri?->nyeri_hilang . " " . $nyeri?->ket_nyeri;
+        $perawatan = $data?->pemeriksaan . ", " . $data?->instruksi . ", tensi : " . $data?->tensi . ", nadi : " . $data?->nadi . ", suhu : " . $data?->suhu_tubuh . ", rr : " . $data?->respirasi;
+        if ($nyeri) {
+            $this->perawatan = $perawatan . $isi_nyeri;
+        }
         $this->perawatan = $perawatan ?? '';
     }
 
@@ -225,7 +232,20 @@ class Resume extends Component
 
     public function simpanResume()
     {
-        // $this->validate();
+        $this->validate(
+            [
+                'keluhan_utama' => 'required|min:10',
+                'jalannya_penyakit' => 'required|min:10',
+                'diag_utama' => 'required',
+            ],
+            [
+                'keluhan_utama.required' => 'Keluhan utama tidak boleh kosong',
+                'jalannya_penyakit.required' => 'Jalannya penyakit tidak boleh kosong',
+                'diag_utama.required' => 'Diagnosa utama tidak boleh kosong',
+                'keluhan_utama.min' => 'Keluhan utama minimal 10 karakter',
+                'jalannya_penyakit.min' => 'Jalannya penyakit minimal 10 karakter',
+            ]
+        );
 
         $data = [
             'no_rawat' => $this->noRawat,
