@@ -92,7 +92,7 @@ class Resume extends Component
         $nyeri = DB::table('penilaian_ulang_nyeri')
             ->where('no_rawat', $this->noRawat)
             ->first();
-        $isi_nyeri = ", nyeri : " . $nyeri?->nyeri . ", provokes : " . $nyeri?->provokes . " " . $nyeri?->ket_provokes . ", quality : " . $nyeri?->quality . " " . $nyeri?->ket_quality . ", lokasi : " . $nyeri?->lokasi . ", durasi : " . $nyeri?->durasi . ", nyeri_hilang : " . $nyeri?->nyeri_hilang . " " . $nyeri?->ket_nyeri;
+        $isi_nyeri = ", skala nyeri : " . $nyeri?->skala_nyeri . ", durasi : " . $nyeri?->durasi;
         $perawatan = $data?->pemeriksaan . ", " . $data?->instruksi . ", tensi : " . $data?->tensi . ", nadi : " . $data?->nadi . ", suhu : " . $data?->suhu_tubuh . ", rr : " . $data?->respirasi;
         if ($nyeri) {
             $this->perawatan = $perawatan . $isi_nyeri;
