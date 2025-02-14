@@ -127,6 +127,7 @@ class Pemeriksaan extends Component
             'instruksi.required' => 'Instruksi tidak boleh kosong',
             'rtl.required' => 'RTL tidak boleh kosong',
         ]);
+
         try {
             DB::beginTransaction();
             DB::table('pemeriksaan_ralan')

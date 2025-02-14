@@ -15,17 +15,20 @@
         <div class="row">
             <div class="form-group col-md-6">
                 <label for="">Asesmen</label>
-                <textarea wire:model.defer='penilaian' class="form-control" name="" id="" rows="2"></textarea>
+                <textarea wire:model.defer='penilaian' class="form-control @error('penilaian') is-invalid @enderror" name="" id="" rows="2"></textarea>
+                @error('penilaian') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
             <div class="form-group col-md-6">
                 <label for="">Instruksi</label>
-                <textarea wire:model.defer='instruksi' class="form-control" name="" id="" rows="2"></textarea>
+                <textarea wire:model.defer='instruksi' class="form-control @error('instruksi') is-invalid @enderror" name="" id="" rows="2"></textarea>
+                @error('instruksi') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
         </div>
         <div class="row">
             <div class="form-group col-md-6">
                 <label for="">Plan</label>
-                <textarea wire:model.defer='rtl' class="form-control" name="" id="" rows="1"></textarea>
+                <textarea wire:model.defer='rtl' class="form-control @error('rtl') is-invalid @enderror" name="" id="" rows="1"></textarea>
+                @error('rtl') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
             <div class="form-group col-md-6">
                 <label for="">Alergi</label>
