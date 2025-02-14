@@ -75,7 +75,7 @@
                 <div class="form-group col-md-8">
                     <label for="diagnosa">Diagnosa Utama</label>
                     <input type="text" class="form-control" wire:model.defer='diagnosa' id="diagnosa" name="diagnosa">
-                    {{-- @error('diagnosa') <span class="text-danger">{{ $message }}</span> @enderror --}}
+                    @error('diagnosa') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-4">
                     <label for="diagnosa">Kode ICD</label>

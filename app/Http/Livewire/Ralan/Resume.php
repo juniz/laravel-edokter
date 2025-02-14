@@ -234,16 +234,16 @@ class Resume extends Component
     {
         $this->validate(
             [
-                'keluhan_utama' => 'required|min:10',
-                'jalannya_penyakit' => 'required|min:10',
-                'diag_utama' => 'required',
+                'keluhan' => 'required|min:10',
+                'perawatan' => 'required|min:10',
+                'diagnosa' => 'required',
             ],
             [
-                'keluhan_utama.required' => 'Keluhan utama tidak boleh kosong',
-                'jalannya_penyakit.required' => 'Jalannya penyakit tidak boleh kosong',
-                'diag_utama.required' => 'Diagnosa utama tidak boleh kosong',
-                'keluhan_utama.min' => 'Keluhan utama minimal 10 karakter',
-                'jalannya_penyakit.min' => 'Jalannya penyakit minimal 10 karakter',
+                'keluhan.required' => 'Keluhan utama tidak boleh kosong',
+                'perawatan.required' => 'Jalannya penyakit tidak boleh kosong',
+                'diagnosa.required' => 'Diagnosa utama tidak boleh kosong',
+                'keluhan.min' => 'Keluhan utama minimal 10 karakter',
+                'perawatan.min' => 'Jalannya penyakit minimal 10 karakter',
             ]
         );
 
