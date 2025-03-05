@@ -284,7 +284,7 @@
                         </x-adminlte-card>
                         @endif
 
-                        @if(count($radiologi)>0)
+                        @if(count($radiologi)>0 || !empty($gambarRadiologi))
                         <x-adminlte-card theme="dark" title="Radiologi" collapsible="collapsed" maximizable>
                             <x-adminlte-card theme="dark" title="Gambar Radiologi" collapsible="collapsed">
                                 <div class="container">
@@ -299,6 +299,7 @@
                                     </div>
                                 </div>
                             </x-adminlte-card>
+                            @if(count($radiologi)>0)
                             @foreach($radiologi as $radiologi)
                             <x-adminlte-card title="{{$radiologi->jam}}" theme="dark"
                                 footer-class="bg-dark border-top rounded border-light">
@@ -309,6 +310,7 @@
                                 </x-slot> --}}
                             </x-adminlte-card>
                             @endforeach
+                            @endif
                         </x-adminlte-card>
                         @endif
 
