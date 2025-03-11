@@ -28,19 +28,10 @@
             $('#{{$id}}').select2({
                 theme: 'bootstrap4',
                 placeholder: 'Pilih {{$label}}',
-                ajax: {
-                    url: '{{$ajax}}',
-                    dataType: 'json',
-                    delay: 250,
-                    processResults: function (data) {
-                        return {
-                            results: data
-                        };
-                    },
-                    cache: true,
-                    minimumInputLength: 3
-                }
             });
+        });
+        $('#{{$id}}').on('change', function(e) {
+            @this.set('{{$model}}', e.target.value);
         });
     </script>
 @endpush

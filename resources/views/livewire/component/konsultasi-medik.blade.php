@@ -2,12 +2,12 @@
     <form wire:submit.prevent='simpan'>
         <div class="row">
             <div class="col-md-6">
-                <x-ui.select id="kd_dokter_dikonsuli" label="Dokter yang Dikonsuli" model="kd_dokter_dikonsuli">
+                <x-ui.select2 id="kd_dokter_dikonsuli" label="Dokter yang Dikonsuli" model="kd_dokter_dikonsuli">
                     <option value="">Pilih Dokter</option>
                     @foreach($list_dokter as $dokter)
                         <option value="{{$dokter->kd_dokter}}">{{$dokter->nm_dokter}}</option>
                     @endforeach
-                </x-ui.select>
+                </x-ui.select2>
             </div>
             <div class="col-md-6">
                 <x-ui.select id='permintaan' label='Permintaan' model='jenis_permintaan'>
