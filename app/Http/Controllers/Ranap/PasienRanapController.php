@@ -68,9 +68,9 @@ class PasienRanapController extends Controller
                     ->where('dpjp_ranap.kd_dokter', $kd_dokter)
                     ->where('kamar_inap.tgl_masuk', $tanggal)
                     ->where(function ($query) {
-                        $query->where('kamar_inap.stts_pulang', 'Pulang')
-                            ->orWhere('kamar_inap.stts_pulang', 'Atas Persetujuan Dokter')
-                            ->orWhere('kamar_inap.stts_pulang', 'Sembuh');
+                        $query->where('kamar_inap.stts_pulang', '<>', '-')
+                            ->orWhere('kamar_inap.stts_pulang', '<>', 'Pindah Kamar')
+                            ->orWhere('kamar_inap.stts_pulang', '<>', 'Status Belum Lengkap');
                     })
                     ->select('pasien.nm_pasien', 'reg_periksa.no_rkm_medis', 'bangsal.nm_bangsal', 'kamar_inap.kd_kamar', 'kamar_inap.tgl_masuk', 'penjab.png_jawab', 'reg_periksa.no_rawat', 'bangsal.kd_bangsal')
                     ->get();
