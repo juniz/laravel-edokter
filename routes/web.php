@@ -241,3 +241,5 @@ Route::get(
     'notifications/get',
     [App\Http\Controllers\NotificationController::class, 'getNotificationsData']
 )->name('notifications.get');
+
+Route::get('temp-konsultasi/', [App\Http\Controllers\KonsultasiMedikController::class, 'jawabanWa'])->name('temp-konsultasi');
