@@ -21,6 +21,12 @@ class Kernel extends ConsoleKernel
         $schedule->command('cek:mjkn')
             ->dailyAt('00:50')
             ->withoutOverlapping();
+
+        $schedule->command('bpjs:finger')
+            ->everyFiveMinutes()
+            ->between('07:00', '15:00')
+            ->timezone('Asia/Jakarta')
+            ->withoutOverlapping();
     }
 
     /**

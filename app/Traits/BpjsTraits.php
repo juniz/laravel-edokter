@@ -11,6 +11,19 @@ use LZCompressor\LZString;
 
 trait BpjsTraits
 {
+    public function requestFinger($subUrl)
+    {
+        $xTimestamp = $this->craeteTimestamp();
+        $res = Http::withHeaders([
+            'X-cons-id' => env('BPJS_CONS_ID'),
+            'X-timestamp' => $xTimestamp,
+            'X-signature' => $this->createSign($xTimestamp, env('BPJS_CONS_ID')),
+            'user_key' => env('BPJS_USER_KEY'),
+        ])->get(env('BPJS_VCLAIM_BASE_URL') . $subUrl);
+        return response()->json($this->decodeResponse($res['response'], $this->createKeyForDecode($xTimestamp)), 200);
+        // return $this->responseDataBpjs($res->json(), $xTimestamp);
+    }
+
     public function requestGetBpjs($suburl)
     {
 
@@ -23,7 +36,6 @@ trait BpjsTraits
                 'X-signature' => $this->createSign($xTimestamp, env('BPJS_CONS_ID')),
                 'user_key' => env('BPJS_USER_KEY'),
             ])->get(env('BPJS_ICARE_BASE_URL') . $suburl);
-            dd($res);
             return $this->responseDataBpjs($res->json(), $xTimestamp);
         } catch (\Exception $e) {
 
