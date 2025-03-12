@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\KonsultasiMedik;
 use App\Models\JawabanKonsultasiMedik;
+use Illuminate\Support\Facades\URL;
 
 class KonsultasiMedikController extends Controller
 {
@@ -12,6 +13,16 @@ class KonsultasiMedikController extends Controller
     {
         $konsultasi = KonsultasiMedik::with('dokter')->find($no_permintaan);
         $jawaban = JawabanKonsultasiMedik::find($no_permintaan);
+        return view('konsultasi.jawab', compact('konsultasi', 'jawaban'));
+    }
+
+    public function jawabanWa(Request $request)
+    {
+        if (!URL::hasValidSignature($request)) {
+            abort(403, 'Unauthorized action.');
+        }
+        $konsultasi = KonsultasiMedik::with('dokter')->find($request->no_permintaan);
+        $jawaban = JawabanKonsultasiMedik::find($request->no_permintaan);
         return view('konsultasi.jawab', compact('konsultasi', 'jawaban'));
     }
 
