@@ -3,11 +3,29 @@
 @section('title', 'Pasien Ranap')
 
 @section('content_header')
-    <h1>Pasien Ranap</h1>
+    <h1>Pasien Ranapp</h1>
 @stop
 
 @section('content')
 <x-adminlte-callout theme="info" >
+    <div class="d-flex justify-content-end mb-3">
+        <form action="{{route('ranap.pasien')}}" method="GET">
+            <div class="d-flex" style="gap: 10px">
+                @php
+                    $config = ['format' => 'YYYY-MM-DD'];
+                @endphp
+                <x-adminlte-select name="status" id="status">
+                    <option value="belum_pulang" {{ request('status') == 'belum_pulang' ? 'selected' : '' }}>Belum Pulang</option>
+                    <option value="sudah_pulang" {{ request('status') == 'sudah_pulang' ? 'selected' : '' }}>Sudah Pulang</option>
+                </x-adminlte-select>
+                <x-adminlte-input-date name="tanggal" value="{{ request('tanggal') ?? date('Y-m-d') }}" :config="$config" placeholder="Pilih Tanggal...">
+                    <x-slot name="appendSlot">
+                        <x-adminlte-button class="btn-sm" type="submit" theme="primary" icon="fas fa-lg fa-search"/>
+                    </x-slot>
+                </x-adminlte-input-date>
+            </div>
+        </form>
+    </div>
     @php
         $config["responsive"] = true;
     @endphp
@@ -49,4 +67,15 @@
 
 @section('plugins.TempusDominusBs4', true)
 @section('js')
+<script>
+    // $(function() {
+    //     // Filter handler - redirect to same page with status parameter
+    //     $('#filter_status').on('change', function() {
+    //         window.location.href = "{{ route('ranap.pasien') }}?status=" + $(this).val();
+    //     });
+    //     $('#tanggal').on('change.datetimepicker', function() {
+    //         window.location.href = "{{ route('ranap.pasien') }}?tanggal=" + $(this).val();
+    //     });
+    // });
+</script>
 @stop
