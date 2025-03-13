@@ -55,9 +55,9 @@ class SendWa extends Command
             "*Pesan ini dikirim melalui aplikasi E-Dokter* 🚀" . "\n" .
             "*Jangan balas pesan ini* ❌";
         $response = Http::withHeaders([
-            'Authorization' => '8LLyYjktuhCwvqANudzD',
+            'Authorization' => env('FONNTE_API_KEY'),
         ])->post('https://api.fonnte.com/send', [
-            'target' => '08994750136',
+            'target' => '08111111111111',
             'message' => $message,
             'countryCode' => '62',
         ]);
