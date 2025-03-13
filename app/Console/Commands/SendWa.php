@@ -45,11 +45,13 @@ class SendWa extends Command
             "*Pasien:* " . $pasien->nm_pasien . "\n" .
             "*No. RM:* " . $pasien->no_rkm_medis . "\n" .
             "*No. Permintaan:* " . $konsultasi->no_permintaan . "\n" .
+            "*Jenis Permintaan:* " . $konsultasi->jenis_permintaan . "\n" .
             "*Tanggal:* " . $konsultasi->tanggal . "\n" .
             "*Dokter:* " . $konsultasi->dokter->nm_dokter . "\n\n" .
             "*Diagnosa Kerja:*\n" . $konsultasi->diagnosa_kerja . "\n\n" .
             "*Uraian Konsultasi:*\n" . $konsultasi->uraian_konsultasi . "\n\n" .
-            "Silahkan klik link berikut untuk melihat detail konsultasi: " . URL::temporarySignedRoute('temp-konsultasi', now()->addDay(1), ['no_permintaan' => $no_permintaan]) . "\n\n" .
+            "Silahkan klik link berikut untuk menjawab konsultasi: " . URL::temporarySignedRoute('temp-konsultasi', now()->addDay(1), ['no_permintaan' => $no_permintaan]) . "\n\n" .
+            "*Link akan kadaluarsa dalam 24 jam*\n\n" .
             "*Pesan ini dikirim melalui aplikasi E-Dokter* 🚀" . "\n" .
             "*Jangan balas pesan ini* ❌";
         $response = Http::withHeaders([
