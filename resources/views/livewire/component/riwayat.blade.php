@@ -284,7 +284,7 @@
                         </x-adminlte-card>
                         @endif
 
-                        @if(count($radiologi)>0 || !empty($gambarRadiologi))
+                        @if(count($gambarRadiologi)>0)
                         <x-adminlte-card theme="dark" title="Radiologi" collapsible="collapsed" maximizable>
                             <x-adminlte-card theme="dark" title="Gambar Radiologi" collapsible="collapsed">
                                 <div class="container">
