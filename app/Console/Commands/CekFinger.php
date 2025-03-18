@@ -36,8 +36,11 @@ class CekFinger extends Command
         $no = 1;
         foreach ($referensi as $r) {
             $nopeserta = $r->nomorkartu;
-            $response = $this->requestFinger('SEP/FingerPrint/Peserta/' . $nopeserta . '/TglPelayanan' . '/' . $tanggal);
             $cek = FingerBpjs::where('no_rawat', $r->no_rawat)->first();
+            if ($cek->kode == "1") {
+                continue;
+            }
+            $response = $this->requestFinger('SEP/FingerPrint/Peserta/' . $nopeserta . '/TglPelayanan' . '/' . $tanggal);
             if ($cek) {
                 $cek->update([
                     'tanggal' => $tanggal,
