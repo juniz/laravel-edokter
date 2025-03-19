@@ -37,7 +37,7 @@ class CekFinger extends Command
         foreach ($referensi as $r) {
             $nopeserta = $r->nomorkartu;
             $cek = FingerBpjs::where('no_rawat', $r->no_rawat)->first();
-            if ($cek->kode == "1") {
+            if ($cek?->kode == "1") {
                 continue;
             }
             $response = $this->requestFinger('SEP/FingerPrint/Peserta/' . $nopeserta . '/TglPelayanan' . '/' . $tanggal);
