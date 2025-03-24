@@ -41,22 +41,26 @@ class CekFinger extends Command
                 continue;
             }
             $response = $this->requestFinger('SEP/FingerPrint/Peserta/' . $nopeserta . '/TglPelayanan' . '/' . $tanggal);
-            if ($cek) {
-                $cek->update([
-                    'tanggal' => $tanggal,
-                    'kode' => $response->getData()->kode,
-                    'status' => $response->getData()->status
-                ]);
+            if (isset($response->getData()->kode)) {
+                if ($cek) {
+                    $cek->update([
+                        'tanggal' => $tanggal,
+                        'kode' => $response->getData()->kode,
+                        'status' => $response->getData()->status
+                    ]);
+                } else {
+                    FingerBpjs::create([
+                        'no_rawat' => $r->no_rawat,
+                        'no_kartu' => $nopeserta,
+                        'tanggal' => $tanggal,
+                        'kode' => $response->getData()->kode,
+                        'status' => $response->getData()->status
+                    ]);
+                }
+                $this->info('#' . $no . '. No Kartu: ' . $nopeserta . ' Kode: ' . $response->getData()->kode . ' Status: ' . $response->getData()->status);
             } else {
-                FingerBpjs::create([
-                    'no_rawat' => $r->no_rawat,
-                    'no_kartu' => $nopeserta,
-                    'tanggal' => $tanggal,
-                    'kode' => $response->getData()->kode,
-                    'status' => $response->getData()->status
-                ]);
+                $this->error('#' . $no . 'No Kartu: ' . $nopeserta . ' tidak ditemukan');
             }
-            $this->info('#' . $no . '. No Kartu: ' . $nopeserta . ' Kode: ' . $response->getData()->kode . ' Status: ' . $response->getData()->status);
             $no++;
         }
     }
