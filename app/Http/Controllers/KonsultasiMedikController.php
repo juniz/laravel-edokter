@@ -48,13 +48,22 @@ class KonsultasiMedikController extends Controller
             ], ['no_permintaan'], ['tanggal', 'diagnosa_kerja', 'uraian_jawaban']);
 
             $konsul = KonsultasiMedik::where('no_permintaan', $no_permintaan)->first();
-            $reg = RegPeriksa::where('no_rawat', $konsul->no_rawat)->first();
+            $reg = RegPeriksa::with('poliklinik')->where('no_rawat', $konsul->no_rawat)->first();
             $dokter_dikonsuli = Dokter::where('kd_dokter', $konsul->kd_dokter_dikonsuli)->first();
             $dokter = Dokter::where('kd_dokter', $konsul->kd_dokter)->first();
+            $asalPasien = '';
+            if ($reg->status_lanjut == 'Ralan') {
+                $asalPasien = "*Poliklinik:* " . $reg->poliklinik->nm_poli . "\n";
+            } else {
+                $bangsal = \App\Models\KamarInap::with('kamar.bangsal')->where('no_rawat', $reg->no_rawat)->first();
+                // $this->info($bangsal->kamar->bangsal->nm_bangsal);
+                $asalPasien = "*Kamar:* " . $bangsal->kamar->bangsal->nm_bangsal . ' ' . $bangsal->kd_kamar . "\n";
+            }
             $message =
                 "*Jawaban Konsultasi Medik* 👨‍⚕️\n\n" .
                 "*Pasien:* " . $reg->pasien->nm_pasien . "\n" .
                 "*No. RM:* " . $reg->pasien->no_rkm_medis . "\n" .
+                $asalPasien .
                 "*No. Permintaan:* " . $no_permintaan . "\n" .
                 "*Jenis Permintaan:* " . $konsul->jenis_permintaan . "\n" .
                 "*Tanggal:* " . $konsul->tanggal . "\n" .

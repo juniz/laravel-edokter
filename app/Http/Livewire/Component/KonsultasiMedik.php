@@ -195,11 +195,20 @@ class KonsultasiMedik extends Component
 
                 $dokter = Dokter::where('kd_dokter', session()->get('username'))->first();
                 $dokter_dikonsuli = Dokter::where('kd_dokter', $this->kd_dokter_dikonsuli)->first();
-                $reg = RegPeriksa::where('no_rawat', $this->noRawat)->first();
+                $reg = RegPeriksa::with('poliklinik')->where('no_rawat', $this->noRawat)->first();
+                $asalPasien = '';
+                if ($reg->status_lanjut == 'Ralan') {
+                    $asalPasien = "*Poliklinik:* " . $reg->poliklinik->nm_poli . "\n";
+                } else {
+                    $bangsal = \App\Models\KamarInap::with('kamar.bangsal')->where('no_rawat', $reg->no_rawat)->first();
+                    // $this->info($bangsal->kamar->bangsal->nm_bangsal);
+                    $asalPasien = "*Kamar:* " . $bangsal->kamar->bangsal->nm_bangsal . ' ' . $bangsal->kd_kamar . "\n";
+                }
                 $message =
                     "*Konsultasi Medik* 👨‍⚕️\n\n" .
                     "*Pasien:* " . $reg->pasien->nm_pasien . "\n" .
                     "*No. RM:* " . $reg->pasien->no_rkm_medis . "\n" .
+                    $asalPasien .
                     "*No. Permintaan:* " . $no_permintaan . "\n" .
                     "*Jenis Permintaan:* " . $this->jenis_permintaan . "\n" .
                     "*Tanggal:* " . $this->tanggal . "\n" .
