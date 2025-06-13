@@ -51,7 +51,6 @@ class Pemeriksaan extends Component
 
     public function hydrate()
     {
-        $this->getPemeriksaan();
         $this->getListPemeriksaan();
     }
 
@@ -110,6 +109,27 @@ class Pemeriksaan extends Component
         }
     }
 
+    public function resetForm()
+    {
+        $this->keluhan = '';
+        $this->pemeriksaan = '';
+        $this->penilaian = '';
+        $this->instruksi = '';
+        $this->rtl = '';
+        $this->alergi = 'Tidak Ada';
+        $this->suhu = '';
+        $this->berat = '';
+        $this->tinggi = '';
+        $this->tensi = '';
+        $this->nadi = '';
+        $this->respirasi = '';
+        $this->evaluasi = '';
+        $this->gcs = '';
+        $this->kesadaran = 'Compos Mentis';
+        $this->lingkar = '';
+        $this->spo2 = '';
+    }
+
     public function simpanPemeriksaan()
     {
         $this->validate([
@@ -156,8 +176,15 @@ class Pemeriksaan extends Component
                 ]);
 
             DB::commit();
+
+            // Reset form setelah berhasil simpan
+            $this->resetForm();
+
+            // Refresh list pemeriksaan
             $this->getListPemeriksaan();
-            // $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse('Pemeriksaan berhasil ditambahkan'));
+
+            // Tampilkan notifikasi sukses
+            $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse('Pemeriksaan berhasil ditambahkan', 'success'));
         } catch (\Exception $ex) {
             DB::rollback();
             $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse($ex->getMessage() ?? 'Pemeriksaan gagal ditambahkan', 'error'));
@@ -200,5 +227,11 @@ class Pemeriksaan extends Component
                 'text' =>  $e->getMessage(),
             ]);
         }
+    }
+
+    public function loadDataTerakhir()
+    {
+        $this->getPemeriksaan();
+        $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse('Data pemeriksaan terakhir berhasil dimuat', 'info'));
     }
 }

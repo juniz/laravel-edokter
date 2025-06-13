@@ -102,9 +102,19 @@
             <label for="">Evaluasi</label>
             <textarea wire:model.defer='evaluasi' class="form-control" name="" id="" rows="1"></textarea>
         </div>
-        <div class="d-flex flex-row-reverse" style="gap: 10px">
-            <button type="submit" class="btn btn-primary">Simpan</button>
-            {{-- <button type="button" wire:click='geminiSoap' class="btn btn-secondary">AI</button> --}}
+        <div class="d-flex justify-content-between align-items-center" style="gap: 10px">
+            <div>
+                <button type="button" wire:click='loadDataTerakhir' class="btn btn-info btn-sm">
+                    <i class="fas fa-history"></i> Muat Data Terakhir
+                </button>
+                <button type="button" wire:click='resetForm' class="btn btn-secondary btn-sm">
+                    <i class="fas fa-refresh"></i> Reset Form
+                </button>
+            </div>
+            <div class="d-flex" style="gap: 10px">
+                <button type="submit" class="btn btn-primary">Simpan</button>
+                {{-- <button type="button" wire:click='geminiSoap' class="btn btn-secondary">AI</button> --}}
+            </div>
         </div>
     </form>
     <h5 class="pt-4">Riwayat Pemeriksaan</h5>
