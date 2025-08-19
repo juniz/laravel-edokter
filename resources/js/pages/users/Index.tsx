@@ -61,7 +61,15 @@ export default function UserIndex({ users }: Props) {
   const { delete: destroy, processing } = useForm();
 
   const handleDelete = (id: number) => {
-    destroy(`/users/${id}`);
+    destroy(`/users/${id}`, {
+      preserveScroll: true,
+      onSuccess: () => {
+        // Data akan otomatis terupdate karena Inertia.js
+      },
+      onError: (errors) => {
+        console.error('Delete failed:', errors);
+      }
+    });
   };
 
   const handleResetPassword = (id: number) => {

@@ -35,7 +35,8 @@ class UserController extends Controller
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
-            'role'     => ['required', Rule::exists('roles', 'name')],
+            'roles'    => ['required', 'array', 'min:1'],
+            'roles.*'  => ['required', Rule::exists('roles', 'name')],
         ]);
 
         $user = User::create([
@@ -44,7 +45,7 @@ class UserController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        $user->assignRole($validated['role']);
+        $user->assignRole($validated['roles']);
 
         return redirect()->route('users.index')->with('success', 'User berhasil dibuat.');
     }
@@ -56,7 +57,7 @@ class UserController extends Controller
         return Inertia::render('users/Form', [
             'user'         => $user->only(['id', 'name', 'email']),
             'roles'        => $roles,
-            'currentRole'  => $user->roles->pluck('name')->first(), // satu role saja
+            'currentRoles' => $user->roles->pluck('name')->toArray(), // multiple roles
         ]);
     }
 
@@ -66,7 +67,8 @@ class UserController extends Controller
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => ['nullable', 'string', 'min:6'],
-            'role'     => ['required', Rule::exists('roles', 'name')],
+            'roles'    => ['required', 'array', 'min:1'],
+            'roles.*'  => ['required', Rule::exists('roles', 'name')],
         ]);
 
         $user->update([
@@ -77,7 +79,7 @@ class UserController extends Controller
                 : $user->password,
         ]);
 
-        $user->syncRoles([$validated['role']]);
+        $user->syncRoles($validated['roles']);
 
         return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
     }

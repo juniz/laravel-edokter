@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { BreadcrumbItem } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Role {
   id: number;
@@ -19,23 +20,23 @@ interface User {
   id?: number;
   name: string;
   email: string;
-  role?: string;
+  roles?: string[];
 }
 
 interface Props {
   user?: User;
   roles: Role[];
-  currentRole?: string;
+  currentRoles?: string[];
 }
 
-export default function UserForm({ user, roles, currentRole }: Props) {
+export default function UserForm({ user, roles, currentRoles }: Props) {
   const isEdit = !!user;
 
   const { data, setData, post, put, processing, errors } = useForm({
     name: user?.name || '',
     email: user?.email || '',
     password: '',
-    role: currentRole || '',
+    roles: currentRoles || [],
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -58,7 +59,7 @@ export default function UserForm({ user, roles, currentRole }: Props) {
               {isEdit ? 'Edit User' : 'Create New User'}
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              {isEdit ? 'Update user data and role' : 'Enter user data and set role'}
+              {isEdit ? 'Update user data and roles' : 'Enter user data and set roles'}
             </p>
           </CardHeader>
 
@@ -107,25 +108,30 @@ export default function UserForm({ user, roles, currentRole }: Props) {
                   {errors.password && <p className="text-sm text-red-500 mt-2">{errors.password}</p>}
                 </div>
 
-                {/* Role */}
+                {/* Roles */}
                 <div>
-                  <Label htmlFor="role" className="mb-2 block">Role</Label>
-                  <Select
-                    value={data.role}
-                    onValueChange={(value) => setData('role', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.name}>
+                  <Label className="mb-3 block">Roles</Label>
+                  <div className="space-y-3 border rounded-lg p-4">
+                    {roles.map((role) => (
+                      <div key={role.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`role-${role.id}`}
+                          checked={data.roles.includes(role.name)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setData('roles', [...data.roles, role.name]);
+                            } else {
+                              setData('roles', data.roles.filter(r => r !== role.name));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`role-${role.id}`} className="text-sm font-normal cursor-pointer">
                           {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.role && <p className="text-sm text-red-500 mt-2">{errors.role}</p>}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  {errors.roles && <p className="text-sm text-red-500 mt-2">{errors.roles}</p>}
                 </div>
               </div>
 
