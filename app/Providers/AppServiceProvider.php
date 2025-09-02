@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-
+use App\Jobs\ProcessAuditLog;
+use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,51 +29,70 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // DB::listen(function (QueryExecuted $q) {
-        //     DB::listen(function (QueryExecuted $q) {
-        //         // 1) Hanya DML
-        //         $sql = $q->sql;
-        //         if (!preg_match('/^\s*(insert|update|delete)\s/i', $sql)) return;
+        DB::listen(function (QueryExecuted $q) {
+            $username = session()?->get('username');
 
-        //         // 2) Hindari rekursi:
-        //         // - lewati event dari koneksi 'audit'
-        //         // - lewati query yang menyentuh tabel log
-        //         if ($q->connectionName === 'audit') return;
-        //         if (stripos($sql, 'audit_sql_logs') !== false) return;
+            // 1) Hanya DML
+            $sql = $q->sql;
+            if (!preg_match('/^\s*(insert|update|delete)\s/i', $sql)) return;
 
-        //         // 3) Normalkan & batasi ukuran bindings (hindari BLOB besar)
-        //         $bindings = array_map(function ($b) {
-        //             if (is_resource($b)) return '[resource]';
-        //             if ($b instanceof \DateTimeInterface) return $b->format(DATE_ATOM);
-        //             $s = is_scalar($b)
-        //                 ? (string) $b
-        //                 : json_encode($b, JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR);
-        //             return Str::limit($s ?? '[non-scalar]', 1000); // limit 1KB per binding
-        //         }, $q->bindings);
+            // 2) Hindari rekursi
+            if ($q->connectionName === 'audit') return;
+            if (stripos($sql, 'audit_sql_logs') !== false) return;
 
-        //         // 4) Batasi panjang SQL yang disimpan
-        //         $sqlLimited = Str::limit($sql, 10000); // 10KB
+            // 3) Buat unique hash untuk query (mencegah duplikasi)
+            $queryHash = md5($sql . json_encode($q->bindings) . $username . time());
 
-        //         // 5) Reentrancy guard tambahan (satu request)
-        //         static $busy = false;
-        //         if ($busy) return;
+            // 4) Check cache untuk mencegah duplikasi dalam satu request
+            $cacheKey = "audit_query_{$queryHash}";
+            if (Cache::has($cacheKey)) {
+                return; // Query sudah diproses
+            }
 
-        //         $busy = true;
-        //         try {
-        //             DB::table('audit_sql_logs')->insert([
-        //                 'sql'        => $sqlLimited,
-        //                 'bindings'   => json_encode($bindings, JSON_UNESCAPED_UNICODE),
-        //                 'time_ms'    => (int) $q->time,
-        //                 'user_id'    => session()?->get('username'),
-        //                 'ip'         => request()?->ip(),
-        //                 'url'        => request()?->fullUrl(),
-        //                 'created_at' => now(),
-        //                 'updated_at' => now(),
-        //             ]);
-        //         } finally {
-        //             $busy = false;
-        //         }
-        //     });
-        // });
+            // 5) Set cache lock dengan TTL pendek
+            Cache::put($cacheKey, true, 10); // 10 detik
+
+            // 6) Normalkan & batasi ukuran bindings
+            $bindings = array_map(function ($b) {
+                if (is_resource($b)) return '[resource]';
+                if ($b instanceof \DateTimeInterface) return $b->format(DATE_ATOM);
+                $s = is_scalar($b)
+                    ? (string) $b
+                    : json_encode($b, JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR);
+                return Str::limit($s ?? '[non-scalar]', 1000);
+            }, $q->bindings);
+
+            // 7) Batasi panjang SQL
+            $sqlLimited = Str::limit($sql, 10000);
+
+            // 8) Dispatch job ke queue untuk diproses di background
+            try {
+                ProcessAuditLog::dispatch([
+                    'sql' => $sqlLimited,
+                    'bindings' => json_encode($bindings, JSON_UNESCAPED_UNICODE),
+                    'time_ms' => (int) $q->time,
+                    'user_id' => $username,
+                    'ip' => request()?->ip(),
+                    'url' => request()?->fullUrl(),
+                    'query_hash' => $queryHash,
+                ]);
+
+                // Log success untuk monitoring
+                Log::info('Audit log job dispatched', [
+                    'query_hash' => $queryHash,
+                    'user_id' => $username,
+                    'queue' => 'audit-logs'
+                ]);
+            } catch (\Exception $e) {
+                // Log error jika dispatch gagal
+                Log::error('Failed to dispatch audit log job: ' . $e->getMessage(), [
+                    'query_hash' => $queryHash,
+                    'error' => $e->getMessage()
+                ]);
+
+                // Remove cache lock jika gagal
+                Cache::forget($cacheKey);
+            }
+        });
     }
 }
