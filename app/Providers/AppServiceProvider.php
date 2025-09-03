@@ -40,6 +40,9 @@ class AppServiceProvider extends ServiceProvider
             if ($q->connectionName === 'audit') return;
             if (stripos($sql, 'audit_sql_logs') !== false) return;
 
+            // 3) Hindari query table finger_bpjs
+            if (stripos($sql, 'finger_bpjs') !== false) return;
+
             // 3) Buat unique hash untuk query (mencegah duplikasi)
             $queryHash = md5($sql . json_encode($q->bindings) . $username . time());
 
