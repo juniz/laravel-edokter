@@ -213,6 +213,12 @@
                                 <label for="satu-resep">Jadikan Satu Resep</label>
                             </div>
                         </div>
+                        <x-adminlte-select-bs id="iterRacikan" name="iterRacikan" fgroup-class="col-md-4 my-auto"
+                            data-placeholder="Pilih Iter">
+                            <option value="-">Pilih jumlah iter</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </x-adminlte-select-bs>
                         <x-adminlte-button id="deleteRacikan" onclick="deleteRowRacikan()"
                             class="md:col-md-1 sm:col-sm-6 delete-form-racikan mr-1" theme="danger" label="-" />
                         <x-adminlte-button id="addRacikan" class="md:col-md-1 sm:col-sm-6 add-form-racikan"
@@ -933,6 +939,7 @@
             let jumlah = $('#jumlah_racikan').val();
             let aturan = $('#aturan_racikan').val();
             let keterangan = $('#keterangan_racikan').val();
+            let iterRacikan = $('#iterRacikan').val();
             let kdObat = getValue('obatRacikan[]');
             let p1 = getValue('p1[]');
             let p2 = getValue('p2[]');
@@ -948,6 +955,7 @@
                     jumlah_racikan:jumlah,
                     aturan_racikan:aturan,
                     keterangan_racikan:keterangan,
+                    iter:iterRacikan,
                     kd_obat:kdObat,
                     p1:p1,
                     p2:p2,

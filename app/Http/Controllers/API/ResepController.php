@@ -345,6 +345,7 @@ class ResepController extends Controller
         $jumlahRacikan = $input['jumlah_racikan'];
         $metodeRacikan = $input['metode_racikan'];
         $keteranganRacikan = $input['keterangan_racikan'];
+        $iter = $input['iter'] ?? '-';
         $satu_resep = $input['satu_resep'] ?? 0;
 
         $kdObat = $input['kd_obat'];
@@ -388,6 +389,19 @@ class ResepController extends Controller
 
         try {
             DB::beginTransaction();
+
+            // Handle iter untuk resep racikan
+            if ($iter != '-') {
+                DB::table('resep_iter')->upsert(
+                    [
+                        'no_rawat' => $no_rawat,
+                        'catatan_iter' => $iter ?? 'Na',
+                    ],
+                    ['no_rawat'],
+                    ['catatan_iter']
+                );
+            }
+
             $noResep = '';
 
             if ($satu_resep == 0) {
