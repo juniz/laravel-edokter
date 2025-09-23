@@ -49,9 +49,13 @@ class KonsultasiMedikTable extends DataTableComponent
     public function filters(): array
     {
         return [
-            DateFilter::make('Tanggal', 'tanggal')
+            DateFilter::make('Tanggal Mulai', 'tanggal_mulai')
                 ->filter(function (Builder $query, $value) {
-                    $query->where('konsultasi_medik.tanggal', 'like', $value . '%');
+                    $query->where('konsultasi_medik.tanggal', '>=', $value);
+                }),
+            DateFilter::make('Tanggal Akhir', 'tanggal_akhir')
+                ->filter(function (Builder $query, $value) {
+                    $query->where('konsultasi_medik.tanggal', '<=', $value);
                 }),
         ];
     }
