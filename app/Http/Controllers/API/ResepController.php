@@ -93,6 +93,7 @@ class ResepController extends Controller
             ->where('databarang.kode_brng', $kdObat)
             ->where('riwayat_barang_medis.tanggal', $maxTgl)
             ->where('riwayat_barang_medis.jam', $maxJam)
+            ->where('riwayat_barang_medis.kd_bangsal', $bangsal)
             ->select('databarang.*', 'riwayat_barang_medis.stok_akhir')
             ->first();
 
