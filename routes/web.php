@@ -243,3 +243,8 @@ Route::get(
 )->name('notifications.get');
 
 Route::get('temp-konsultasi/', [App\Http\Controllers\KonsultasiMedikController::class, 'jawabanWa'])->name('temp-konsultasi');
+
+// Routes for Dokumen Online
+Route::get('dokumen-online/folders', [App\Http\Controllers\DokumenOnlineController::class, 'getFolders'])->name('dokumen-online.folders');
+Route::get('dokumen-online/documents/{folder}', [App\Http\Controllers\DokumenOnlineController::class, 'getDocuments'])->name('dokumen-online.documents');
+Route::get('dokumen-online/stream', [App\Http\Controllers\DokumenOnlineController::class, 'streamDocument'])->name('dokumen-online.stream');

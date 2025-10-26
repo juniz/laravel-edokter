@@ -33,6 +33,14 @@
         <ul class="navbar-nav ml-auto order-1 order-md-3 navbar-no-expand">
             {{-- Custom right links --}}
             @yield('content_top_nav_right')
+            
+            {{-- Dokumen Online Button --}}
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-toggle="modal" data-target="#modalDokumenOnline" title="Dokumen Online">
+                    <i class="fas fa-file-pdf mr-1"></i>
+                    <span class="d-none d-md-inline">Dokumen Online</span>
+                </a>
+            </li>
 
             {{-- Configured right links --}}
             @each('adminlte::partials.navbar.menu-item', $adminlte->menu('navbar-right'), 'item')
