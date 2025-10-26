@@ -203,83 +203,46 @@
 @section('plugins.DatatablesPlugin', true)
 
 @section('css')
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <style>
-    /* Modern Dashboard Styles */
+    /* Simple Dashboard Styles */
     body {
-        font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        min-height: 100vh;
+        background: #f8f9fa;
     }
 
     .content-wrapper {
-        background: transparent;
+        background: #f8f9fa;
     }
 
     /* Dashboard Header */
     .dashboard-header {
+        background: #007bff;
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 2rem;
-        padding: 1.5rem 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 15px;
-        color: white;
-        padding: 2rem;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .dashboard-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-        transform: rotate(45deg);
-        animation: shine 3s infinite;
-    }
-
-    @keyframes shine {
-        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-    }
-
-    .header-content {
-        position: relative;
-        z-index: 1;
     }
 
     .welcome-title {
-        font-size: 2.2rem;
-        font-weight: 700;
+        font-size: 1.5rem;
+        font-weight: 600;
         margin: 0;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .welcome-subtitle {
-        font-size: 1.1rem;
+        font-size: 1rem;
         margin: 0.5rem 0 0 0;
         opacity: 0.9;
-        font-weight: 400;
-    }
-
-    .header-actions {
-        position: relative;
-        z-index: 1;
     }
 
     .current-date {
         background: rgba(255,255,255,0.2);
         padding: 0.5rem 1rem;
-        border-radius: 25px;
-        font-weight: 500;
-        backdrop-filter: blur(10px);
+        border-radius: 6px;
+        font-size: 0.9rem;
     }
 
     /* Dashboard Container */
@@ -291,65 +254,47 @@
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
+        gap: 1rem;
         margin-bottom: 2rem;
     }
 
     .stat-card {
         background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
+        border-radius: 6px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         display: flex;
         align-items: center;
         gap: 1rem;
-    }
-
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: var(--accent-color);
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        border-top: 4px solid #007bff;
     }
 
     .stat-card.stat-primary {
-        --accent-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-top-color: #007bff;
     }
 
     .stat-card.stat-success {
-        --accent-color: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        border-top-color: #28a745;
     }
 
     .stat-card.stat-warning {
-        --accent-color: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border-top-color: #ffc107;
     }
 
     .stat-card.stat-info {
-        --accent-color: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        border-top-color: #17a2b8;
     }
 
     .stat-icon {
-        width: 70px;
-        height: 70px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
-        background: var(--accent-color);
+        background: #007bff;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
-        font-size: 1.8rem;
-        flex-shrink: 0;
+        font-size: 1.5rem;
     }
 
     .stat-content {
@@ -357,59 +302,52 @@
     }
 
     .stat-number {
-        font-size: 2.5rem;
+        font-size: 2rem;
         font-weight: 700;
         margin: 0;
-        color: #2d3748;
+        color: #333;
         line-height: 1;
     }
 
     .stat-label {
-        font-size: 0.95rem;
-        color: #718096;
-        margin: 0.5rem 0 0 0;
-        font-weight: 500;
+        font-size: 0.9rem;
+        color: #666;
+        margin: 0.3rem 0 0 0;
     }
 
     .stat-trend {
-        color: #48bb78;
-        font-size: 1.2rem;
+        color: #28a745;
+        font-size: 1rem;
     }
 
-    /* Modern Cards */
+    /* Simple Cards */
     .modern-card {
         background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        overflow: hidden;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin-bottom: 2rem;
-        transition: all 0.3s ease;
-    }
-
-    .modern-card:hover {
-        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
 
     .modern-card .card-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 1.5rem 2rem;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
+        background: #007bff;
+        color: white;
+        padding: 1rem 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-radius: 6px 6px 0 0;
     }
 
     .modern-card .card-title {
-        font-size: 1.3rem;
+        font-size: 1.1rem;
         font-weight: 600;
         margin: 0;
-        color: #2d3748;
         display: flex;
         align-items: center;
     }
 
     .modern-card .card-body {
-        padding: 2rem;
+        padding: 1.5rem;
     }
 
     .card-actions {
@@ -418,37 +356,24 @@
     }
 
     .btn-filter {
-        background: #e2e8f0;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 25px;
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
         font-size: 0.85rem;
-        font-weight: 500;
-        color: #4a5568;
-        transition: all 0.3s ease;
+        color: white;
         cursor: pointer;
     }
 
     .btn-filter.active {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: rgba(255,255,255,0.3);
     }
 
     .badge {
-        padding: 0.5rem 1rem;
-        border-radius: 25px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
         font-size: 0.8rem;
         font-weight: 500;
-    }
-
-    .badge-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .badge-info {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
     }
 
     /* Chart Section */
@@ -458,10 +383,8 @@
 
     .chart-container {
         position: relative;
-        height: 400px;
+        height: 350px;
         padding: 1rem;
-        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-        border-radius: 15px;
     }
 
     /* Chart Controls */
@@ -469,82 +392,64 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem;
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-        border-radius: 12px;
-        border: 1px solid rgba(102, 126, 234, 0.1);
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 4px;
+        margin-bottom: 1rem;
     }
 
     .chart-type-buttons {
         display: flex;
         gap: 0.5rem;
-        background: white;
-        padding: 0.5rem;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .chart-btn {
-        width: 40px;
-        height: 40px;
-        border: none;
-        border-radius: 8px;
-        background: transparent;
-        color: #6c757d;
+        width: 36px;
+        height: 36px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background: white;
+        color: #666;
         cursor: pointer;
-        transition: all 0.3s ease;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
-        position: relative;
+        font-size: 14px;
     }
 
     .chart-btn:hover {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #007bff;
         color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        border-color: #007bff;
     }
 
     .chart-btn.active {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #007bff;
         color: white;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-
-    .chart-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+        border-color: #007bff;
     }
 
     .total-visits {
-        background: white;
-        padding: 0.5rem 1rem;
-        border-radius: 25px;
         font-size: 0.9rem;
-        color: #495057;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        color: #666;
     }
 
     .total-visits strong {
-        color: #667eea;
-        font-weight: 600;
+        color: #007bff;
     }
 
     /* Custom ApexCharts Tooltip */
     .custom-tooltip {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 10px;
-        padding: 1rem;
+        background: #007bff;
+        border-radius: 6px;
+        padding: 0.75rem;
         color: white;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        min-width: 200px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        min-width: 180px;
     }
 
     .tooltip-header {
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
         margin-bottom: 0.5rem;
         text-align: center;
@@ -555,7 +460,7 @@
     .tooltip-body {
         display: flex;
         flex-direction: column;
-        gap: 0.3rem;
+        gap: 0.25rem;
     }
 
     .tooltip-row {
@@ -565,27 +470,13 @@
     }
 
     .tooltip-label {
-        font-size: 12px;
-        opacity: 0.8;
+        font-size: 11px;
+        opacity: 0.9;
     }
 
     .tooltip-value {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
-    }
-
-    /* ApexCharts Responsive Fixes */
-    .apexcharts-canvas {
-        border-radius: 10px;
-    }
-
-    .apexcharts-menu {
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    .apexcharts-toolbar {
-        border-radius: 8px;
     }
 
     /* Tables Grid */
@@ -599,48 +490,33 @@
         min-height: 500px;
     }
 
-    /* Modern Table */
+    /* Simple Table */
     .modern-table {
-        border-radius: 10px;
+        border-radius: 6px;
         overflow: hidden;
     }
 
     .modern-table .table {
         margin: 0;
-        border-collapse: separate;
-        border-spacing: 0;
     }
 
     .modern-table .table thead th {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #007bff;
         color: white;
         font-weight: 600;
-        padding: 1rem;
+        padding: 0.75rem;
         border: none;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .modern-table .table tbody tr {
-        transition: all 0.3s ease;
+        font-size: 0.85rem;
     }
 
     .modern-table .table tbody tr:hover {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-        transform: translateX(5px);
+        background: #f8f9fa;
     }
 
     .modern-table .table tbody td {
-        padding: 1rem;
-        border-bottom: 1px solid #e2e8f0;
+        padding: 0.75rem;
+        border-bottom: 1px solid #dee2e6;
         font-size: 0.9rem;
-        color: #4a5568;
-        vertical-align: middle;
-    }
-
-    .modern-table .table tbody tr:last-child td {
-        border-bottom: none;
     }
 
     /* Responsive Design */
@@ -649,309 +525,69 @@
             flex-direction: column;
             text-align: center;
             gap: 1rem;
-            padding: 1.5rem;
-        }
-
-        .welcome-title {
-            font-size: 1.8rem;
-        }
-
-        .welcome-subtitle {
-            font-size: 1rem;
+            padding: 1rem;
         }
 
         .stats-grid {
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
         }
 
         .stat-card {
-            padding: 1.5rem;
-            flex-direction: column;
-            text-align: center;
-            gap: 0.5rem;
-        }
-
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
+            padding: 1rem;
         }
 
         .tables-grid {
             grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-
-        .modern-card .card-header {
-            padding: 1rem;
-            flex-direction: column;
-            gap: 1rem;
-            text-align: center;
-        }
-
-        .modern-card .card-body {
-            padding: 1rem;
         }
 
         .chart-container {
             height: 300px;
-            padding: 0.5rem;
         }
 
-        .chart-controls {
-            flex-direction: column;
-            gap: 1rem;
-            text-align: center;
+        .fab-btn {
+            width: 44px;
+            height: 44px;
         }
-
-        .chart-type-buttons {
-            justify-content: center;
-        }
-
-        .modern-table .table thead th,
-        .modern-table .table tbody td {
-            padding: 0.75rem 0.5rem;
-            font-size: 0.8rem;
-        }
-
-        .card-actions {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .btn-filter {
-            font-size: 0.8rem;
-            padding: 0.4rem 0.8rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .dashboard-header {
-            padding: 1rem;
-        }
-
-        .stats-grid {
-            grid-template-columns: 1fr;
-            gap: 0.8rem;
-        }
-
-        .stat-card {
-            padding: 1rem;
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            font-size: 1.3rem;
-        }
-
-        .stat-number {
-            font-size: 1.8rem;
-        }
-
-        .welcome-title {
-            font-size: 1.5rem;
-        }
-
-        .welcome-subtitle {
-            font-size: 0.9rem;
-        }
-
-        .modern-card .card-title {
-            font-size: 1.1rem;
-        }
-
-        .chart-container {
-            height: 250px;
-            padding: 0.3rem;
-        }
-
-        .current-date {
-            font-size: 0.85rem;
-            padding: 0.4rem 0.8rem;
-        }
-
-        .badge {
-            font-size: 0.7rem;
-            padding: 0.3rem 0.8rem;
-        }
-
-        .modern-card .card-header {
-            padding: 0.8rem;
-        }
-
-        .modern-card .card-body {
-            padding: 0.8rem;
-        }
-    }
-
-    /* Extra small devices */
-    @media (max-width: 320px) {
-        .dashboard-header {
-            padding: 0.8rem;
-        }
-
-        .welcome-title {
-            font-size: 1.3rem;
-        }
-
-        .welcome-subtitle {
-            font-size: 0.8rem;
-        }
-
-        .stat-card {
-            padding: 0.8rem;
-        }
-
-        .stat-number {
-            font-size: 1.5rem;
-        }
-
-        .chart-container {
-            height: 200px;
-        }
-    }
-
-    /* Loading Animation */
-    .loading-skeleton {
-        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-        background-size: 200% 100%;
-        animation: loading 1.5s infinite;
-    }
-
-    @keyframes loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
     }
 
     /* Floating Action Button */
     .floating-actions {
         position: fixed;
-        bottom: 2rem;
-        right: 2rem;
+        bottom: 1.5rem;
+        right: 1.5rem;
         z-index: 1000;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .fab-btn {
-        width: 56px;
-        height: 56px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #007bff;
         border: none;
         color: white;
-        font-size: 1.2rem;
+        font-size: 1rem;
         cursor: pointer;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
     .fab-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        background: #0056b3;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
     .fab-btn.refresh {
-        background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-        box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+        background: #28a745;
     }
 
     .fab-btn.refresh:hover {
-        box-shadow: 0 6px 20px rgba(86, 171, 47, 0.6);
-    }
-
-    /* Tooltip */
-    .tooltip-fab {
-        position: relative;
-    }
-
-    .tooltip-fab::before {
-        content: attr(data-tooltip);
-        position: absolute;
-        right: 70px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 0.5rem 0.8rem;
-        border-radius: 6px;
-        font-size: 0.8rem;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-        pointer-events: none;
-    }
-
-    .tooltip-fab::after {
-        content: '';
-        position: absolute;
-        right: 60px;
-        top: 50%;
-        transform: translateY(-50%);
-        border: 6px solid transparent;
-        border-left-color: rgba(0, 0, 0, 0.8);
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-    }
-
-    .tooltip-fab:hover::before,
-    .tooltip-fab:hover::after {
-        opacity: 1;
-        visibility: visible;
-    }
-
-    /* Fade in animation */
-    .dashboard-container {
-        animation: fadeIn 0.6s ease-out;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .stat-card {
-        animation: slideUp 0.6s ease-out;
-        animation-fill-mode: both;
-    }
-
-    .stat-card:nth-child(1) { animation-delay: 0.1s; }
-    .stat-card:nth-child(2) { animation-delay: 0.2s; }
-    .stat-card:nth-child(3) { animation-delay: 0.3s; }
-    .stat-card:nth-child(4) { animation-delay: 0.4s; }
-
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        background: #218838;
     }
 </style>
 @stop
@@ -1035,33 +671,11 @@
                             reset: true
                         }
                     },
-                    animations: {
-                        enabled: true,
-                        easing: 'easeinout',
-                        speed: 1000,
-                        animateGradually: {
-                            enabled: true,
-                            delay: 150
-                        },
-                        dynamicAnimation: {
-                            enabled: true,
-                            speed: 350
-                        }
-                    },
-                    dropShadow: {
-                        enabled: true,
-                        color: '#000',
-                        top: 18,
-                        left: 7,
-                        blur: 10,
-                        opacity: 0.2
-                    }
                 },
                 plotOptions: {
                     bar: {
                         borderRadius: 4,
-                        columnWidth: '60%',
-                        distributed: true
+                        columnWidth: '70%'
                     }
                 },
                 colors: getChartColors(chartType),
@@ -1098,14 +712,14 @@
                     title: {
                         text: period === 'year' ? 'Tahun' : 'Bulan',
                         style: {
-                            fontSize: '14px',
+                            fontSize: '13px',
                             fontWeight: 'bold',
-                            color: '#667eea'
+                            color: '#007bff'
                         }
                     },
                     labels: {
                         style: {
-                            colors: '#6c757d',
+                            colors: '#666',
                             fontSize: '12px'
                         }
                     }
@@ -1114,14 +728,14 @@
                     title: {
                         text: 'Jumlah Kunjungan',
                         style: {
-                            fontSize: '14px',
+                            fontSize: '13px',
                             fontWeight: 'bold',
-                            color: '#667eea'
+                            color: '#007bff'
                         }
                     },
                     labels: {
                         style: {
-                            colors: '#6c757d',
+                            colors: '#666',
                             fontSize: '12px'
                         },
                         formatter: function (val) {
@@ -1130,59 +744,20 @@
                     }
                 },
                 tooltip: {
-                    theme: 'dark',
-                    style: {
-                        fontSize: '13px',
-                        fontFamily: 'Inter, sans-serif'
-                    },
-                    x: {
-                        formatter: function(val) {
-                            return period === 'year' ? 'Tahun ' + val : 'Bulan ' + val;
-                        }
-                    },
+                    theme: 'light',
                     y: {
                         formatter: function (val) {
-                            return val + ' kunjungan pasien';
+                            return val + ' pasien';
                         }
-                    },
-                    marker: {
-                        show: true,
-                    },
-                    custom: function({series, seriesIndex, dataPointIndex, w}) {
-                        const label = w.globals.labels[dataPointIndex];
-                        const value = series[seriesIndex][dataPointIndex];
-                        const percentage = ((value / currentData.values.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
-                        
-                        return '<div class="custom-tooltip">' +
-                            '<div class="tooltip-header">' + (period === 'year' ? 'Tahun ' : 'Bulan ') + label + '</div>' +
-                            '<div class="tooltip-body">' +
-                                '<div class="tooltip-row">' +
-                                    '<span class="tooltip-label">Kunjungan:</span>' +
-                                    '<span class="tooltip-value">' + value + ' pasien</span>' +
-                                '</div>' +
-                                '<div class="tooltip-row">' +
-                                    '<span class="tooltip-label">Persentase:</span>' +
-                                    '<span class="tooltip-value">' + percentage + '%</span>' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>';
                     }
                 },
                 title: {
-                    text: currentData.title + ' ' + chartData.poliklinik + ' - ' + (period === 'year' ? '5 Tahun Terakhir' : 'Tahun ' + new Date().getFullYear()),
+                    text: currentData.title + ' ' + chartData.poliklinik,
                     align: 'center',
                     style: {
-                        fontSize: '16px',
+                        fontSize: '15px',
                         fontWeight: 'bold',
-                        color: '#2d3748'
-                    }
-                },
-                subtitle: {
-                    text: 'Data kunjungan pasien per ' + (period === 'year' ? 'tahun' : 'bulan'),
-                    align: 'center',
-                    style: {
-                        fontSize: '12px',
-                        color: '#6c757d'
+                        color: '#333'
                     }
                 },
                 legend: {
@@ -1211,15 +786,15 @@
         }
 
         function getChartColors(chartType) {
-            const baseColors = [
-                '#667eea', '#764ba2', '#56ab2f', '#f093fb', 
-                '#4facfe', '#ff9a9e', '#a8edea', '#ffecd2',
-                '#d299c2', '#fef9d7', '#667eea', '#764ba2'
-            ];
-            
             if (chartType === 'line' || chartType === 'area') {
-                return ['#667eea'];
+                return ['#007bff'];
             }
+            
+            // Primary Bootstrap colors
+            const baseColors = [
+                '#007bff', '#28a745', '#ffc107', '#17a2b8',
+                '#dc3545', '#6c757d', '#007bff', '#28a745'
+            ];
             
             const currentData = currentPeriod === 'year' ? chartData.yearly : chartData.monthly;
             return baseColors.slice(0, currentData.values.length);
@@ -1232,26 +807,12 @@
                     gradient: {
                         shade: 'light',
                         type: 'vertical',
-                        shadeIntensity: 0.5,
-                        gradientToColors: ['#764ba2'],
+                        shadeIntensity: 0.3,
+                        gradientToColors: ['#0056b3'],
                         inverseColors: false,
                         opacityFrom: 0.8,
-                        opacityTo: 0.1,
+                        opacityTo: 0.2,
                         stops: [0, 100]
-                    }
-                };
-            } else if (chartType === 'bar') {
-                return {
-                    type: 'gradient',
-                    gradient: {
-                        shade: 'light',
-                        type: 'vertical',
-                        shadeIntensity: 0.3,
-                        gradientToColors: undefined,
-                        inverseColors: false,
-                        opacityFrom: 0.9,
-                        opacityTo: 0.6,
-                        stops: [0, 90, 100]
                     }
                 };
             }
@@ -1363,73 +924,6 @@
                 });
             }
 
-            // Add real-time clock
-            function updateClock() {
-                const now = new Date();
-                const options = { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                };
-                const dateElement = document.querySelector('.current-date');
-                if (dateElement) {
-                    dateElement.innerHTML = 
-                        '<i class="fas fa-calendar-alt me-2"></i>' + 
-                        now.toLocaleDateString('id-ID', options);
-                }
-            }
-
-            // Update clock every minute
-            setInterval(updateClock, 60000);
-            updateClock();
-
-            // Add smooth animations for stat cards
-            const statCards = document.querySelectorAll('.stat-card');
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            }, observerOptions);
-
-            statCards.forEach(card => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                observer.observe(card);
-            });
-
-            // Add number counter animation
-            function animateNumbers() {
-                const numbers = document.querySelectorAll('.stat-number');
-                numbers.forEach(number => {
-                    const finalValue = parseInt(number.textContent.replace(/[^\d]/g, ''));
-                    let currentValue = 0;
-                    const increment = finalValue / 50;
-                    const timer = setInterval(() => {
-                        currentValue += increment;
-                        if (currentValue >= finalValue) {
-                            number.textContent = finalValue.toLocaleString('id-ID');
-                            clearInterval(timer);
-                        } else {
-                            number.textContent = Math.floor(currentValue).toLocaleString('id-ID');
-                        }
-                    }, 30);
-                });
-            }
-
-            // Trigger number animation after a short delay
-            setTimeout(animateNumbers, 500);
 
             // Add chart responsiveness
             window.addEventListener('resize', function() {
