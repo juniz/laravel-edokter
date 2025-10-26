@@ -3,70 +3,199 @@
 @section('title', 'Dashboard')
 
 @section('content_header')
-    <h1>Selamat Datang, </br>{{$nm_dokter}}</h1>
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1 class="welcome-title">
+                <i class="fas fa-tachometer-alt me-3"></i>
+                Dashboard Medis
+            </h1>
+            <p class="welcome-subtitle">
+                Selamat datang, <strong>{{$nm_dokter}}</strong> - {{$poliklinik}}
+            </p>
+        </div>
+        <div class="header-actions">
+            <span class="current-date">
+                <i class="fas fa-calendar-alt me-2"></i>
+                {{ date('d F Y') }}
+            </span>
+        </div>
+    </div>
 @stop
 
 @section('content')
-        <div class="row">
-            <div class="col-md-3">
-                <x-adminlte-info-box title="TOTAL PASIEN" text="{{$totalPasien}}" icon="fas fa-lg fa-users" theme="primary"/>
+    <div class="dashboard-container">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card stat-primary">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{$totalPasien}}</h3>
+                    <p class="stat-label">Total Pasien</p>
+                </div>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
             </div>
-            <div class="col-md-3">
-                <x-adminlte-info-box title="PASIEN BULAN INI" text="{{$pasienBulanIni}}" icon="fas fa-lg fa-clipboard" theme="success"/>
+
+            <div class="stat-card stat-success">
+                <div class="stat-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{$pasienBulanIni}}</h3>
+                    <p class="stat-label">Pasien Bulan Ini</p>
+                </div>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
             </div>
-            <div class="col-md-3">
-                <x-adminlte-info-box title="PASIEN POLI BULAN INI" text="{{$pasienPoliBulanIni}}" icon="fas fa-lg fa-hospital" theme="danger"/>
+
+            <div class="stat-card stat-warning">
+                <div class="stat-icon">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{$pasienPoliBulanIni}}</h3>
+                    <p class="stat-label">Poli Bulan Ini</p>
+                </div>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
             </div>
-            <div class="col-md-3">
-                <x-adminlte-info-box title="PASIEN POLI HARI INI" text="{{$pasienPoliHariIni}}" icon="fas fa-lg fa-stethoscope" theme="info"/>
+
+            <div class="stat-card stat-info">
+                <div class="stat-icon">
+                    <i class="fas fa-stethoscope"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{$pasienPoliHariIni}}</h3>
+                    <p class="stat-label">Poli Hari Ini</p>
+                </div>
+                <div class="stat-trend">
+                    <i class="fas fa-clock"></i>
+                </div>
             </div>
         </div>
 
-        <x-adminlte-card title="{{ ucwords(strtolower($poliklinik))}}" theme="info" theme-mode="outline">
-            @php 
-                $bulan = [];
-                $jumlah = [];
-                foreach ($statistikKunjungan as $key => $value) {
-                    $bulan[] = $value->bulan;
-                    $jumlah[] = intval($value->jumlah);
-                }
-            @endphp
-            <canvas id="chartKunjungan" height="100px"></canvas>
-        </x-adminlte-card>
-        
-    @php
-        $config = [
-            'order' => [[2, 'asc']],
-            'columns' => [null, null, null, ['orderable' => true]],
-        ];
-    @endphp
-    <div class="row">
-        <div class="col-md-6">
-            <x-adminlte-card theme="info" title="Pasien {{ ucwords(strtolower($poliklinik))}} Paling Aktif" theme-mode="outline">
-                <x-adminlte-datatable id="table5" :heads="$headPasienAktif" theme="light" striped hoverable>
-                    @foreach($pasienAktif as $row)
-                        <tr>
-                            @foreach($row as $cell)
-                                <td>{!! $cell !!}</td>
-                            @endforeach
-                        </tr>
-                    @endforeach
-                </x-adminlte-datatable>
-            </x-adminlte-callout>
+        <!-- Chart Section -->
+        <div class="chart-section">
+            <div class="modern-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        <span id="chartTitle">Statistik Kunjungan {{ ucwords(strtolower($poliklinik))}}</span>
+                    </h3>
+                    <div class="card-actions">
+                        <button class="btn-filter active" data-period="month">
+                            <i class="fas fa-calendar-alt"></i> Bulanan
+                        </button>
+                        <button class="btn-filter" data-period="year">
+                            <i class="fas fa-calendar"></i> Tahunan
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-controls mb-3">
+                        <div class="chart-type-buttons">
+                            <button class="chart-btn active" data-type="bar" title="Column Chart">
+                                <i class="fas fa-chart-bar"></i>
+                            </button>
+                            <button class="chart-btn" data-type="area" title="Area Chart">
+                                <i class="fas fa-chart-area"></i>
+                            </button>
+                            <button class="chart-btn" data-type="line" title="Line Chart">
+                                <i class="fas fa-chart-line"></i>
+                            </button>
+                        </div>
+                        <div class="chart-info">
+                            <span class="total-visits">Total: <strong id="totalVisits">0</strong> kunjungan</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div id="chartKunjungan"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <x-adminlte-card theme="info" title="Antrian 10 Pasien Terakhir {{ ucwords(strtolower($poliklinik))}}" theme-mode="outline">
-                <x-adminlte-datatable id="table6" :heads="$headPasienTerakhir" theme="light" striped hoverable>
-                    @foreach($pasienTerakhir as $row)
-                        <tr>
-                            @foreach($row as $cell)
-                                <td>{!! $cell !!}</td>
-                            @endforeach
-                        </tr>
-                    @endforeach
-                </x-adminlte-datatable>
-            </x-adminlte-callout>
+
+        <!-- Tables Section -->
+        <div class="tables-grid">
+            <div class="table-section">
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-star me-2"></i>
+                            Pasien Paling Aktif
+                        </h3>
+                        <span class="badge badge-primary">{{ ucwords(strtolower($poliklinik))}}</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <div class="modern-table">
+                            <table class="table" id="table5">
+                                <thead>
+                                    @foreach($headPasienAktif as $head)
+                                        <th>{{ $head }}</th>
+                                    @endforeach
+                                </thead>
+                                <tbody>
+                                    @foreach($pasienAktif as $row)
+                                        <tr>
+                                            @foreach($row as $cell)
+                                                <td>{!! $cell !!}</td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-clock me-2"></i>
+                            Antrian Terakhir
+                        </h3>
+                        <span class="badge badge-info">10 Terbaru</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <div class="modern-table">
+                            <table class="table" id="table6">
+                                <thead>
+                                    @foreach($headPasienTerakhir as $head)
+                                        <th>{{ $head }}</th>
+                                    @endforeach
+                                </thead>
+                                <tbody>
+                                    @foreach($pasienTerakhir as $row)
+                                        <tr>
+                                            @foreach($row as $cell)
+                                                <td>{!! $cell !!}</td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
+
+    <!-- Floating Action Buttons -->
+    <div class="floating-actions">
+        <button class="fab-btn tooltip-fab" data-tooltip="Refresh Dashboard" onclick="refreshDashboard()">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+        <button class="fab-btn refresh tooltip-fab" data-tooltip="Export Data" onclick="exportData()">
+            <i class="fas fa-download"></i>
+        </button>
     </div>
 @stop
 
@@ -74,47 +203,1731 @@
 @section('plugins.DatatablesPlugin', true)
 
 @section('css')
-    {{-- <link rel="stylesheet" href="/css/admin_custom.css"> --}}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<style>
+    /* Modern Dashboard Styles */
+    body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+
+    .content-wrapper {
+        background: transparent;
+    }
+
+    /* Dashboard Header */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1.5rem 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        color: white;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+        transform: rotate(45deg);
+        animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .welcome-subtitle {
+        font-size: 1.1rem;
+        margin: 0.5rem 0 0 0;
+        opacity: 0.9;
+        font-weight: 400;
+    }
+
+    .header-actions {
+        position: relative;
+        z-index: 1;
+    }
+
+    .current-date {
+        background: rgba(255,255,255,0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 500;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Dashboard Container */
+    .dashboard-container {
+        padding: 0;
+    }
+
+    /* Statistics Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--accent-color);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .stat-card.stat-primary {
+        --accent-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .stat-card.stat-success {
+        --accent-color: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+    }
+
+    .stat-card.stat-warning {
+        --accent-color: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .stat-card.stat-info {
+        --accent-color: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .stat-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: var(--accent-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        flex-shrink: 0;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        color: #2d3748;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.95rem;
+        color: #718096;
+        margin: 0.5rem 0 0 0;
+        font-weight: 500;
+    }
+
+    .stat-trend {
+        color: #48bb78;
+        font-size: 1.2rem;
+    }
+
+    /* Modern Cards */
+    .modern-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .modern-card:hover {
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .modern-card .card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modern-card .card-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0;
+        color: #2d3748;
+        display: flex;
+        align-items: center;
+    }
+
+    .modern-card .card-body {
+        padding: 2rem;
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-filter {
+        background: #e2e8f0;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #4a5568;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-filter.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .badge-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .badge-info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    /* Chart Section */
+    .chart-section {
+        margin-bottom: 2rem;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 400px;
+        padding: 1rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 15px;
+    }
+
+    /* Chart Controls */
+    .chart-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .chart-type-buttons {
+        display: flex;
+        gap: 0.5rem;
+        background: white;
+        padding: 0.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .chart-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        position: relative;
+    }
+
+    .chart-btn:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .chart-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .chart-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .total-visits {
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        color: #495057;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .total-visits strong {
+        color: #667eea;
+        font-weight: 600;
+    }
+
+    /* Custom ApexCharts Tooltip */
+    .custom-tooltip {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        padding: 1rem;
+        color: white;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        min-width: 200px;
+    }
+
+    .tooltip-header {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 0.5rem;
+    }
+
+    .tooltip-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .tooltip-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .tooltip-label {
+        font-size: 12px;
+        opacity: 0.8;
+    }
+
+    .tooltip-value {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* ApexCharts Responsive Fixes */
+    .apexcharts-canvas {
+        border-radius: 10px;
+    }
+
+    .apexcharts-menu {
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .apexcharts-toolbar {
+        border-radius: 8px;
+    }
+
+    /* Tables Grid */
+    .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 2rem;
+    }
+
+    .table-section {
+        min-height: 500px;
+    }
+
+    /* Modern Table */
+    .modern-table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .modern-table .table {
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .modern-table .table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        padding: 1rem;
+        border: none;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .modern-table .table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .modern-table .table tbody tr:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        transform: translateX(5px);
+    }
+
+    .modern-table .table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.9rem;
+        color: #4a5568;
+        vertical-align: middle;
+    }
+
+    .modern-table .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .dashboard-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+            padding: 1.5rem;
+        }
+
+        .welcome-title {
+            font-size: 1.8rem;
+        }
+
+        .welcome-subtitle {
+            font-size: 1rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+        }
+
+        .tables-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .modern-card .card-header {
+            padding: 1rem;
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .modern-card .card-body {
+            padding: 1rem;
+        }
+
+        .chart-container {
+            height: 300px;
+            padding: 0.5rem;
+        }
+
+        .chart-controls {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .chart-type-buttons {
+            justify-content: center;
+        }
+
+        .modern-table .table thead th,
+        .modern-table .table tbody td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .card-actions {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-filter {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-header {
+            padding: 1rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.3rem;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+        }
+
+        .welcome-title {
+            font-size: 1.5rem;
+        }
+
+        .welcome-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .modern-card .card-title {
+            font-size: 1.1rem;
+        }
+
+        .chart-container {
+            height: 250px;
+            padding: 0.3rem;
+        }
+
+        .current-date {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.8rem;
+        }
+
+        .modern-card .card-header {
+            padding: 0.8rem;
+        }
+
+        .modern-card .card-body {
+            padding: 0.8rem;
+        }
+    }
+
+    /* Extra small devices */
+    @media (max-width: 320px) {
+        .dashboard-header {
+            padding: 0.8rem;
+        }
+
+        .welcome-title {
+            font-size: 1.3rem;
+        }
+
+        .welcome-subtitle {
+            font-size: 0.8rem;
+        }
+
+        .stat-card {
+            padding: 0.8rem;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+        }
+
+        .chart-container {
+            height: 200px;
+        }
+    }
+
+    /* Loading Animation */
+    .loading-skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Floating Action Button */
+    .floating-actions {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .fab-btn {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fab-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .fab-btn.refresh {
+        background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+    }
+
+    .fab-btn.refresh:hover {
+        box-shadow: 0 6px 20px rgba(86, 171, 47, 0.6);
+    }
+
+    /* Tooltip */
+    .tooltip-fab {
+        position: relative;
+    }
+
+    .tooltip-fab::before {
+        content: attr(data-tooltip);
+        position: absolute;
+        right: 70px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 0.5rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+
+    .tooltip-fab::after {
+        content: '';
+        position: absolute;
+        right: 60px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 6px solid transparent;
+        border-left-color: rgba(0, 0, 0, 0.8);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .tooltip-fab:hover::before,
+    .tooltip-fab:hover::after {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Fade in animation */
+    .dashboard-container {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stat-card {
+        animation: slideUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 @stop
 
 @section('js')
     <script>
-        var colors = [];
-        var i = 0;
-        var dynamicColors = function() {
-            var r = Math.floor(Math.random() * 255);
-            var g = Math.floor(Math.random() * 255);
-            var b = Math.floor(Math.random() * 255);
-            return "rgb(" + r + "," + g + "," + b + ")";
+        // Chart Configuration with ApexCharts
+        @php 
+            $bulan = [];
+            $jumlah = [];
+            foreach ($statistikKunjungan as $key => $value) {
+                $bulan[] = $value->bulan;
+                $jumlah[] = intval($value->jumlah);
+            }
+        @endphp
+
+        // Chart Data
+        @php 
+            $tahun = [];
+            $jumlahTahunan = [];
+            foreach ($statistikKunjunganTahunan as $key => $value) {
+                $tahun[] = $value->tahun;
+                $jumlahTahunan[] = intval($value->jumlah);
+            }
+        @endphp
+
+        const chartData = {
+            monthly: {
+                categories: {!! json_encode($bulan) !!},
+                values: {!! json_encode($jumlah) !!},
+                title: 'Statistik Kunjungan Bulanan'
+            },
+            yearly: {
+                categories: {!! json_encode($tahun) !!},
+                values: {!! json_encode($jumlahTahunan) !!},
+                title: 'Statistik Kunjungan Tahunan'
+            },
+            poliklinik: "{{ ucwords(strtolower($poliklinik))}}"
         };
 
-        for(i in  {!! json_encode($jumlah) !!}){
-            colors.push(dynamicColors());
-        }
-        
-        const ctx = document.getElementById('chartKunjungan').getContext('2d');
-        const myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: {!! json_encode($bulan) !!},
-                datasets: [{
-                    label: 'Jumlah Kunjungan ' + "{{ ucwords(strtolower($poliklinik))}}",
-                    data: {!! json_encode($jumlah) !!},
-                    backgroundColor: colors,
-                    borderColor:'rgba(200, 200, 200, 0.75)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+        // Global chart variable
+        let visitChart;
+        let currentChartType = 'bar';
+        let currentPeriod = 'month';
+
+        // Initialize ApexChart
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChart('bar', 'month');
+            updateTotalVisits();
+            setupChartControls();
+            setupPeriodControls();
+        });
+
+        function initializeChart(chartType, period = 'month') {
+            // Destroy existing chart if exists
+            if (visitChart) {
+                visitChart.destroy();
+            }
+
+            // Get current data based on period
+            const currentData = period === 'year' ? chartData.yearly : chartData.monthly;
+
+            const options = {
+                series: [{
+                    name: 'Kunjungan Pasien',
+                    data: currentData.values
+                }],
+                chart: {
+                    type: chartType,
+                    height: 350,
+                    fontFamily: 'Inter, sans-serif',
+                    toolbar: {
+                        show: true,
+                        tools: {
+                            download: true,
+                            selection: false,
+                            zoom: true,
+                            zoomin: true,
+                            zoomout: true,
+                            pan: false,
+                            reset: true
+                        }
+                    },
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 1000,
+                        animateGradually: {
+                            enabled: true,
+                            delay: 150
+                        },
+                        dynamicAnimation: {
+                            enabled: true,
+                            speed: 350
+                        }
+                    },
+                    dropShadow: {
+                        enabled: true,
+                        color: '#000',
+                        top: 18,
+                        left: 7,
+                        blur: 10,
+                        opacity: 0.2
+                    }
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 4,
+                        columnWidth: '60%',
+                        distributed: true
+                    }
+                },
+                colors: getChartColors(chartType),
+                fill: getFillOptions(chartType),
+                dataLabels: {
+                    enabled: true,
+                    style: {
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        colors: chartType === 'bar' ? ['#fff'] : ['#333']
+                    },
+                    offsetY: chartType === 'bar' ? 0 : -20,
+                    formatter: function (val) {
+                        return val + ' pasien';
+                    }
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: chartType === 'line' ? 4 : chartType === 'area' ? 2 : 0
+                },
+                grid: {
+                    borderColor: '#e7e7e7',
+                    row: {
+                        colors: ['#f3f3f3', 'transparent'],
+                        opacity: 0.5
+                    },
+                    column: {
+                        colors: ['#f3f3f3', 'transparent'],
+                        opacity: 0.5
+                    }
+                },
+                xaxis: {
+                    categories: currentData.categories,
+                    title: {
+                        text: period === 'year' ? 'Tahun' : 'Bulan',
+                        style: {
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            color: '#667eea'
+                        }
+                    },
+                    labels: {
+                        style: {
+                            colors: '#6c757d',
+                            fontSize: '12px'
+                        }
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Jumlah Kunjungan',
+                        style: {
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            color: '#667eea'
+                        }
+                    },
+                    labels: {
+                        style: {
+                            colors: '#6c757d',
+                            fontSize: '12px'
+                        },
+                        formatter: function (val) {
+                            return Math.floor(val) + ' pasien';
+                        }
+                    }
+                },
+                tooltip: {
+                    theme: 'dark',
+                    style: {
+                        fontSize: '13px',
+                        fontFamily: 'Inter, sans-serif'
                     },
                     x: {
-                        beginAtZero: true
+                        formatter: function(val) {
+                            return period === 'year' ? 'Tahun ' + val : 'Bulan ' + val;
+                        }
+                    },
+                    y: {
+                        formatter: function (val) {
+                            return val + ' kunjungan pasien';
+                        }
+                    },
+                    marker: {
+                        show: true,
+                    },
+                    custom: function({series, seriesIndex, dataPointIndex, w}) {
+                        const label = w.globals.labels[dataPointIndex];
+                        const value = series[seriesIndex][dataPointIndex];
+                        const percentage = ((value / currentData.values.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+                        
+                        return '<div class="custom-tooltip">' +
+                            '<div class="tooltip-header">' + (period === 'year' ? 'Tahun ' : 'Bulan ') + label + '</div>' +
+                            '<div class="tooltip-body">' +
+                                '<div class="tooltip-row">' +
+                                    '<span class="tooltip-label">Kunjungan:</span>' +
+                                    '<span class="tooltip-value">' + value + ' pasien</span>' +
+                                '</div>' +
+                                '<div class="tooltip-row">' +
+                                    '<span class="tooltip-label">Persentase:</span>' +
+                                    '<span class="tooltip-value">' + percentage + '%</span>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
                     }
+                },
+                title: {
+                    text: currentData.title + ' ' + chartData.poliklinik + ' - ' + (period === 'year' ? '5 Tahun Terakhir' : 'Tahun ' + new Date().getFullYear()),
+                    align: 'center',
+                    style: {
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        color: '#2d3748'
+                    }
+                },
+                subtitle: {
+                    text: 'Data kunjungan pasien per ' + (period === 'year' ? 'tahun' : 'bulan'),
+                    align: 'center',
+                    style: {
+                        fontSize: '12px',
+                        color: '#6c757d'
+                    }
+                },
+                legend: {
+                    show: false
+                },
+                responsive: [{
+                    breakpoint: 768,
+                    options: {
+                        chart: {
+                            height: 300
+                        },
+                        dataLabels: {
+                            enabled: false
+                        },
+                        title: {
+                            style: {
+                                fontSize: '14px'
+                            }
+                        }
+                    }
+                }]
+            };
+
+            visitChart = new ApexCharts(document.querySelector("#chartKunjungan"), options);
+            visitChart.render();
+        }
+
+        function getChartColors(chartType) {
+            const baseColors = [
+                '#667eea', '#764ba2', '#56ab2f', '#f093fb', 
+                '#4facfe', '#ff9a9e', '#a8edea', '#ffecd2',
+                '#d299c2', '#fef9d7', '#667eea', '#764ba2'
+            ];
+            
+            if (chartType === 'line' || chartType === 'area') {
+                return ['#667eea'];
+            }
+            
+            const currentData = currentPeriod === 'year' ? chartData.yearly : chartData.monthly;
+            return baseColors.slice(0, currentData.values.length);
+        }
+
+        function getFillOptions(chartType) {
+            if (chartType === 'area') {
+                return {
+                    type: 'gradient',
+                    gradient: {
+                        shade: 'light',
+                        type: 'vertical',
+                        shadeIntensity: 0.5,
+                        gradientToColors: ['#764ba2'],
+                        inverseColors: false,
+                        opacityFrom: 0.8,
+                        opacityTo: 0.1,
+                        stops: [0, 100]
+                    }
+                };
+            } else if (chartType === 'bar') {
+                return {
+                    type: 'gradient',
+                    gradient: {
+                        shade: 'light',
+                        type: 'vertical',
+                        shadeIntensity: 0.3,
+                        gradientToColors: undefined,
+                        inverseColors: false,
+                        opacityFrom: 0.9,
+                        opacityTo: 0.6,
+                        stops: [0, 90, 100]
+                    }
+                };
+            }
+            
+            return {
+                opacity: 1
+            };
+        }
+
+        function updateTotalVisits() {
+            const currentData = currentPeriod === 'year' ? chartData.yearly : chartData.monthly;
+            const total = currentData.values.reduce((a, b) => a + b, 0);
+            document.getElementById('totalVisits').textContent = total.toLocaleString('id-ID');
+        }
+
+        function updateChartTitle(period) {
+            const titleElement = document.getElementById('chartTitle');
+            const baseTitle = 'Statistik Kunjungan {{ ucwords(strtolower($poliklinik))}}';
+            const periodText = period === 'year' ? ' - 5 Tahun Terakhir' : ' - Tahun {{ date("Y") }}';
+            titleElement.textContent = baseTitle + periodText;
+        }
+
+        function setupChartControls() {
+            const chartButtons = document.querySelectorAll('.chart-btn');
+            
+            chartButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const chartType = this.getAttribute('data-type');
+                    
+                    // Update active button
+                    chartButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update chart
+                    currentChartType = chartType;
+                    initializeChart(chartType, currentPeriod);
+                });
+            });
+        }
+
+        function setupPeriodControls() {
+            const periodButtons = document.querySelectorAll('.btn-filter');
+            
+            periodButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const period = this.getAttribute('data-period');
+                    
+                    // Update active button
+                    periodButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update period
+                    currentPeriod = period;
+                    
+                    // Update chart title
+                    updateChartTitle(period);
+                    
+                    // Update chart
+                    initializeChart(currentChartType, period);
+                    updateTotalVisits();
+                });
+            });
+        }
+
+        // Add loading states and interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize DataTables with modern styling
+            if (typeof $('#table5').DataTable === 'function') {
+                $('#table5').DataTable({
+                    responsive: true,
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json'
+                    },
+                    dom: 'Bfrtip',
+                    buttons: [
+                        {
+                            extend: 'excel',
+                            className: 'btn btn-success btn-sm',
+                            text: '<i class="fas fa-file-excel"></i> Excel'
+                        },
+                        {
+                            extend: 'pdf',
+                            className: 'btn btn-danger btn-sm',
+                            text: '<i class="fas fa-file-pdf"></i> PDF'
+                        }
+                    ]
+                });
+            }
+
+            if (typeof $('#table6').DataTable === 'function') {
+                $('#table6').DataTable({
+                    responsive: true,
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json'
+                    },
+                    dom: 'Bfrtip',
+                    buttons: [
+                        {
+                            extend: 'excel',
+                            className: 'btn btn-success btn-sm',
+                            text: '<i class="fas fa-file-excel"></i> Excel'
+                        },
+                        {
+                            extend: 'pdf',
+                            className: 'btn btn-danger btn-sm',
+                            text: '<i class="fas fa-file-pdf"></i> PDF'
+                        }
+                    ]
+                });
+            }
+
+            // Add real-time clock
+            function updateClock() {
+                const now = new Date();
+                const options = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                const dateElement = document.querySelector('.current-date');
+                if (dateElement) {
+                    dateElement.innerHTML = 
+                        '<i class="fas fa-calendar-alt me-2"></i>' + 
+                        now.toLocaleDateString('id-ID', options);
                 }
             }
+
+            // Update clock every minute
+            setInterval(updateClock, 60000);
+            updateClock();
+
+            // Add smooth animations for stat cards
+            const statCards = document.querySelectorAll('.stat-card');
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            statCards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+
+            // Add number counter animation
+            function animateNumbers() {
+                const numbers = document.querySelectorAll('.stat-number');
+                numbers.forEach(number => {
+                    const finalValue = parseInt(number.textContent.replace(/[^\d]/g, ''));
+                    let currentValue = 0;
+                    const increment = finalValue / 50;
+                    const timer = setInterval(() => {
+                        currentValue += increment;
+                        if (currentValue >= finalValue) {
+                            number.textContent = finalValue.toLocaleString('id-ID');
+                            clearInterval(timer);
+                        } else {
+                            number.textContent = Math.floor(currentValue).toLocaleString('id-ID');
+                        }
+                    }, 30);
+                });
+            }
+
+            // Trigger number animation after a short delay
+            setTimeout(animateNumbers, 500);
+
+            // Add chart responsiveness
+            window.addEventListener('resize', function() {
+                if (visitChart) {
+                    visitChart.updateOptions({
+                        chart: {
+                            height: window.innerWidth <= 768 ? 300 : 350
+                        }
+                    });
+                }
+            });
         });
+
+        // Floating Action Button Functions
+        function refreshDashboard() {
+            // Add loading state
+            const refreshBtn = document.querySelector('.fab-btn');
+            const originalIcon = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            refreshBtn.disabled = true;
+
+            // Simulate refresh delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        function exportData() {
+            // Create export options modal or direct download
+            const tables = ['table5', 'table6'];
+            const exportData = [];
+            
+            tables.forEach(tableId => {
+                const table = document.getElementById(tableId);
+                if (table && $.fn.DataTable.isDataTable('#' + tableId)) {
+                    const dataTable = $('#' + tableId).DataTable();
+                    dataTable.button('.buttons-excel').trigger();
+                }
+            });
+
+            // Show notification
+            showNotification('Data berhasil diexport!', 'success');
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            // Add notification styles
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#56ab2f' : '#667eea'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Add responsive behavior for floating buttons
+        function handleFloatingButtons() {
+            const floatingActions = document.querySelector('.floating-actions');
+            if (window.innerWidth <= 768) {
+                floatingActions.style.bottom = '1rem';
+                floatingActions.style.right = '1rem';
+            } else {
+                floatingActions.style.bottom = '2rem';
+                floatingActions.style.right = '2rem';
+            }
+        }
+
+        window.addEventListener('resize', handleFloatingButtons);
+        handleFloatingButtons();
     </script>
+    
+    {{-- Include Dokumen Online Modal --}}
+    @include('components.dokumen-online')
+    
+    @push('css')
+    <style>
+        .list-group-item {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .folder-item {
+            cursor: pointer;
+        }
+        
+        .breadcrumb {
+            background-color: #f8f9fa;
+            padding: 0.75rem 1rem;
+            border-radius: 0.25rem;
+        }
+        
+        #documentList {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        #folderList {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        /* PDF Viewer Styles */
+        #modalPdfViewer .modal-body {
+            overflow: hidden;
+        }
+        
+        #pdfIframe {
+            transition: opacity 0.3s ease;
+        }
+        
+        #modalPdfViewer .modal-dialog {
+            margin: 1.75rem auto;
+        }
+        
+        /* Search Styles */
+        #searchDocument {
+            transition: border-color 0.2s ease;
+        }
+        
+        #searchDocument:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        #searchBoxDocument mark {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 0 2px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        
+        #clearSearchDocument {
+            transition: all 0.2s ease;
+        }
+        
+        #clearSearchDocument:hover {
+            background-color: #f8f9fa;
+        }
+        
+        #searchResultInfo {
+            transition: opacity 0.2s ease;
+        }
+        
+        @media (max-width: 768px) {
+            #modalPdfViewer .modal-dialog {
+                max-width: 98vw !important;
+            }
+            
+            #modalPdfViewer .modal-body {
+                height: 70vh !important;
+            }
+            
+            #pdfIframe {
+                height: 70vh !important;
+            }
+            
+            #searchBoxDocument .input-group {
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+    @endpush
+    
+    @push('js')
+    <script>
+    $(document).ready(function() {
+        let currentFolder = null;
+        const baseUrl = '{{ url('/') }}';
+        
+        // Load folders when modal is shown
+        $('#modalDokumenOnline').on('show.bs.modal', function() {
+            if (currentFolder === null) {
+                loadFolders();
+            }
+        });
+        
+        // Back to folder list
+        $('#btnBackToFolder').on('click', function(e) {
+            e.preventDefault();
+            currentFolder = null;
+            $('#breadcrumbNav').hide();
+            $('#documentList').hide();
+            $('#folderList').show();
+            $('#searchBoxDocument').hide();
+            $('#searchDocument').val('');
+            $('#clearSearchDocument').hide();
+            $('#searchResultInfo').empty();
+        });
+        
+        function loadFolders() {
+            $.ajax({
+                url: baseUrl + '/dokumen-online/folders',
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        displayFolders(response.folders);
+                    } else {
+                        showError('Gagal memuat folder');
+                    }
+                },
+                error: function() {
+                    showError('Terjadi kesalahan saat memuat folder');
+                }
+            });
+        }
+        
+        function displayFolders(folders) {
+            let html = '';
+            
+            if (folders.length === 0) {
+                html = '<div class="alert alert-info">Tidak ada folder tersedia</div>';
+            } else {
+                folders.forEach(function(folder) {
+                    html += `
+                        <div class="list-group-item list-group-item-action folder-item" data-folder="${folder.path}">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-folder mr-2 text-warning"></i>
+                                    <strong>${folder.name}</strong>
+                                </div>
+                                <small class="text-muted">${folder.size}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            $('#folderList').html(html);
+            
+            // Add click handler for folders
+            $('.folder-item').on('click', function() {
+                const folderPath = $(this).data('folder');
+                loadDocuments(folderPath);
+            });
+        }
+        
+        function loadDocuments(folder) {
+            currentFolder = folder;
+            
+            $.ajax({
+                url: baseUrl + '/dokumen-online/documents/' + encodeURIComponent(folder),
+                method: 'GET',
+                beforeSend: function() {
+                    $('#documentList').html('<div class="text-center p-3"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div></div>').show();
+                },
+                success: function(response) {
+                    if (response.success) {
+                        displayDocuments(response.documents, folder);
+                        $('#breadcrumbNav').show();
+                        $('#currentFolder').text(folder);
+                        $('#folderList').hide();
+                        $('#documentList').show();
+                        $('#searchBoxDocument').show();
+                    } else {
+                        showError('Gagal memuat dokumen');
+                    }
+                },
+                error: function() {
+                    showError('Terjadi kesalahan saat memuat dokumen');
+                }
+            });
+        }
+        
+        // Store all documents for search
+        let allDocuments = [];
+        
+        function displayDocuments(documents, folder) {
+            // Store all documents
+            allDocuments = documents;
+            
+            // Display all documents initially
+            filterAndDisplayDocuments('');
+            
+            // Setup search functionality
+            setupSearchFunctionality();
+        }
+        
+        function setupSearchFunctionality() {
+            // Remove previous listeners
+            $('#searchDocument').off('input');
+            $('#clearSearchDocument').off('click');
+            
+            // Search input handler
+            let searchTimeout;
+            $('#searchDocument').on('input', function() {
+                const query = $(this).val().toLowerCase().trim();
+                
+                clearTimeout(searchTimeout);
+                
+                searchTimeout = setTimeout(function() {
+                    filterAndDisplayDocuments(query);
+                    
+                    // Show/hide clear button
+                    if (query.length > 0) {
+                        $('#clearSearchDocument').show();
+                    } else {
+                        $('#clearSearchDocument').hide();
+                    }
+                }, 300);
+            });
+            
+            // Clear search button
+            $('#clearSearchDocument').on('click', function() {
+                $('#searchDocument').val('').trigger('input');
+                $('#clearSearchDocument').hide();
+            });
+        }
+        
+        function filterAndDisplayDocuments(query) {
+            let html = '';
+            let filteredDocs = allDocuments;
+            
+            // Filter documents if query exists
+            if (query.length > 0) {
+                filteredDocs = allDocuments.filter(function(doc) {
+                    return doc.name.toLowerCase().includes(query);
+                });
+            }
+            
+            // Update search result info
+            updateSearchResultInfo(allDocuments.length, filteredDocs.length, query);
+            
+            if (filteredDocs.length === 0) {
+                html = `<div class="alert alert-warning">
+                    <i class="fas fa-search mr-2"></i>
+                    ${query.length > 0 ? 'Tidak ada dokumen yang cocok dengan "' + query + '"' : 'Tidak ada dokumen tersedia'}
+                </div>`;
+            } else {
+                filteredDocs.forEach(function(doc) {
+                    html += `
+                        <div class="list-group-item list-group-item-action document-item" data-name="${doc.name.toLowerCase()}">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-file-pdf mr-2 text-danger"></i>
+                                    <span>${highlightSearchTerm(doc.name, query)}</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    ${doc.size ? '<small class="text-muted mr-2">' + doc.size + '</small>' : ''}
+                                    <button class="btn btn-sm btn-primary open-pdf-viewer" data-url="${doc.url}" data-name="${doc.name}" title="Buka PDF">
+                                        <i class="fas fa-file-pdf"></i> Buka
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            $('#documentList').html(html);
+            
+            // Add click handler for PDF viewer buttons
+            $('.open-pdf-viewer').off('click').on('click', function(e) {
+                e.preventDefault();
+                const pdfUrl = $(this).data('url');
+                const pdfName = $(this).data('name');
+                openPdfViewer(pdfUrl, pdfName);
+            });
+        }
+        
+        function highlightSearchTerm(text, query) {
+            if (!query || query.length === 0) {
+                return text;
+            }
+            
+            // Escape special regex characters
+            const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedQuery})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+        
+        function updateSearchResultInfo(total, filtered, query) {
+            let info = '';
+            
+            if (query.length > 0) {
+                if (filtered === total) {
+                    info = `<i class="fas fa-check-circle text-success"></i> Menampilkan ${filtered} dari ${total} dokumen`;
+                } else {
+                    info = `<i class="fas fa-filter text-primary"></i> Menampilkan ${filtered} dari ${total} dokumen`;
+                }
+            } else {
+                info = `<i class="fas fa-info-circle text-muted"></i> ${total} dokumen tersedia`;
+            }
+            
+            $('#searchResultInfo').html(info);
+        }
+        
+        function openPdfViewer(pdfUrl, pdfName) {
+            // Set modal title
+            $('#modalPdfViewerTitle').html('<i class="fas fa-file-pdf mr-2"></i>' + pdfName);
+            
+            // Reset previous listeners
+            $('#pdfIframe').off('load error');
+            
+            // Show loading state
+            $('#pdfLoading').show();
+            $('#pdfIframe').hide();
+            $('#pdfError').hide();
+            
+            // Set external links
+            $('#pdfExternalLink').attr('href', pdfUrl);
+            $('#pdfDownloadLink').attr('href', pdfUrl);
+            
+            // Create Google Docs Viewer URL
+            const viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(pdfUrl) + '&embedded=true';
+            
+            // Set iframe source
+            $('#pdfIframe').attr('src', viewerUrl);
+            
+            // Show modal
+            $('#modalPdfViewer').modal('show');
+            
+            // Handle iframe load with timeout
+            let loadTimeout = setTimeout(function() {
+                $('#pdfLoading').hide();
+                $('#pdfIframe').show();
+            }, 1500);
+            
+            // Handle iframe load event (one-time)
+            $('#pdfIframe').one('load', function() {
+                clearTimeout(loadTimeout);
+                $('#pdfLoading').hide();
+                $('#pdfIframe').show();
+            });
+            
+            // Handle iframe error (one-time)
+            $('#pdfIframe').one('error', function() {
+                clearTimeout(loadTimeout);
+                showPdfError(pdfUrl);
+            });
+        }
+        
+        function showPdfError(pdfUrl) {
+            $('#pdfLoading').hide();
+            $('#pdfIframe').hide();
+            $('#pdfError').show();
+            $('#pdfDownloadLink').attr('href', pdfUrl);
+        }
+        
+        // Reset modal when closed
+        $('#modalPdfViewer').on('hidden.bs.modal', function() {
+            // Clear iframe source to prevent memory leaks
+            $('#pdfIframe').attr('src', 'about:blank');
+            
+            // Reset states
+            $('#pdfLoading').show();
+            $('#pdfIframe').hide();
+            $('#pdfError').hide();
+            
+            // Remove all event listeners
+            $('#pdfIframe').off('load error');
+        });
+        
+        function showError(message) {
+            $('#folderList').html(`
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    ${message}
+                </div>
+            `);
+        }
+    });
+    </script>
+    @endpush
 @stop
