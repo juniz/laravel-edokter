@@ -3,7 +3,7 @@
 @section('title', 'Pasien Ranap')
 
 @section('content_header')
-    <h1>Pasien Ranapp</h1>
+    <h1>Pasien Ranap</h1>
 @stop
 
 @section('content')
@@ -44,9 +44,9 @@
                 </td>
                 <td>
                     <div class="dropdown">
-                        <button id="my-dropdown" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">{{$row->no_rawat}}</button>
-                        <div class="dropdown-menu" aria-labelledby="my-dropdown">
-                            <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-medis-ranap"> Penilaian Awal Medis Ranap</button>
+                        <button id="my-dropdown-{{$row->no_rawat}}" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">{{$row->no_rawat}}</button>
+                        <div class="dropdown-menu" aria-labelledby="my-dropdown-{{$row->no_rawat}}">
+                            <a class="dropdown-item" href="{{route('ralan.pemeriksaan', ['no_rawat' => $noRawat, 'no_rm' => $noRM])}}">Pemeriksaan Ralan</a>
                         </div>
                     </div>
                 </td>
@@ -66,6 +66,19 @@
 @stop
 
 @section('plugins.TempusDominusBs4', true)
+@section('css')
+<style>
+    .dropdown-menu .dropdown-item {
+        color: #212529;
+    }
+    
+    .dropdown-menu .dropdown-item:hover,
+    .dropdown-menu .dropdown-item:focus {
+        color: #212529 !important;
+        background-color: #f8f9fa;
+    }
+</style>
+@stop
 @section('js')
 <script>
     // $(function() {
