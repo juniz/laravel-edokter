@@ -46,6 +46,7 @@
                     <div class="dropdown">
                         <button id="my-dropdown-{{$row->no_rawat}}" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">{{$row->no_rawat}}</button>
                         <div class="dropdown-menu" aria-labelledby="my-dropdown-{{$row->no_rawat}}">
+                            <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-medis-ranap"> Penilaian Awal Medis Ranap</button>
                             <a class="dropdown-item" href="{{route('ralan.pemeriksaan', ['no_rawat' => $noRawat, 'no_rm' => $noRM])}}">Pemeriksaan Ralan</a>
                         </div>
                     </div>

@@ -207,7 +207,7 @@
 @push('js')
 <script>
     $(".btn-awal-medis-ranap").on('click', function(){
-        alert('ok');
+        // alert('ok');
         var id = $(this).attr('id');
         @this.set('no_rawat', id);
         $("#modal-awal-medis-ranap").modal('show');
