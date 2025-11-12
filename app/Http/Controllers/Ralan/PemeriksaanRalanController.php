@@ -143,7 +143,7 @@ class PemeriksaanRalanController extends Controller
     {
         $data = DB::table('resep_dokter')
             ->join('databarang', 'resep_dokter.kode_brng', '=', 'databarang.kode_brng')
-            ->where('resep_dokter.no_resep', $noResep)
+            ->where('resep_dokter.no_resep', 'like', '%' . $noResep . '%')
             ->select('databarang.nama_brng', 'resep_dokter.jml', 'resep_dokter.aturan_pakai', 'resep_dokter.kode_brng')
             ->get();
         return response()->json($data);
