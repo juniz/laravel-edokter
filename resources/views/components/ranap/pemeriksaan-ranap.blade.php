@@ -50,12 +50,13 @@
         </x-adminlte-card>
         <x-adminlte-card theme="info" title="Riwayat" theme-mode="outline" header-class="rounded-bottom" collapsible>
             @php
+                $dokterLogin = session()->get('username');
                 $config["responsive"] = true;
-                $config['order'] = [[1, 'desc'], [2, 'desc']];
+                $config['order'] = [[8, 'asc'], [1, 'desc'], [2, 'desc']];
             @endphp
             <x-adminlte-datatable id="tableRiwayatPemeriksaanRanap" :heads="$heads" head-theme="dark" :config="$config" striped hoverable bordered compressed>
                 @foreach($riwayat as $row)
-                    <tr>
+                    <tr data-is-dokter="{{ $row->nip == $dokterLogin ? '1' : '0' }}">
                         <td>{{ $row->nama }}</td>
                         <td>{{ $row->tgl_perawatan }}</td>
                         <td>{{ $row->jam_rawat }}</td>
@@ -68,6 +69,7 @@
                                 <i class="fa fa-lg fa-fw fa-pen"></i>
                             </button>
                         </td>
+                        <td style="display: none;">{{ $row->nip == $dokterLogin ? '0' : '1' }}</td>
                     </tr>
                 @endforeach
             </x-adminlte-datatable>
@@ -83,6 +85,21 @@
 @push('js')
     {{-- <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script> --}}
     <script>
+        $(document).ready(function() {
+            // Gunakan event listener untuk memastikan sorting dilakukan setelah DataTables diinisialisasi
+            $('#tableRiwayatPemeriksaanRanap').on('init.dt', function() {
+                var table = $('#tableRiwayatPemeriksaanRanap').DataTable();
+                
+                // Urutkan berdasarkan kolom tersembunyi (0 untuk dokter, 1 untuk lainnya)
+                // Kemudian urutkan berdasarkan tanggal dan jam
+                table.order([
+                    [8, 'asc'],  // Kolom tersembunyi untuk sorting dokter
+                    [1, 'desc'], // Tanggal descending
+                    [2, 'desc']  // Jam descending
+                ]).draw();
+            });
+        });
+
         function showModalEdit(noRawat, tgl, jam){
             $.ajax({
                 url: "{{url('/ranap/pemeriksaan')}}"+"/"+"{{$encryptNoRawat}}"+"/"+tgl+"/"+jam,

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Illuminate\View\Component;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Session;
 
 class PemeriksaanRanap extends Component
 {
@@ -43,12 +44,19 @@ class PemeriksaanRanap extends Component
 
     public function getRiwayat($noRM)
     {
-        $data = DB::table('pemeriksaan_ranap')
+        $dokterLogin = Session::get('username');
+        $query = DB::table('pemeriksaan_ranap')
             ->join('reg_periksa', 'reg_periksa.no_rawat', '=', 'pemeriksaan_ranap.no_rawat')
             ->join('pegawai', 'pemeriksaan_ranap.nip', '=', 'pegawai.nik')
             ->where('reg_periksa.no_rkm_medis', $noRM)
-            ->select('pemeriksaan_ranap.*', 'pegawai.nama')
-            ->orderBy('pemeriksaan_ranap.tgl_perawatan', 'DESC')
+            ->select('pemeriksaan_ranap.*', 'pegawai.nama');
+        
+        if ($dokterLogin) {
+            $dokterLoginEscaped = DB::connection()->getPdo()->quote($dokterLogin);
+            $query->orderByRaw("CASE WHEN pemeriksaan_ranap.nip = {$dokterLoginEscaped} THEN 0 ELSE 1 END");
+        }
+        
+        $data = $query->orderBy('pemeriksaan_ranap.tgl_perawatan', 'DESC')
             ->orderByDesc('pemeriksaan_ranap.jam_rawat')
             ->get();
         return $data;
