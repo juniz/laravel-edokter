@@ -1,188 +1,280 @@
-<p align="center"><img src="https://raw.githubusercontent.com/yogijowo/laravel12-react-starterkit/refs/heads/main/screenshots/landing-welcome.png" alt="Laravel 12 + React Starter Kit"></p>
+# Abahost - Platform Penyewaan Hosting
 
-# 🚀 Laravel 12 + React Starter Kit
+Aplikasi platform penyewaan layanan hosting (shared/VPS) dengan dukungan manajemen paket, domain, order, langganan (subscription), penagihan (invoice), pembayaran otomatis/manual, provisioning ke panel (cPanel/DirectAdmin/Proxmox melalui adapter), dan dukungan tiket.
 
-A modern and flexible starter kit built with **Laravel 12**, **React (Inertia.js + TypeScript)**, **TailwindCSS**, and **ShadCN UI v4**. Designed to accelerate secure, responsive, and customizable dashboard application development.
+## 🛠️ Tech Stack
 
----
+- **Backend**: Laravel 12 (PHP 8.2+)
+- **Frontend**: React + Inertia.js + Tailwind CSS
+- **Database**: MySQL 8/14+ atau PostgreSQL 14+
+- **Cache/Queue**: Redis
+- **Queue Management**: Laravel Horizon
+- **Permissions**: Spatie Laravel Permission
+- **Activity Log**: Spatie Laravel Activity Log
+- **Media Library**: Spatie Laravel Media Library
 
-## ✨ Features
+## 📋 Persyaratan
 
-- 🔐 Full authentication (login, register, reset password)
-- 👥 Role & Permission Management (Spatie Laravel Permission)
-- 📂 Dynamic Sidebar & Menus based on role & permission
-- 🧩 Drag & drop menu management (nested, reorder)
-- ⚙️ App settings (name, logo, theme color, SEO)
-- 🎨 ShadCN UI v4 + TailwindCSS modern design
-- 🌗 Dark/Light mode support
-- 🔒 Dynamic access protection via `CheckMenuPermission` middleware
-- ⚠️ Custom 403 Error Page (React-based)
-- 💾 Primary color configuration via DB `--primary`
-- 🪪 Audit Log to track user activity
-- 📦 Manual & automatic database backup system
-- 🗂️ File Manager with folder & file operations
+- PHP 8.2 atau lebih tinggi
+- Composer
+- Node.js & NPM
+- MySQL 8+ atau PostgreSQL 14+
+- Redis (untuk cache & queue)
 
----
+## 🚀 Instalasi
 
-## 🧱 Tech Stack
-
-| Area        | Technology                         |
-| ----------- | ---------------------------------- |
-| Backend     | Laravel 12                         |
-| Frontend    | React 19 + Inertia.js + TypeScript |
-| UI Library  | ShadCN UI v4                       |
-| CSS Utility | TailwindCSS                        |
-| Auth        | Laravel Fortify / Breeze-style     |
-| Access Ctrl | Spatie Laravel Permission v5       |
-| DBMS        | MySQL / MariaDB                    |
-| Layout      | Dynamic Sidebar + Header           |
-
----
-
-## 🔧 Installation & Setup
-
+1. Clone repository:
 ```bash
-# Create project
-composer create-project yogijowo/laravel12-react-starterkit my-app
-cd my-app
+git clone <repository-url>
+cd abahost
+```
 
-# Backend setup
+2. Install dependencies:
+```bash
 composer install
-
-# Configure your database settings in .env
-php artisan migrate:fresh --seed
-
-# Frontend setup
 npm install
-
-# Running dev
-composer run dev
 ```
 
-Login using:
-
-```
-Email: admin@admin.com
-Password: admin123
-```
-
----
-
-## 🚀 Deployment Guide
-
-1. **Build Frontend for Production**
-
+3. Setup environment:
 ```bash
-npm install
+cp .env.example .env
+php artisan key:generate
+```
+
+4. Konfigurasi database di `.env`:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=abahost
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+5. Jalankan migrations dan seeders:
+```bash
+php artisan migrate
+php artisan db:seed
+```
+
+6. Build frontend assets:
+```bash
 npm run build
+# atau untuk development:
+npm run dev
 ```
 
-2. **Run Laravel in Production Mode**
+7. Jalankan aplikasi:
+```bash
+php artisan serve
+```
+
+## 📁 Struktur Project
+
+```
+app/
+  Domain/                    # Domain Entities & Business Logic
+    Billing/                 # Invoice, Payment, Refund
+    Catalog/                 # Product, Plan, Coupon
+    Customer/                # Customer, Domain
+    Order/                   # Order, Cart
+    Provisioning/            # Server, PanelAccount, ProvisionTask
+    Subscription/            # Subscription, SubscriptionCycle
+    Support/                 # Ticket, TicketReply
+    Shared/                  # ValueObjects, Contracts, Exceptions
+  Application/               # Use Cases / Services
+    Billing/
+    Catalog/
+    Order/
+    ...
+  Infrastructure/            # External Implementations
+    Persistence/
+      Eloquent/              # Eloquent Repository implementations
+    Provisioning/
+      Adapters/              # cPanel, DirectAdmin, Proxmox adapters
+    Payments/
+      Adapters/              # Midtrans, Xendit, Tripay adapters
+  Http/
+    Controllers/             # HTTP Controllers
+    Requests/                # Form Requests
+  Jobs/                      # Queue Jobs
+  Events/                    # Domain Events
+  Listeners/                 # Event Listeners
+```
+
+## 🔑 Fitur Utama
+
+### 1. Catalog Management
+- Manajemen produk (Shared Hosting, VPS, Addon, Domain)
+- Manajemen plans dengan berbagai billing cycle
+- Plan features management
+- Coupon management
+
+### 2. Order Management
+- Cart system
+- Order placement
+- Order tracking
+- Automatic invoice generation
+
+### 3. Billing System
+- Invoice generation
+- Multiple payment gateways (Midtrans, Xendit, Tripay, Manual Transfer)
+- Payment tracking
+- Refund management
+
+### 4. Subscription Management
+- Subscription lifecycle management
+- Auto-renewal system
+- Grace period handling
+- Subscription cycles tracking
+
+### 5. Provisioning System
+- Multi-adapter support (cPanel, DirectAdmin, Proxmox)
+- Automatic account provisioning
+- Account suspension/termination
+- Plan changes
+
+### 6. Support System
+- Ticket system
+- Priority management
+- SLA tracking
+- Ticket replies
+
+## 🏗️ Arsitektur
+
+Aplikasi ini menggunakan **Domain-Driven Design (DDD)** dengan **Repository Pattern**:
+
+### Domain Layer
+- **Entities**: Customer, Product, Order, Invoice, Subscription, dll
+- **Contracts**: Repository interfaces
+- **Value Objects**: (jika diperlukan)
+
+### Application Layer
+- **Services/Use Cases**: Business logic orchestration
+- Contoh: `PlaceOrderService`, `GenerateInvoiceService`
+
+### Infrastructure Layer
+- **Persistence**: Eloquent repository implementations
+- **Adapters**: External service integrations
+
+### Presentation Layer
+- **Controllers**: HTTP request handling
+- **Requests**: Form validation
+- **React Components**: Frontend UI
+
+## 🔄 Alur Bisnis
+
+### 1. Order Flow
+```
+Customer → Pilih Produk → Add to Cart → Checkout → Create Order → Generate Invoice → Payment → Provision Account
+```
+
+### 2. Payment Flow
+```
+Invoice Created → Payment Gateway → Webhook → Mark Invoice Paid → Trigger Provisioning
+```
+
+### 3. Provisioning Flow
+```
+Invoice Paid → Dispatch ProvisionAccountJob → Adapter.createAccount() → Update Subscription → Send Welcome Email
+```
+
+### 4. Renewal Flow
+```
+Daily Cron → Check Due Subscriptions → Generate Invoice → Charge Payment → Extend Subscription
+```
+
+## 📝 Configuration
+
+### Payment Gateways
+Konfigurasi di `.env`:
+```env
+PAYMENT_DEFAULT=manual
+MIDTRANS_SERVER_KEY=
+XENDIT_API_KEY=
+TRIPAY_API_KEY=
+```
+
+### Provisioning Adapters
+Konfigurasi di `.env`:
+```env
+PROVISIONING_DEFAULT=cpanel
+```
+
+### Queue
+Pastikan Redis sudah running dan konfigurasi queue:
+```env
+QUEUE_CONNECTION=redis
+```
+
+Jalankan queue worker:
+```bash
+php artisan queue:work
+# atau menggunakan Horizon:
+php artisan horizon
+```
+
+## 🧪 Testing
 
 ```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan test
 ```
 
-3. **Set File Permissions**
+## 📅 Scheduled Tasks
 
+Aplikasi memiliki scheduled tasks di `routes/console.php`:
+- **RenewSubscriptionJob**: Berjalan setiap hari jam 02:00 untuk auto-renewal
+
+Pastikan cron job sudah setup:
 ```bash
-chmod -R 775 storage bootstrap/cache
-chown -R www-data:www-data .
+* * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-4. **Serve with Web Server** (Nginx/Apache) pointing to `public/` folder.
+## 🔐 Roles & Permissions
 
----
+Default roles:
+- **admin**: Full access
+- **billing**: Invoice & payment management
+- **support**: Ticket management
+- **customer**: Customer access
 
-## 🖼️ Application Screenshots
+## 📚 API Documentation
 
-### 📌 Dashboard (light)
+API endpoints akan tersedia di `/api` (jika diperlukan).
 
-![Dashboard](./screenshots/dashboard-light.png)
+## 🐛 Troubleshooting
 
-### 📌 Dashboard (dark)
+### Migration Issues
+Jika ada masalah dengan ULID:
+```bash
+php artisan migrate:fresh
+```
 
-![Dashboard](./screenshots/dashboard-dark.png)
+### Queue Not Running
+Pastikan Redis sudah running:
+```bash
+redis-cli ping
+```
 
-### 📌 User Management
-
-![Users](./screenshots/users.png)
-
-### 📌 Role Management
-
-![Roles](./screenshots/roles.png)
-
-### 📌 Permission Management
-
-![Permissions](./screenshots/permissions.png)
-
-### 📌 Menu Manager
-
-![Menus](./screenshots/menus.png)
-
-### 📌 App Settings
-
-![App Settings](./screenshots/app-settings.png)
-
-### 📌 Audit Logs
-
-![Audit Logs](./screenshots/audit-logs.png)
-
-### 📌 Database Backup
-
-![Backup](./screenshots/backup.png)
-
-### 📌 File Manager
-
-![File Manager](./screenshots/file-manager.png)
-
----
-
-## ✅ Manual Test Checklist
-
-| Feature                  | Status |
-| ------------------------ | ------ |
-| Authentication (Login)   | ✅     |
-| CRUD User                | ✅     |
-| CRUD Role & Permission   | ✅     |
-| Dynamic Menu + Sidebar   | ✅     |
-| Access Protection (403)  | ✅     |
-| Drag & Drop Menu Sorting | ✅     |
-| Theme Color via DB       | ✅     |
-| Dark Mode Support        | ✅     |
-| Audit Logs Functionality | ✅     |
-| Database Backup          | ✅     |
-| File Manager             | ✅     |
-
----
-
-## ☕ Support This Project
-
-If you find this starter kit helpful, consider supporting me:
-
-- 💖 [Donate via Ko-fi](https://ko-fi.com/yogijowo)
-- 🧧 [Donate via Saweria](https://saweria.co/yogijowo)
-- 🙌 Share this repo with others
-
-Your support helps me keep improving this open-source project. Thank you! 🙏
-
----
+### Adapter Not Found
+Pastikan service provider sudah terdaftar di `bootstrap/providers.php`
 
 ## 📄 License
 
-Released under the [MIT License](https://opensource.org/licenses/MIT). Feel free to use it for personal or commercial projects.
+MIT License
+
+## 👥 Contributing
+
+1. Fork repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Create Pull Request
+
+## 📞 Support
+
+Untuk pertanyaan atau dukungan, silakan buat issue di repository.
 
 ---
 
-## 🇵🇸 Free Palestine
-
-> **"You don’t have to be Palestinian to stand for Palestine. You just have to be human."**
-
-We stand with the people of Palestine. We reject colonialism, injustice, and violence.
-**Freedom is a human right. FREE PALESTINE 🇵🇸**
-
----
-
-Created with ❤️ by [@yogijowo](https://github.com/yogijowo)
+**Dibuat dengan ❤️ menggunakan Laravel + React + Inertia**

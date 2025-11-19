@@ -29,7 +29,7 @@ class ShareMenus
                     ->filter(
                         fn($menu) =>
                         $menu->parent_id === $parentId &&
-                            (!$menu->permission_name || $user->can($menu->permission_name))
+                            (!$menu->permission_name || $user->hasPermissionTo($menu->permission_name))
                     )
                     ->map(function ($menu) use (&$buildTree) {
                         $menu->children = $buildTree($menu->id)->values();

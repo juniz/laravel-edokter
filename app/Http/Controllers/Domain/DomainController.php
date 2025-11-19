@@ -1,0 +1,247 @@
+<?php
+
+namespace App\Http\Controllers\Domain;
+
+use App\Application\Rdash\Domain\CheckDomainAvailabilityService;
+use App\Application\Rdash\Domain\GetDomainDetailsService;
+use App\Application\Rdash\Domain\ListDomainsService;
+use App\Application\Rdash\Domain\RegisterDomainViaRdashService;
+use App\Domain\Customer\Contracts\CustomerRepository;
+use App\Http\Controllers\Controller;
+use App\Models\Domain\Customer\Domain;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class DomainController extends Controller
+{
+    public function __construct(
+        private ListDomainsService $listDomainsService,
+        private CheckDomainAvailabilityService $checkAvailabilityService,
+        private GetDomainDetailsService $getDomainDetailsService,
+        private RegisterDomainViaRdashService $registerDomainService,
+        private CustomerRepository $customerRepository
+    ) {
+    }
+
+    /**
+     * Display a listing of domains
+     */
+    public function index(Request $request)
+    {
+        $filters = $request->only([
+            'customer_id',
+            'name',
+            'status',
+            'verification_status',
+            'required_document',
+            'created_range',
+            'expired_range',
+            'page',
+            'limit',
+        ]);
+
+        // Get local domains
+        $query = Domain::with('customer');
+
+        // Jika customer (bukan admin), hanya tampilkan domains mereka sendiri
+        if (auth()->user()->hasRole('customer') || auth()->user()->hasRole('user')) {
+            $customer = auth()->user()->customer;
+            if ($customer) {
+                $query->where('customer_id', $customer->id);
+            } else {
+                // Jika user tidak punya customer, return empty
+                $query->whereRaw('1 = 0');
+            }
+        } elseif ($request->has('customer_id') && $request->customer_id) {
+            // Admin bisa filter by customer_id
+            $query->where('customer_id', $request->customer_id);
+        }
+
+        if ($request->has('name') && $request->name) {
+            $query->where('name', 'like', "%{$request->name}%");
+        }
+
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $domains = $query->latest()->paginate($request->get('per_page', 15));
+
+        // Get domains from RDASH (hanya untuk admin atau jika customer_id di-filter)
+        $rdashDomains = [];
+        if (auth()->user()->hasRole('admin')) {
+            $rdashDomains = $this->listDomainsService->execute($filters);
+        }
+
+        return Inertia::render('domains/Index', [
+            'domains' => $domains,
+            'rdashDomains' => array_map(fn ($d) => $d->toArray(), $rdashDomains),
+            'filters' => $filters,
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new domain
+     */
+    public function create()
+    {
+        // Jika customer, gunakan customer mereka sendiri
+        if (auth()->user()->hasRole('customer') || auth()->user()->hasRole('user')) {
+            $customer = auth()->user()->customer;
+            if (!$customer || !$customer->rdash_customer_id || $customer->rdash_sync_status !== 'synced') {
+                return redirect()->route('customer.domains.index')->withErrors([
+                    'error' => 'Customer belum di-sync ke RDASH. Silakan hubungi admin untuk sync customer terlebih dahulu.',
+                ]);
+            }
+            $customers = collect([$customer]);
+        } else {
+            // Admin bisa pilih customer
+            $customers = \App\Models\Domain\Customer\Customer::whereNotNull('rdash_customer_id')
+                ->where('rdash_sync_status', 'synced')
+                ->get();
+        }
+
+        return Inertia::render('domains/Form', [
+            'customers' => $customers,
+        ]);
+    }
+
+    /**
+     * Store a newly created domain
+     */
+    public function store(Request $request)
+    {
+        // Jika customer, gunakan customer mereka sendiri
+        $customerId = null;
+        if (auth()->user()->hasRole('customer') || auth()->user()->hasRole('user')) {
+            $customer = auth()->user()->customer;
+            if (!$customer) {
+                return redirect()->back()->withErrors(['error' => 'Customer tidak ditemukan.']);
+            }
+            $customerId = $customer->id;
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'period' => 'required|integer|min:1|max:10',
+            'customer_id' => $customerId ? 'sometimes|string' : 'required|string|exists:customers,id',
+            'nameserver' => 'sometimes|array|max:5',
+            'nameserver.*' => 'string|max:255',
+            'buy_whois_protection' => 'sometimes|boolean',
+            'include_premium_domains' => 'sometimes|boolean',
+            'registrant_contact_id' => 'sometimes|integer',
+            'auto_renew' => 'sometimes|boolean',
+        ]);
+
+        // Format nameservers untuk API RDASH
+        $data = [
+            'name' => $validated['name'],
+            'period' => $validated['period'],
+            'customer_id' => $customerId ?? $validated['customer_id'],
+            'auto_renew' => $validated['auto_renew'] ?? false,
+        ];
+
+        if (isset($validated['nameserver'])) {
+            foreach ($validated['nameserver'] as $index => $ns) {
+                $data["nameserver[{$index}]"] = $ns;
+            }
+        }
+
+        if (isset($validated['buy_whois_protection'])) {
+            $data['buy_whois_protection'] = $validated['buy_whois_protection'];
+        }
+
+        if (isset($validated['include_premium_domains'])) {
+            $data['include_premium_domains'] = $validated['include_premium_domains'];
+        }
+
+        if (isset($validated['registrant_contact_id'])) {
+            $data['registrant_contact_id'] = $validated['registrant_contact_id'];
+        }
+
+        $result = $this->registerDomainService->execute($data);
+
+        if (!$result['success']) {
+            return redirect()->back()->withErrors(['error' => $result['message']]);
+        }
+
+        // Redirect berdasarkan role
+        if (auth()->user()->hasRole('customer') || auth()->user()->hasRole('user')) {
+            return redirect()->route('customer.domains.index')->with('success', $result['message']);
+        }
+        return redirect()->route('admin.domains.index')->with('success', $result['message']);
+    }
+
+    /**
+     * Display the specified domain
+     */
+    public function show(Domain $domain)
+    {
+        $domain->load('customer');
+
+        // Check authorization: customer hanya bisa lihat domains mereka sendiri
+        if (auth()->user()->hasRole('customer') || auth()->user()->hasRole('user')) {
+            $customer = auth()->user()->customer;
+            if (!$customer || $domain->customer_id !== $customer->id) {
+                abort(403, 'Unauthorized access to this domain');
+            }
+        }
+
+        // Get RDASH domain details if available
+        $rdashDomain = null;
+        if ($domain->rdash_domain_id) {
+            $rdashDomain = $this->getDomainDetailsService->executeById($domain->rdash_domain_id);
+        }
+
+        return Inertia::render('domains/Show', [
+            'domain' => $domain,
+            'rdashDomain' => $rdashDomain?->toArray(),
+        ]);
+    }
+
+    /**
+     * Check domain availability
+     */
+    public function checkAvailability(Request $request)
+    {
+        $validated = $request->validate([
+            'domain' => 'required|string',
+            'include_premium_domains' => 'sometimes|boolean',
+        ]);
+
+        $availability = $this->checkAvailabilityService->execute(
+            $validated['domain'],
+            $validated['include_premium_domains'] ?? false
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $availability->toArray(),
+        ]);
+    }
+
+    /**
+     * Get domain details by name
+     */
+    public function getDetails(Request $request)
+    {
+        $validated = $request->validate([
+            'domain_name' => 'required|string',
+        ]);
+
+        $domain = $this->getDomainDetailsService->execute($validated['domain_name']);
+
+        if (!$domain) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Domain not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $domain->toArray(),
+        ]);
+    }
+}
+
