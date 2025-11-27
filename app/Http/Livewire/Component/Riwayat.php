@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Component;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Riwayat extends Component
 {
@@ -11,18 +12,22 @@ class Riwayat extends Component
     protected $pasien;
     public $data = [];
     public $selectDokter = "";
-    protected $listeners = ['loadRiwayatPasien' => 'init'];
+    public $readyToLoad = false; // Flag untuk lazy loading
+    protected $listeners = [
+        'loadRiwayatPasien' => 'init',
+        'refresh' => '$refresh'
+    ];
 
     public function mount($noRawat)
     {
         $this->noRawat = $noRawat;
-        $this->pasien = $this->getPasien($noRawat);
-        // dd($noRawat);
+        // Tidak load data pasien dan riwayat saat mount untuk optimasi performa
+        // Data akan di-load saat user menekan tombol riwayat
     }
 
     public function hydrate()
     {
-        $this->pasien = $this->getPasien($this->noRawat);
+        // Tidak load data saat hydrate untuk optimasi performa
     }
 
     public function render()
@@ -34,7 +39,25 @@ class Riwayat extends Component
 
     public function init()
     {
-        $this->data = $this->getRiwayatPemeriksaan($this->pasien->no_rkm_medis);
+        try {
+            // Load data pasien jika belum di-load
+            if (!$this->pasien) {
+                $this->pasien = $this->getPasien($this->noRawat);
+            }
+
+            // Load data riwayat hanya jika pasien ditemukan
+            if ($this->pasien) {
+                $this->data = $this->getRiwayatPemeriksaan($this->pasien->no_rkm_medis);
+                $this->readyToLoad = true;
+            } else {
+                // Jika pasien tidak ditemukan, set readyToLoad tetap true untuk menampilkan pesan error
+                $this->readyToLoad = true;
+            }
+        } catch (\Exception $e) {
+            // Handle error jika terjadi
+            $this->readyToLoad = true;
+            Log::error('Error loading riwayat: ' . $e->getMessage());
+        }
     }
 
     public function getListDokter()
@@ -44,7 +67,11 @@ class Riwayat extends Component
 
     public function updatedSelectDokter()
     {
-        // dd($this->pasien);
+        // Pastikan pasien sudah di-load
+        if (!$this->pasien) {
+            $this->pasien = $this->getPasien($this->noRawat);
+        }
+
         if ($this->selectDokter != "") {
             $this->data = DB::table('reg_periksa')
                 ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
@@ -64,6 +91,10 @@ class Riwayat extends Component
                 ->limit(10)
                 ->get();
         } else {
+            // Pastikan pasien sudah di-load sebelum memanggil getRiwayatPemeriksaan
+            if (!$this->pasien) {
+                $this->pasien = $this->getPasien($this->noRawat);
+            }
             $this->data = $this->getRiwayatPemeriksaan($this->pasien->no_rkm_medis);
         }
     }

@@ -14,19 +14,18 @@ class RadiologiController extends Controller
     public function getPermintaanRadiologi($noRawat)
     {
         $noRawat = $this->decryptData($noRawat);
-        try{
+        try {
 
             $data = DB::table('hasil_radiologi')
-                        ->where('no_rawat', $noRawat)
-                        ->get();
+                ->where('no_rawat', $noRawat)
+                ->get();
 
             return response()->json([
                 'status' => 'sukses',
                 'pesan' => 'Data permintaan radiologi berhasil diambil',
                 'data' => $data
             ]);
-            
-        }catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             return response()->json([
                 'status' => 'gagal',
                 'pesan' => $ex->getMessage()
@@ -37,15 +36,15 @@ class RadiologiController extends Controller
     public function getPerawatanRadiologi(Request $request)
     {
         $q = $request->get('q');
-        $que = '%'.$q.'%';
+        $que = '%' . $q . '%';
         $obat = DB::table('jns_perawatan_radiologi')
-                    ->where('status', '1')
-                    ->where(function($query) use ($que) {
-                        $query->where('kd_jenis_prw', 'like', $que)
-                              ->orWhere('nm_perawatan', 'like', $que);
-                    })
-                    ->selectRaw('kd_jenis_prw AS id, nm_perawatan AS text')
-                    ->get();
+            ->where('status', '1')
+            ->where(function ($query) use ($que) {
+                $query->where('kd_jenis_prw', 'like', $que)
+                    ->orWhere('nm_perawatan', 'like', $que);
+            })
+            ->selectRaw('kd_jenis_prw AS id, nm_perawatan AS text')
+            ->get();
         return response()->json($obat, 200);
     }
 
@@ -57,42 +56,41 @@ class RadiologiController extends Controller
         $jnsPemeriksaan = $input['jns_pemeriksaan'];
         $noRawat = $this->decryptData($noRawat);
 
-        try{
+        try {
             DB::beginTransaction();
             $getNumber = DB::table('permintaan_radiologi')
-                            ->where('tgl_permintaan', date('Y-m-d'))
-                            ->selectRaw('ifnull(MAX(CONVERT(RIGHT(noorder,4),signed)),0) as no')
-                            ->first();
+                ->where('tgl_permintaan', date('Y-m-d'))
+                ->selectRaw('ifnull(MAX(CONVERT(RIGHT(noorder,4),signed)),0) as no')
+                ->first();
 
             $lastNumber = substr($getNumber->no, 0, 4);
             $getNextNumber = sprintf('%04s', ($lastNumber + 1));
-            $noOrder = 'PL'.date('Ymd').$getNextNumber;
+            $noOrder = 'PL' . date('Ymd') . $getNextNumber;
 
             DB::table('permintaan_radiologi')
+                ->insert([
+                    'noorder' => $noOrder,
+                    'no_rawat' => $noRawat,
+                    'tgl_permintaan' => date('Y-m-d'),
+                    'jam_permintaan' => date('H:i:s'),
+                    'dokter_perujuk' => session()->get('username'),
+                    'diagnosa_klinis' => $klinis,
+                    'informasi_tambahan' => $info,
+                    'status' => 'ralan'
+                ]);
+
+            foreach ($jnsPemeriksaan as $pemeriksaan) {
+                DB::table('permintaan_pemeriksaan_radiologi')
                     ->insert([
                         'noorder' => $noOrder,
-                        'no_rawat' => $noRawat,
-                        'tgl_permintaan' => date('Y-m-d'),
-                        'jam_permintaan' => date('H:i:s'),
-                        'dokter_perujuk' => session()->get('username'),
-                        'diagnosa_klinis' => $klinis,
-                        'informasi_tambahan' => $info,
-                        'status' => 'ralan'
+                        'kd_jenis_prw' => $pemeriksaan,
+                        'stts_bayar' => 'Belum'
                     ]);
-
-            foreach($jnsPemeriksaan as $pemeriksaan){
-                DB::table('permintaan_pemeriksaan_radiologi')
-                        ->insert([
-                            'noorder' => $noOrder,
-                            'kd_jenis_prw' => $pemeriksaan,
-                            'stts_bayar' => 'Belum'
-                        ]);
             }
 
             DB::commit();
             return response()->json(['status' => 'sukses', 'message' => 'Permintaan lab berhasil disimpan'], 200);
-
-        }catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
             return response()->json(['status' => 'gagal', 'message' => $ex->getMessage()], 200);
         }
@@ -100,12 +98,12 @@ class RadiologiController extends Controller
 
     public function hapusPermintaanRadiologi($noOrder)
     {
-        try{
+        try {
             DB::beginTransaction();
 
             DB::table('permintaan_radiologi')
-                    ->where('noorder', $noOrder)
-                    ->delete();
+                ->where('noorder', $noOrder)
+                ->delete();
 
             // DB::table('permintaan_pemeriksaan_lab')
             //         ->where('noorder', $noOrder)
@@ -113,7 +111,7 @@ class RadiologiController extends Controller
 
             DB::commit();
             return response()->json(['status' => 'sukses', 'message' => 'Permintaan lab berhasil dihapus'], 200);
-        }catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
             return response()->json(['status' => 'gagal', 'message' => $ex->getMessage()], 200);
         }

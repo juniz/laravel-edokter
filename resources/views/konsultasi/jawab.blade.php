@@ -14,10 +14,10 @@
 @endif
 
 <div class="row">
-    <div class="col-md-4">
-        <x-ralan.pasien :no-rawat="$konsultasi->no_rawat" />
+    <div class="col-md-6">
+        <livewire:ralan.pasien-tabs :noRawat="$konsultasi->no_rawat" />
     </div>
-    <div class="col-md-8">
+    <div class="col-md-6">
         <x-adminlte-card theme="info" theme-mode="outline">
             <form method="POST" action="{{ route('konsultasi.jawaban.simpan', $konsultasi->no_permintaan) }}">
                 @csrf

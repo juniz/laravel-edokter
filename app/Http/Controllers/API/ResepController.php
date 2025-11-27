@@ -43,16 +43,19 @@ class ResepController extends Controller
             ->where('kd_poli', $poli)
             ->first();
 
+        if (!$depo) {
+            return response()->json([], 200);
+        }
+
         $obat = DB::table('databarang')
             ->join('gudangbarang', 'databarang.kode_brng', '=', 'gudangbarang.kode_brng')
-            ->where('status', '1')
-            ->where('gudangbarang.stok', '>', '0')
+            ->where('databarang.status', '1')
             ->where('gudangbarang.kd_bangsal', $depo->kd_bangsal)
             ->where(function ($query) use ($que) {
                 $query->where('databarang.kode_brng', 'like', $que)
                     ->orWhere('databarang.nama_brng', 'like', $que);
             })
-            ->selectRaw('gudangbarang.kode_brng AS id, databarang.nama_brng AS text')
+            ->selectRaw('gudangbarang.kode_brng AS id, databarang.nama_brng AS text, gudangbarang.stok AS stok')
             ->get();
         return response()->json($obat, 200);
     }

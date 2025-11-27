@@ -1,0 +1,73 @@
+# syntax=docker/dockerfile:1
+
+# -------- Dependencies stage: install composer deps (no dev in prod) --------
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --no-scripts --no-progress --prefer-dist --ignore-platform-reqs
+
+# -------- Base FrankenPHP image --------
+FROM ghcr.io/dunglas/frankenphp:1-php8.3-bookworm AS base
+
+# Install system dependencies and PHP extensions you need
+# Add or remove extensions based on project requirements
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+     git unzip libicu-dev libpng-dev libonig-dev libzip-dev libjpeg62-turbo-dev libfreetype6-dev \
+  && rm -rf /var/lib/apt/lists/* \
+  && install-php-extensions \
+     pdo_mysql \
+     intl \
+     gd \
+     zip \
+     pcntl
+
+WORKDIR /app
+
+# Copy app files
+COPY . /app
+
+# Copy vendor deps
+COPY --from=vendor /app/vendor /app/vendor
+
+# Ensure storage and bootstrap cache are writable
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+  && chmod -R ug+rwX /app/storage /app/bootstrap/cache
+
+# Set production-friendly PHP settings by default (can be overridden at runtime)
+ENV APP_ENV=production \
+    PHP_MEMORY_LIMIT=512M \
+    PHP_MAX_EXECUTION_TIME=120 \
+    PHP_OPCACHE_ENABLE=1 \
+    PHP_OPCACHE_VALIDATE_TIMESTAMPS=0 \
+    PHP_OPCACHE_JIT=disable
+
+# Expose default Caddy/FrankenPHP port
+EXPOSE 8080
+
+# Default command is provided by base image (FrankenPHP)
+
+# -------- Development stage: keep dev dependencies and enable hot reload --------
+FROM base AS dev
+
+# In dev, we want composer dev dependencies
+COPY composer.json composer.lock /app/
+RUN composer install --no-interaction --no-progress
+
+# Enable opcache timestamp validation in dev
+ENV APP_ENV=local \
+    PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 \
+    PHP_ERROR_REPORTING=E_ALL \
+    PHP_DISPLAY_ERRORS=1
+
+# Use same entrypoint as base
+
+
+
+
+
+
+
+
+
+

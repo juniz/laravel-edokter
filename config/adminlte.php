@@ -330,6 +330,12 @@ return [
             'icon'        => 'fas fa-fw fa-file',
         ],
         [
+            'text'        => 'Rekap Tindakan Dokter',
+            'url'         => '/rekap/tindakan-dokter',
+            'icon'        => 'fas fa-fw fa-chart-line',
+            'label_color' => 'info',
+        ],
+        [
             'text'        => 'Master Obat',
             'url'         => '/master_obat',
             'icon'        => 'fas fa-fw fa-pills',
@@ -591,6 +597,21 @@ return [
                     'asset' => true,
                     'location' => 'vendor/jquery-ui/jquery-ui.min.css',
                 ],
+            ],
+        ],
+        'FilePond' => [
+            'active' => false,
+            'files' => [
+                [
+                    'type' => 'js',
+                    'asset' => false,
+                    'location' => 'https://unpkg.com/filepond/dist/filepond.min.js',
+                ],
+                [
+                    'type' => 'js',
+                    'asset' => false,
+                    'location' => 'https://unpkg.com/jquery-filepond/filepond.jquery.js',
+                ]
             ],
         ],
         'Summernote' => [

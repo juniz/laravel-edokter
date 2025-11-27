@@ -10,11 +10,11 @@
     {{-- <x-ranap.riwayat-ranap :no-rawat="request()->get('no_rawat')" /> --}}
     <x-ralan.riwayat :no-rawat="request()->get('no_rawat')" />
     <div class="row">
-        <div class="col-md-4">
-            {{-- <x-ranap.pasien :no-rawat="request()->get('no_rawat')" /> --}}
-            <x-ralan.pasien :no-rawat="request()->get('no_rawat')" />
+        <div class="col-md-6">
+            <livewire:ralan.pasien-tabs :noRawat="request()->get('no_rawat')" />
+            {{-- <x-ralan.pasien :no-rawat="request()->get('no_rawat')" /> --}}
         </div>
-        <div class="col-md-8">
+        <div class="col-md-6">
             <x-ranap.pemeriksaan-ranap :no-rawat="request()->get('no_rawat')" />
             <x-ranap.resep-ranap />
             <livewire:ranap.resume-pasien :no-rawat="request()->get('no_rawat')" />

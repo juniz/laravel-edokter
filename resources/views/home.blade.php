@@ -207,23 +207,24 @@
 <style>
     /* Simple Dashboard Styles */
     body {
-        background: #f8f9fa;
+        background: #f5f5f5;
     }
 
     .content-wrapper {
-        background: #f8f9fa;
+        background: #f5f5f5;
     }
 
     /* Dashboard Header */
     .dashboard-header {
-        background: #007bff;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
         color: white;
         padding: 1.5rem 2rem;
-        border-radius: 8px;
+        border-radius: 12px;
         margin-bottom: 2rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
     }
 
     .welcome-title {
@@ -239,10 +240,12 @@
     }
 
     .current-date {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.25);
         padding: 0.5rem 1rem;
-        border-radius: 6px;
+        border-radius: 20px;
         font-size: 0.9rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
     }
 
     /* Dashboard Container */
@@ -260,41 +263,67 @@
 
     .stat-card {
         background: white;
-        border-radius: 6px;
+        border-radius: 12px;
         padding: 1.5rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         display: flex;
         align-items: center;
         gap: 1rem;
         border-top: 4px solid #007bff;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
     }
 
     .stat-card.stat-primary {
         border-top-color: #007bff;
+        background: linear-gradient(135deg, rgba(0, 123, 255, 0.05) 0%, rgba(0, 86, 179, 0.05) 100%);
     }
 
     .stat-card.stat-success {
-        border-top-color: #28a745;
+        border-top-color: #17a2b8;
+        background: linear-gradient(135deg, rgba(23, 162, 184, 0.05) 0%, rgba(0, 86, 179, 0.05) 100%);
     }
 
     .stat-card.stat-warning {
         border-top-color: #ffc107;
+        background: linear-gradient(135deg, rgba(222, 192, 241, 0.05) 0%, rgba(23, 162, 184, 0.05) 100%);
     }
 
     .stat-card.stat-info {
-        border-top-color: #17a2b8;
+        border-top-color: #0056b3;
+        background: linear-gradient(135deg, rgba(0, 86, 179, 0.05) 0%, rgba(0, 123, 255, 0.05) 100%);
     }
 
     .stat-icon {
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        background: #007bff;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-size: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    }
+
+    .stat-card.stat-success .stat-icon {
+        background: linear-gradient(135deg, #17a2b8 0%, #0056b3 100%);
+        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+    }
+
+    .stat-card.stat-warning .stat-icon {
+        background: linear-gradient(135deg, #ffc107 0%, #17a2b8 100%);
+        box-shadow: 0 2px 8px rgba(222, 192, 241, 0.3);
+    }
+
+    .stat-card.stat-info .stat-icon {
+        background: linear-gradient(135deg, #0056b3 0%, #007bff 100%);
+        box-shadow: 0 2px 8px rgba(0, 86, 179, 0.3);
     }
 
     .stat-content {
@@ -305,7 +334,7 @@
         font-size: 2rem;
         font-weight: 700;
         margin: 0;
-        color: #333;
+        color: #007bff;
         line-height: 1;
     }
 
@@ -316,26 +345,33 @@
     }
 
     .stat-trend {
-        color: #28a745;
+        color: #17a2b8;
         font-size: 1rem;
     }
 
     /* Simple Cards */
     .modern-card {
         background: white;
-        border-radius: 6px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         margin-bottom: 2rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .modern-card:hover {
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.15);
     }
 
     .modern-card .card-header {
-        background: #007bff;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
         color: white;
         padding: 1rem 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-radius: 6px 6px 0 0;
+        border-radius: 12px 12px 0 0;
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
     }
 
     .modern-card .card-title {
@@ -418,13 +454,13 @@
     }
 
     .chart-btn:hover {
-        background: #007bff;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
         color: white;
         border-color: #007bff;
     }
 
     .chart-btn.active {
-        background: #007bff;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
         color: white;
         border-color: #007bff;
     }
@@ -440,11 +476,11 @@
 
     /* Custom ApexCharts Tooltip */
     .custom-tooltip {
-        background: #007bff;
-        border-radius: 6px;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        border-radius: 8px;
         padding: 0.75rem;
         color: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
         min-width: 180px;
     }
 
@@ -501,7 +537,7 @@
     }
 
     .modern-table .table thead th {
-        background: #007bff;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
         color: white;
         font-weight: 600;
         padding: 0.75rem;
@@ -510,7 +546,7 @@
     }
 
     .modern-table .table tbody tr:hover {
-        background: #f8f9fa;
+        background: linear-gradient(135deg, rgba(0, 123, 255, 0.05) 0%, rgba(0, 86, 179, 0.05) 100%);
     }
 
     .modern-table .table tbody td {
@@ -565,30 +601,34 @@
         width: 48px;
         height: 48px;
         border-radius: 50%;
-        background: #007bff;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
         border: none;
         color: white;
         font-size: 1rem;
         cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        transition: all 0.2s ease;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+        transition: all 0.3s ease;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
     .fab-btn:hover {
-        background: #0056b3;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        background: linear-gradient(135deg, #0056b3 0%, #007bff 100%);
+        box-shadow: 0 6px 20px rgba(0, 123, 255, 0.5);
+        transform: scale(1.1);
     }
 
     .fab-btn.refresh {
-        background: #28a745;
+        background: linear-gradient(135deg, #17a2b8 0%, #0056b3 100%);
+        box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
     }
 
     .fab-btn.refresh:hover {
-        background: #218838;
+        background: linear-gradient(135deg, #0056b3 0%, #17a2b8 100%);
+        box-shadow: 0 6px 20px rgba(23, 162, 184, 0.5);
     }
+
 </style>
 @stop
 
@@ -790,10 +830,10 @@
                 return ['#007bff'];
             }
             
-            // Primary Bootstrap colors
+            // Soft Periwinkle color palette
             const baseColors = [
-                '#007bff', '#28a745', '#ffc107', '#17a2b8',
-                '#dc3545', '#6c757d', '#007bff', '#28a745'
+                '#007bff', '#0056b3', '#17a2b8', '#ffc107',
+                '#007bff', '#0056b3', '#17a2b8', '#ffc107'
             ];
             
             const currentData = currentPeriod === 'year' ? chartData.yearly : chartData.monthly;

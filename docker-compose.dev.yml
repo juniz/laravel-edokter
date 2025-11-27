@@ -1,0 +1,34 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.frankenphp
+      target: dev
+    image: edokter/frankenphp-dev:latest
+    container_name: edokter-frankenphp-dev
+    ports:
+      - "5173:5173" # Vite (opsional)
+      - "8080:8080" # FrankenPHP
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      LOG_CHANNEL: stderr
+      SESSION_DRIVER: file
+      CACHE_DRIVER: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - ./:/app
+      - ./Caddyfile.frankenphp:/etc/caddy/Caddyfile:ro
+    # depends_on:
+    #   - mysql
+    #   - redis
+
+
+
+
+
+
+
+

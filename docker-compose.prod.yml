@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.frankenphp
+      target: base
+    image: edokter/frankenphp:latest
+    container_name: edokter-frankenphp
+    ports:
+      - "8080:8080"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8080
+      LOG_CHANNEL: stderr
+      SESSION_DRIVER: file
+      CACHE_DRIVER: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - ./Caddyfile.frankenphp:/etc/caddy/Caddyfile:ro
+    restart: unless-stopped
+
+
+
+
+
+
+
+

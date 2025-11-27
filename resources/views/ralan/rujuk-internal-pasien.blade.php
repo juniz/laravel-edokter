@@ -13,7 +13,7 @@
     <div class="col-md-4">
         <x-ralan.pasien :no-rawat="request()->get('no_rawat')" />
     </div>
-    <div class="col-md-8">
+    <div class="col-md-8 d-flex flex-column">
         <x-adminlte-card title="Konsul Rujukan Internal" theme="dark" theme-mode="outline" >
             <div class="row">
                 <div class="col-md-3 mb-auto label-side">
@@ -67,15 +67,18 @@
                 <x-adminlte-button label="Kirim" onclick="updateRujukan(event)" theme="primary" />
             </div>
         </x-adminlte-card>
+        <x-adminlte-card title="Pemeriksaan" theme="info" icon="fas fa-lg fa-bell" collapsible="collapsed" maximizable >
+            <livewire:ralan.pemeriksaan :noRawat="request()->get('no_rawat')" :noRm="request()->get('no_rm')" />
+            <livewire:ralan.modal.edit-pemeriksaan />
+        </x-adminlte-card>
+        <x-adminlte-card title="Resep" id="resepCard" theme="info" icon="fas fa-lg fa-pills" collapsible="collapsed"
+            maximizable>
+            <x-ralan.resep />
+        </x-adminlte-card>
+        <x-adminlte-card title="Konsultasi Medik" icon='fas fa-user' theme="info" maximizable collapsible="collapsed">
+            <livewire:component.konsultasi-medik :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" />
+        </x-adminlte-card>
     </div>
-    {{-- <x-adminlte-modal wire:ignore.self id="modalRiwayatPemeriksaanRalan" title="Riwayat Pemeriksaan" size="lg" theme="info" v-centered
-    static-backdrop scrollable>
-    <livewire:component.riwayat :noRawat="$noRawat" />
-    
-    <x-slot name="footerSlot">
-        <x-adminlte-button theme="danger" label="Tutup" data-dismiss="modal" />
-    </x-slot>
-</x-adminlte-modal> --}}
 </div>
 @stop
 

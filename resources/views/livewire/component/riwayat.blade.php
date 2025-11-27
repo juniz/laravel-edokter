@@ -12,13 +12,16 @@
 
     <div wire:loading wire:target='init'>
         <div class="d-flex flex-row">
-            <div class="mx-auto">
-                Loading ...
+            <div class="mx-auto py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="text-center mt-2">Memuat data riwayat...</p>
             </div>
         </div>
     </div>
 
-    @if(count($data)>0)
+    @if($readyToLoad && count($data)>0)
     <div class="timeline">
             @foreach($data as $row)
             @php
@@ -364,10 +367,20 @@
             </div>
             @endforeach
         </div>
-    @else
+    @elseif($readyToLoad && count($data) == 0)
     <div class="d-flex flex-row">
-        <div class="mx-auto">
-            <h3>Data Tidak Ditemukan</h3>
+        <div class="mx-auto py-4">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Data riwayat tidak ditemukan.
+            </div>
+        </div>
+    </div>
+    @elseif(!$readyToLoad)
+    <div class="d-flex flex-row">
+        <div class="mx-auto py-4">
+            <div class="alert alert-secondary">
+                <i class="fas fa-clock"></i> Klik tombol "Riwayat" untuk memuat data.
+            </div>
         </div>
     </div>
     @endif
@@ -386,8 +399,25 @@
         @this.set('selectDokter', $(this).val());
     });
 
+    // Event listener untuk modal riwayat pemeriksaan
+    $('#modalRiwayatPemeriksaan').on('shown.bs.modal', function(){
+        // Emit event untuk memuat data riwayat saat modal dibuka
+        @if(config('livewire.inject_assets', true))
+        if (typeof Livewire !== 'undefined') {
+            setTimeout(function() {
+                Livewire.emit('loadRiwayatPasien');
+            }, 100);
+        }
+        @endif
+    });
+    
+    // Backup event listener untuk modal lama (jika masih digunakan)
     $('#modalRiwayatPemeriksaanRalan').on('show.bs.modal', function(){
-        Livewire.emit('loadRiwayatPasien');
-    })
+        @if(config('livewire.inject_assets', true))
+        if (typeof Livewire !== 'undefined') {
+            Livewire.emit('loadRiwayatPasien');
+        }
+        @endif
+    });
 </script>
 @endpush

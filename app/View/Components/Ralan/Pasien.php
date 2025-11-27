@@ -23,6 +23,10 @@ class Pasien extends Component
             ->leftJoin('catatan_pasien', 'reg_periksa.no_rkm_medis', '=', 'catatan_pasien.no_rkm_medis')
             ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
             ->leftJoin('personal_pasien', 'pasien.no_rkm_medis', '=', 'personal_pasien.no_rkm_medis')
+            ->leftJoin('propinsi', 'pasien.kd_prop', '=', 'propinsi.kd_prop')
+            ->leftJoin('kabupaten', 'pasien.kd_kab', '=', 'kabupaten.kd_kab')
+            ->leftJoin('kecamatan', 'pasien.kd_kec', '=', 'kecamatan.kd_kec')
+            ->leftJoin('kelurahan', 'pasien.kd_kel', '=', 'kelurahan.kd_kel')
             ->where('reg_periksa.no_rawat', $noRawat)
             ->select(
                 'pasien.*',
@@ -36,6 +40,10 @@ class Pasien extends Component
                 'reg_periksa.kd_poli',
                 'catatan_pasien.catatan',
                 'personal_pasien.gambar',
+                'propinsi.nm_prop',
+                'kabupaten.nm_kab',
+                'kecamatan.nm_kec',
+                'kelurahan.nm_kel',
             )
             ->first();
     }

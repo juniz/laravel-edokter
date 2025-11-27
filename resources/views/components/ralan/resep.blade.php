@@ -579,9 +579,12 @@
             });
 
             function formatData (data) {
-                    var $data = $(
-                        '<b>'+ data.id +'</b> - <i>'+ data.text +'</i>'
-                    );
+                var $data = $(
+            '<div>' +
+            '<b>'+ data.id +'</b> - <i>'+ data.text +'</i>' +
+            (data.stok ? ' <span class="text-muted"><b>[Stok: ' + data.stok + ']</b></span>' : '') +
+            '</div>'
+            );
                     return $data;
             };
         });
@@ -829,21 +832,47 @@
                         });      
                     }
                     else{
+                        // Format pesan dengan detail stok jika tersedia
+                        let htmlContent = '<div style="text-align: left;">' + response.pesan;
+                        if (response.detail_stok && response.detail_stok.length > 0) {
+                            htmlContent += '<br><br><strong>Detail stok:</strong><ul style="text-align: left; padding-left: 20px; margin-top: 10px;">';
+                            response.detail_stok.forEach(function(obat) {
+                                htmlContent += '<li style="margin-bottom: 5px;">' + obat.nama_brng + ': Stok tersedia <strong>' + obat.stok_tersedia + '</strong>, diminta <strong>' + obat.jumlah_diminta + '</strong></li>';
+                            });
+                            htmlContent += '</ul>';
+                        }
+                        htmlContent += '</div>';
+                        
                         Swal.fire({
                         title: 'Gagal',
-                        text: response.pesan,
+                        html: htmlContent,
                         icon: 'error',
-                        confirmButtonText: 'Ok'
+                        confirmButtonText: 'Ok',
+                        width: '600px'
                         })
                     }
                 },
                 error: function (response) {
                     console.log(response);
+                    let htmlContent = '<div style="text-align: left;">Terjadi kesalahan';
+                    if (response.responseJSON && response.responseJSON.pesan) {
+                        htmlContent = '<div style="text-align: left;">' + response.responseJSON.pesan;
+                        if (response.responseJSON.detail_stok && response.responseJSON.detail_stok.length > 0) {
+                            htmlContent += '<br><br><strong>Detail stok:</strong><ul style="text-align: left; padding-left: 20px; margin-top: 10px;">';
+                            response.responseJSON.detail_stok.forEach(function(obat) {
+                                htmlContent += '<li style="margin-bottom: 5px;">' + obat.nama_brng + ': Stok tersedia <strong>' + obat.stok_tersedia + '</strong>, diminta <strong>' + obat.jumlah_diminta + '</strong></li>';
+                            });
+                            htmlContent += '</ul>';
+                        }
+                    }
+                    htmlContent += '</div>';
+                    
                     Swal.fire({
                         title: 'Error',
-                        text: response.pesan ?? 'Terjadi kesalahan',
+                        html: htmlContent,
                         icon: 'error',
-                        confirmButtonText: 'Ok'
+                        confirmButtonText: 'Ok',
+                        width: '600px'
                     })
                 }
             });
@@ -911,21 +940,47 @@
                         }); 
                     }
                     else{
+                        // Format pesan dengan detail stok jika tersedia
+                        let htmlContent = '<div style="text-align: left;">' + response.pesan;
+                        if (response.detail_stok && response.detail_stok.length > 0) {
+                            htmlContent += '<br><br><strong>Detail stok:</strong><ul style="text-align: left; padding-left: 20px; margin-top: 10px;">';
+                            response.detail_stok.forEach(function(obat) {
+                                htmlContent += '<li style="margin-bottom: 5px;">' + obat.nama_brng + ': Stok tersedia <strong>' + obat.stok_tersedia + '</strong>, diminta <strong>' + obat.jumlah_diminta + '</strong></li>';
+                            });
+                            htmlContent += '</ul>';
+                        }
+                        htmlContent += '</div>';
+                        
                         Swal.fire({
                         title: 'Gagal',
-                        text: response.pesan,
+                        html: htmlContent,
                         icon: 'error',
-                        confirmButtonText: 'Ok'
+                        confirmButtonText: 'Ok',
+                        width: '600px'
                         })
                     }
                 },
                 error: function (response) {
                     console.log(response);
+                    let htmlContent = '<div style="text-align: left;">Terjadi kesalahan';
+                    if (response.responseJSON && response.responseJSON.pesan) {
+                        htmlContent = '<div style="text-align: left;">' + response.responseJSON.pesan;
+                        if (response.responseJSON.detail_stok && response.responseJSON.detail_stok.length > 0) {
+                            htmlContent += '<br><br><strong>Detail stok:</strong><ul style="text-align: left; padding-left: 20px; margin-top: 10px;">';
+                            response.responseJSON.detail_stok.forEach(function(obat) {
+                                htmlContent += '<li style="margin-bottom: 5px;">' + obat.nama_brng + ': Stok tersedia <strong>' + obat.stok_tersedia + '</strong>, diminta <strong>' + obat.jumlah_diminta + '</strong></li>';
+                            });
+                            htmlContent += '</ul>';
+                        }
+                    }
+                    htmlContent += '</div>';
+                    
                     Swal.fire({
                         title: 'Error',
-                        text: response.pesan ?? 'Terjadi kesalahan',
+                        html: htmlContent,
                         icon: 'error',
-                        confirmButtonText: 'Ok'
+                        confirmButtonText: 'Ok',
+                        width: '600px'
                     })
                 }
             });

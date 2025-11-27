@@ -133,6 +133,11 @@ Route::delete('/ranap/obat/{noResep}/{kdObat}', [
 ]);
 
 // Route menu Ralan
+Route::get('/rekap/tindakan-dokter', [
+    App\Http\Controllers\RekapTindakanDokterController::class,
+    'index',
+])->name('rekap.tindakan-dokter');
+
 Route::get('/master_obat', [
     App\Http\Controllers\MasterObat::class,
     'index',
