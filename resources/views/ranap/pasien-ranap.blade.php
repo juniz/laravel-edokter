@@ -7,25 +7,82 @@
 @stop
 
 @section('content')
-<x-adminlte-callout theme="info" >
-    <div class="d-flex justify-content-end mb-3">
-        <form action="{{route('ranap.pasien')}}" method="GET">
-            <div class="d-flex" style="gap: 10px">
-                @php
-                    $config = ['format' => 'YYYY-MM-DD'];
-                @endphp
+<!-- Filter Card -->
+<x-adminlte-card theme="info" title="Filter Pencarian Pasien Ranap" icon="fas fa-filter" collapsible>
+    <form action="{{route('ranap.pasien')}}" method="GET" id="filterForm">
+        <div class="row">
+            @php
+                $config = ['format' => 'YYYY-MM-DD'];
+                $statusAktif = request('status') ?? 'belum_pulang';
+                $tanggalMulaiAktif = request('tanggal_mulai') ?? date('Y-m-01');
+                $tanggalAkhirAktif = request('tanggal_akhir') ?? date('Y-m-d');
+            @endphp
+            <div class="col-12 col-md-6 col-lg-3 mb-3 mb-md-0">
+                <label for="status" class="form-label">
+                    <i class="fas fa-user-check text-info"></i> Status Pasien
+                </label>
                 <x-adminlte-select name="status" id="status">
-                    <option value="belum_pulang" {{ request('status') == 'belum_pulang' ? 'selected' : '' }}>Belum Pulang</option>
-                    <option value="sudah_pulang" {{ request('status') == 'sudah_pulang' ? 'selected' : '' }}>Sudah Pulang</option>
+                    <option value="belum_pulang" {{ $statusAktif == 'belum_pulang' ? 'selected' : '' }}>Belum Pulang</option>
+                    <option value="sudah_pulang" {{ $statusAktif == 'sudah_pulang' ? 'selected' : '' }}>Sudah Pulang</option>
                 </x-adminlte-select>
-                <x-adminlte-input-date name="tanggal" value="{{ request('tanggal') ?? date('Y-m-d') }}" :config="$config" placeholder="Pilih Tanggal...">
+                <small class="form-text text-muted">Filter berdasarkan status pasien</small>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">
+                <label for="tanggal_mulai" class="form-label">
+                    <i class="fas fa-calendar-alt text-primary"></i> Tanggal Mulai
+                </label>
+                <x-adminlte-input-date name="tanggal_mulai" id="tanggal_mulai" value="{{ $tanggalMulaiAktif }}" :config="$config" placeholder="Pilih Tanggal Mulai...">
+                </x-adminlte-input-date>
+                <small class="form-text text-muted">Tanggal awal periode pencarian</small>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">
+                <label for="tanggal_akhir" class="form-label">
+                    <i class="fas fa-calendar-check text-success"></i> Tanggal Akhir
+                </label>
+                <x-adminlte-input-date name="tanggal_akhir" id="tanggal_akhir" value="{{ $tanggalAkhirAktif }}" :config="$config" placeholder="Pilih Tanggal Akhir...">
                     <x-slot name="appendSlot">
-                        <x-adminlte-button class="btn-sm" type="submit" theme="primary" icon="fas fa-lg fa-search"/>
+                        <x-adminlte-button class="btn-sm" type="submit" theme="primary" icon="fas fa-lg fa-search" style="display: none;"/>
                     </x-slot>
                 </x-adminlte-input-date>
+                <small class="form-text text-muted">Tanggal akhir periode pencarian</small>
             </div>
-        </form>
-    </div>
+            <div class="col-12 col-md-6 col-lg-1 d-flex align-items-end mb-3 mb-md-0">
+                <button type="button" class="btn btn-secondary btn-sm w-100" id="resetFilter" title="Reset Filter">
+                    <i class="fas fa-redo"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Info Filter Aktif -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="alert alert-info mb-0 py-2">
+                    <div class="d-flex flex-wrap align-items-center" style="gap: 15px;">
+                        <div>
+                            <i class="fas fa-info-circle"></i> <strong>Filter Aktif:</strong>
+                        </div>
+                        <div>
+                            <span class="badge badge-info">
+                                <i class="fas fa-user-check"></i> Status: {{ $statusAktif == 'belum_pulang' ? 'Belum Pulang' : 'Sudah Pulang' }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="badge badge-primary">
+                                <i class="fas fa-calendar-alt"></i> Periode: {{ date('d/m/Y', strtotime($tanggalMulaiAktif)) }} - {{ date('d/m/Y', strtotime($tanggalAkhirAktif)) }}
+                            </span>
+                        </div>
+                        <div class="ml-auto">
+                            <span class="badge badge-success">
+                                <i class="fas fa-users"></i> Total: {{ count($data) }} Pasien
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</x-adminlte-card>
+
+<x-adminlte-callout theme="info" >
     @php
         $config["responsive"] = true;
     @endphp
@@ -78,18 +135,212 @@
         color: #212529 !important;
         background-color: #f8f9fa;
     }
+    
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .form-label i {
+        margin-right: 5px;
+    }
+    
+    .form-text {
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .alert-info .d-flex {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+        
+        .alert-info .ml-auto {
+            margin-left: 0 !important;
+            margin-top: 10px;
+        }
+        
+        .form-label {
+            font-size: 0.8rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .badge {
+            font-size: 0.7rem;
+            padding: 0.35em 0.65em;
+        }
+        
+        .alert {
+            padding: 0.5rem;
+        }
+    }
+    
+    /* Card filter styling */
+    .card-header {
+        background-color: #17a2b8 !important;
+        color: white !important;
+    }
+    
+    .card-header * {
+        color: white !important;
+    }
+    
+    .card-header .card-title {
+        color: white !important;
+        font-weight: 600;
+    }
+    
+    .card-header .card-title i {
+        margin-right: 8px;
+        color: white !important;
+    }
+    
+    .card-header .btn-link {
+        color: white !important;
+    }
+    
+    .card-header .btn-link:hover,
+    .card-header .btn-link:focus {
+        color: white !important;
+    }
+    
+    /* Ensure card header text is visible */
+    .card.card-info .card-header,
+    .card.card-info .card-header .card-title,
+    .card.card-info .card-header .card-title span,
+    .card.card-info .card-header a,
+    .card.card-info .card-header button {
+        color: white !important;
+    }
+    
+    /* Loading overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .loading-overlay .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+    
+    /* Badge styling */
+    .badge {
+        padding: 0.5em 0.75em;
+        font-size: 0.85rem;
+    }
+    
+    .badge i {
+        margin-right: 5px;
+    }
 </style>
 @stop
 @section('js')
 <script>
-    // $(function() {
-    //     // Filter handler - redirect to same page with status parameter
-    //     $('#filter_status').on('change', function() {
-    //         window.location.href = "{{ route('ranap.pasien') }}?status=" + $(this).val();
-    //     });
-    //     $('#tanggal').on('change.datetimepicker', function() {
-    //         window.location.href = "{{ route('ranap.pasien') }}?tanggal=" + $(this).val();
-    //     });
-    // });
+    $(function() {
+        var form = $('#filterForm');
+        var isSubmitting = false;
+        
+        // Auto-submit ketika status berubah
+        $('#status').on('change', function() {
+            if (!isSubmitting) {
+                isSubmitting = true;
+                form.submit();
+            }
+        });
+        
+        // Auto-submit ketika tanggal mulai berubah (untuk TempusDominusBs4)
+        $(document).on('changeDate', '#tanggal_mulai', function() {
+            if (!isSubmitting) {
+                isSubmitting = true;
+                form.submit();
+            }
+        });
+        
+        // Auto-submit ketika tanggal akhir berubah (untuk TempusDominusBs4)
+        $(document).on('changeDate', '#tanggal_akhir', function() {
+            if (!isSubmitting) {
+                isSubmitting = true;
+                form.submit();
+            }
+        });
+        
+        // Fallback untuk event change biasa pada input tanggal mulai
+        $(document).on('change', '#tanggal_mulai', function() {
+            if (!isSubmitting) {
+                isSubmitting = true;
+                setTimeout(function() {
+                    form.submit();
+                }, 100);
+            }
+        });
+        
+        // Fallback untuk event change biasa pada input tanggal akhir
+        $(document).on('change', '#tanggal_akhir', function() {
+            if (!isSubmitting) {
+                isSubmitting = true;
+                setTimeout(function() {
+                    form.submit();
+                }, 100);
+            }
+        });
+        
+        // Reset filter button
+        $('#resetFilter').on('click', function() {
+            var tanggalMulai = '{{ date('Y-m-01') }}';
+            var tanggalAkhir = '{{ date('Y-m-d') }}';
+            
+            $('#status').val('belum_pulang');
+            $('#tanggal_mulai').val(tanggalMulai);
+            $('#tanggal_akhir').val(tanggalAkhir);
+            
+            // Trigger change event untuk datepicker jika menggunakan TempusDominusBs4
+            if ($('#tanggal_mulai').data('datetimepicker')) {
+                $('#tanggal_mulai').data('datetimepicker').date(tanggalMulai);
+            }
+            if ($('#tanggal_akhir').data('datetimepicker')) {
+                $('#tanggal_akhir').data('datetimepicker').date(tanggalAkhir);
+            }
+            
+            form.submit();
+        });
+        
+        // Reset flag setelah form submit
+        form.on('submit', function() {
+            setTimeout(function() {
+                isSubmitting = false;
+            }, 500);
+        });
+        
+        // Show loading indicator saat form submit
+        form.on('submit', function() {
+            // Remove existing overlay if any
+            $('.loading-overlay').remove();
+            // Add new overlay
+            $('body').append('<div class="loading-overlay"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div></div>');
+        });
+        
+        // Remove loading overlay when page loads
+        $(window).on('load', function() {
+            setTimeout(function() {
+                $('.loading-overlay').fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }, 500);
+        });
+    });
 </script>
 @stop
