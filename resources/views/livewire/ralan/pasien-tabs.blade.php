@@ -818,8 +818,8 @@
                                                     </div>
                                                 </div>
                                                 
-                                                <!-- Grid Berkas dalam Kelompok -->
-                                                <div class="row">
+                                                <!-- List Berkas dalam Kelompok -->
+                                                <div class="list-group list-group-flush border">
                                                     @foreach($berkasGroup as $berkas)
                                                     @php
                                                     $urlBerkas = env('URL_BERKAS', '');
@@ -852,29 +852,30 @@
                                                         $fileColor = 'success';
                                                     }
                                                     @endphp
-                                                    <div class="col-12 col-sm-6 col-md-6 col-lg-4 mb-3">
-                                                        <div class="card border-left-{{$fileColor}} h-100" style="border-left-width: 4px;">
-                                                            <div class="card-body p-2 p-md-3">
-                                                                <div class="d-flex flex-column flex-md-row align-items-start">
-                                                                    <div class="mr-0 mr-md-3 mb-2 mb-md-0 text-center text-md-left">
-                                                                        <i class="fas {{$fileIcon}} fa-2x text-{{$fileColor}}"></i>
-                                                                    </div>
-                                                                    <div class="flex-grow-1 w-100">
-                                                                        <h6 class="mb-2 text-center text-md-left" style="font-size: 0.9rem; word-break: break-all;">
-                                                                            <strong class="text-dark">
-                                                                                <i class="fas fa-file text-{{$fileColor}}"></i> {{$fileName}}
-                                                                            </strong>
-                                                                        </h6>
-                                                                        <div class="mt-2">
-                                                                            <button type="button" 
-                                                                                    class="btn btn-sm btn-{{$fileColor}} btn-block"
-                                                                                    onclick="openBerkasModal('{{$fullPath}}', '{{$fileName}}', '{{$fileExtension}}')">
-                                                                                <i class="fas fa-eye"></i> Buka Berkas
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
+                                                    <div class="list-group-item d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                                                        <div class="d-flex align-items-center flex-grow-1">
+                                                            <div class="mr-3">
+                                                                <i class="fas {{$fileIcon}} fa-lg text-{{$fileColor}}"></i>
                                                             </div>
+                                                            <div>
+                                                                <div class="font-weight-bold text-dark" style="word-break: break-all;">{{$fileName}}</div>
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-clock"></i> {{$berkas->tanggal ?? '-'}} &nbsp;|&nbsp;
+                                                                    <i class="fas fa-user"></i> {{$berkas->petugas ?? '-'}} &nbsp;|&nbsp;
+                                                                    <i class="fas fa-hashtag"></i> {{$berkas->no_rawat ?? '-'}}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-3 mt-md-0 ml-md-3 d-flex flex-wrap" style="gap:0.5rem;">
+                                                            <button type="button" class="btn btn-sm btn-outline-{{$fileColor}}" onclick="openBerkasModal('{{$fullPath}}', '{{$fileName}}', '{{$fileExtension}}')">
+                                                                <i class="fas fa-eye"></i> Lihat
+                                                            </button>
+                                                            <a href="{{$fullPath}}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="fas fa-external-link-alt"></i>
+                                                            </a>
+                                                            <a href="{{$fullPath}}" download class="btn btn-sm btn-outline-secondary">
+                                                                <i class="fas fa-download"></i>
+                                                            </a>
                                                         </div>
                                                     </div>
                                                     @endforeach

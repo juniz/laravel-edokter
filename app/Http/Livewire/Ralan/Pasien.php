@@ -9,7 +9,7 @@ use App\Models\TemplateEKG;
 class Pasien extends Component
 {
     public $noRawat;
-    public $alergi;
+    public $alergi = null;
 
     protected $listeners = ['setNoRawat' => 'loadPasien'];
 
@@ -58,7 +58,7 @@ class Pasien extends Component
                 )
                 ->first();
 
-            $this->alergi = DB::table('pemeriksaan_ralan')
+            $alergiRecord = DB::table('pemeriksaan_ralan')
                 ->where('no_rawat', $this->noRawat)
                 ->where('alergi', '<>', 'Tidak Ada')
                 ->where('alergi', '<>', '-')
@@ -68,6 +68,8 @@ class Pasien extends Component
                 ->orderBy('tgl_perawatan', 'desc')
                 ->orderBy('jam_rawat', 'desc')
                 ->first();
+
+            $this->alergi = $alergiRecord->alergi ?? null;
         }
 
         $dokterList = DB::table('dokter')->where('status', '1')->get();
