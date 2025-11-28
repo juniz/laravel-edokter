@@ -852,30 +852,33 @@
                                                         $fileColor = 'success';
                                                     }
                                                     @endphp
-                                                    <div class="list-group-item d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                                                    <div class="list-group-item d-flex flex-column flex-md-row align-items-start align-items-md-center berkas-item"
+                                                        data-file-path="{{$fullPath}}"
+                                                        data-file-name="{{$fileName}}"
+                                                        data-file-extension="{{$fileExtension}}">
                                                         <div class="d-flex align-items-center flex-grow-1">
                                                             <div class="mr-3">
                                                                 <i class="fas {{$fileIcon}} fa-lg text-{{$fileColor}}"></i>
                                                             </div>
                                                             <div>
                                                                 <div class="font-weight-bold text-dark" style="word-break: break-all;">{{$fileName}}</div>
-                                                                <small class="text-muted">
+                                                                {{-- <small class="text-muted">
                                                                     <i class="fas fa-clock"></i> {{$berkas->tanggal ?? '-'}} &nbsp;|&nbsp;
                                                                     <i class="fas fa-user"></i> {{$berkas->petugas ?? '-'}} &nbsp;|&nbsp;
                                                                     <i class="fas fa-hashtag"></i> {{$berkas->no_rawat ?? '-'}}
-                                                                </small>
+                                                                </small> --}}
                                                             </div>
                                                         </div>
-                                                        <div class="mt-3 mt-md-0 ml-md-3 d-flex flex-wrap" style="gap:0.5rem;">
+                                                        <div class="mt-3 mt-md-0 ml-md-3 d-flex flex-wrap berkas-item-actions" style="gap:0.5rem;">
                                                             <button type="button" class="btn btn-sm btn-outline-{{$fileColor}}" onclick="openBerkasModal('{{$fullPath}}', '{{$fileName}}', '{{$fileExtension}}')">
                                                                 <i class="fas fa-eye"></i> Lihat
                                                             </button>
-                                                            <a href="{{$fullPath}}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                            {{-- <a href="{{$fullPath}}" target="_blank" class="btn btn-sm btn-outline-secondary">
                                                                 <i class="fas fa-external-link-alt"></i>
                                                             </a>
                                                             <a href="{{$fullPath}}" download class="btn btn-sm btn-outline-secondary">
                                                                 <i class="fas fa-download"></i>
-                                                            </a>
+                                                            </a> --}}
                                                         </div>
                                                     </div>
                                                     @endforeach
@@ -1119,50 +1122,40 @@
     </div>
 </div>
 
-<!-- Modal Berkas Digital -->
-<div class="modal fade" id="berkasModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="true" style="z-index: 9999;">
-    <div class="modal-dialog" role="document" style="margin: 0; max-width: 100%; width: 100%; height: 100vh;">
-        <div class="modal-content" style="background: transparent; border: none; box-shadow: none; height: 100vh;">
-            <div class="modal-body p-0" style="height: 100vh; overflow: hidden; background: rgba(0, 0, 0, 0.95); position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; margin: 0;">
-                <!-- Floating Controls -->
-                <div class="position-fixed" style="top: 20px; right: 20px; z-index: 10000;">
-                    <div class="btn-group-vertical" role="group">
-                        <button type="button" class="btn btn-light btn-sm mb-2" onclick="zoomOut()" title="Zoom Out">
-                            <i class="fas fa-search-minus"></i>
-                        </button>
-                        <button type="button" class="btn btn-light btn-sm mb-2" onclick="resetZoom()" title="Reset Zoom">
-                            <i class="fas fa-search"></i><br><small id="zoomLevel">100%</small>
-                        </button>
-                        <button type="button" class="btn btn-light btn-sm mb-2" onclick="zoomIn()" title="Zoom In">
-                            <i class="fas fa-search-plus"></i>
-                        </button>
-                        <a href="#" id="downloadBerkasLink" class="btn btn-light btn-sm mb-2" download title="Download">
-                            <i class="fas fa-download"></i>
-                        </a>
-                        <a href="#" id="openNewTabLink" target="_blank" class="btn btn-light btn-sm mb-2" title="Buka Tab Baru">
-                            <i class="fas fa-external-link-alt"></i>
-                        </a>
-                        <button type="button" class="btn btn-light btn-sm" data-dismiss="modal" title="Tutup">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Viewer Container -->
-                <div id="berkasViewerContainer" style="height: 100vh; width: 100vw; overflow: hidden; position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
-                    <div id="berkasViewer" style="display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; padding: 0; margin: 0; box-sizing: border-box;">
-                        <div id="berkasContent" style="transform: scale(1); transform-origin: center center; transition: transform 0.3s ease; width: 100vw; height: 100vh; position: relative;">
-                            <!-- Content akan diisi oleh JavaScript -->
-                        </div>
-                    </div>
-                </div>
+<!-- Overlay Berkas Digital -->
+<div class="pdf-viewer-overlay" id="berkasViewerOverlay" style="display: none;">
+    <div class="pdf-viewer-container">
+        <div class="pdf-viewer-header">
+            <span class="pdf-viewer-title" id="berkasViewerTitle">Berkas Digital</span>
+            <div class="pdf-viewer-actions">
+                <a href="#" id="berkasViewerDownload" class="btn btn-sm btn-light" download title="Download">
+                    <i class="fas fa-download"></i>
+                </a>
+                <a href="#" id="berkasViewerOpen" class="btn btn-sm btn-light" target="_blank" title="Buka Tab Baru">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
+                <button type="button" class="btn btn-sm btn-danger" onclick="closeBerkasViewer()" title="Tutup">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+        </div>
+        <div class="pdf-viewer-body" id="berkasViewerBody">
+            <!-- konten dimuat via JS -->
         </div>
     </div>
 </div>
 
 @push('css')
 <style>
+    .berkas-item {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .berkas-item:hover {
+        background-color: #f8fafc;
+    }
+
     .pasien-tabs-container {
         min-height: 400px;
     }
@@ -1202,6 +1195,82 @@
         overflow: visible;
     }
     
+    /* Overlay berkas digital */
+    .pdf-viewer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 2050;
+        background: rgba(0,0,0,0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .pdf-viewer-container {
+        width: 100%;
+        max-width: 1400px;
+        height: 95vh;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+    }
+
+    .pdf-viewer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        background: linear-gradient(135deg, #343a40 0%, #1f2327 100%);
+        color: #fff;
+    }
+
+    .pdf-viewer-actions .btn {
+        margin-left: 0.5rem;
+    }
+
+    .pdf-viewer-close {
+        border: none;
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        padding: 0.35rem 0.6rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .pdf-viewer-close:hover {
+        background: rgba(255,255,255,0.35);
+    }
+
+    .pdf-viewer-body {
+        flex: 1;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .pdf-viewer-body iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: #fff;
+    }
+
+    .pdf-viewer-body img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
     /* Responsif untuk mobile */
     @media (max-width: 768px) {
         .pasien-tabs-container {
@@ -1231,142 +1300,66 @@
 
 @push('js')
 <script>
-    let currentZoom = 1;
-    let currentFilePath = '';
     let currentFileExtension = '';
 
     function openBerkasModal(filePath, fileName, fileExtension) {
-        currentFilePath = filePath;
-        currentFileExtension = fileExtension.toLowerCase();
-        currentZoom = 1;
-        
-        $('#downloadBerkasLink').attr('href', filePath);
-        $('#openNewTabLink').attr('href', filePath);
-        
-        const contentDiv = $('#berkasContent');
-        contentDiv.empty();
-        
+        currentFileExtension = (fileExtension || '').toLowerCase();
+        $('#berkasViewerTitle').text(fileName || 'Berkas Digital');
+        $('#berkasViewerDownload').attr('href', filePath);
+        $('#berkasViewerOpen').attr('href', filePath);
+
+        const body = $('#berkasViewerBody');
+        body.empty();
+
         if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(currentFileExtension)) {
-            // Tampilkan gambar fullscreen
-            const img = $('<img>').attr('src', filePath)
-                .css({
-                    'width': '100vw',
-                    'height': '100vh',
-                    'object-fit': 'contain',
-                    'display': 'block',
-                    'margin': '0',
-                    'padding': '0'
+            const img = $('<img>')
+                .attr('src', filePath)
+                .attr('alt', fileName || 'Berkas Digital')
+                .on('error', function() {
+                    body.html('<div class="text-white text-center p-4"><i class="fas fa-exclamation-triangle"></i> Gagal memuat gambar</div>');
+                });
+            body.append(img);
+        } else {
+            const iframe = $('<iframe>')
+                .attr({
+                    src: filePath,
+                    title: fileName || 'Berkas Digital'
                 })
                 .on('error', function() {
-                    contentDiv.html('<div class="alert alert-danger text-white bg-danger p-4 rounded"><i class="fas fa-exclamation-triangle"></i> Gagal memuat gambar</div>');
+                    body.html(`
+                        <div class="text-center p-5">
+                            <i class="fas fa-file fa-3x mb-3"></i>
+                            <p>File tidak dapat ditampilkan di browser</p>
+                            <a href="${filePath}" class="btn btn-primary" download>
+                                <i class="fas fa-download"></i> Download File
+                            </a>
+                        </div>
+                    `);
                 });
-            contentDiv.css({
-                'width': '100vw',
-                'height': '100vh',
-                'display': 'flex',
-                'justify-content': 'center',
-                'align-items': 'center'
-            });
-            contentDiv.append(img);
-        } else if (currentFileExtension === 'pdf') {
-            // Tampilkan PDF menggunakan iframe fullscreen
-            contentDiv.css({
-                'width': '100vw',
-                'height': '100vh',
-                'padding': '0',
-                'margin': '0'
-            });
-            const iframe = $('<iframe>').attr({
-                'src': filePath,
-                'width': '100%',
-                'height': '100%',
-                'style': 'border: none; background: white; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;'
-            });
-            contentDiv.append(iframe);
-        } else {
-            // Untuk file lain, tampilkan iframe fullscreen
-            contentDiv.css({
-                'width': '100vw',
-                'height': '100vh',
-                'padding': '0',
-                'margin': '0'
-            });
-            const iframe = $('<iframe>').attr({
-                'src': filePath,
-                'width': '100%',
-                'height': '100%',
-                'style': 'border: none; background: white; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;'
-            }).on('error', function() {
-                contentDiv.html(`
-                    <div class="text-center p-5 text-white" style="width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <i class="fas fa-file fa-4x mb-3"></i>
-                        <p>File tidak dapat ditampilkan di browser</p>
-                        <a href="${filePath}" class="btn btn-light" download>
-                            <i class="fas fa-download"></i> Download File
-                        </a>
-                    </div>
-                `);
-            });
-            contentDiv.append(iframe);
+            body.append(iframe);
         }
-        
-        updateZoom();
-        $('#berkasModal').modal('show');
+
+        $('#berkasViewerOverlay').fadeIn(200);
+        $('body').css('overflow', 'hidden');
     }
 
-    function zoomIn() {
-        if (currentZoom < 3) {
-            currentZoom += 0.1;
-            updateZoom();
-        }
+    function closeBerkasViewer() {
+        $('#berkasViewerOverlay').fadeOut(200);
+        $('#berkasViewerBody').empty();
+        $('body').css('overflow', '');
     }
 
-    function zoomOut() {
-        if (currentZoom > 0.3) {
-            currentZoom -= 0.1;
-            updateZoom();
-        }
-    }
-
-    function resetZoom() {
-        currentZoom = 1;
-        updateZoom();
-    }
-
-    function updateZoom() {
-        $('#berkasContent').css('transform', `scale(${currentZoom})`);
-        $('#zoomLevel').text(Math.round(currentZoom * 100) + '%');
-    }
-
-    // Keyboard shortcuts untuk zoom
-    $(document).on('keydown', function(e) {
-        if ($('#berkasModal').hasClass('show')) {
-            if (e.ctrlKey || e.metaKey) {
-                if (e.key === '+' || e.key === '=') {
-                    e.preventDefault();
-                    zoomIn();
-                } else if (e.key === '-') {
-                    e.preventDefault();
-                    zoomOut();
-                } else if (e.key === '0') {
-                    e.preventDefault();
-                    resetZoom();
-                }
-            }
+    // Tutup overlay dengan ESC
+    $(document).on('keydown.berkasViewer', function(e) {
+        if (e.key === 'Escape' && $('#berkasViewerOverlay').is(':visible')) {
+            closeBerkasViewer();
         }
     });
 
-    // Mouse wheel zoom untuk gambar
-    $(document).on('wheel', '#berkasViewerContainer', function(e) {
-        if ($('#berkasModal').hasClass('show') && ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(currentFileExtension)) {
-            if (e.ctrlKey || e.metaKey) {
-                e.preventDefault();
-                if (e.originalEvent.deltaY < 0) {
-                    zoomIn();
-                } else {
-                    zoomOut();
-                }
-            }
+    // Tutup overlay saat klik area gelap
+    $(document).on('click', '#berkasViewerOverlay', function(e) {
+        if (e.target.id === 'berkasViewerOverlay') {
+            closeBerkasViewer();
         }
     });
 
@@ -1397,6 +1390,19 @@
             $('#filterRiwayatIcon').removeClass('fa-chevron-up').addClass('fa-chevron-down');
         });
 
+        // Klik list berkas untuk buka modal
+        $(document).on('click', '.berkas-item', function (event) {
+            if ($(event.target).closest('.berkas-item-actions').length) {
+                return;
+            }
+            const filePath = $(this).data('file-path');
+            const fileName = $(this).data('file-name');
+            const fileExtension = $(this).data('file-extension');
+            if (filePath) {
+                openBerkasModal(filePath, fileName || 'Berkas', fileExtension || '');
+            }
+        });
+
         $(document).on('click', '[data-toggle="lightbox"]', function(event) {
             event.preventDefault();
             $(this).ekkoLightbox();
@@ -1418,25 +1424,6 @@
                 $('#tindakan-dokter-tab').addClass('active');
                 $('#tindakan-dokter-content').addClass('show active');
             }
-        });
-
-        // Reset zoom saat modal ditutup
-        $('#berkasModal').on('hidden.bs.modal', function () {
-            resetZoom();
-            $('#berkasContent').empty();
-        });
-
-        // Pastikan backdrop fullscreen
-        $('#berkasModal').on('show.bs.modal', function () {
-            $('.modal-backdrop').css({
-                'position': 'fixed',
-                'top': '0',
-                'left': '0',
-                'width': '100vw',
-                'height': '100vh',
-                'z-index': '9998',
-                'background-color': 'rgba(0, 0, 0, 0.95)'
-            });
         });
 
         // Listener untuk membuka tab riwayat dari tombol di pasien.blade.php
