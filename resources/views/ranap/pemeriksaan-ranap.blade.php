@@ -7,7 +7,7 @@
 @stop
 
 @section('content')
-    {{-- <x-ranap.riwayat-ranap :no-rawat="request()->get('no_rawat')" /> --}}
+    <livewire:ralan.pasien :noRawat="request()->get('no_rawat')" />
     <x-ralan.riwayat :no-rawat="request()->get('no_rawat')" />
     <div class="row">
         <div class="col-md-6">

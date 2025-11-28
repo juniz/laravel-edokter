@@ -18,7 +18,6 @@
                 </div>
                 <div class="flex-grow-1 d-flex justify-content-between">
                     <div class="d-flex flex-column" style="align-items: flex-start;">
-                        <h5 class="widget-user-username mb-1 text-white" style="font-size: 1.3rem; font-weight: 600; line-height: 1.2; margin: 0; padding: 0; text-align: left;">{{$data->nm_pasien}}</h5>
                         <span class="text-white mb-1" style="font-size: 0.95rem; opacity: 0.95; text-align: left;">No. RM: {{$data->no_rkm_medis}}</span>
                         <div class="d-flex flex-wrap align-items-center" style="gap: 12px; font-size: 0.9rem; text-align: left;">
                             <span class="text-white"><i class="fas fa-{{$data->jk == 'L' ? 'mars' : 'venus'}}"></i> {{$data->jk == 'L' ? 'Laki-Laki' : 'Perempuan'}}</span>
@@ -42,6 +41,8 @@
                         <dl class="mb-0">
                             <dt style="font-size: 0.85rem; color: #6c757d;">No. KTP</dt>
                             <dd class="mb-2" style="font-size: 0.9rem;">{{$data->no_ktp ?? '-'}}</dd>
+                            <dt style="font-size: 0.85rem; color: #6c757d;">Nama</dt>
+                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->nm_pasien}}</dd>
                             <dt style="font-size: 0.85rem; color: #6c757d;">TTL</dt>
                             <dd class="mb-2" style="font-size: 0.9rem;">{{$data->tmp_lahir}}, {{$data->tgl_lahir ? \Carbon\Carbon::parse($data->tgl_lahir)->isoFormat('D MMM Y') : '-'}}</dd>
                             <dt style="font-size: 0.85rem; color: #6c757d;">Umur</dt>
