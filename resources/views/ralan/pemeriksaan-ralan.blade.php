@@ -14,7 +14,11 @@
 @stop
 
 @section('content')
-<livewire:ralan.pasien :noRawat="request()->get('no_rawat')" />
+<div class="row">
+    <div class="col-md-12">
+        <livewire:ralan.pasien :noRawat="request()->get('no_rawat')" />
+    </div>
+</div>
 <div class="row">
     <div class="col-md-6">
         <livewire:ralan.pasien-tabs :noRawat="request()->get('no_rawat')" />

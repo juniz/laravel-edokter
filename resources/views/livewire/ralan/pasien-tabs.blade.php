@@ -268,6 +268,20 @@
                                                                     <div class="font-weight-bold">{{ $pemeriksaan->gcs ?? '-' }}</div>
                                                                 </div>
                                                             </div>
+                                                            <div class="row mb-2">
+                                                                <div class="col-md-3 col-6 mb-2">
+                                                                    <div class="small text-muted">Berat Badan</div>
+                                                                    <div class="font-weight-bold">{{ $pemeriksaan->berat ?? '-' }} <span class="small">kg</span></div>
+                                                                </div>
+                                                                <div class="col-md-3 col-6 mb-2">
+                                                                    <div class="small text-muted">Tinggi Badan</div>
+                                                                    <div class="font-weight-bold">{{ $pemeriksaan->tinggi ?? '-' }} <span class="small">cm</span></div>
+                                                                </div>
+                                                                <div class="col-md-3 col-6 mb-2">
+                                                                    <div class="small text-muted">Lingkar Perut</div>
+                                                                    <div class="font-weight-bold">{{ $pemeriksaan->lingkar_perut ?? '-' }} <span class="small">cm</span></div>
+                                                                </div>
+                                                            </div>
                                                             <div class="mb-2">
                                                                 <div class="small text-muted">Status Lokalis:</div>
                                                                 <div class="border rounded p-2 bg-light">{!! nl2br(e($pemeriksaan->pemeriksaan ?? '-')) !!}</div>

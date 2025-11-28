@@ -1,230 +1,192 @@
-<div>
-    <style>
-        .accordion .card-header button:not(.collapsed) .fa-chevron-down {
-            transform: rotate(180deg);
-        }
-        .accordion .card-header button .fa-chevron-down {
-            transition: transform 0.3s ease;
-            display: inline-block;
-        }
-    </style>
-    @if($data)
-    <div class="card card-widget widget-user-2 shadow-sm mb-3">
-        <!-- Add the bg color to the header using any of the bg-* classes -->
-        <div class="widget-user-header bg-primary p-3">
-            <div class="d-flex align-items-start">
-                <div class="widget-user-image mr-3">
-                    <img class="img-circle elevation-2" src="https://simrs.rsbhayangkaranganjuk.com/webapps/photopasien/{{$data->gambar ?? 'avatar.png'}}" alt="User Avatar" style="width: 65px; height: 65px; object-fit: cover;">
-                </div>
-                <div class="flex-grow-1 d-flex justify-content-between">
-                    <div class="d-flex flex-column" style="align-items: flex-start;">
-                        <span class="text-white mb-1" style="font-size: 0.95rem; opacity: 0.95; text-align: left;">No. RM: {{$data->no_rkm_medis}}</span>
-                        <div class="d-flex flex-wrap align-items-center" style="gap: 12px; font-size: 0.9rem; text-align: left;">
-                            <span class="text-white"><i class="fas fa-{{$data->jk == 'L' ? 'mars' : 'venus'}}"></i> {{$data->jk == 'L' ? 'Laki-Laki' : 'Perempuan'}}</span>
-                            <span class="text-white"><i class="fas fa-droplet"></i> {{$data->gol_darah}}</span>
-                        </div>
-                    </div>
-                    <div class="d-flex flex-column align-items-end" style="gap: 5px;">
-                        <span class="badge badge-light badge-lg" style="font-size: 0.85rem; padding: 0.35rem 0.65rem;">{{$data->no_rawat}}</span>
-                        <span class="badge badge-warning badge-lg" style="font-size: 0.85rem; padding: 0.35rem 0.65rem;">{{$data->png_jawab}}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="card-footer p-0">
-            <div class="card-body p-2">
-                <!-- Desktop View: 4 Columns -->
-                <div class="row d-none d-md-flex" style="font-size: 0.9rem;">
-                    <!-- Identitas -->
-                    <div class="col-md-3 border-right">
-                        <h6 class="text-primary mb-2" style="font-weight: 600; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">Identitas</h6>
-                        <dl class="mb-0">
-                            <dt style="font-size: 0.85rem; color: #6c757d;">No. KTP</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->no_ktp ?? '-'}}</dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Nama</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->nm_pasien}}</dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">TTL</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->tmp_lahir}}, {{$data->tgl_lahir ? \Carbon\Carbon::parse($data->tgl_lahir)->isoFormat('D MMM Y') : '-'}}</dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Umur</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">
-                                <span style="display: flex; align-items: center;">
-                                    <span id="umur-display">{{$data->umur}}</span>
-                                    <button class="btn btn-xs btn-success ml-2" 
-                                            title="Edit Umur" 
-                                            onclick="openModalUmur('{{$data->no_rkm_medis}}', '{{$data->umur}}', '{{$data->tgl_lahir}}')">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                </span>
-                            </dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Pendidikan</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->pnd}}</dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Pekerjaan</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->pekerjaan}}</dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Agama</dt>
-                            <dd class="mb-0" style="font-size: 0.9rem;">{{$data->agama}}</dd>
-                        </dl>
-                    </div>
+@props(['noRawat', 'collapsible' => false])
 
-                    <!-- Kontak -->
-                    <div class="col-md-3 border-right">
-                        <h6 class="text-primary mb-2" style="font-weight: 600; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">Kontak</h6>
-                        <dl class="mb-0">
-                            <dt style="font-size: 0.85rem; color: #6c757d;">No. Tlp</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">
-                                {{$data->no_tlp}}
-                                <button class="btn btn-xs btn-success ml-2" title="Edit"><i class="fas fa-edit"></i></button>
-                            </dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Alamat</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->alamat}}</dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Wilayah</dt>
-                            <dd class="mb-0" style="font-size: 0.9rem;">
-                                {{$data->nm_kel}}, {{$data->nm_kec}}, {{$data->nm_kab}}, {{$data->nm_prop}}
-                            </dd>
-                        </dl>
-                    </div>
-
-                    <!-- Medis -->
-                    <div class="col-md-3 border-right">
-                        <h6 class="text-primary mb-2" style="font-weight: 600; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">Medis</h6>
-                        <dl class="mb-0">
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Gol. Darah</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->gol_darah}}</dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Nama Ibu</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->nm_ibu}}</dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Catatan</dt>
-                            <dd class="mb-0" style="font-size: 0.9rem;">
-                                @if($data->catatan)
-                                <div class="alert alert-warning p-1 mb-0" style="font-size: 0.85rem;">
-                                    {{$data->catatan}}
-                                </div>
-                                @else
-                                -
-                                @endif
-                            </dd>
-                        </dl>
-                    </div>
-
-                    <!-- Penanggung Jawab -->
-                    <div class="col-md-3">
-                        <h6 class="text-primary mb-2" style="font-weight: 600; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">Penanggung Jawab</h6>
-                        <dl class="mb-0">
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Nama PJ</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->namakeluarga}}</dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Pekerjaan</dt>
-                            <dd class="mb-2" style="font-size: 0.9rem;">{{$data->pekerjaanpj}}</dd>
-                            <dt style="font-size: 0.85rem; color: #6c757d;">Alamat</dt>
-                            <dd class="mb-0" style="font-size: 0.9rem;">{{$data->alamatpj}}</dd>
-                        </dl>
-                    </div>
-                </div>
-
-                <!-- Mobile View: Accordion -->
-                <div class="accordion d-md-none" id="pasienAccordion" style="font-size: 0.9rem;">
-                    <!-- Identitas -->
-                    <div class="card">
-                        <div class="card-header p-2" id="headingIdentitas">
-                            <h6 class="mb-0">
-                                <button class="btn btn-link btn-block text-left text-primary" type="button" data-toggle="collapse" data-target="#collapseIdentitas" aria-expanded="true" aria-controls="collapseIdentitas" style="font-weight: 600; text-decoration: none;">
-                                    <i class="fas fa-chevron-down mr-2"></i> Identitas
-                                </button>
-                            </h6>
-                        </div>
-                        <div id="collapseIdentitas" class="collapse show" aria-labelledby="headingIdentitas" data-parent="#pasienAccordion">
-                            <div class="card-body p-2">
-                                <dl class="mb-0">
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">No. KTP</dt>
-                                    <dd class="mb-2" style="font-size: 0.9rem;">{{$data->no_ktp ? \Illuminate\Support\Str::mask($data->no_ktp, '*', 0) : '-'}}</dd>
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">TTL</dt>
-                                    <dd class="mb-2" style="font-size: 0.9rem;">{{$data->tmp_lahir}}, {{$data->tgl_lahir ? \Carbon\Carbon::parse($data->tgl_lahir)->isoFormat('D MMM Y') : '-'}}</dd>
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Pendidikan</dt>
-                                    <dd class="mb-2" style="font-size: 0.9rem;">{{$data->pnd}}</dd>
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Pekerjaan</dt>
-                                    <dd class="mb-2" style="font-size: 0.9rem;">{{$data->pekerjaan}}</dd>
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Agama</dt>
-                                    <dd class="mb-0" style="font-size: 0.9rem;">{{$data->agama}}</dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Kontak -->
-                    <div class="card">
-                        <div class="card-header p-2" id="headingKontak">
-                            <h6 class="mb-0">
-                                <button class="btn btn-link btn-block text-left text-primary collapsed" type="button" data-toggle="collapse" data-target="#collapseKontak" aria-expanded="false" aria-controls="collapseKontak" style="font-weight: 600; text-decoration: none;">
-                                    <i class="fas fa-chevron-down mr-2"></i> Kontak
-                                </button>
-                            </h6>
-                        </div>
-                        <div id="collapseKontak" class="collapse" aria-labelledby="headingKontak" data-parent="#pasienAccordion">
-                            <div class="card-body p-2">
-                                <dl class="mb-0">
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">No. Tlp</dt>
-                                    <dd class="mb-2" style="font-size: 0.9rem;">
-                                        {{$data->no_tlp}}
-                                        <button class="btn btn-xs btn-success ml-2" title="Edit"><i class="fas fa-edit"></i></button>
-                                    </dd>
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Alamat</dt>
-                                    <dd class="mb-2" style="font-size: 0.9rem;">{{$data->alamat}}</dd>
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Wilayah</dt>
-                                    <dd class="mb-0" style="font-size: 0.9rem;">
-                                        {{$data->nm_kel}}, {{$data->nm_kec}}, {{$data->nm_kab}}, {{$data->nm_prop}}
-                                    </dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Medis -->
-                    <div class="card">
-                        <div class="card-header p-2" id="headingMedis">
-                            <h6 class="mb-0">
-                                <button class="btn btn-link btn-block text-left text-primary collapsed" type="button" data-toggle="collapse" data-target="#collapseMedis" aria-expanded="false" aria-controls="collapseMedis" style="font-weight: 600; text-decoration: none;">
-                                    <i class="fas fa-chevron-down mr-2"></i> Medis
-                                </button>
-                            </h6>
-                        </div>
-                        <div id="collapseMedis" class="collapse" aria-labelledby="headingMedis" data-parent="#pasienAccordion">
-                            <div class="card-body p-2">
-                                <dl class="mb-0">
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Gol. Darah</dt>
-                                    <dd class="mb-2" style="font-size: 0.9rem;">{{$data->gol_darah}}</dd>
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Nama Ibu</dt>
-                                    <dd class="mb-2" style="font-size: 0.9rem;">{{$data->nm_ibu}}</dd>
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Catatan</dt>
-                                    <dd class="mb-0" style="font-size: 0.9rem;">
-                                        @if($data->catatan)
-                                        <div class="alert alert-warning p-1 mb-0" style="font-size: 0.85rem;">
-                                            {{$data->catatan}}
+<div class="d-flex flex-column align-items-center pasien-header-container">
+    <div class="pasien-photo-box text-center mb-3">
+        <img src="https://simrs.rsbhayangkaranganjuk.com/webapps/photopasien/{{$data->gambar ?? 'avatar.png'}}" 
+             class="img-circle elevation-2"
+             style="width: 120px; height: 120px; object-fit: cover;"
+             alt="Foto Pasien">
+        <h6 class="mt-2 mb-0 font-weight-bold">{{$data->nm_pasien ?? '-'}}</h6>
+        <h6 class="text-muted">{{$data->no_rkm_medis ?? '-'}}</h6>
+        <h6 class="mt-2 mb-0 font-weight-bold">{{$data->no_rawat ?? '-'}}</h6>
+    </div>
+    <div class="pasien-card-box w-100 d-flex justify-content-center">
+        <x-adminlte-card title="Detail Data Pasien" theme="lightblue" icon="fas fa-user-circle" collapsible="collapsed" class="pasien-card-center">
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <div class="info-box bg-light h-100">
+                        <div class="info-box-content">
+                            <h6 class="border-bottom pb-2 mb-3">Informasi Utama</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-exclamation-triangle text-danger"></i>
+                                        <div class="info-item-content">
+                                            <strong>Alergi</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$alergi->alergi ?? 'Tidak ada'}}</span>
                                         </div>
-                                        @else
-                                        -
-                                        @endif
-                                    </dd>
-                                </dl>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-book-medical text-primary"></i>
+                                        <div class="info-item-content">
+                                            <strong>No Rawat</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->no_rawat ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-id-card text-info"></i>
+                                        <div class="info-item-content">
+                                            <strong>No KTP</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->no_ktp ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-user text-success"></i>
+                                        <div class="info-item-content">
+                                            <strong>Gender</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->jk == 'L' ? 'Laki - Laki' : 'Perempuan' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-calendar text-warning"></i>
+                                        <div class="info-item-content">
+                                            <strong>TTL</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->tmp_lahir ?? '-'}}, {{\Carbon\Carbon::parse($data->tgl_lahir)->isoFormat('LL')  ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-droplet text-danger"></i>
+                                        <div class="info-item-content">
+                                            <strong>Gol Darah</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->gol_darah ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-clock text-info"></i>
+                                        <div class="info-item-content">
+                                            <strong>Umur</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->umur ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-wallet text-success"></i>
+                                        <div class="info-item-content">
+                                            <strong>Cara Bayar</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->png_jawab ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-phone text-primary"></i>
+                                        <div class="info-item-content">
+                                            <strong>Telp</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->no_tlp ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-building text-warning"></i>
+                                        <div class="info-item-content">
+                                            <strong>Pekerjaan</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->pekerjaan ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Penanggung Jawab -->
-                    <div class="card">
-                        <div class="card-header p-2" id="headingPJ">
-                            <h6 class="mb-0">
-                                <button class="btn btn-link btn-block text-left text-primary collapsed" type="button" data-toggle="collapse" data-target="#collapsePJ" aria-expanded="false" aria-controls="collapsePJ" style="font-weight: 600; text-decoration: none;">
-                                    <i class="fas fa-chevron-down mr-2"></i> Penanggung Jawab
-                                </button>
-                            </h6>
-                        </div>
-                        <div id="collapsePJ" class="collapse" aria-labelledby="headingPJ" data-parent="#pasienAccordion">
-                            <div class="card-body p-2">
-                                <dl class="mb-0">
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Nama PJ</dt>
-                                    <dd class="mb-2" style="font-size: 0.9rem;">{{$data->namakeluarga}}</dd>
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Pekerjaan</dt>
-                                    <dd class="mb-2" style="font-size: 0.9rem;">{{$data->pekerjaanpj}}</dd>
-                                    <dt style="font-size: 0.85rem; color: #6c757d;">Alamat</dt>
-                                    <dd class="mb-0" style="font-size: 0.9rem;">{{$data->alamatpj}}</dd>
-                                </dl>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="info-box bg-light h-100">
+                        <div class="info-box-content">
+                            <h6 class="border-bottom pb-2 mb-3">Informasi Tambahan</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-user text-info"></i>
+                                        <div class="info-item-content">
+                                            <strong>Nama Ibu</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->nm_ibu ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-map text-success"></i>
+                                        <div class="info-item-content">
+                                            <strong>Alamat</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->alamat ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-user text-primary"></i>
+                                        <div class="info-item-content">
+                                            <strong>Keluarga</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->namakeluarga ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-ring text-warning"></i>
+                                        <div class="info-item-content">
+                                            <strong>Status</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->stts_nikah ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-book text-danger"></i>
+                                        <div class="info-item-content">
+                                            <strong>Agama</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->agama ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-briefcase text-info"></i>
+                                        <div class="info-item-content">
+                                            <strong>Pekerjaan PJ</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->pekerjaanpj ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-map text-success"></i>
+                                        <div class="info-item-content">
+                                            <strong>Alamat PJ</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->alamatpj ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-id-card text-primary"></i>
+                                        <div class="info-item-content">
+                                            <strong>No Peserta</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->no_peserta ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-fw fa-sticky-note text-warning"></i>
+                                        <div class="info-item-content">
+                                            <strong>Catatan</strong>
+                                            <span class="separator">:</span>
+                                            <span class="value">{{$data->catatan ?? '-'}}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -240,10 +202,12 @@
                     <button data-toggle="modal" data-target="#modal-upload-berkas" class="btn btn-xs btn-success"><i class="fas fa-file-upload"></i> Upload</button>
                 </div>
             </div>
-        </div>
+        </x-adminlte-card>
     </div>
-    
-    <!-- Modals and other components that were in the original file can be included here or kept in the main page if they are shared -->
+</div>
+
+
+<!-- Modals and other components that were in the original file can be included here or kept in the main page if they are shared -->
     <!-- For now, I'll assume the modals are already present in the main page or I should include them if they are specific to this component. -->
     <!-- The original component included modals. I should probably include them here too to ensure functionality works. -->
     
@@ -285,12 +249,14 @@
     </x-adminlte-modal>
 
     <!-- Other modals -->
-    <x-adminlte-modal id="modalBerkasRM" class="modal-lg" title="Berkas RM" size="lg" theme="info" icon="fas fa-bell" v-centered static-backdrop scrollable>
+    <x-adminlte-modal id="modalBerkasRM" class="modal-fullscreen-custom" title="Berkas RM" size="xl" theme="info" icon="fas fa-folder-open" v-centered static-backdrop scrollable>
         <div class="body-modal-berkasrm" style="gap:20px"></div>
     </x-adminlte-modal>
 
-    <x-adminlte-modal id="modal-rm" class="modal-lg" title="Berkas RM" size="lg" theme="info" icon="fas fa-bell" v-centered scrollable>
-        <livewire:component.berkas-rm />
+    <x-adminlte-modal id="modal-rm" class="modal-fullscreen-custom" title="Berkas RM" size="xl" theme="info" icon="fas fa-folder-open" v-centered scrollable>
+        <div id="berkas-rm-container">
+            <livewire:component.berkas-rm :rm="$data->no_rkm_medis ?? null" :key="'berkas-rm-'.($data->no_rkm_medis ?? 'default')" />
+        </div>
     </x-adminlte-modal>
 
     <x-adminlte-modal id="icare-modal" title="I-Care BPJS" size="lg" theme="info" icon="fas fa-heart" v-centered static-backdrop scrollable>
@@ -321,15 +287,246 @@
     <livewire:component.change-umur />
     <livewire:component.upload-berkas-digital :noRawat="$data->no_rawat" />
 
-    @else
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i> Pilih pasien untuk melihat detail.
-    </div>
-    @endif
-</div>
+@push('css')
+<style>
+    /* Modal Fullscreen Custom */
+    #modalBerkasRM .modal-dialog,
+    #modal-rm .modal-dialog {
+        max-width: 98vw !important;
+        width: 98vw !important;
+        height: 95vh !important;
+        margin: 1rem auto !important;
+    }
+    #modalBerkasRM .modal-content,
+    #modal-rm .modal-content {
+        height: 100% !important;
+        border-radius: 8px;
+    }
+    #modalBerkasRM .modal-body,
+    #modal-rm .modal-body {
+        height: calc(100% - 60px) !important;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+    #modalBerkasRM .body-modal-berkasrm {
+        min-height: 100%;
+    }
+    @media (max-width: 767.98px) {
+        #modalBerkasRM .modal-dialog,
+        #modal-rm .modal-dialog {
+            max-width: 100vw !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0 !important;
+        }
+        #modalBerkasRM .modal-content,
+        #modal-rm .modal-content {
+            border-radius: 0;
+        }
+    }
+    
+    .info-box {
+        min-height: auto;
+        padding: 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.24);
+        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+    }
+    .info-box:hover {
+        box-shadow: 0 3px 6px rgba(0,0,0,.16), 0 3px 6px rgba(0,0,0,.23);
+    }
+    .info-box-content {
+        padding: 1.25rem;
+    }
+    .img-circle {
+        border: 3px solid #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,.15);
+        transition: transform 0.2s ease;
+    }
+    .img-circle:hover {
+        transform: scale(1.05);
+    }
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        margin-bottom: 0.5rem;
+        text-align: left;
+    }
+    .info-item i {
+        margin-top: 0.25rem;
+        width: 20px;
+        text-align: left;
+    }
+    .info-item-content {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        text-align: left;
+        flex: 1;
+    }
+    .info-item strong {
+        min-width: 90px;
+        color: #666;
+        display: inline-block;
+        text-align: left;
+    }
+    .info-item .separator {
+        color: #666;
+        margin: 0 0.25rem;
+        display: inline-block;
+        width: 10px;
+        text-align: center;
+    }
+    .info-item .value {
+        color: #333;
+        text-align: left;
+        flex: 1;
+    }
+    h6 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-align: left;
+    }
+    .border-bottom {
+        border-color: rgba(0,0,0,.1) !important;
+    }
+    .text-center {
+        text-align: left !important;
+    }
+    .btn-group {
+        box-shadow: 0 1px 3px rgba(0,0,0,.12);
+        border-radius: 0.25rem;
+        overflow: hidden;
+    }
+    .btn-group .btn {
+        border: none;
+        margin: 0;
+    }
+    @media (max-width: 767.98px) {
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            align-items: stretch !important;
+        }
+        .btn-group {
+            display: flex;
+            width: 100%;
+        }
+        .btn-group .btn {
+            flex: 1;
+        }
+        .info-box {
+            margin-bottom: 1rem;
+        }
+        .col-md-2 {
+            margin-bottom: 1.5rem;
+        }
+    }
+    .pasien-photo:hover {
+        opacity: 0.9;
+        transition: opacity 0.2s ease;
+    }
+    /* Tambahan untuk layout baru */
+    .col-md-10 .card {
+        margin-bottom: 0;
+    }
+    @media (max-width: 767.98px) {
+        .col-md-10 {
+            margin-top: 1rem;
+        }
+    }
+    .pasien-header-container {
+        margin-bottom: 1.5rem;
+    }
+    .pasien-photo-box {
+        min-width: 140px;
+        max-width: 180px;
+    }
+    .pasien-card-box {
+        min-width: 0;
+    }
+    .pasien-card-center {
+        max-width: 100%;
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 1.2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        border-radius: 12px;
+        transition: box-shadow 0.2s, max-width 0.2s, margin 0.2s;
+    }
+    .pasien-card-center.collapsed-card {
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        opacity: 0.95;
+    }
+    .pasien-card-center .card-header {
+        display: flex;
+        justify-content: stretch;
+        align-items: center;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    .pasien-card-center .card-header .card-title {
+        width: 100%;
+        text-align: center;
+    }
+    .pasien-card-center .card-body {
+        padding: 1.5rem 1.2rem;
+    }
+    @media (max-width: 767.98px) {
+        .pasien-card-center {
+            max-width: 100%;
+            margin-top: 1rem;
+            border-radius: 8px;
+        }
+        .pasien-card-center .card-body {
+            padding: 1rem 0.7rem;
+        }
+    }
+    @media (max-width: 900px) {
+        .pasien-card-center .row.g-3 {
+            flex-direction: column !important;
+        }
+        .pasien-card-center .col-12,
+        .pasien-card-center .col-md-6 {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-bottom: 1rem;
+        }
+        .pasien-card-center .info-box {
+            margin-bottom: 0.75rem;
+        }
+    }
+</style>
+@endpush
+
+@push('js')
+<script>
+    $(document).ready(function() {
+        // Fungsi untuk membuka accordion saat foto diklik
+        $('.pasien-photo').click(function() {
+            const firstAccordion = $('#accordionRiwayatPemeriksaan .pemeriksaan-item:first');
+            const firstCollapse = firstAccordion.find('.collapse');
+            
+            // Buka accordion pertama
+            firstCollapse.collapse('show');
+            
+            // Scroll ke accordion yang dibuka
+            $('html, body').animate({
+                scrollTop: firstAccordion.offset().top - 100
+            }, 500);
+        });
+    });
+
+</script>
+@endpush
 
 <script>
-    // Function untuk membuka modal I-Care - didefinisikan di global scope
     window.openIcareModal = function() {
         console.log('openIcareModal called');
         

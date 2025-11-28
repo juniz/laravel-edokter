@@ -1,0 +1,89 @@
+/* Mobile Dock Menu Styles */
+.mobile-dock {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #dee2e6;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1030;
+    padding: 8px 0;
+}
+
+.mobile-dock .dock-menu {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 60px;
+}
+
+.mobile-dock .dock-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #6c757d;
+    transition: color 0.3s ease;
+    padding: 4px 8px;
+}
+
+.mobile-dock .dock-item:hover,
+.mobile-dock .dock-item.active {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.mobile-dock .dock-item i {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.mobile-dock .dock-item span {
+    font-size: 10px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Hide sidebar on mobile */
+@media (max-width: 991.98px) {
+    .main-sidebar {
+        display: none !important;
+        visibility: hidden !important;
+        transform: translateX(-100%) !important;
+    }
+    
+    .content-wrapper,
+    .main-footer {
+        margin-left: 0 !important;
+    }
+    
+    .mobile-dock {
+        display: block;
+    }
+    
+    /* Add padding bottom to content to prevent dock overlap */
+    .content-wrapper {
+        padding-bottom: 80px;
+    }
+    
+    /* Hide sidebar toggle button on mobile */
+    .main-header .navbar-nav .nav-link[data-widget="pushmenu"] {
+        display: none !important;
+    }
+}
+
+/* Show sidebar on desktop */
+@media (min-width: 992px) {
+    .mobile-dock {
+        display: none !important;
+    }
+}
+
