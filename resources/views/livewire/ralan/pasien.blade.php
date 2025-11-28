@@ -288,6 +288,7 @@
     <livewire:component.upload-berkas-digital :noRawat="$data->no_rawat" />
 
 @push('css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.css">
 <style>
     /* Modal Fullscreen Custom */
     #modalBerkasRM .modal-dialog,
@@ -506,8 +507,28 @@
 @endpush
 
 @push('js')
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs4.min.js"></script>
 <script>
     $(document).ready(function() {
+        // Inisialisasi WYSIWYG Summernote untuk textarea ECHO
+        if (typeof $.fn.summernote !== 'undefined') {
+            $('#isi-echo').summernote({
+                height: 300,
+                placeholder: 'Tulis hasil ECHO di sini...',
+                toolbar: [
+                    ['style', ['bold', 'italic', 'underline', 'clear']],
+                    ['font', ['strikethrough', 'superscript', 'subscript']],
+                    ['fontsize', ['fontsize']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['insert', ['link', 'picture', 'table']],
+                    ['view', ['fullscreen', 'codeview']]
+                ]
+            });
+        }
+
+        const templateEndpoint = "{{ url('template-ekg') }}";
+
         // Fungsi untuk membuka accordion saat foto diklik
         $('.pasien-photo').click(function() {
             const firstAccordion = $('#accordionRiwayatPemeriksaan .pemeriksaan-item:first');
@@ -520,6 +541,50 @@
             $('html, body').animate({
                 scrollTop: firstAccordion.offset().top - 100
             }, 500);
+        });
+
+        $('#echo-select').on('change', function() {
+            const templateId = $(this).val();
+
+            if (typeof $.fn.summernote === 'undefined') {
+                return;
+            }
+
+            if (!templateId) {
+                $('#isi-echo').summernote('code', '');
+                return;
+            }
+
+            $.ajax({
+                url: `${templateEndpoint}/${templateId}`,
+                type: 'GET',
+                success: function(response) {
+                    if (response.status === 'success' && response.data) {
+                        $('#isi-echo').summernote('code', response.data.template || '');
+                    } else {
+                        $('#isi-echo').summernote('code', '');
+                        Swal.fire({
+                            title: 'Gagal',
+                            text: response.message || 'Template tidak ditemukan.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    $('#isi-echo').summernote('code', '');
+                    let message = 'Gagal memuat template.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
         });
     });
 

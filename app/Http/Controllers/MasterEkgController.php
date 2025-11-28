@@ -153,4 +153,21 @@ class MasterEkgController extends Controller
         // return $pdf->inline('ekg.pdf');
         return view('prints.echo', $data);
     }
+
+    public function getTemplate($id)
+    {
+        $template = TemplateEKG::find($id);
+
+        if (!$template) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Template tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $template
+        ]);
+    }
 }

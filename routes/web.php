@@ -196,7 +196,10 @@ Route::get('/master-operasi', fn() => view('master-laporan-operasi'))->name(
     'master-operasi'
 )->middleware('loginauth');
 
-Route::resource('master-ekg', App\Http\Controllers\MasterEkgController::class)->middleware('loginauth');
+Route::middleware('loginauth')->group(function () {
+    Route::resource('master-ekg', App\Http\Controllers\MasterEkgController::class);
+    Route::get('template-ekg/{id}', [App\Http\Controllers\MasterEkgController::class, 'getTemplate'])->name('template-ekg.show');
+});
 Route::post('/print-ekg', [App\Http\Controllers\MasterEkgController::class, 'cetakEkg'])->name('print-ekg')->middleware('loginauth');
 
 Route::get('/pegawai', [App\Http\Controllers\API\PemeriksaanController::class, 'getPegawai'])->name('pegawai');
