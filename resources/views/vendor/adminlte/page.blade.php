@@ -71,6 +71,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="/igd" class="dock-item" data-route="igd">
+                        <i class="fas fa-stethoscope"></i>
+                        <span>IGD</span>
+                    </a>
+                </li>
+                <li>
                     <a href="/konsultasi" class="dock-item" data-route="konsultasi">
                         <i class="fas fa-user"></i>
                         <span>Konsultasi</span>
