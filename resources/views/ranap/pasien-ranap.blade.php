@@ -9,15 +9,15 @@
 @section('content')
 <!-- Filter Card -->
 <x-adminlte-card theme="info" title="Filter Pencarian Pasien Ranap" icon="fas fa-filter" collapsible>
+    @php
+        $config = ['format' => 'YYYY-MM-DD'];
+        $statusAktif = request('status') ?? 'belum_pulang';
+        $tanggalMulaiAktif = request('tanggal_mulai') ?? date('Y-m-01');
+        $tanggalAkhirAktif = request('tanggal_akhir') ?? date('Y-m-d');
+    @endphp
     <form action="{{route('ranap.pasien')}}" method="GET" id="filterForm">
-        <div class="row">
-            @php
-                $config = ['format' => 'YYYY-MM-DD'];
-                $statusAktif = request('status') ?? 'belum_pulang';
-                $tanggalMulaiAktif = request('tanggal_mulai') ?? date('Y-m-01');
-                $tanggalAkhirAktif = request('tanggal_akhir') ?? date('Y-m-d');
-            @endphp
-            <div class="col-12 col-md-6 col-lg-3 mb-3 mb-md-0">
+        <div class="row {{ $statusAktif == 'belum_pulang' ? 'filter-row-compact' : '' }}">
+            <div class="col-12 col-md-6 col-lg-3 mb-3 mb-md-0" id="statusWrapper">
                 <label for="status" class="form-label">
                     <i class="fas fa-user-check text-info"></i> Status Pasien
                 </label>
@@ -27,7 +27,7 @@
                 </x-adminlte-select>
                 <small class="form-text text-muted">Filter berdasarkan status pasien</small>
             </div>
-            <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">
+            <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0 tanggal-filter-wrapper" id="tanggalMulaiWrapper">
                 <label for="tanggal_mulai" class="form-label">
                     <i class="fas fa-calendar-alt text-primary"></i> Tanggal Mulai
                 </label>
@@ -35,7 +35,7 @@
                 </x-adminlte-input-date>
                 <small class="form-text text-muted">Tanggal awal periode pencarian</small>
             </div>
-            <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">
+            <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0 tanggal-filter-wrapper" id="tanggalAkhirWrapper">
                 <label for="tanggal_akhir" class="form-label">
                     <i class="fas fa-calendar-check text-success"></i> Tanggal Akhir
                 </label>
@@ -46,7 +46,7 @@
                 </x-adminlte-input-date>
                 <small class="form-text text-muted">Tanggal akhir periode pencarian</small>
             </div>
-            <div class="col-12 col-md-6 col-lg-1 d-flex align-items-end mb-3 mb-md-0">
+            <div class="col-12 col-md-6 col-lg-1 d-flex align-items-end mb-3 mb-md-0" id="resetWrapper">
                 <button type="button" class="btn btn-secondary btn-sm w-100" id="resetFilter" title="Reset Filter">
                     <i class="fas fa-redo"></i>
                 </button>
@@ -65,11 +65,13 @@
                                 <i class="fas fa-user-check"></i> Status: {{ $statusAktif == 'belum_pulang' ? 'Belum Pulang' : 'Sudah Pulang' }}
                             </span>
                         </div>
+                        @if($statusAktif == 'sudah_pulang')
                         <div>
                             <span class="badge badge-primary">
                                 <i class="fas fa-calendar-alt"></i> Periode: {{ date('d/m/Y', strtotime($tanggalMulaiAktif)) }} - {{ date('d/m/Y', strtotime($tanggalAkhirAktif)) }}
                             </span>
                         </div>
+                        @endif
                         <div class="ml-auto">
                             <span class="badge badge-success">
                                 <i class="fas fa-users"></i> Total: {{ count($data) }} Pasien
@@ -246,6 +248,104 @@
     .badge i {
         margin-right: 5px;
     }
+    
+    /* Tanggal filter wrapper styling */
+    .tanggal-filter-wrapper {
+        transition: opacity 0.3s ease, max-height 0.3s ease;
+        overflow: visible !important; /* Pastikan date picker tidak terpotong */
+        position: relative;
+        z-index: 1;
+    }
+    
+    .tanggal-filter-wrapper.hidden {
+        display: none !important;
+    }
+    
+    .tanggal-filter-wrapper.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+    
+    /* Fix z-index untuk date picker TempusDominusBs4 */
+    .tanggal-filter-wrapper .input-group {
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Pastikan date picker dropdown tidak terpotong */
+    .bootstrap-datetimepicker-widget {
+        z-index: 1060 !important; /* Lebih tinggi dari modal (1050) dan card */
+        position: absolute !important;
+    }
+    
+    /* Pastikan card tidak memotong date picker */
+    .card {
+        overflow: visible !important;
+    }
+    
+    .card-body {
+        overflow: visible !important;
+    }
+    
+    /* Pastikan form tidak memotong date picker */
+    #filterForm {
+        overflow: visible !important;
+        position: relative;
+    }
+    
+    #filterForm .row {
+        overflow: visible !important;
+    }
+    
+    /* Layout adjustment saat filter tanggal hidden */
+    .filter-row-compact {
+        display: flex;
+        align-items: flex-end;
+        gap: 15px;
+    }
+    
+    .filter-row-compact #statusWrapper {
+        flex: 0 0 auto;
+        min-width: 250px;
+        max-width: 350px;
+        margin-bottom: 0 !important;
+    }
+    
+    .filter-row-compact #resetWrapper {
+        flex: 0 0 auto;
+        width: auto;
+        min-width: 50px;
+        margin-bottom: 0 !important;
+        margin-left: auto;
+    }
+    
+    .filter-row-compact #resetWrapper .btn {
+        min-width: 50px;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    @media (max-width: 991px) {
+        .filter-row-compact {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-row-compact #statusWrapper {
+            max-width: 100%;
+            margin-bottom: 1rem !important;
+        }
+        
+        .filter-row-compact #resetWrapper {
+            margin-left: 0;
+            margin-bottom: 0 !important;
+        }
+    }
+    
+    @media (min-width: 992px) {
+        .filter-row-compact #statusWrapper {
+            min-width: 300px;
+        }
+    }
 </style>
 @stop
 @section('js')
@@ -254,48 +354,102 @@
         var form = $('#filterForm');
         var isSubmitting = false;
         
+        // Function to toggle tanggal filter visibility
+        function toggleTanggalFilter() {
+            var status = $('#status').val();
+            var $tanggalMulaiWrapper = $('#tanggalMulaiWrapper');
+            var $tanggalAkhirWrapper = $('#tanggalAkhirWrapper');
+            var $filterRow = $('#filterForm .row').first();
+            
+            if (status === 'belum_pulang') {
+                // Hide tanggal filter saat status belum pulang
+                $tanggalMulaiWrapper.addClass('hidden');
+                $tanggalAkhirWrapper.addClass('hidden');
+                // Tambahkan class untuk layout compact
+                $filterRow.addClass('filter-row-compact');
+            } else {
+                // Show tanggal filter saat status sudah pulang
+                $tanggalMulaiWrapper.removeClass('hidden');
+                $tanggalAkhirWrapper.removeClass('hidden');
+                // Hapus class layout compact
+                $filterRow.removeClass('filter-row-compact');
+            }
+        }
+        
+        // Initialize tanggal filter visibility on page load
+        toggleTanggalFilter();
+        
         // Auto-submit ketika status berubah
         $('#status').on('change', function() {
+            toggleTanggalFilter();
             if (!isSubmitting) {
                 isSubmitting = true;
                 form.submit();
             }
         });
         
-        // Auto-submit ketika tanggal mulai berubah (untuk TempusDominusBs4)
-        $(document).on('changeDate', '#tanggal_mulai', function() {
-            if (!isSubmitting) {
+        // Function untuk submit form saat tanggal berubah
+        function submitOnDateChange() {
+            // Hanya submit jika status sudah pulang (tanggal filter terlihat)
+            var status = $('#status').val();
+            if (status === 'sudah_pulang' && !isSubmitting) {
                 isSubmitting = true;
-                form.submit();
+                // Delay kecil untuk memastikan value sudah ter-update
+                setTimeout(function() {
+                    form.submit();
+                }, 150);
             }
+        }
+        
+        // Auto-submit ketika tanggal mulai berubah (untuk TempusDominusBs4)
+        // Event 'update.td' adalah event khusus TempusDominusBs4 yang dipanggil saat tanggal berubah
+        $(document).on('update.td', '#tanggal_mulai', function() {
+            submitOnDateChange();
+        });
+        
+        $(document).on('changeDate', '#tanggal_mulai', function() {
+            submitOnDateChange();
         });
         
         // Auto-submit ketika tanggal akhir berubah (untuk TempusDominusBs4)
+        $(document).on('update.td', '#tanggal_akhir', function() {
+            submitOnDateChange();
+        });
+        
         $(document).on('changeDate', '#tanggal_akhir', function() {
-            if (!isSubmitting) {
-                isSubmitting = true;
-                form.submit();
-            }
+            submitOnDateChange();
         });
         
         // Fallback untuk event change biasa pada input tanggal mulai
         $(document).on('change', '#tanggal_mulai', function() {
-            if (!isSubmitting) {
-                isSubmitting = true;
-                setTimeout(function() {
-                    form.submit();
-                }, 100);
-            }
+            submitOnDateChange();
         });
         
         // Fallback untuk event change biasa pada input tanggal akhir
         $(document).on('change', '#tanggal_akhir', function() {
-            if (!isSubmitting) {
-                isSubmitting = true;
-                setTimeout(function() {
-                    form.submit();
-                }, 100);
+            submitOnDateChange();
+        });
+        
+        // Event listener tambahan untuk input field langsung (jika user mengetik)
+        $(document).on('blur', '#tanggal_mulai', function() {
+            if ($(this).val() && !isSubmitting) {
+                submitOnDateChange();
             }
+        });
+        
+        $(document).on('blur', '#tanggal_akhir', function() {
+            if ($(this).val() && !isSubmitting) {
+                submitOnDateChange();
+            }
+        });
+        
+        // Event listener untuk saat datepicker ditutup (hide event)
+        $(document).on('hide.td', '#tanggal_mulai', function() {
+            submitOnDateChange();
+        });
+        
+        $(document).on('hide.td', '#tanggal_akhir', function() {
+            submitOnDateChange();
         });
         
         // Reset filter button
@@ -341,6 +495,26 @@
                 });
             }, 500);
         });
+        
+        // Inisialisasi event listener untuk datepicker setelah page load
+        // Pastikan datepicker sudah terinisialisasi sebelum menambahkan event listener
+        setTimeout(function() {
+            // Attach event listener langsung ke datepicker instance jika tersedia
+            var tanggalMulaiPicker = $('#tanggal_mulai').data('datetimepicker');
+            var tanggalAkhirPicker = $('#tanggal_akhir').data('datetimepicker');
+            
+            if (tanggalMulaiPicker) {
+                $('#tanggal_mulai').on('update.td', function() {
+                    submitOnDateChange();
+                });
+            }
+            
+            if (tanggalAkhirPicker) {
+                $('#tanggal_akhir').on('update.td', function() {
+                    submitOnDateChange();
+                });
+            }
+        }, 500);
     });
 </script>
 @stop

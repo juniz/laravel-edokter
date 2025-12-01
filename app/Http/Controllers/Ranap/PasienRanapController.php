@@ -36,18 +36,20 @@ class PasienRanapController extends Controller
         if ($kd_dokter == '86062112' || $kd_dokter == 'SP0000005' || $kd_dokter == 'SP0000002' || $kd_dokter == 'SP0000006' || $kd_sps == 'S004') {
             // Untuk kondisi khusus, tetap gunakan filter status
             if ($statusPasien == 'belum_pulang') {
-                $data = DB::table('kamar_inap')
+                // Belum pulang: tidak gunakan filter tanggal
+                $query = DB::table('kamar_inap')
                     ->join('reg_periksa', 'reg_periksa.no_rawat', '=', 'kamar_inap.no_rawat')
                     ->join('pasien', 'pasien.no_rkm_medis', '=', 'reg_periksa.no_rkm_medis')
                     ->join('kamar', 'kamar.kd_kamar', '=', 'kamar_inap.kd_kamar')
                     ->join('bangsal', 'bangsal.kd_bangsal', '=', 'kamar.kd_bangsal')
                     ->join('penjab', 'penjab.kd_pj', '=', 'reg_periksa.kd_pj')
-                    ->where('kamar_inap.stts_pulang', '-')
-                    ->whereBetween('kamar_inap.tgl_masuk', [$tanggalMulai, $tanggalAkhir])
-                    ->select('pasien.nm_pasien', 'reg_periksa.no_rkm_medis', 'bangsal.nm_bangsal', 'kamar_inap.kd_kamar', 'kamar_inap.tgl_masuk', 'penjab.png_jawab', 'reg_periksa.no_rawat', 'bangsal.kd_bangsal')
+                    ->where('kamar_inap.stts_pulang', '-');
+
+                $data = $query->select('pasien.nm_pasien', 'reg_periksa.no_rkm_medis', 'bangsal.nm_bangsal', 'kamar_inap.kd_kamar', 'kamar_inap.tgl_masuk', 'penjab.png_jawab', 'reg_periksa.no_rawat', 'bangsal.kd_bangsal')
                     ->get();
             } else {
-                // Sudah pulang: status bukan '-' dan bukan 'Pindah Kamar'
+                // Sudah pulang: gunakan filter tanggal
+                // Gunakan whereNotIn untuk mengecualikan status '-' dan 'Pindah Kamar'
                 $data = DB::table('kamar_inap')
                     ->join('reg_periksa', 'reg_periksa.no_rawat', '=', 'kamar_inap.no_rawat')
                     ->join('pasien', 'pasien.no_rkm_medis', '=', 'reg_periksa.no_rkm_medis')
@@ -55,14 +57,14 @@ class PasienRanapController extends Controller
                     ->join('bangsal', 'bangsal.kd_bangsal', '=', 'kamar.kd_bangsal')
                     ->join('penjab', 'penjab.kd_pj', '=', 'reg_periksa.kd_pj')
                     ->whereBetween('kamar_inap.tgl_masuk', [$tanggalMulai, $tanggalAkhir])
-                    ->where('kamar_inap.stts_pulang', '!=', '-')
-                    ->where('kamar_inap.stts_pulang', '!=', 'Pindah Kamar')
+                    ->whereNotIn('kamar_inap.stts_pulang', ['-', 'Pindah Kamar'])
                     ->select('pasien.nm_pasien', 'reg_periksa.no_rkm_medis', 'bangsal.nm_bangsal', 'kamar_inap.kd_kamar', 'kamar_inap.tgl_masuk', 'penjab.png_jawab', 'reg_periksa.no_rawat', 'bangsal.kd_bangsal')
                     ->get();
             }
         } else {
             if ($statusPasien == 'belum_pulang') {
-                $data = DB::table('kamar_inap')
+                // Belum pulang: tidak gunakan filter tanggal
+                $query = DB::table('kamar_inap')
                     ->join('reg_periksa', 'reg_periksa.no_rawat', '=', 'kamar_inap.no_rawat')
                     ->join('pasien', 'pasien.no_rkm_medis', '=', 'reg_periksa.no_rkm_medis')
                     ->join('kamar', 'kamar.kd_kamar', '=', 'kamar_inap.kd_kamar')
@@ -70,12 +72,13 @@ class PasienRanapController extends Controller
                     ->join('penjab', 'penjab.kd_pj', '=', 'reg_periksa.kd_pj')
                     ->join('dpjp_ranap', 'dpjp_ranap.no_rawat', '=', 'reg_periksa.no_rawat')
                     ->where('kamar_inap.stts_pulang', '-')
-                    ->where('dpjp_ranap.kd_dokter', $kd_dokter)
-                    ->whereBetween('kamar_inap.tgl_masuk', [$tanggalMulai, $tanggalAkhir])
-                    ->select('pasien.nm_pasien', 'reg_periksa.no_rkm_medis', 'bangsal.nm_bangsal', 'kamar_inap.kd_kamar', 'kamar_inap.tgl_masuk', 'penjab.png_jawab', 'reg_periksa.no_rawat', 'bangsal.kd_bangsal')
+                    ->where('dpjp_ranap.kd_dokter', $kd_dokter);
+
+                $data = $query->select('pasien.nm_pasien', 'reg_periksa.no_rkm_medis', 'bangsal.nm_bangsal', 'kamar_inap.kd_kamar', 'kamar_inap.tgl_masuk', 'penjab.png_jawab', 'reg_periksa.no_rawat', 'bangsal.kd_bangsal')
                     ->get();
             } else {
-                // Sudah pulang: status bukan '-' dan bukan 'Pindah Kamar'
+                // Sudah pulang: gunakan filter tanggal
+                // Gunakan whereNotIn untuk mengecualikan status '-' dan 'Pindah Kamar'
                 $data = DB::table('kamar_inap')
                     ->join('reg_periksa', 'reg_periksa.no_rawat', '=', 'kamar_inap.no_rawat')
                     ->join('pasien', 'pasien.no_rkm_medis', '=', 'reg_periksa.no_rkm_medis')
@@ -86,7 +89,7 @@ class PasienRanapController extends Controller
                     ->where('dpjp_ranap.kd_dokter', $kd_dokter)
                     ->whereBetween('kamar_inap.tgl_masuk', [$tanggalMulai, $tanggalAkhir])
                     ->where('kamar_inap.stts_pulang', '!=', '-')
-                    ->where('kamar_inap.stts_pulang', '!=', 'Pindah Kamar')
+                    // ->whereNotIn('kamar_inap.stts_pulang', ['-', 'Pindah Kamar'])
                     ->select('pasien.nm_pasien', 'reg_periksa.no_rkm_medis', 'bangsal.nm_bangsal', 'kamar_inap.kd_kamar', 'kamar_inap.tgl_masuk', 'penjab.png_jawab', 'reg_periksa.no_rawat', 'bangsal.kd_bangsal')
                     ->get();
             }
