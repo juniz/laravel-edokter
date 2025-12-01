@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -32,6 +32,10 @@ class RolePermissionSeeder extends Seeder
                 'customer-domains-create',
                 'customer-domains-edit',
                 'customer-domains-delete',
+                'customer-ssl-view',
+                'customer-ssl-create',
+                'customer-ssl-edit',
+                'customer-ssl-delete',
             ],
             'Admin Catalog' => [
                 'admin-catalog-view',
@@ -62,6 +66,12 @@ class RolePermissionSeeder extends Seeder
                 'admin-domains-register',
                 'admin-domains-transfer',
                 'admin-domains-renew',
+                'admin-domain-prices-view',
+                'admin-ssl-view',
+                'admin-ssl-create',
+                'admin-ssl-edit',
+                'admin-ssl-delete',
+                'admin-ssl-manage',
             ],
             'Admin Provisioning' => [
                 'admin-provisioning-view',
@@ -125,7 +135,7 @@ class RolePermissionSeeder extends Seeder
                     ['name' => $name],
                     ['group' => $group]
                 );
-                
+
                 // Update group if permission exists but group is different
                 if ($permission->group !== $group) {
                     $permission->update(['group' => $group]);
@@ -147,6 +157,8 @@ class RolePermissionSeeder extends Seeder
             'customer-domains-view',
             'customer-domains-create',
             'customer-domains-edit',
+            'customer-ssl-view',
+            'customer-ssl-create',
         ]);
 
         // Assign permissions to support role

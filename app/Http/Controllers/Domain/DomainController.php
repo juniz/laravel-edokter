@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Domain;
 
+use App\Application\Domain\CheckoutDomainService;
 use App\Application\Rdash\Domain\CheckDomainAvailabilityService;
 use App\Application\Rdash\Domain\GetDomainDetailsService;
 use App\Application\Rdash\Domain\ListDomainsService;
@@ -19,9 +20,9 @@ class DomainController extends Controller
         private CheckDomainAvailabilityService $checkAvailabilityService,
         private GetDomainDetailsService $getDomainDetailsService,
         private RegisterDomainViaRdashService $registerDomainService,
+        private CheckoutDomainService $checkoutDomainService,
         private CustomerRepository $customerRepository
-    ) {
-    }
+    ) {}
 
     /**
      * Display a listing of domains
@@ -75,7 +76,7 @@ class DomainController extends Controller
 
         return Inertia::render('domains/Index', [
             'domains' => $domains,
-            'rdashDomains' => array_map(fn ($d) => $d->toArray(), $rdashDomains),
+            'rdashDomains' => array_map(fn($d) => $d->toArray(), $rdashDomains),
             'filters' => $filters,
         ]);
     }
@@ -88,7 +89,7 @@ class DomainController extends Controller
         // Jika customer, gunakan customer mereka sendiri
         if (auth()->user()->hasRole('customer') || auth()->user()->hasRole('user')) {
             $customer = auth()->user()->customer;
-            if (!$customer || !$customer->rdash_customer_id || $customer->rdash_sync_status !== 'synced') {
+            if (! $customer || ! $customer->rdash_customer_id || $customer->rdash_sync_status !== 'synced') {
                 return redirect()->route('customer.domains.index')->withErrors([
                     'error' => 'Customer belum di-sync ke RDASH. Silakan hubungi admin untuk sync customer terlebih dahulu.',
                 ]);
@@ -115,7 +116,7 @@ class DomainController extends Controller
         $customerId = null;
         if (auth()->user()->hasRole('customer') || auth()->user()->hasRole('user')) {
             $customer = auth()->user()->customer;
-            if (!$customer) {
+            if (! $customer) {
                 return redirect()->back()->withErrors(['error' => 'Customer tidak ditemukan.']);
             }
             $customerId = $customer->id;
@@ -125,15 +126,23 @@ class DomainController extends Controller
             'name' => 'required|string|max:255',
             'period' => 'required|integer|min:1|max:10',
             'customer_id' => $customerId ? 'sometimes|string' : 'required|string|exists:customers,id',
-            'nameserver' => 'sometimes|array|max:5',
-            'nameserver.*' => 'string|max:255',
-            'buy_whois_protection' => 'sometimes|boolean',
-            'include_premium_domains' => 'sometimes|boolean',
-            'registrant_contact_id' => 'sometimes|integer',
-            'auto_renew' => 'sometimes|boolean',
+            // Nameserver & opsi lain dibuat benar-benar opsional (sesuai Swagger)
+            'nameserver' => 'nullable|array|max:5',
+            'nameserver.*' => 'nullable|string|max:255',
+            'buy_whois_protection' => 'nullable|boolean',
+            'include_premium_domains' => 'nullable|boolean',
+            'registrant_contact_id' => 'nullable|integer',
+            'auto_renew' => 'nullable|boolean',
+            'payment_method' => 'nullable|string|in:midtrans,manual', // Payment method
         ]);
 
-        // Format nameservers untuk API RDASH
+        // Jika payment_method adalah midtrans, gunakan checkout service
+        if ($request->has('payment_method') && $request->payment_method === 'midtrans') {
+            return $this->checkoutWithPayment($request, $validated, $customerId);
+        }
+
+        // Default: register langsung tanpa payment (untuk admin atau manual payment)
+        // Format nameservers untuk API RDASH (hanya kirim yang terisi, mengikuti Swagger: opsional)
         $data = [
             'name' => $validated['name'],
             'period' => $validated['period'],
@@ -142,7 +151,12 @@ class DomainController extends Controller
         ];
 
         if (isset($validated['nameserver'])) {
-            foreach ($validated['nameserver'] as $index => $ns) {
+            $nameservers = array_values(array_filter(
+                $validated['nameserver'],
+                static fn($ns): bool => filled($ns)
+            ));
+
+            foreach ($nameservers as $index => $ns) {
                 $data["nameserver[{$index}]"] = $ns;
             }
         }
@@ -161,7 +175,7 @@ class DomainController extends Controller
 
         $result = $this->registerDomainService->execute($data);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return redirect()->back()->withErrors(['error' => $result['message']]);
         }
 
@@ -169,7 +183,57 @@ class DomainController extends Controller
         if (auth()->user()->hasRole('customer') || auth()->user()->hasRole('user')) {
             return redirect()->route('customer.domains.index')->with('success', $result['message']);
         }
+
         return redirect()->route('admin.domains.index')->with('success', $result['message']);
+    }
+
+    /**
+     * Checkout domain dengan payment
+     */
+    private function checkoutWithPayment(Request $request, array $validated, ?string $customerId)
+    {
+        $data = [
+            'name' => $validated['name'],
+            'period' => $validated['period'],
+            'customer_id' => $customerId ?? $validated['customer_id'],
+            'auto_renew' => $validated['auto_renew'] ?? false,
+            'payment_method' => $validated['payment_method'] ?? 'midtrans',
+        ];
+
+        if (isset($validated['nameserver'])) {
+            $data['nameserver'] = $validated['nameserver'];
+        }
+
+        if (isset($validated['buy_whois_protection'])) {
+            $data['buy_whois_protection'] = $validated['buy_whois_protection'];
+        }
+
+        if (isset($validated['include_premium_domains'])) {
+            $data['include_premium_domains'] = $validated['include_premium_domains'];
+        }
+
+        if (isset($validated['registrant_contact_id'])) {
+            $data['registrant_contact_id'] = $validated['registrant_contact_id'];
+        }
+
+        $result = $this->checkoutDomainService->execute($data);
+
+        if (! $result['success']) {
+            return redirect()->back()->withErrors(['error' => $result['message']]);
+        }
+
+        // Redirect ke invoice payment page dengan payment token
+        $payment = $result['payment'];
+        $redirectUrl = $payment->raw_payload['redirect_url'] ?? null;
+
+        if ($redirectUrl) {
+            // Redirect ke Midtrans payment page
+            return redirect($redirectUrl);
+        }
+
+        // Fallback: redirect ke invoice page
+        return redirect()->route('invoices.show', $result['invoice']->id)
+            ->with('success', $result['message']);
     }
 
     /**
@@ -182,7 +246,7 @@ class DomainController extends Controller
         // Check authorization: customer hanya bisa lihat domains mereka sendiri
         if (auth()->user()->hasRole('customer') || auth()->user()->hasRole('user')) {
             $customer = auth()->user()->customer;
-            if (!$customer || $domain->customer_id !== $customer->id) {
+            if (! $customer || $domain->customer_id !== $customer->id) {
                 abort(403, 'Unauthorized access to this domain');
             }
         }
@@ -231,7 +295,7 @@ class DomainController extends Controller
 
         $domain = $this->getDomainDetailsService->execute($validated['domain_name']);
 
-        if (!$domain) {
+        if (! $domain) {
             return response()->json([
                 'success' => false,
                 'message' => 'Domain not found',
@@ -244,4 +308,3 @@ class DomainController extends Controller
         ]);
     }
 }
-

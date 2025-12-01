@@ -2,320 +2,397 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Menu;
-use Spatie\Permission\Models\Role;
+use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class MenuSeeder extends Seeder
 {
     public function run(): void
     {
         // MENU: Dashboard
-        Menu::create([
-            'title' => 'Dashboard',
-            'icon' => 'Home',
-            'route' => '/dashboard',
-            'order' => 1,
-            'permission_name' => 'dashboard-view',
-        ]);
+        $dashboard = Menu::updateOrCreate(
+            ['route' => '/dashboard'],
+            [
+                'title' => 'Dashboard',
+                'icon' => 'Home',
+                'order' => 1,
+                'permission_name' => 'dashboard-view',
+                'parent_id' => null,
+            ]
+        );
 
         // GROUP: Catalog (Public - no auth required)
-        $catalog = Menu::create([
-            'title' => 'Catalog',
-            'icon' => 'ShoppingCart',
-            'route' => '/catalog',
-            'order' => 2,
-            'permission_name' => null, // Public access
-        ]);
+        $catalog = Menu::updateOrCreate(
+            ['route' => '/catalog'],
+            [
+                'title' => 'Catalog',
+                'icon' => 'ShoppingCart',
+                'order' => 2,
+                'permission_name' => null, // Public access
+                'parent_id' => null,
+            ]
+        );
 
         // GROUP: Customer Area
-        $customerArea = Menu::create([
-            'title' => 'Customer Area',
-            'icon' => 'User',
-            'route' => '#',
-            'order' => 3,
-            'permission_name' => 'customer-area-view',
-        ]);
+        $customerArea = Menu::updateOrCreate(
+            ['route' => '#', 'title' => 'Customer Area'],
+            [
+                'icon' => 'User',
+                'order' => 3,
+                'permission_name' => 'customer-area-view',
+                'parent_id' => null,
+            ]
+        );
 
-        Menu::create([
-            'title' => 'My Orders',
-            'icon' => 'Package',
-            'route' => '/customer/orders',
-            'order' => 1,
-            'permission_name' => 'customer-orders-view',
-            'parent_id' => $customerArea->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/customer/orders', 'parent_id' => $customerArea->id],
+            [
+                'title' => 'My Orders',
+                'icon' => 'Package',
+                'order' => 1,
+                'permission_name' => 'customer-orders-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'My Invoices',
-            'icon' => 'FileText',
-            'route' => '/customer/invoices',
-            'order' => 2,
-            'permission_name' => 'customer-invoices-view',
-            'parent_id' => $customerArea->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/customer/invoices', 'parent_id' => $customerArea->id],
+            [
+                'title' => 'My Invoices',
+                'icon' => 'FileText',
+                'order' => 2,
+                'permission_name' => 'customer-invoices-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'My Subscriptions',
-            'icon' => 'CreditCard',
-            'route' => '/customer/subscriptions',
-            'order' => 3,
-            'permission_name' => 'customer-subscriptions-view',
-            'parent_id' => $customerArea->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/customer/subscriptions', 'parent_id' => $customerArea->id],
+            [
+                'title' => 'My Subscriptions',
+                'icon' => 'CreditCard',
+                'order' => 3,
+                'permission_name' => 'customer-subscriptions-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Support Tickets',
-            'icon' => 'MessageSquare',
-            'route' => '/customer/tickets',
-            'order' => 4,
-            'permission_name' => 'customer-tickets-view',
-            'parent_id' => $customerArea->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/customer/tickets', 'parent_id' => $customerArea->id],
+            [
+                'title' => 'Support Tickets',
+                'icon' => 'MessageSquare',
+                'order' => 4,
+                'permission_name' => 'customer-tickets-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'My Domains',
-            'icon' => 'Globe',
-            'route' => '/customer/domains',
-            'order' => 5,
-            'permission_name' => 'customer-domains-view',
-            'parent_id' => $customerArea->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/customer/domains', 'parent_id' => $customerArea->id],
+            [
+                'title' => 'My Domains',
+                'icon' => 'Globe',
+                'order' => 5,
+                'permission_name' => 'customer-domains-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
+            ['route' => '/customer/ssl', 'parent_id' => $customerArea->id],
+            [
+                'title' => 'SSL Certificates',
+                'icon' => 'Shield',
+                'order' => 6,
+                'permission_name' => 'customer-ssl-view',
+            ]
+        );
 
         // GROUP: Admin - Catalog Management
-        $adminCatalog = Menu::create([
-            'title' => 'Catalog Management',
-            'icon' => 'Store',
-            'route' => '#',
-            'order' => 10,
-            'permission_name' => 'admin-catalog-view',
-        ]);
+        $adminCatalog = Menu::updateOrCreate(
+            ['route' => '#', 'title' => 'Catalog Management'],
+            [
+                'icon' => 'Store',
+                'order' => 10,
+                'permission_name' => 'admin-catalog-view',
+                'parent_id' => null,
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Products',
-            'icon' => 'Box',
-            'route' => '/admin/products',
-            'order' => 1,
-            'permission_name' => 'admin-products-view',
-            'parent_id' => $adminCatalog->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/admin/products', 'parent_id' => $adminCatalog->id],
+            [
+                'title' => 'Products',
+                'icon' => 'Box',
+                'order' => 1,
+                'permission_name' => 'admin-products-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Plans',
-            'icon' => 'List',
-            'route' => '/admin/plans',
-            'order' => 2,
-            'permission_name' => 'admin-plans-view',
-            'parent_id' => $adminCatalog->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/admin/plans', 'parent_id' => $adminCatalog->id],
+            [
+                'title' => 'Plans',
+                'icon' => 'List',
+                'order' => 2,
+                'permission_name' => 'admin-plans-view',
+            ]
+        );
 
         // GROUP: Admin - Order Management
-        $adminOrders = Menu::create([
-            'title' => 'Order Management',
-            'icon' => 'ShoppingBag',
-            'route' => '#',
-            'order' => 11,
-            'permission_name' => 'admin-orders-view',
-        ]);
+        $adminOrders = Menu::updateOrCreate(
+            ['route' => '#', 'title' => 'Order Management'],
+            [
+                'icon' => 'ShoppingBag',
+                'order' => 11,
+                'permission_name' => 'admin-orders-view',
+                'parent_id' => null,
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Orders',
-            'icon' => 'Package',
-            'route' => '/admin/orders',
-            'order' => 1,
-            'permission_name' => 'admin-orders-view',
-            'parent_id' => $adminOrders->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/admin/orders', 'parent_id' => $adminOrders->id],
+            [
+                'title' => 'Orders',
+                'icon' => 'Package',
+                'order' => 1,
+                'permission_name' => 'admin-orders-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Invoices',
-            'icon' => 'FileText',
-            'route' => '/admin/invoices',
-            'order' => 2,
-            'permission_name' => 'admin-invoices-view',
-            'parent_id' => $adminOrders->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/admin/invoices', 'parent_id' => $adminOrders->id],
+            [
+                'title' => 'Invoices',
+                'icon' => 'FileText',
+                'order' => 2,
+                'permission_name' => 'admin-invoices-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Subscriptions',
-            'icon' => 'CreditCard',
-            'route' => '/admin/subscriptions',
-            'order' => 3,
-            'permission_name' => 'admin-subscriptions-view',
-            'parent_id' => $adminOrders->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/admin/subscriptions', 'parent_id' => $adminOrders->id],
+            [
+                'title' => 'Subscriptions',
+                'icon' => 'CreditCard',
+                'order' => 3,
+                'permission_name' => 'admin-subscriptions-view',
+            ]
+        );
 
         // GROUP: Admin - Domain Management
-        $adminDomains = Menu::create([
-            'title' => 'Domain Management',
-            'icon' => 'Globe',
-            'route' => '#',
-            'order' => 14,
-            'permission_name' => 'admin-domains-view',
-        ]);
+        $adminDomains = Menu::updateOrCreate(
+            ['route' => '#', 'title' => 'Domain Management'],
+            [
+                'icon' => 'Globe',
+                'order' => 14,
+                'permission_name' => 'admin-domains-view',
+                'parent_id' => null,
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Domains',
-            'icon' => 'Globe',
-            'route' => '/admin/domains',
-            'order' => 1,
-            'permission_name' => 'admin-domains-view',
-            'parent_id' => $adminDomains->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/admin/domains', 'parent_id' => $adminDomains->id],
+            [
+                'title' => 'Domains',
+                'icon' => 'Globe',
+                'order' => 1,
+                'permission_name' => 'admin-domains-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
+            ['route' => '/admin/ssl', 'parent_id' => $adminDomains->id],
+            [
+                'title' => 'SSL Certificates',
+                'icon' => 'Shield',
+                'order' => 2,
+                'permission_name' => 'admin-ssl-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
+            ['route' => '/admin/domain-prices', 'parent_id' => $adminDomains->id],
+            [
+                'title' => 'Domain Prices',
+                'icon' => 'Tags',
+                'order' => 3,
+                'permission_name' => 'admin-domain-prices-view',
+            ]
+        );
 
         // GROUP: Admin - Provisioning
-        $adminProvisioning = Menu::create([
-            'title' => 'Provisioning',
-            'icon' => 'Server',
-            'route' => '#',
-            'order' => 12,
-            'permission_name' => 'admin-provisioning-view',
-        ]);
+        $adminProvisioning = Menu::updateOrCreate(
+            ['route' => '#', 'title' => 'Provisioning'],
+            [
+                'icon' => 'Server',
+                'order' => 12,
+                'permission_name' => 'admin-provisioning-view',
+                'parent_id' => null,
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Servers',
-            'icon' => 'Server',
-            'route' => '/admin/servers',
-            'order' => 1,
-            'permission_name' => 'admin-servers-view',
-            'parent_id' => $adminProvisioning->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/admin/servers', 'parent_id' => $adminProvisioning->id],
+            [
+                'title' => 'Servers',
+                'icon' => 'Server',
+                'order' => 1,
+                'permission_name' => 'admin-servers-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Panel Accounts',
-            'icon' => 'UserCircle',
-            'route' => '/admin/panel-accounts',
-            'order' => 2,
-            'permission_name' => 'admin-panel-accounts-view',
-            'parent_id' => $adminProvisioning->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/admin/panel-accounts', 'parent_id' => $adminProvisioning->id],
+            [
+                'title' => 'Panel Accounts',
+                'icon' => 'UserCircle',
+                'order' => 2,
+                'permission_name' => 'admin-panel-accounts-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Provision Tasks',
-            'icon' => 'Settings',
-            'route' => '/admin/provision-tasks',
-            'order' => 3,
-            'permission_name' => 'admin-provision-tasks-view',
-            'parent_id' => $adminProvisioning->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/admin/provision-tasks', 'parent_id' => $adminProvisioning->id],
+            [
+                'title' => 'Provision Tasks',
+                'icon' => 'Settings',
+                'order' => 3,
+                'permission_name' => 'admin-provision-tasks-view',
+            ]
+        );
 
         // GROUP: Admin - Support
-        $adminSupport = Menu::create([
-            'title' => 'Support',
-            'icon' => 'Headphones',
-            'route' => '#',
-            'order' => 13,
-            'permission_name' => 'admin-support-view',
-        ]);
+        $adminSupport = Menu::updateOrCreate(
+            ['route' => '#', 'title' => 'Support'],
+            [
+                'icon' => 'Headphones',
+                'order' => 13,
+                'permission_name' => 'admin-support-view',
+                'parent_id' => null,
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Tickets',
-            'icon' => 'MessageSquare',
-            'route' => '/admin/tickets',
-            'order' => 1,
-            'permission_name' => 'admin-tickets-view',
-            'parent_id' => $adminSupport->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/admin/tickets', 'parent_id' => $adminSupport->id],
+            [
+                'title' => 'Tickets',
+                'icon' => 'MessageSquare',
+                'order' => 1,
+                'permission_name' => 'admin-tickets-view',
+            ]
+        );
 
         // GROUP: Access
-        $access = Menu::create([
-            'title' => 'Access',
-            'icon' => 'Contact',
-            'route' => '#',
-            'order' => 20,
-            'permission_name' => 'access-view',
-        ]);
+        $access = Menu::updateOrCreate(
+            ['route' => '#', 'title' => 'Access'],
+            [
+                'icon' => 'Contact',
+                'order' => 20,
+                'permission_name' => 'access-view',
+                'parent_id' => null,
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Permissions',
-            'icon' => 'AlertOctagon',
-            'route' => '/permissions',
-            'order' => 2,
-            'permission_name' => 'permission-view',
-            'parent_id' => $access->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/permissions', 'parent_id' => $access->id],
+            [
+                'title' => 'Permissions',
+                'icon' => 'AlertOctagon',
+                'order' => 2,
+                'permission_name' => 'permission-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Users',
-            'icon' => 'Users',
-            'route' => '/users',
-            'order' => 3,
-            'permission_name' => 'users-view',
-            'parent_id' => $access->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/users', 'parent_id' => $access->id],
+            [
+                'title' => 'Users',
+                'icon' => 'Users',
+                'order' => 3,
+                'permission_name' => 'users-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Roles',
-            'icon' => 'AlertTriangle',
-            'route' => '/roles',
-            'order' => 4,
-            'permission_name' => 'roles-view',
-            'parent_id' => $access->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/roles', 'parent_id' => $access->id],
+            [
+                'title' => 'Roles',
+                'icon' => 'AlertTriangle',
+                'order' => 4,
+                'permission_name' => 'roles-view',
+            ]
+        );
 
         // GROUP: Settings
-        $settings = Menu::create([
-            'title' => 'Settings',
-            'icon' => 'Settings',
-            'route' => '#',
-            'order' => 21,
-            'permission_name' => 'settings-view',
-        ]);
+        $settings = Menu::updateOrCreate(
+            ['route' => '#', 'title' => 'Settings'],
+            [
+                'icon' => 'Settings',
+                'order' => 21,
+                'permission_name' => 'settings-view',
+                'parent_id' => null,
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Menu Manager',
-            'icon' => 'Menu',
-            'route' => '/menus',
-            'order' => 1,
-            'permission_name' => 'menu-view',
-            'parent_id' => $settings->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/menus', 'parent_id' => $settings->id],
+            [
+                'title' => 'Menu Manager',
+                'icon' => 'Menu',
+                'order' => 1,
+                'permission_name' => 'menu-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'App Settings',
-            'icon' => 'AtSign',
-            'route' => '/settingsapp',
-            'order' => 2,
-            'permission_name' => 'app-settings-view',
-            'parent_id' => $settings->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/settingsapp', 'parent_id' => $settings->id],
+            [
+                'title' => 'App Settings',
+                'icon' => 'AtSign',
+                'order' => 2,
+                'permission_name' => 'app-settings-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Backup',
-            'icon' => 'Inbox',
-            'route' => '/backup',
-            'order' => 3,
-            'permission_name' => 'backup-view',
-            'parent_id' => $settings->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/backup', 'parent_id' => $settings->id],
+            [
+                'title' => 'Backup',
+                'icon' => 'Inbox',
+                'order' => 3,
+                'permission_name' => 'backup-view',
+            ]
+        );
 
         // GROUP: Utilities
-        $utilities = Menu::create([
-            'title' => 'Utilities',
-            'icon' => 'CreditCard',
-            'route' => '#',
-            'order' => 22,
-            'permission_name' => 'utilities-view',
-        ]);
+        $utilities = Menu::updateOrCreate(
+            ['route' => '#', 'title' => 'Utilities'],
+            [
+                'icon' => 'CreditCard',
+                'order' => 22,
+                'permission_name' => 'utilities-view',
+                'parent_id' => null,
+            ]
+        );
 
-        Menu::create([
-            'title' => 'Audit Logs',
-            'icon' => 'Activity',
-            'route' => '/audit-logs',
-            'order' => 2,
-            'permission_name' => 'log-view',
-            'parent_id' => $utilities->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/audit-logs', 'parent_id' => $utilities->id],
+            [
+                'title' => 'Audit Logs',
+                'icon' => 'Activity',
+                'order' => 2,
+                'permission_name' => 'log-view',
+            ]
+        );
 
-        Menu::create([
-            'title' => 'File Manager',
-            'icon' => 'Folder',
-            'route' => '/files',
-            'order' => 3,
-            'permission_name' => 'filemanager-view',
-            'parent_id' => $utilities->id,
-        ]);
+        Menu::updateOrCreate(
+            ['route' => '/files', 'parent_id' => $utilities->id],
+            [
+                'title' => 'File Manager',
+                'icon' => 'Folder',
+                'order' => 3,
+                'permission_name' => 'filemanager-view',
+            ]
+        );
 
         // Create permissions from menu
         $permissions = Menu::pluck('permission_name')->unique()->filter();
@@ -333,6 +410,7 @@ class MenuSeeder extends Seeder
             'customer-invoices-view',
             'customer-subscriptions-view',
             'customer-tickets-view',
+            'customer-ssl-view',
         ]);
     }
 }

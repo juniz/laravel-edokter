@@ -27,14 +27,14 @@ const getBreadcrumbs = (): BreadcrumbItem[] => {
   if (path.startsWith('/customer/domains')) {
     return [
       {
-        title: 'My Domains',
+        title: 'Domain Saya',
         href: '/customer/domains',
       },
     ];
   }
   return [
     {
-      title: 'Domain Management',
+      title: 'Manajemen Domain',
       href: '/admin/domains',
     },
   ];
@@ -84,9 +84,15 @@ function getStatusBadge(status: string) {
     expired: 'destructive',
   };
 
+  const labels: Record<string, string> = {
+    active: 'Aktif',
+    pending: 'Menunggu',
+    expired: 'Kedaluwarsa',
+  };
+
   return (
     <Badge variant={variants[status] || 'outline'}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {labels[status] || status.charAt(0).toUpperCase() + status.slice(1)}
     </Badge>
   );
 }
@@ -106,9 +112,15 @@ function getRdashSyncStatusBadge(status?: string | null) {
     failed: 'text-red-600',
   };
 
+  const labels: Record<string, string> = {
+    synced: 'Tersinkronisasi',
+    pending: 'Menunggu',
+    failed: 'Gagal',
+  };
+
   return (
     <Badge variant={variants[status] || 'secondary'} className={colors[status]}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {labels[status] || status.charAt(0).toUpperCase() + status.slice(1)}
     </Badge>
   );
 }
@@ -129,24 +141,24 @@ export default function DomainIndex({ domains, filters = {} }: Props) {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Domain Management" />
+      <Head title={window.location.pathname.startsWith('/customer') ? 'Domain Saya' : 'Manajemen Domain'} />
       <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              {window.location.pathname.startsWith('/customer') ? 'My Domains' : 'Domain Management'}
+              {window.location.pathname.startsWith('/customer') ? 'Domain Saya' : 'Manajemen Domain'}
             </h1>
             <p className="text-muted-foreground mt-1">
               {window.location.pathname.startsWith('/customer') 
-                ? 'Manage your domains registered via RDASH API.' 
-                : 'Manage domains registered via RDASH API.'}
+                ? 'Kelola semua domain yang terdaftar melalui sistem RDASH. Daftarkan domain baru, pantau status verifikasi, dan kelola pengaturan domain Anda di sini.' 
+                : 'Kelola semua domain yang terdaftar melalui sistem RDASH. Pantau status domain, verifikasi, dan kelola pengaturan untuk semua customer.'}
             </p>
           </div>
           <Link href={window.location.pathname.startsWith('/customer') ? '/customer/domains/create' : '/admin/domains/create'}>
             <Button className="w-full md:w-auto">
               <Plus className="w-4 h-4 mr-2" />
-              Register Domain
+              Daftarkan Domain Baru
             </Button>
           </Link>
         </div>
@@ -160,7 +172,7 @@ export default function DomainIndex({ domains, filters = {} }: Props) {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by domain name..."
+                    placeholder="Cari berdasarkan nama domain..."
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
                     className="pl-10"
@@ -175,13 +187,13 @@ export default function DomainIndex({ domains, filters = {} }: Props) {
                   onValueChange={(value) => handleFilterChange('status', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Filter by status" />
+                    <SelectValue placeholder="Filter berdasarkan status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
+                    <SelectItem value="all">Semua Status</SelectItem>
+                    <SelectItem value="active">Aktif</SelectItem>
+                    <SelectItem value="pending">Menunggu</SelectItem>
+                    <SelectItem value="expired">Kedaluwarsa</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -194,15 +206,15 @@ export default function DomainIndex({ domains, filters = {} }: Props) {
           <Card>
             <CardContent className="p-12 text-center">
               <Globe className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No domains found</h3>
+              <h3 className="text-lg font-semibold mb-2">Tidak Ada Domain Ditemukan</h3>
               <p className="text-muted-foreground mb-4">
                 {searchQuery || filters.status
-                  ? 'Try adjusting your filters'
-                  : 'Get started by registering a new domain'}
+                  ? 'Coba sesuaikan filter pencarian Anda atau hapus filter untuk melihat semua domain'
+                  : 'Mulai dengan mendaftarkan domain baru untuk mengelola website dan layanan online Anda'}
               </p>
               {!searchQuery && !filters.status && (
                 <Link href={window.location.pathname.startsWith('/customer') ? '/customer/domains/create' : '/admin/domains/create'}>
-                  <Button>Register Domain</Button>
+                  <Button>Daftarkan Domain Baru</Button>
                 </Link>
               )}
             </CardContent>
@@ -229,21 +241,21 @@ export default function DomainIndex({ domains, filters = {} }: Props) {
 
                       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                         {domain.rdash_domain_id && (
-                          <span>RDASH ID: {domain.rdash_domain_id}</span>
+                          <span>ID RDASH: {domain.rdash_domain_id}</span>
                         )}
                         {domain.auto_renew && (
-                          <Badge variant="outline" className="text-xs">Auto Renew</Badge>
+                          <Badge variant="outline" className="text-xs">Perpanjangan Otomatis</Badge>
                         )}
                         {domain.rdash_required_document && (
-                          <Badge variant="outline" className="text-xs">Document Required</Badge>
+                          <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">Dokumen Diperlukan</Badge>
                         )}
-                        <span>Registered {dayjs(domain.created_at).fromNow()}</span>
+                        <span>Terdaftar {dayjs(domain.created_at).fromNow()}</span>
                       </div>
                     </div>
 
                     <div className="flex gap-2">
                       <Link href={`${window.location.pathname.startsWith('/customer') ? '/customer' : '/admin'}/domains/${domain.id}`}>
-                        <Button size="sm" variant="outline">View</Button>
+                        <Button size="sm" variant="outline">Lihat Detail</Button>
                       </Link>
                     </div>
                   </div>
@@ -259,8 +271,8 @@ export default function DomainIndex({ domains, filters = {} }: Props) {
             <CardContent className="p-4">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="text-sm text-muted-foreground">
-                  Showing {((domains.current_page - 1) * domains.per_page) + 1} to{' '}
-                  {Math.min(domains.current_page * domains.per_page, domains.total)} of {domains.total} domains
+                  Menampilkan {((domains.current_page - 1) * domains.per_page) + 1} sampai{' '}
+                  {Math.min(domains.current_page * domains.per_page, domains.total)} dari {domains.total} domain
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {domains.links.map((link, index) => (

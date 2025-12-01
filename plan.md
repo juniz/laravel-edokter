@@ -192,7 +192,107 @@ H --> I[Email/Notifikasi Welcome]
 
 - User buka tiket → SLA dihitung → notifikasi ke agent → balasan via panel user → status (open, pending, solved, closed).
 
-### 7) Integrasi Customer dengan RDASH API
+### 7) SSL Certificate Management
+
+```mermaid
+sequenceDiagram
+    participant C as Customer
+    participant FE as Frontend (React)
+    participant BE as Laravel Backend
+    participant RDASH as RDASH API
+    participant PG as Payment Gateway
+
+    C->>FE: Buka menu SSL Certificates
+    FE->>BE: GET /customer/ssl
+    BE->>RDASH: GET /ssl/ (list products)
+    RDASH-->>BE: SSL Products dengan pagination
+    BE-->>FE: Tampilkan list SSL products
+    C->>FE: Filter & pilih SSL product
+    FE->>BE: GET /customer/ssl/{productId}
+    BE->>RDASH: GET /ssl/{id}
+    RDASH-->>BE: SSL Product details
+    BE-->>FE: Tampilkan detail & harga
+    C->>FE: Purchase SSL certificate
+    FE->>BE: POST /customer/ssl/purchase
+    BE->>BE: Create Order + Invoice
+    BE->>PG: Create payment charge
+    PG-->>BE: Payment URL
+    BE-->>FE: Redirect ke payment page
+    C->>PG: Selesaikan pembayaran
+    PG-->>BE: Webhook payment success
+    BE->>RDASH: POST /ssl/orders/ (buy SSL)
+    RDASH-->>BE: SSL Order created
+    BE->>BE: Update invoice & order status
+    BE-->>FE: Notifikasi SSL order berhasil
+    C->>FE: View SSL orders
+    FE->>BE: GET /customer/ssl/orders
+    BE->>RDASH: GET /ssl/orders/
+    RDASH-->>BE: SSL Orders list
+    BE-->>FE: Tampilkan SSL orders
+    C->>FE: Download SSL certificate
+    FE->>BE: GET /customer/ssl/orders/{id}/download
+    BE->>RDASH: GET /ssl/orders/{id}/download
+    RDASH-->>BE: SSL Certificate files
+    BE-->>FE: Download certificate
+```
+
+**Alur SSL Certificate Management:**
+
+1. **List SSL Products:**
+
+   - Customer membuka menu SSL Certificates (`/customer/ssl`)
+   - System fetch SSL products dari RDASH API dengan pagination
+   - Tampilkan list SSL products dengan filter (brand, type, wildcard)
+   - Customer dapat melihat detail setiap product (features, harga, warranty)
+
+2. **Purchase SSL Certificate:**
+
+   - Customer pilih SSL product yang diinginkan
+   - System create Order dan Invoice untuk SSL purchase
+   - Integrasi dengan Payment Gateway (Midtrans/Xendit/Tripay)
+   - Setelah payment success → System purchase SSL via RDASH API
+   - SSL Order dibuat di RDASH dengan status sesuai proses validasi
+
+3. **SSL Order Management:**
+
+   - Customer dapat melihat semua SSL orders mereka
+   - Status tracking: Pending, Validating, Active, Expired
+   - Download SSL certificate setelah aktif
+   - Manage SSL: Reissue, Revalidate, Cancel
+
+4. **SSL Certificate Operations:**
+   - **Reissue**: Generate ulang certificate dengan data baru
+   - **Revalidate**: Re-validasi certificate yang sudah ada
+   - **Download**: Download certificate files (certificate, private key, chain)
+   - **Cancel**: Cancel SSL order jika masih dalam proses
+
+**Menu SSL untuk Customer:**
+
+- **Route**: `/customer/ssl`
+- **Permission**: `customer-ssl-view` (required), `customer-ssl-create` (untuk purchase)
+- **Icon**: `Shield`
+- **Controller**: `App\Http\Controllers\Domain\Ssl\SslController`
+- **Service**: `App\Application\Rdash\Ssl\ListSslProductsService`
+- **Repository**: `App\Domain\Rdash\Ssl\Contracts\SslRepository`
+
+**Menu SSL untuk Admin:**
+
+- **Route**: `/admin/ssl`
+- **Permission**: `admin-ssl-view`, `admin-ssl-manage`
+- **Icon**: `Shield`
+- **Fitur Tambahan**:
+  - View semua SSL orders dari semua customers
+  - Manage SSL orders (reissue, revalidate, cancel)
+  - Monitor SSL certificate status
+  - View SSL statistics dan reports
+
+**Integrasi dengan Payment Gateway:**
+
+- SSL purchase dapat menggunakan payment gateway yang sama dengan domain purchase
+- Flow: Create Order → Generate Invoice → Payment Gateway → Webhook → Purchase SSL via RDASH API
+- Service: `CheckoutSslService` (similar dengan `CheckoutDomainService`)
+
+### 8) Integrasi Customer dengan RDASH API
 
 ```mermaid
 sequenceDiagram
@@ -223,7 +323,7 @@ sequenceDiagram
 - Contacts digunakan untuk domain registration di RDASH
 - Contacts di-sync ke RDASH saat diperlukan untuk domain operations
 
-### 8) Integrasi User Management dengan RDASH API
+### 9) Integrasi User Management dengan RDASH API
 
 ```mermaid
 flowchart TD
@@ -284,16 +384,75 @@ flowchart TD
 - `SyncToRdashButton.tsx`: Component untuk trigger sync
 - `RdashCustomerDetails.tsx`: Component untuk menampilkan info customer RDASH
 
+### 10) Menu Customer Area dengan SSL Management
+
+**Struktur Menu Customer Area:**
+
+Menu Customer Area (`/customer/*`) berisi sub-menu untuk mengelola berbagai layanan customer:
+
+1. **My Orders** (`/customer/orders`)
+
+   - Permission: `customer-orders-view`
+   - Icon: `Package`
+   - Fungsi: Lihat dan kelola semua order customer
+
+2. **My Invoices** (`/customer/invoices`)
+
+   - Permission: `customer-invoices-view`
+   - Icon: `FileText`
+   - Fungsi: Lihat dan download invoice
+
+3. **My Subscriptions** (`/customer/subscriptions`)
+
+   - Permission: `customer-subscriptions-view`
+   - Icon: `CreditCard`
+   - Fungsi: Kelola langganan hosting/VPS
+
+4. **Support Tickets** (`/customer/tickets`)
+
+   - Permission: `customer-tickets-view`
+   - Icon: `MessageSquare`
+   - Fungsi: Buat dan kelola tiket support
+
+5. **My Domains** (`/customer/domains`)
+
+   - Permission: `customer-domains-view`
+   - Icon: `Globe`
+   - Fungsi: Kelola domain (register, transfer, renew, manage DNS)
+
+6. **SSL Certificates** (`/customer/ssl`)
+   - Permission: `customer-ssl-view`
+   - Icon: `Shield`
+   - Fungsi: Lihat dan kelola SSL certificates
+   - Fitur:
+     - List SSL products dari RDASH API
+     - Filter SSL products (brand, type, wildcard)
+     - View SSL product details dan features
+     - Purchase SSL certificate (integrasi dengan payment gateway)
+     - View SSL orders dan status
+     - Download SSL certificate
+     - Manage SSL certificate (reissue, revalidate, cancel)
+
+**Menu SSL untuk Customer:**
+
+- Route: `/customer/ssl`
+- Controller: `App\Http\Controllers\Domain\Ssl\SslController`
+- Service: `App\Application\Rdash\Ssl\ListSslProductsService`
+- Repository: `App\Domain\Rdash\Ssl\Contracts\SslRepository`
+- Permission: `customer-ssl-view` (required), `customer-ssl-create` (untuk purchase)
+- Integrasi: RDASH API untuk mendapatkan SSL products dan manage SSL orders
+
 ---
 
 ## Role & Perizinan
 
-- **Customer**: kelola order, invoice, subscription, tiket.
+- **Customer**: kelola order, invoice, subscription, tiket, domain, SSL certificates.
 - **Agent Support**: kelola tiket, baca profil pelanggan (sebagian).
 - **Billing**: kelola invoice, refund, rekonsiliasi manual.
 - **Admin**: semua, termasuk manajemen produk, server, adapter, kupon, user management dengan RDASH integration.
   > Gunakan **Spatie Permission**: roles (`admin`, `billing`, `support`, `customer`) + permissions granular untuk tiap use case.
   > Permission untuk RDASH: `rdash-sync`, `rdash-view`, `rdash-manage-contacts`.
+  > Permission untuk SSL: `customer-ssl-view`, `customer-ssl-create`, `admin-ssl-view`, `admin-ssl-manage`.
 
 ---
 
@@ -468,6 +627,14 @@ flowchart TD
 > - Status: `0` Pending, `1` Active, `2` Expired, `3` Pending Delete, `4` Deleted, `5` Pending Transfer, `6` Transferred Away, `7` Suspended, `8` Rejected
 > - Verification Status: `0` Waiting, `1` Verifying, `2` Document Validating, `3` Active
 > - Required Document: `0` False, `1` True
+>
+> **Pembayaran Domain via Midtrans**:
+>
+> - Domain dapat dibeli dengan pembayaran melalui Midtrans payment gateway
+> - Flow: User pilih domain → Check availability → Get price dari RDASH → Checkout dengan payment method Midtrans → Create Order & Invoice → Create Payment via Midtrans → Redirect ke Midtrans payment page → Setelah payment success → Register domain ke RDASH secara otomatis
+> - Service `CheckoutDomainService` menangani proses checkout domain dengan payment
+> - Listener `RegisterDomainOnInvoicePaid` akan otomatis register domain ke RDASH setelah invoice paid
+> - Domain dibuat dengan status `pending` terlebih dahulu, baru di-register ke RDASH setelah payment berhasil
 
 ### 9) Support
 
@@ -482,7 +649,28 @@ flowchart TD
   - `message` text, `attachments` JSON
   - Index: `ticket_id`
 
-### 10) Audit & Config
+### 12) SSL Products
+
+- `ssl_products`
+  - `id` ULID PK
+  - `rdash_ssl_product_id` integer unique (ID dari RDASH API)
+  - `provider` string (gogetssl)
+  - `brand` string (Comodo, Geotrust, Digicert)
+  - `name` string (Sectigo PositiveSSL, RapidSSL, dll)
+  - `ssl_type` enum: `DV|OV|EV` (Domain Validation, Organization Validation, Extended Validation)
+  - `is_wildcard` boolean
+  - `is_refundable` boolean
+  - `max_period` integer (maksimal periode dalam tahun)
+  - `status` tinyint (0 = inactive, 1 = active)
+  - `features` JSON (domain, issuance, warranty, site_seal, validation, description, authentication_level, subdomain)
+  - `price_cents` bigint nullable (harga dalam cents jika ada)
+  - `currency` char(3) default 'IDR'
+  - `rdash_synced_at` datetime nullable
+  - Index: `rdash_ssl_product_id`, `provider`, `brand`, `ssl_type`, `status`, `(is_wildcard, ssl_type)`
+
+> **Integrasi RDASH**: SSL products dapat di-list, filter, dan manage melalui RDASH API. Gunakan `SslRepository` untuk operasi SSL di RDASH. Tabel `ssl_products` digunakan untuk cache lokal produk SSL dari RDASH API.
+
+### 13) Audit & Config
 
 - `activity_log` (Spatie) untuk audit trail.
 - `settings`
@@ -499,7 +687,8 @@ flowchart TD
   - `subscriptions (customer_id, status, next_renewal_at)`,
   - `invoices (customer_id, status, due_at)`,
   - `provision_tasks (status, action)`,
-  - `customers (rdash_sync_status, rdash_customer_id)`.
+  - `customers (rdash_sync_status, rdash_customer_id)`,
+  - `ssl_products (is_wildcard, ssl_type)`.
 - Partisi (opsional, PostgreSQL) untuk `activity_log`/`payments` jika volume besar.
 - Pisahkan **read model** (caching: Redis) untuk dashboard/metrik.
 - Gunakan **ulids()** helper pada migration untuk konsistensi.
@@ -536,6 +725,18 @@ flowchart TD
   - `ForwardingRepository` - Domain forwarding
   - `WhoisProtectionRepository` - Whois protection
   - `SslRepository` - SSL certificate management
+    - `getProducts(array $filters)` - List SSL products dengan filter (name, provider, brand, ssl_type, is_wildcard, status, page, limit)
+    - `getProductsWithPrices(array $filters)` - Get SSL products dengan prices
+    - `getProductsWithPagination(array $filters)` - List SSL products dengan pagination info (links & meta)
+    - `getOrders(array $filters)` - List SSL orders
+    - `getOrderById(int $sslOrderId)` - Get SSL order by ID
+    - `generateCsr(array $data)` - Generate CSR
+    - `buy(array $data)` - Buy SSL certificate
+    - `changeValidationMethod(int $sslOrderId, array $data)` - Change validation method
+    - `revalidate(int $sslOrderId)` - Revalidate SSL
+    - `reissue(int $sslOrderId, array $data)` - Reissue SSL
+    - `download(int $sslOrderId)` - Download SSL certificate
+    - `cancel(int $sslOrderId)` - Cancel SSL order
   - `ObjectStorageRepository` - Object storage management
   - `BareMetalRepository` - Bare metal server management
 
@@ -546,8 +747,15 @@ Setiap adapter di-_bind_ lewat Service Provider berdasarkan konfigurasi. RDASH A
 ## Rute Utama (Inertia + React)
 
 - **Guest**: `/`, `/catalog`, `/plans/{product}`, `/register`, `/login`.
-- **Customer**: `/dashboard`, `/orders`, `/invoices`, `/subscriptions`, `/support/tickets`, `/domains`.
-- **Admin**: `/admin/products`, `/admin/plans`, `/admin/orders`, `/admin/invoices`, `/admin/subscriptions`, `/admin/servers`, `/admin/settings`, `/admin/tickets`, `/admin/customers`, `/admin/domains`, `/users` (dengan integrasi RDASH).
+- **Customer**:
+  - `/dashboard` - Dashboard customer
+  - `/customer/orders` - My Orders (lihat dan kelola order)
+  - `/customer/invoices` - My Invoices (lihat dan download invoice)
+  - `/customer/subscriptions` - My Subscriptions (kelola langganan)
+  - `/customer/tickets` - Support Tickets (buat dan kelola tiket support)
+  - `/customer/domains` - My Domains (kelola domain)
+  - `/customer/ssl` - SSL Certificates (lihat dan kelola SSL certificates)
+- **Admin**: `/admin/products`, `/admin/plans`, `/admin/orders`, `/admin/invoices`, `/admin/subscriptions`, `/admin/servers`, `/admin/settings`, `/admin/tickets`, `/admin/customers`, `/admin/domains`, `/admin/ssl`, `/users` (dengan integrasi RDASH).
 
 ### RDASH API Routes (REST API)
 
@@ -555,7 +763,11 @@ Setiap adapter di-_bind_ lewat Service Provider berdasarkan konfigurasi. RDASH A
 - **Customer**: `/api/rdash/customers` (CRUD), `/api/rdash/customers/{id}/contacts` (Contact management)
 - **Domain**: `/api/rdash/domains` (CRUD), `/api/rdash/domains/availability`, `/api/rdash/domains/register`, `/api/rdash/domains/transfer`, `/api/rdash/domains/{id}/renew`
 - **DNS**: `/api/rdash/domains/{id}/dns` (DNS records management)
-- **SSL**: `/api/rdash/ssl/products`, `/api/rdash/ssl/orders` (SSL management)
+- **SSL**:
+  - `GET /api/rdash/ssl/products` - List SSL products dengan pagination (filters: name, provider, brand, ssl_type, is_wildcard, status, page, limit)
+  - `GET /api/rdash/ssl/products/prices` - List SSL products dengan prices
+  - `GET /api/rdash/ssl/orders` - List SSL orders
+  - `GET /api/rdash/ssl/orders/{sslOrderId}` - Get SSL order by ID
 
 **RDASH API Response Structure:**
 
@@ -667,6 +879,65 @@ Untuk endpoint `POST /domains` (Register), struktur request:
 - `2` - Document Validating
 - `3` - Active
 
+Untuk endpoint `GET /ssl/`, struktur response dengan pagination:
+
+```json
+{
+	"data": [
+		{
+			"id": 1,
+			"provider": "gogetssl",
+			"brand": "Comodo",
+			"name": "Sectigo PositiveSSL",
+			"ssl_type": "DV",
+			"is_wildcard": 0,
+			"is_refundable": 1,
+			"max_period": 3,
+			"status": 1,
+			"features": {
+				"domain": "Single Domain",
+				"issuance": "Instant Publish",
+				"warranty": "$50.000 warranty",
+				"site_seal": "Static Site Seal",
+				"validation": "Domain Validation (DV)",
+				"description": "For Personal Website",
+				"authentication_level": "Tingkat Autentikasi 2"
+			},
+			"created_at": "2024-10-14T04:19:39.000000Z",
+			"updated_at": "2024-10-14T04:19:39.000000Z"
+		}
+	],
+	"links": {
+		"first": "https://api.rdash.id/v1/ssl?limit=10&status=1&page=1",
+		"last": "https://api.rdash.id/v1/ssl?limit=10&status=1&page=2",
+		"prev": null,
+		"next": "https://api.rdash.id/v1/ssl?limit=10&status=1&page=2"
+	},
+	"meta": {
+		"current_page": 1,
+		"from": 1,
+		"last_page": 2,
+		"path": "https://api.rdash.id/v1/ssl",
+		"per_page": 10,
+		"to": 10,
+		"total": 14
+	}
+}
+```
+
+**SSL Product Fields:**
+
+- `id` - ID produk SSL dari RDASH
+- `provider` - Provider SSL (gogetssl)
+- `brand` - Brand SSL (Comodo, Geotrust, Digicert)
+- `name` - Nama produk SSL
+- `ssl_type` - Tipe SSL: `DV` (Domain Validation), `OV` (Organization Validation), `EV` (Extended Validation)
+- `is_wildcard` - `0` atau `1` (apakah wildcard SSL)
+- `is_refundable` - `0` atau `1` (apakah bisa di-refund)
+- `max_period` - Maksimal periode dalam tahun
+- `status` - `0` (inactive) atau `1` (active)
+- `features` - JSON object berisi fitur SSL (domain, issuance, warranty, site_seal, validation, description, authentication_level, subdomain)
+
 ### User Management Routes dengan RDASH Integration
 
 - **User Management**:
@@ -720,7 +991,41 @@ Komponen React dipetakan ke halaman Inertia. Pakai form helpers + zod/yup untuk 
   - Supports ordering: f_params[orderBy][field], f_params[orderBy][type]
   - Supports pagination: page, limit
 - `ManageDnsViaRdashService` - Kelola DNS records melalui RDASH
-- `ManageSslViaRdashService` - Kelola SSL certificate melalui RDASH
+- `ListSslProductsService` - List SSL products dari RDASH API dengan pagination
+  - Supports filtering: name, provider, brand, ssl_type, is_wildcard, status
+  - Supports pagination: page, limit
+  - Returns: products array, links (pagination), meta (pagination info)
+- `ManageSslViaRdashService` - Kelola SSL certificate melalui RDASH (buy, reissue, download, cancel)
+
+### Domain Purchase dengan Payment Use Cases
+
+- `CheckoutDomainService` - Checkout domain dengan payment gateway (Midtrans)
+  - Get domain price dari RDASH API berdasarkan extension
+  - Create Order dengan item domain
+  - Generate Invoice untuk domain purchase
+  - Create Domain record dengan status `pending` (belum register ke RDASH)
+  - Create Payment via Midtrans adapter
+  - Return invoice dan payment untuk redirect ke payment page
+- `RegisterDomainOnInvoicePaid` (Listener) - Register domain ke RDASH setelah invoice paid
+  - Triggered oleh event `InvoicePaid`
+  - Cek apakah invoice untuk domain purchase (via invoice item meta)
+  - Register domain ke RDASH menggunakan data dari invoice item meta
+  - Update domain status dan RDASH sync status setelah berhasil register
+
+### SSL Certificate Purchase dengan Payment Use Cases
+
+- `CheckoutSslService` - Checkout SSL certificate dengan payment gateway
+  - Get SSL product details dari RDASH API berdasarkan product ID
+  - Create Order dengan item SSL certificate
+  - Generate Invoice untuk SSL purchase
+  - Create SSL Order record dengan status `pending` (belum purchase ke RDASH)
+  - Create Payment via payment adapter (Midtrans/Xendit/Tripay)
+  - Return invoice dan payment untuk redirect ke payment page
+- `PurchaseSslOnInvoicePaid` (Listener) - Purchase SSL certificate ke RDASH setelah invoice paid
+  - Triggered oleh event `InvoicePaid`
+  - Cek apakah invoice untuk SSL purchase (via invoice item meta)
+  - Purchase SSL ke RDASH menggunakan data dari invoice item meta (domain, CSR, validation method)
+  - Update SSL order status dan RDASH sync status setelah berhasil purchase
 
 ### User Management Use Cases dengan RDASH
 
@@ -785,6 +1090,35 @@ Schema::table('customers', function (Blueprint $table) {
 
     $table->index('rdash_customer_id');
     $table->index('rdash_sync_status');
+});
+```
+
+```php
+// database/migrations/2025_11_23_143448_create_ssl_products_table.php
+Schema::create('ssl_products', function (Blueprint $table) {
+    $table->ulid('id')->primary();
+    $table->unsignedInteger('rdash_ssl_product_id')->unique();
+    $table->string('provider');
+    $table->string('brand');
+    $table->string('name');
+    $table->enum('ssl_type', ['DV', 'OV', 'EV'])->default('DV');
+    $table->boolean('is_wildcard')->default(false);
+    $table->boolean('is_refundable')->default(true);
+    $table->unsignedInteger('max_period')->default(1);
+    $table->unsignedTinyInteger('status')->default(1);
+    $table->json('features')->nullable();
+    $table->unsignedBigInteger('price_cents')->nullable();
+    $table->char('currency', 3)->default('IDR');
+    $table->timestamp('rdash_synced_at')->nullable();
+    $table->timestamps();
+    $table->softDeletes();
+
+    $table->index('rdash_ssl_product_id');
+    $table->index('provider');
+    $table->index('brand');
+    $table->index('ssl_type');
+    $table->index('status');
+    $table->index(['is_wildcard', 'ssl_type']);
 });
 ```
 
@@ -864,6 +1198,23 @@ RDASH_RETRY_DELAY=100
 - **Infrastructure Layer**: HTTP Client dan Repository implementations
 - **Application Layer**: Use Cases/Services untuk business logic orchestration
 - **Presentation Layer**: API Controllers dengan validasi
+
+### Konfigurasi Payment Gateway (Midtrans)
+
+Tambahkan ke `.env`:
+
+```env
+PAYMENT_DEFAULT=midtrans
+MIDTRANS_SERVER_KEY=your_midtrans_server_key
+MIDTRANS_CLIENT_KEY=your_midtrans_client_key
+MIDTRANS_IS_PRODUCTION=false
+```
+
+**Catatan**:
+
+- Untuk development/testing, gunakan `MIDTRANS_IS_PRODUCTION=false` (sandbox mode)
+- Untuk production, set `MIDTRANS_IS_PRODUCTION=true` dan gunakan production server key
+- Midtrans webhook URL: `https://your-domain.com/api/payments/midtrans/webhook`
 
 **Keuntungan Pendekatan DDD untuk RDASH:**
 

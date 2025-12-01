@@ -15,8 +15,7 @@ class DomainController extends Controller
         private RdashDomainRepository $domainRepository,
         private CheckDomainAvailabilityService $checkAvailabilityService,
         private RegisterDomainService $registerDomainService
-    ) {
-    }
+    ) {}
 
     /**
      * Get list all domains
@@ -41,7 +40,7 @@ class DomainController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => array_map(fn ($domain) => $domain->toArray(), $domains),
+            'data' => array_map(fn($domain) => $domain->toArray(), $domains),
         ]);
     }
 
@@ -112,17 +111,24 @@ class DomainController extends Controller
             'name' => 'required|string',
             'period' => 'required|integer|min:1',
             'customer_id' => 'required|integer',
-            'nameserver' => 'sometimes|array',
-            'nameserver.*' => 'string',
-            'buy_whois_protection' => 'sometimes|boolean',
-            'include_premium_domains' => 'sometimes|boolean',
-            'registrant_contact_id' => 'sometimes|integer',
+            // Parameter opsional mengikuti dokumentasi Swagger
+            'nameserver' => 'nullable|array',
+            'nameserver.*' => 'nullable|string',
+            'buy_whois_protection' => 'nullable|boolean',
+            'include_premium_domains' => 'nullable|boolean',
+            'registrant_contact_id' => 'nullable|integer',
         ]);
 
         // Format nameservers untuk API RDASH
         if (isset($validated['nameserver'])) {
+            // Hanya kirim nameserver yang terisi, sehingga indeks nameserver[0-4] benar-benar opsional
+            $filteredNameservers = array_values(array_filter(
+                $validated['nameserver'],
+                static fn($ns): bool => filled($ns)
+            ));
+
             $nameservers = [];
-            foreach ($validated['nameserver'] as $index => $ns) {
+            foreach ($filteredNameservers as $index => $ns) {
                 $nameservers["nameserver[{$index}]"] = $ns;
             }
             unset($validated['nameserver']);
@@ -147,15 +153,20 @@ class DomainController extends Controller
             'auth_code' => 'required|integer',
             'period' => 'required|integer|min:1',
             'customer_id' => 'required|integer',
-            'nameserver' => 'sometimes|array',
-            'nameserver.*' => 'string',
-            'buy_whois_protection' => 'sometimes|boolean',
+            'nameserver' => 'nullable|array',
+            'nameserver.*' => 'nullable|string',
+            'buy_whois_protection' => 'nullable|boolean',
         ]);
 
         // Format nameservers untuk API RDASH
         if (isset($validated['nameserver'])) {
+            $filteredNameservers = array_values(array_filter(
+                $validated['nameserver'],
+                static fn($ns): bool => filled($ns)
+            ));
+
             $nameservers = [];
-            foreach ($validated['nameserver'] as $index => $ns) {
+            foreach ($filteredNameservers as $index => $ns) {
                 $nameservers["nameserver[{$index}]"] = $ns;
             }
             unset($validated['nameserver']);
@@ -305,4 +316,3 @@ class DomainController extends Controller
         ]);
     }
 }
-

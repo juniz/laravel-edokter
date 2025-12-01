@@ -11,18 +11,42 @@ class SslRepository implements SslRepositoryContract
 {
     public function __construct(
         private HttpClient $client
-    ) {
-    }
+    ) {}
 
     public function getProducts(array $filters = []): array
     {
-        $data = $this->client->get('/ssl/', $filters);
-        $products = $data['data'] ?? [];
+        $response = $this->client->get('/ssl/', $filters);
+
+        // Handle RDASH API response structure dengan pagination
+        // Response: {data: [...], links: {...}, meta: {...}}
+        $products = $response['data'] ?? [];
 
         return array_map(
             fn (array $product) => SslProduct::fromArray($product),
             $products
         );
+    }
+
+    /**
+     * Get products dengan pagination info
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{products: array<int, SslProduct>, links: array<string, mixed>, meta: array<string, mixed>}
+     */
+    public function getProductsWithPagination(array $filters = []): array
+    {
+        $response = $this->client->get('/ssl/', $filters);
+
+        $products = array_map(
+            fn (array $product) => SslProduct::fromArray($product),
+            $response['data'] ?? []
+        );
+
+        return [
+            'products' => $products,
+            'links' => $response['links'] ?? [],
+            'meta' => $response['meta'] ?? [],
+        ];
     }
 
     public function getProductsWithPrices(array $filters = []): array
@@ -101,4 +125,3 @@ class SslRepository implements SslRepositoryContract
         return true;
     }
 }
-

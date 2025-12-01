@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Payment\MidtransWebhookController;
 use App\Http\Controllers\Api\Rdash\AccountController;
 use App\Http\Controllers\Api\Rdash\DomainController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +14,11 @@ use App\Http\Controllers\Api\Rdash\DomainController;
 | Semua endpoint menggunakan prefix /api/rdash
 |
 */
+
+// Payment webhook routes (no auth required, verified via signature)
+Route::prefix('payments')->name('payments.')->group(function () {
+    Route::post('/midtrans/webhook', [MidtransWebhookController::class, 'handle'])->name('midtrans.webhook');
+});
 
 Route::prefix('rdash')->name('rdash.')->group(function () {
     // Account routes
@@ -43,4 +49,3 @@ Route::prefix('rdash')->name('rdash.')->group(function () {
         Route::delete('/{domainId}/suspend', [DomainController::class, 'unsuspend'])->name('unsuspend');
     });
 });
-

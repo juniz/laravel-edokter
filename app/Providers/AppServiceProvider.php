@@ -2,19 +2,20 @@
 
 namespace App\Providers;
 
-use App\Models\Menu;
-use App\Models\User;
-use App\Models\SettingApp;
-use Spatie\Permission\Models\Role;
-use App\Observers\GlobalActivityLogger;
-use Illuminate\Support\ServiceProvider;
-use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\Event;
-use App\Events\InvoicePaid;
 use App\Events\AccountProvisioned;
+use App\Events\InvoicePaid;
 use App\Listeners\ProvisionAccountOnInvoicePaid;
+use App\Listeners\RegisterDomainOnInvoicePaid;
 use App\Listeners\SendInvoiceEmail;
 use App\Listeners\SendWelcomeEmail;
+use App\Models\Menu;
+use App\Models\SettingApp;
+use App\Models\User;
+use App\Observers\GlobalActivityLogger;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +42,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             InvoicePaid::class,
             [ProvisionAccountOnInvoicePaid::class, 'handle']
+        );
+
+        Event::listen(
+            InvoicePaid::class,
+            [RegisterDomainOnInvoicePaid::class, 'handle']
         );
 
         Event::listen(

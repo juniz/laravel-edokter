@@ -1,30 +1,32 @@
 <?php
 
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\MenuController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\BackupController;
 use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\UserFileController;
-use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\SettingAppController;
-use App\Http\Controllers\MediaFolderController;
-use App\Http\Controllers\Domain\Catalog\CatalogController;
-use App\Http\Controllers\Domain\Catalog\ProductController;
-use App\Http\Controllers\Domain\Catalog\PlanController;
-use App\Http\Controllers\Domain\Order\OrderController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\Domain\Billing\InvoiceController;
-use App\Http\Controllers\Domain\Subscription\SubscriptionController;
-use App\Http\Controllers\Domain\Support\TicketController;
-use App\Http\Controllers\Domain\Provisioning\ServerController;
+use App\Http\Controllers\Domain\Catalog\CatalogController;
+use App\Http\Controllers\Domain\Catalog\PlanController;
+use App\Http\Controllers\Domain\Catalog\ProductController;
+use App\Http\Controllers\Domain\DomainController;
+use App\Http\Controllers\Domain\DomainPriceController;
+use App\Http\Controllers\Domain\Order\OrderController;
 use App\Http\Controllers\Domain\Provisioning\PanelAccountController;
 use App\Http\Controllers\Domain\Provisioning\ProvisionTaskController;
-use App\Http\Controllers\Domain\DomainController;
+use App\Http\Controllers\Domain\Provisioning\ServerController;
+use App\Http\Controllers\Domain\Ssl\SslController as DomainSslController;
+use App\Http\Controllers\Domain\Subscription\SubscriptionController;
+use App\Http\Controllers\Domain\Support\TicketController;
+use App\Http\Controllers\MediaFolderController;
+use App\Http\Controllers\MenuController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SettingAppController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserFileController;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return redirect()->route('login');
 })->name('home');
 
 // Public catalog routes
@@ -41,21 +43,21 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
         Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-        
+
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::get('/invoices/{id}/download', [InvoiceController::class, 'download'])->name('invoices.download');
-        
+
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
         Route::get('/subscriptions/{id}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
         Route::post('/subscriptions/{id}/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
-        
+
         Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
         Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
         Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
         Route::get('/tickets/{id}', [TicketController::class, 'show'])->name('tickets.show');
         Route::post('/tickets/{id}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
-        
+
         // Customer domains
         Route::get('/domains', [DomainController::class, 'index'])->name('domains.index');
         Route::get('/domains/create', [DomainController::class, 'create'])->name('domains.create');
@@ -63,6 +65,9 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::get('/domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
         Route::post('/domains/check-availability', [DomainController::class, 'checkAvailability'])->name('domains.check-availability');
         Route::post('/domains/get-details', [DomainController::class, 'getDetails'])->name('domains.get-details');
+
+        // Customer SSL
+        Route::get('/ssl', [DomainSslController::class, 'index'])->name('ssl.index');
     });
 
     // Admin routes
@@ -74,24 +79,24 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::get('/panel-accounts/{id}', [PanelAccountController::class, 'show'])->name('panel-accounts.show');
         Route::get('/provision-tasks', [ProvisionTaskController::class, 'index'])->name('provision-tasks.index');
         Route::get('/provision-tasks/{id}', [ProvisionTaskController::class, 'show'])->name('provision-tasks.show');
-        
+
         // Admin orders, invoices, subscriptions views
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-        
+
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
-        
+
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
         Route::get('/subscriptions/{id}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
-        
+
         // Admin tickets
         Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
         Route::get('/tickets/{id}', [TicketController::class, 'show'])->name('tickets.show');
         Route::put('/tickets/{id}', [TicketController::class, 'update'])->name('tickets.update');
         Route::post('/tickets/{id}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
         Route::post('/tickets/{id}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
-        
+
         // Domain management
         Route::get('/domains', [DomainController::class, 'index'])->name('domains.index');
         Route::get('/domains/create', [DomainController::class, 'create'])->name('domains.create');
@@ -99,6 +104,12 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::get('/domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
         Route::post('/domains/check-availability', [DomainController::class, 'checkAvailability'])->name('domains.check-availability');
         Route::post('/domains/get-details', [DomainController::class, 'getDetails'])->name('domains.get-details');
+
+        // Domain price management (RDASH domain prices)
+        Route::get('/domain-prices', [DomainPriceController::class, 'index'])->name('domain-prices.index');
+
+        // SSL management
+        Route::get('/ssl', [DomainSslController::class, 'index'])->name('ssl.index');
     });
 
     // Existing admin routes
