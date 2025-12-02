@@ -40,8 +40,8 @@
                                     <div class="dropdown">
                                         <button id="my-dropdown" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">{{$row->no_rawat}}</button>
                                         <div class="dropdown-menu" aria-labelledby="my-dropdown">
-                                            <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-igd">Penilaian Awal Medis IGD</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-medis" wire:click="$emit('awalMedis')">Penilaian Awal Medis Umum</button>
+                                            <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-igd">Penilaian Awal Medis IGD</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-tht">Penilaian Awal Medis THT</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-anak">Penilaian Awal Medis Bayi/Anak</button>
                                             <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-kandungan">Penilaian Awal Medis Kandungan</button>
@@ -140,8 +140,83 @@
 @stop
 
 @section('plugins.TempusDominusBs4', true)
+@section('css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card,
+        .card-body,
+        .table-responsive {
+            overflow: visible !important;
+        }
+        .dropdown-menu {
+            z-index: 2000 !important;
+            /* max-height: 220px; */
+            /* overflow-y: auto; */
+        }
+        .dropdown {
+            position: relative;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .nav-tabs .nav-link {
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #17a2b8;
+            color: white;
+            border-color: #17a2b8;
+        }
+        .dropdown-item {
+            padding: 0.5rem 1.5rem;
+        }
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        .badge {
+            padding: 0.5em 0.75em;
+            font-size: 0.875em;
+        }
+        .table {
+            border-radius: 8px;
+            /* overflow: hidden; */
+        }
+        .table thead th {
+            background-color: #343a40;
+            color: white;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .input-group {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+@stop
+
 @push('js')
 <script>
-    
+$(document).on('show.bs.dropdown', '.table', function (e) {
+    var $dropdown = $(e.relatedTarget).parent();
+    var $menu = $dropdown.find('.dropdown-menu');
+    var dropdownOffset = $dropdown.offset();
+    var dropdownHeight = $menu.outerHeight();
+    var tableOffset = $(this).offset();
+    var tableHeight = $(this).height();
+    var spaceBelow = tableOffset.top + tableHeight - (dropdownOffset.top + $dropdown.outerHeight());
+    var spaceAbove = dropdownOffset.top - tableOffset.top;
+    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+        $dropdown.addClass('dropup');
+    } else {
+        $dropdown.removeClass('dropup');
+    }
+});
+$(document).on('hide.bs.dropdown', '.table', function (e) {
+    var $dropdown = $(e.relatedTarget).parent();
+    $dropdown.removeClass('dropup');
+});
 </script>
 @endpush

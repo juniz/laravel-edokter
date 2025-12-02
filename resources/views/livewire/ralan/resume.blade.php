@@ -35,24 +35,24 @@
             </div>
             <div class="row">
                 <div class="form-group col-md-6">
-                    <label for="radiologi">Pemeriksaan Penunjang Positif</label>
-                    <div class="input-group">
-                        <textarea type="text" rows="3" class="form-control" wire:model.defer='penunjang' id="radiologi"
-                            name="radiologi"></textarea>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-primary" wire:click='getPemeriksaanRadiologi'>
-                                <i class="fas fa-paperclip"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group col-md-6">
                     <label for="lab">Hasil Laboratorium yang Positif</label>
                     <div class="input-group">
                         <textarea type="text" rows="3" class="form-control" wire:model.defer='lab' id="lab"
                             name="lab"></textarea>
                         <div class="input-group-append">
                             <button type="button" wire:click='getPemeriksaanLab' class="btn btn-primary">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="radiologi">Pemeriksaan Penunjang Positif</label>
+                    <div class="input-group">
+                        <textarea type="text" rows="3" class="form-control" wire:model.defer='penunjang' id="radiologi"
+                            name="radiologi"></textarea>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-primary" wire:click='getPemeriksaanRadiologi'>
                                 <i class="fas fa-paperclip"></i>
                             </button>
                         </div>

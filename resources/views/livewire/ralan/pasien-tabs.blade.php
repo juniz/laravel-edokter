@@ -509,32 +509,6 @@
                                         </div>
                                         @endif
 
-                                        @if(count($gambarRadiologi)>0 || count($radiologi)>0)
-                                        <x-adminlte-card theme="dark" title="Radiologi" icon="fas fa-x-ray" collapsible="collapsed" theme-mode="outline">
-                                            <x-adminlte-card theme="dark" title="Gambar Radiologi" collapsible="collapsed">
-                                                <div class="container">
-                                                    <div class="row row-cols-auto">
-                                                        @foreach($gambarRadiologi as $gambar)
-                                                        <a href="{{ env('URL_RADIOLOGI').$gambar->lokasi_gambar }}"
-                                                            data-toggle="lightbox" data-gallery="example-gallery" class="col-sm-4">
-                                                            <img src="{{ env('URL_RADIOLOGI').$gambar->lokasi_gambar }}"
-                                                                class="img-fluid" style="width: 200px;height:250px">
-                                                        </a>
-                                                        @endforeach
-                                                    </div>
-                                                </div>
-                                            </x-adminlte-card>
-                                            @if(count($radiologi)>0)
-                                            @foreach($radiologi as $radiologi)
-                                            <x-adminlte-card title="{{$radiologi->jam}}" theme="dark"
-                                                footer-class="bg-dark border-top rounded border-light">
-                                                <pre>{{$radiologi->hasil}}</pre>
-                                            </x-adminlte-card>
-                                            @endforeach
-                                            @endif
-                                        </x-adminlte-card>
-                                        @endif
-
                                         @if(count($laboratorium)>0)
                                         <x-adminlte-card theme="dark" title="Laboratorium" icon="fas fa-flask" theme-mode="outline" collapsible="collapsed">
                                             <!-- Desktop Table View -->
@@ -643,6 +617,32 @@
                                                 </div>
                                                 @endforeach
                                             </div>
+                                        </x-adminlte-card>
+                                        @endif
+
+                                        @if(count($gambarRadiologi)>0 || count($radiologi)>0)
+                                        <x-adminlte-card theme="dark" title="Radiologi" icon="fas fa-x-ray" collapsible="collapsed" theme-mode="outline">
+                                            <x-adminlte-card theme="dark" title="Gambar Radiologi" collapsible="collapsed">
+                                                <div class="container">
+                                                    <div class="row row-cols-auto">
+                                                        @foreach($gambarRadiologi as $gambar)
+                                                        <a href="{{ env('URL_RADIOLOGI').$gambar->lokasi_gambar }}"
+                                                            data-toggle="lightbox" data-gallery="example-gallery" class="col-sm-4">
+                                                            <img src="{{ env('URL_RADIOLOGI').$gambar->lokasi_gambar }}"
+                                                                class="img-fluid" style="width: 200px;height:250px">
+                                                        </a>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </x-adminlte-card>
+                                            @if(count($radiologi)>0)
+                                            @foreach($radiologi as $radiologi)
+                                            <x-adminlte-card title="{{$radiologi->jam}}" theme="dark"
+                                                footer-class="bg-dark border-top rounded border-light">
+                                                <pre>{{$radiologi->hasil}}</pre>
+                                            </x-adminlte-card>
+                                            @endforeach
+                                            @endif
                                         </x-adminlte-card>
                                         @endif
 
