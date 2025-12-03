@@ -196,7 +196,7 @@
                                         });
                                         @endphp
                                         @if(count($pemeriksaanDokter) > 0)
-                                        <x-adminlte-card theme="primary" title="SOAP/CPPT" icon="fas fa-clipboard-list" theme-mode="outline" collapsible="collapsed">
+                                        <x-adminlte-card theme="primary" title="SOAP/CPPT" icon="fas fa-clipboard-list" theme-mode="outline" collapsible>
                                             @foreach($pemeriksaanDokter as $pemeriksaan)
                                             @php
                                             $tglPemeriksaan = date_create($pemeriksaan->tgl_perawatan ?? '0000-00-00');
@@ -373,16 +373,16 @@
                                         @endif
 
                                         @if(count($this->getDiagnosa($no_rawat)) > 0)
-                                        <div class="card card-outline card-primary mb-3 collapsed-card">
+                                        <div class="card card-outline card-primary mb-3">
                                             <div class="card-header">
                                                 <h3 class="card-title"><i class="fas fa-diagnoses mr-2"></i>Diagnosa</h3>
                                                 <div class="card-tools">
                                                     <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                                        <i class="fas fa-plus"></i>
+                                                        <i class="fas fa-minus"></i>
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div class="card-body p-0" style="display: none;">
+                                            <div class="card-body p-0">
                                                 <div class="table-responsive">
                                                     <table class="table table-hover">
                                                         <thead>
@@ -408,16 +408,16 @@
                                         @endif
 
                                         @if(count($obatRalan)>0)
-                                        <div class="card card-outline card-success mb-3 collapsed-card">
+                                        <div class="card card-outline card-success mb-3">
                                             <div class="card-header">
                                                 <h3 class="card-title"><i class="fas fa-pills mr-2"></i>Obat Ralan</h3>
                                                 <div class="card-tools">
                                                     <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                                        <i class="fas fa-plus"></i>
+                                                        <i class="fas fa-minus"></i>
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div class="card-body p-0" style="display: none;">
+                                            <div class="card-body p-0">
                                                 <div class="table-responsive">
                                                     <table class="table table-hover">
                                                         <thead>
@@ -443,16 +443,16 @@
                                         @endif
 
                                         @if(count($obatRanap)>0)
-                                        <div class="card card-outline card-success mb-3 collapsed-card">
+                                        <div class="card card-outline card-success mb-3">
                                             <div class="card-header">
                                                 <h3 class="card-title"><i class="fas fa-pills mr-2"></i>Obat Ranap</h3>
                                                 <div class="card-tools">
                                                     <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                                        <i class="fas fa-plus"></i>
+                                                        <i class="fas fa-minus"></i>
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div class="card-body p-0" style="display: none;">
+                                            <div class="card-body p-0">
                                                 @php
                                                     $obatByDate = $obatRanap->groupBy('tgl_perawatan');
                                                 @endphp
@@ -510,7 +510,7 @@
                                         @endif
 
                                         @if(count($laboratorium)>0)
-                                        <x-adminlte-card theme="dark" title="Laboratorium" icon="fas fa-flask" theme-mode="outline" collapsible="collapsed">
+                                        <x-adminlte-card theme="dark" title="Laboratorium" icon="fas fa-flask" theme-mode="outline" collapsible>
                                             <!-- Desktop Table View -->
                                             <div class="table-responsive d-none d-md-block">
                                                 <table class="table table-sm table-hover mb-0">
@@ -621,7 +621,7 @@
                                         @endif
 
                                         @if(count($gambarRadiologi)>0 || count($radiologi)>0)
-                                        <x-adminlte-card theme="dark" title="Radiologi" icon="fas fa-x-ray" collapsible="collapsed" theme-mode="outline">
+                                        <x-adminlte-card theme="dark" title="Radiologi" icon="fas fa-x-ray" collapsible theme-mode="outline">
                                             <x-adminlte-card theme="dark" title="Gambar Radiologi" collapsible="collapsed">
                                                 <div class="container">
                                                     <div class="row row-cols-auto">
@@ -796,7 +796,7 @@
                                         // Kelompokkan berkas berdasarkan kode master_berkas_digital
                                         $berkasGrouped = $berkasDigital->groupBy('kode');
                                         @endphp
-                                        <x-adminlte-card theme="info" title="Berkas Digital" icon="fas fa-file-alt" theme-mode="outline" collapsible="collapsed">
+                                        <x-adminlte-card theme="info" title="Berkas Digital" icon="fas fa-file-alt" theme-mode="outline" collapsible>
                                             @foreach($berkasGrouped as $kode => $berkasGroup)
                                             @php
                                             $namaKelompok = $berkasGroup->first()->nama ?? $kode;

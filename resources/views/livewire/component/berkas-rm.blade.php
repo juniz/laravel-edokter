@@ -76,26 +76,17 @@
                             <span class="berkas-badge">{{ $index + 1 }}</span>
                             <span class="file-ext-badge {{ $isPdf ? 'badge-pdf' : 'badge-img' }}">{{ $fileExt }}</span>
                             
-                            @if($isPdf)
-                            <div class="thumbnail-pdf" data-url="{{ $fileUrl }}">
-                                <div class="pdf-icon-wrapper">
-                                    <i class="fas fa-file-pdf"></i>
-                                    <div class="pdf-lines">
-                                        <span></span><span></span><span></span>
-                                    </div>
-                                </div>
-                                <div class="thumbnail-actions">
-                                    <button class="btn-action btn-view-pdf" data-url="{{ $fileUrl }}" data-title="{{ $fileName }}" title="Lihat PDF">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <a href="{{ $fileUrl }}" target="_blank" class="btn-action" title="Buka Tab Baru">
-                                        <i class="fas fa-external-link-alt"></i>
-                                    </a>
-                                </div>
-                            </div>
-                            @else
+                @if($isPdf)
+                <div class="thumbnail-pdf" data-url="{{ $fileUrl }}">
+                    <iframe src="{{ $fileUrl }}#view=FitH&amp;toolbar=0&amp;navpanes=0" class="pdf-thumb" loading="lazy"></iframe>
+                    <div class="pdf-overlay">
+                        <i class="fas fa-search-plus"></i>
+                        <span>Klik untuk membuka</span>
+                    </div>
+                </div>
+                @else
                             <div class="thumbnail-image">
-                                <a href="{{ $fileUrl }}" data-toggle="lightbox" data-gallery="berkas-gallery" data-width="1280" data-height="700" data-title="{{ $fileName }}">
+                                <a href="{{ $fileUrl }}" class="lightbox-trigger" data-gallery="berkas-gallery" data-width="1280" data-height="700" data-title="{{ $fileName }}">
                                     <img src="{{ $fileUrl }}" alt="{{ $fileName }}" loading="lazy" onerror="this.onerror=null; this.src='/images/no-image.png'; this.parentElement.classList.add('img-error');">
                                     <div class="thumbnail-overlay">
                                         <i class="fas fa-search-plus"></i>
@@ -107,37 +98,23 @@
                         </div>
                         
                         {{-- File Info --}}
-                        <div class="file-info">
-                            <div class="file-info-main">
-                                <div class="file-icon">
-                                    @if($isPdf)
-                                        <i class="fas fa-file-pdf text-danger"></i>
-                                    @else
-                                        <i class="fas fa-file-image text-success"></i>
-                                    @endif
-                                </div>
-                                <div class="file-details">
-                                    <span class="file-name" title="{{ $fileName }}">{{ $fileName }}</span>
-                                    <span class="file-meta">
-                                        <i class="far fa-calendar-alt mr-1"></i>{{ $fileDate }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="file-actions">
-                                @if($isPdf)
-                                <button class="btn btn-xs btn-info btn-view-pdf" data-url="{{ $fileUrl }}" data-title="{{ $fileName }}">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                @else
-                                <a href="{{ $fileUrl }}" data-toggle="lightbox" data-gallery="berkas-gallery" data-title="{{ $fileName }}" class="btn btn-xs btn-success">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                @endif
-                                <a href="{{ $fileUrl }}" target="_blank" download class="btn btn-xs btn-secondary" title="Download">
-                                    <i class="fas fa-download"></i>
-                                </a>
-                            </div>
-                        </div>
+            <div class="file-info">
+                <div class="file-info-main">
+                    <div class="file-icon">
+                        @if($isPdf)
+                            <i class="fas fa-file-pdf text-danger"></i>
+                        @else
+                            <i class="fas fa-file-image text-success"></i>
+                        @endif
+                    </div>
+                    <div class="file-details">
+                        <span class="file-name" title="{{ $fileName }}">{{ $fileName }}</span>
+                        <span class="file-meta">
+                            <i class="far fa-calendar-alt mr-1"></i>{{ $fileDate }}
+                        </span>
+                    </div>
+                </div>
+            </div>
                     </div>
                     @endforeach
                 </div>
@@ -441,63 +418,40 @@
         background: linear-gradient(145deg, #fff5f5 0%, #ffe8e8 100%);
         position: relative;
     }
-    .pdf-icon-wrapper {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-    .pdf-icon-wrapper > i {
-        font-size: 4rem;
-        color: #dc3545;
-        margin-bottom: 0.5rem;
-        filter: drop-shadow(0 3px 6px rgba(220, 53, 69, 0.3));
-    }
-    .pdf-lines {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        align-items: center;
-    }
-    .pdf-lines span {
-        display: block;
-        height: 3px;
-        border-radius: 2px;
-        background: #ffcdd2;
-    }
-    .pdf-lines span:nth-child(1) { width: 50px; }
-    .pdf-lines span:nth-child(2) { width: 40px; }
-    .pdf-lines span:nth-child(3) { width: 45px; }
-    
-    .thumbnail-actions {
-        display: flex;
-        gap: 0.5rem;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .thumbnail-pdf:hover .thumbnail-actions {
-        opacity: 1;
-    }
-    .btn-action {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: #fff;
+    .pdf-thumb {
+        width: 100%;
+        height: 100%;
         border: none;
+        background: #fff;
+        pointer-events: none; /* biar klik masuk ke container, bukan iframe */
+    }
+    .pdf-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 50%, transparent 100%);
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        color: #495057;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: auto;
         cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        text-decoration: none;
     }
-    .btn-action:hover {
-        background: #17a2b8;
+    .pdf-overlay i {
         color: #fff;
-        transform: scale(1.1);
-        text-decoration: none;
+        font-size: 2rem;
+        margin-bottom: 0.25rem;
+    }
+    .pdf-overlay span {
+        color: #fff;
+        font-size: 0.8rem;
+    }
+    .thumbnail-pdf:hover .pdf-overlay {
+        opacity: 1;
     }
     
     /* Thumbnail Image */
@@ -888,23 +842,53 @@
         });
         
         // Lightbox for images with gallery support
-        $(document).off('click.lightbox').on('click.lightbox', '.berkas-rm-container [data-toggle="lightbox"]', function(event) {
-            event.preventDefault();
-            $(this).ekkoLightbox({
-                alwaysShowClose: true,
-                showArrows: true,
-                wrapping: true,
-                loadingMessage: 'Memuat...'
-            });
-        });
-        
-        // PDF viewer button
-        $(document).off('click.pdfview').on('click.pdfview', '.btn-view-pdf', function(event) {
+        // Use custom class instead of data-toggle to prevent double trigger
+        $(document).off('click.lightbox').on('click.lightbox', '.berkas-rm-container .lightbox-trigger', function(event) {
             event.preventDefault();
             event.stopPropagation();
-            var url = $(this).data('url');
-            var title = $(this).data('title');
-            openPdfViewer(url, title);
+            
+            var $link = $(this);
+            var gallery = $link.data('gallery') || 'berkas-gallery';
+            var width = $link.data('width') || 1280;
+            var height = $link.data('height') || 700;
+            var title = $link.data('title') || '';
+            
+            // Initialize ekkoLightbox only once per element
+            if (!$link.data('ekkoLightbox-initialized')) {
+                $link.ekkoLightbox({
+                    alwaysShowClose: true,
+                    showArrows: true,
+                    wrapping: true,
+                    loadingMessage: 'Memuat...',
+                    gallery: gallery,
+                    width: width,
+                    height: height,
+                    title: title
+                });
+                $link.data('ekkoLightbox-initialized', true);
+            } else {
+                // If already initialized, just trigger it
+                $link.ekkoLightbox();
+            }
+            
+            return false;
+        });
+        
+        // PDF viewer - klik pada kartu atau thumbnail PDF
+        $(document).off('click.pdfview').on('click.pdfview', '.berkas-card.is-pdf, .thumbnail-pdf, .thumbnail-pdf .pdf-overlay', function(event) {
+            // Hindari konflik dengan link lain jika ada
+            event.preventDefault();
+            event.stopPropagation();
+            var $card = $(this).closest('.berkas-card');
+            if (!$card.length && $(this).hasClass('berkas-card')) {
+                $card = $(this);
+            }
+            var $thumb = $card.find('.thumbnail-pdf');
+            var url = $thumb.data('url');
+            var title = $card.find('.file-name').attr('title') || $card.find('.file-name').text() || 'Dokumen PDF';
+            if (url) {
+                openPdfViewer(url, title);
+            }
         });
         
         // Function to find and call BerkasRm component
