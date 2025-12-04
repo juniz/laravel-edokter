@@ -143,11 +143,29 @@
         <div class="pdf-viewer-container">
             <div class="pdf-viewer-header">
                 <span class="pdf-viewer-title">Dokumen PDF</span>
-                <button class="pdf-viewer-close" onclick="closePdfViewer()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <div class="pdf-viewer-actions">
+                    <a href="#" id="pdfViewerDownload" class="pdf-viewer-download" target="_blank" download>
+                        <i class="fas fa-download"></i>
+                    </a>
+                    <a href="#" id="pdfViewerOpenNew" class="pdf-viewer-open-new" target="_blank">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    <button class="pdf-viewer-close" onclick="closePdfViewer()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
-            <iframe id="pdfViewerFrame" src="" frameborder="0"></iframe>
+            <div class="pdf-viewer-content">
+                <iframe id="pdfViewerFrame" src="" frameborder="0" allowfullscreen></iframe>
+                <object id="pdfViewerObject" data="" type="application/pdf" style="display: none;" width="100%" height="100%">
+                    <param name="src" value="" />
+                    <embed id="pdfViewerEmbed" src="" type="application/pdf" width="100%" height="100%" />
+                    <p class="pdf-viewer-fallback">
+                        Browser Anda tidak mendukung preview PDF. 
+                        <a href="#" id="pdfViewerFallbackLink" target="_blank">Klik di sini untuk membuka PDF</a>
+                    </p>
+                </object>
+            </div>
         </div>
     </div>
 
@@ -497,6 +515,10 @@
     .pdf-thumb.lazy-pdf[data-loaded="false"] {
         display: none;
     }
+    /* Di mobile, iframe tidak dimuat, jadi sembunyikan */
+    .pdf-thumb.lazy-pdf[data-loaded="skipped-mobile"] {
+        display: none;
+    }
     .pdf-thumb.lazy-pdf[data-loaded="true"] {
         display: block;
         opacity: 0;
@@ -504,18 +526,23 @@
     .pdf-thumb.lazy-pdf[data-loaded="true"].loaded {
         opacity: 1;
     }
-    /* Tampilkan icon PDF saat belum dimuat */
+    /* Tampilkan icon PDF saat belum dimuat atau di mobile */
     .thumbnail-pdf .pdf-preview-icon {
         display: flex;
     }
-    /* Sembunyikan icon saat PDF sudah dimuat */
+    /* Sembunyikan icon saat PDF sudah dimuat (hanya desktop) */
     .thumbnail-pdf .pdf-thumb[data-loaded="true"] ~ .pdf-preview-icon,
     .thumbnail-pdf .pdf-thumb.loaded ~ .pdf-preview-icon {
         display: none !important;
     }
+    /* Di mobile, icon selalu terlihat karena iframe tidak dimuat */
+    .thumbnail-pdf .pdf-thumb[data-loaded="skipped-mobile"] ~ .pdf-preview-icon {
+        display: flex !important;
+    }
     /* Fallback dengan :has() untuk browser modern */
     @supports selector(:has(*)) {
-        .thumbnail-pdf:has(.pdf-thumb[data-loaded="false"]) .pdf-preview-icon {
+        .thumbnail-pdf:has(.pdf-thumb[data-loaded="false"]) .pdf-preview-icon,
+        .thumbnail-pdf:has(.pdf-thumb[data-loaded="skipped-mobile"]) .pdf-preview-icon {
             display: flex !important;
         }
         .thumbnail-pdf:has(.pdf-thumb[data-loaded="true"]) .pdf-preview-icon {
@@ -770,6 +797,7 @@
         padding: 1rem 1.25rem;
         background: linear-gradient(135deg, #343a40 0%, #23272b 100%);
         color: #fff;
+        flex-shrink: 0;
     }
     .pdf-viewer-title {
         font-weight: 600;
@@ -777,12 +805,45 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .pdf-viewer-title::before {
         content: '\f1c1';
         font-family: 'Font Awesome 5 Free';
         font-weight: 400;
         color: #dc3545;
+        flex-shrink: 0;
+    }
+    .pdf-viewer-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+    .pdf-viewer-download,
+    .pdf-viewer-open-new {
+        background: rgba(255,255,255,0.1);
+        border: none;
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .pdf-viewer-download:hover,
+    .pdf-viewer-open-new:hover {
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        text-decoration: none;
     }
     .pdf-viewer-close {
         background: rgba(255,255,255,0.1);
@@ -797,11 +858,45 @@
     .pdf-viewer-close:hover {
         background: rgba(255,255,255,0.2);
     }
-    .pdf-viewer-container iframe {
+    .pdf-viewer-content {
         flex: 1;
         width: 100%;
-        border: none;
+        position: relative;
+        overflow: auto;
         -webkit-overflow-scrolling: touch;
+        min-height: 0;
+    }
+    .pdf-viewer-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+    }
+    .pdf-viewer-container object {
+        width: 100%;
+        height: 100%;
+        min-height: 600px;
+        border: none;
+        display: block;
+    }
+    .pdf-viewer-container embed {
+        width: 100%;
+        height: 100%;
+        min-height: 600px;
+        border: none;
+        display: block;
+    }
+    .pdf-viewer-fallback {
+        padding: 2rem;
+        text-align: center;
+        color: #6c757d;
+    }
+    .pdf-viewer-fallback a {
+        color: #17a2b8;
+        text-decoration: underline;
+    }
+    .pdf-viewer-fallback a:hover {
+        color: #138496;
     }
     
     /* Empty State */
@@ -836,6 +931,52 @@
         }
         .thumbnail-image {
             display: block !important;
+        }
+        
+        /* PDF Viewer Modal untuk Mobile */
+        .pdf-viewer-overlay {
+            padding: 0;
+        }
+        .pdf-viewer-container {
+            width: 100%;
+            height: 100vh;
+            max-width: 100%;
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .pdf-viewer-header {
+            padding: 0.75rem 1rem;
+            flex-wrap: wrap;
+        }
+        .pdf-viewer-title {
+            font-size: 0.9rem;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .pdf-viewer-actions {
+            width: 100%;
+            justify-content: flex-end;
+            margin-left: 0;
+            margin-top: 0.5rem;
+        }
+        .pdf-viewer-download,
+        .pdf-viewer-open-new,
+        .pdf-viewer-close {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.9rem;
+        }
+        .pdf-viewer-content {
+            flex: 1;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .pdf-viewer-container object {
+            min-height: 100%;
+            height: auto;
+        }
+        .pdf-viewer-container embed {
+            min-height: 100%;
         }
         .pdf-icon-wrapper > i {
             font-size: 2.5rem;
@@ -923,17 +1064,88 @@
         if (window.berkasRmInitialized) return;
         window.berkasRmInitialized = true;
         
-        // PDF Viewer functions - define globally
+        // Deteksi mobile device - buat global
+        window.isMobileDevice = function() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   (window.innerWidth <= 768 && 'ontouchstart' in window);
+        };
+        
+        // Deteksi Android khusus - buat global
+        window.isAndroid = function() {
+            return /Android/i.test(navigator.userAgent);
+        };
+        
+        // Alias untuk penggunaan lokal
+        var isMobileDevice = window.isMobileDevice;
+        var isAndroid = window.isAndroid;
+        
+        // PDF Viewer functions - define globally dengan support mobile
         window.openPdfViewer = function(url, title) {
-            $('#pdfViewerFrame').attr('src', url);
-            $('.pdf-viewer-title').text(title || 'Dokumen PDF');
+            var pdfTitle = title || 'Dokumen PDF';
+            
+            // Set title
+            $('.pdf-viewer-title').text(pdfTitle);
+            
+            // Set download dan open new tab links
+            $('#pdfViewerDownload').attr('href', url);
+            $('#pdfViewerOpenNew').attr('href', url);
+            $('#pdfViewerFallbackLink').attr('href', url);
+            
+            // Untuk mobile, gunakan object/embed sebagai alternatif iframe
+            if (isMobileDevice()) {
+                console.log('Mobile device detected, using object/embed for PDF:', url);
+                
+                // Sembunyikan iframe, tampilkan object/embed
+                $('#pdfViewerFrame').css('display', 'none');
+                $('#pdfViewerObject').css('display', 'block');
+                
+                // Set URL ke object dan embed
+                $('#pdfViewerObject').attr('data', url);
+                $('#pdfViewerEmbed').attr('src', url);
+                
+                // Update param di dalam object
+                var $object = $('#pdfViewerObject');
+                var $param = $object.find('param[name="src"]');
+                if ($param.length) {
+                    $param.attr('value', url);
+                } else {
+                    $object.prepend('<param name="src" value="' + url + '" />');
+                }
+                
+                // Juga set iframe sebagai fallback (hidden)
+                $('#pdfViewerFrame').attr('src', url);
+            } else {
+                // Untuk desktop, gunakan iframe
+                console.log('Desktop device, using iframe for PDF:', url);
+                
+                // Sembunyikan object/embed, tampilkan iframe
+                $('#pdfViewerObject').css('display', 'none');
+                $('#pdfViewerFrame').css('display', 'block');
+                
+                // Set URL ke iframe
+                $('#pdfViewerFrame').attr('src', url);
+            }
+            
+            // Tampilkan modal
             $('#pdfViewerOverlay').fadeIn(200);
             $('body').css('overflow', 'hidden');
         };
         
         window.closePdfViewer = function() {
             $('#pdfViewerOverlay').fadeOut(200);
+            
+            // Clear semua sumber PDF
             $('#pdfViewerFrame').attr('src', '');
+            $('#pdfViewerObject').attr('data', '');
+            $('#pdfViewerEmbed').attr('src', '');
+            
+            // Clear param di object
+            $('#pdfViewerObject').find('param[name="src"]').attr('value', '');
+            
+            // Reset display
+            $('#pdfViewerFrame').css('display', '');
+            $('#pdfViewerObject').css('display', 'none');
+            
             $('body').css('overflow', '');
         };
         
@@ -1043,12 +1255,20 @@
                             var src = $iframe.data('src');
                             
                             if (src && $iframe.attr('data-loaded') === 'false') {
+                                // Di mobile device, jangan load iframe, biarkan icon PDF tetap terlihat
+                                if (isMobileDevice()) {
+                                    console.log('Mobile device: Skipping PDF iframe load, icon will remain visible');
+                                    $iframe.attr('data-loaded', 'skipped-mobile');
+                                    pdfObserver.unobserve(entry.target);
+                                    return;
+                                }
+                                
                                 console.log('IntersectionObserver: Loading PDF:', src);
                                 
                                 // Show loading indicator
                                 $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
                                 
-                                // Load PDF
+                                // Load PDF hanya untuk desktop
                                 $iframe.attr('src', src);
                                 $iframe.attr('data-loaded', 'true');
                                 
@@ -1134,6 +1354,13 @@
                     return;
                 }
                 
+                // Di mobile device, jangan load iframe, biarkan icon PDF tetap terlihat
+                if (isMobileDevice()) {
+                    console.log('Mobile device: Skipping PDF iframe load for:', src);
+                    $iframe.attr('data-loaded', 'skipped-mobile');
+                    return;
+                }
+                
                 if (isInViewport(this)) {
                     console.log('Loading PDF immediately (in viewport):', src);
                     $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
@@ -1198,10 +1425,17 @@
         
         // Fallback function untuk browser yang tidak support Intersection Observer
         function loadAllPreviews() {
-            // Load all PDFs
+            // Load all PDFs (hanya untuk desktop, mobile skip)
             $('.pdf-thumb.lazy-pdf[data-loaded="false"]').each(function() {
                 var $iframe = $(this);
                 var src = $iframe.data('src');
+                
+                // Di mobile device, jangan load iframe
+                if (isMobileDevice()) {
+                    $iframe.attr('data-loaded', 'skipped-mobile');
+                    return;
+                }
+                
                 if (src) {
                     $iframe.attr('src', src);
                     $iframe.attr('data-loaded', 'true');
