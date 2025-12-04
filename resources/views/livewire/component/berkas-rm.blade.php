@@ -70,15 +70,30 @@
                         $fileDate = isset($item->created_at) ? \Carbon\Carbon::parse($item->created_at)->isoFormat('DD MMM YYYY') : '-';
                     @endphp
                     
-                    <div class="berkas-card {{ $isPdf ? 'is-pdf' : 'is-image' }}">
+                    <div class="berkas-card {{ $isPdf ? 'is-pdf' : 'is-image' }}" data-file-url="{{ $fileUrl }}" data-file-type="{{ $isPdf ? 'pdf' : 'image' }}" data-file-name="{{ $fileName }}">
                         {{-- Thumbnail Preview --}}
                         <div class="thumbnail-wrapper">
                             <span class="berkas-badge">{{ $index + 1 }}</span>
                             <span class="file-ext-badge {{ $isPdf ? 'badge-pdf' : 'badge-img' }}">{{ $fileExt }}</span>
                             
                 @if($isPdf)
-                <div class="thumbnail-pdf" data-url="{{ $fileUrl }}">
-                    <iframe src="{{ $fileUrl }}#view=FitH&amp;toolbar=0&amp;navpanes=0" class="pdf-thumb" loading="lazy"></iframe>
+                <div class="thumbnail-pdf" data-url="{{ $fileUrl }}" data-title="{{ $fileName }}">
+                    {{-- PDF Preview iframe - lazy load saat scroll --}}
+                    <iframe 
+                        data-src="{{ $fileUrl }}#view=FitH&amp;toolbar=0&amp;navpanes=0" 
+                        class="pdf-thumb lazy-pdf" 
+                        data-loaded="false">
+                    </iframe>
+                    {{-- PDF Icon untuk mobile/tablet (fallback) --}}
+                    <div class="pdf-preview-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    {{-- Loading indicator --}}
+                    <div class="pdf-loading">
+                        <div class="spinner-border spinner-border-sm text-danger" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
                     <div class="pdf-overlay">
                         <i class="fas fa-search-plus"></i>
                         <span>Klik untuk membuka</span>
@@ -86,8 +101,8 @@
                 </div>
                 @else
                             <div class="thumbnail-image">
-                                <a href="{{ $fileUrl }}" class="lightbox-trigger" data-gallery="berkas-gallery" data-width="1280" data-height="700" data-title="{{ $fileName }}">
-                                    <img src="{{ $fileUrl }}" alt="{{ $fileName }}" loading="lazy" onerror="this.onerror=null; this.src='/images/no-image.png'; this.parentElement.classList.add('img-error');">
+                                <a href="{{ $fileUrl }}" class="lightbox-trigger" data-gallery="berkas-gallery" data-width="1280" data-height="700" data-title="{{ $fileName }}" onclick="return false;">
+                                    <img data-src="{{ $fileUrl }}" alt="{{ $fileName }}" loading="lazy" class="lazy-image" onerror="this.onerror=null; this.src='/images/no-image.png'; this.parentElement.classList.add('img-error');">
                                     <div class="thumbnail-overlay">
                                         <i class="fas fa-search-plus"></i>
                                         <span>Klik untuk memperbesar</span>
@@ -280,6 +295,12 @@
         max-width: 120px !important;
         height: 90px !important;
         border-radius: 0 !important;
+        flex-shrink: 0;
+    }
+    .berkas-grid.list-view .thumbnail-pdf,
+    .berkas-grid.list-view .thumbnail-image {
+        width: 100%;
+        height: 100%;
     }
     .berkas-grid.list-view .berkas-badge {
         width: 20px;
@@ -349,10 +370,17 @@
         box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         transition: all 0.3s ease;
         border: 1px solid #e9ecef;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
     }
     .berkas-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .berkas-card:active {
+        transform: translateY(-2px);
     }
     .berkas-card.is-pdf {
         border-top: 4px solid #dc3545;
@@ -417,6 +445,38 @@
         justify-content: center;
         background: linear-gradient(145deg, #fff5f5 0%, #ffe8e8 100%);
         position: relative;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+    .pdf-preview-icon {
+        display: none; /* Hidden by default, shown on mobile via media query */
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: linear-gradient(145deg, #fff5f5 0%, #ffe8e8 100%);
+    }
+    .pdf-preview-icon i {
+        font-size: 4rem;
+        color: #dc3545;
+        opacity: 0.8;
+    }
+    .pdf-loading {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 3;
+    }
+    .pdf-loading.show {
+        display: block;
     }
     .pdf-thumb {
         width: 100%;
@@ -424,6 +484,43 @@
         border: none;
         background: #fff;
         pointer-events: none; /* biar klik masuk ke container, bukan iframe */
+        display: block;
+        position: relative;
+        z-index: 0;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .pdf-thumb.loaded {
+        opacity: 1;
+    }
+    /* PDF preview dengan lazy loading - sembunyikan jika belum dimuat */
+    .pdf-thumb.lazy-pdf[data-loaded="false"] {
+        display: none;
+    }
+    .pdf-thumb.lazy-pdf[data-loaded="true"] {
+        display: block;
+        opacity: 0;
+    }
+    .pdf-thumb.lazy-pdf[data-loaded="true"].loaded {
+        opacity: 1;
+    }
+    /* Tampilkan icon PDF saat belum dimuat */
+    .thumbnail-pdf .pdf-preview-icon {
+        display: flex;
+    }
+    /* Sembunyikan icon saat PDF sudah dimuat */
+    .thumbnail-pdf .pdf-thumb[data-loaded="true"] ~ .pdf-preview-icon,
+    .thumbnail-pdf .pdf-thumb.loaded ~ .pdf-preview-icon {
+        display: none !important;
+    }
+    /* Fallback dengan :has() untuk browser modern */
+    @supports selector(:has(*)) {
+        .thumbnail-pdf:has(.pdf-thumb[data-loaded="false"]) .pdf-preview-icon {
+            display: flex !important;
+        }
+        .thumbnail-pdf:has(.pdf-thumb[data-loaded="true"]) .pdf-preview-icon {
+            display: none !important;
+        }
     }
     .pdf-overlay {
         position: absolute;
@@ -440,6 +537,7 @@
         transition: opacity 0.3s ease;
         pointer-events: auto;
         cursor: pointer;
+        z-index: 2;
     }
     .pdf-overlay i {
         color: #fff;
@@ -450,26 +548,86 @@
         color: #fff;
         font-size: 0.8rem;
     }
-    .thumbnail-pdf:hover .pdf-overlay {
+    .thumbnail-pdf:hover .pdf-overlay,
+    .thumbnail-pdf:active .pdf-overlay {
         opacity: 1;
     }
+    /* List view PDF thumbnail - tampilkan preview di semua device */
+    .berkas-grid.list-view .thumbnail-pdf {
+        display: block !important;
+    }
+    .berkas-grid.list-view .thumbnail-pdf .pdf-preview-icon {
+        display: none !important;
+    }
+    .berkas-grid.list-view .thumbnail-pdf .pdf-thumb {
+        display: block !important;
+        visibility: visible !important;
+    }
+    /* List view image thumbnail - tampilkan preview di semua device */
+    .berkas-grid.list-view .thumbnail-image {
+        display: block !important;
+    }
+    .berkas-grid.list-view .thumbnail-image img {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
     
-    /* Thumbnail Image */
+    /* Thumbnail Image - lazy loading */
     .thumbnail-image {
         width: 100%;
         height: 100%;
         position: relative;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+        display: block !important;
     }
     .thumbnail-image a {
         display: block;
         width: 100%;
         height: 100%;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
     }
     .thumbnail-image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.4s ease;
+        transition: transform 0.4s ease, opacity 0.3s ease;
+        display: block !important;
+        pointer-events: none;
+    }
+    /* Lazy image - sembunyikan sampai dimuat */
+    .thumbnail-image img.lazy-image:not([data-loaded="true"]) {
+        opacity: 0;
+        visibility: hidden;
+    }
+    .thumbnail-image img.lazy-image[data-loaded="true"] {
+        opacity: 1;
+        visibility: visible;
+    }
+    /* List view image thumbnail - selalu tampil */
+    .berkas-grid.list-view .thumbnail-image {
+        display: block !important;
+    }
+    .berkas-grid.list-view .thumbnail-image img {
+        object-fit: cover;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    /* Desktop & Mobile: container selalu tampil, preview menggunakan lazy loading */
+    @media (min-width: 769px) {
+        .thumbnail-image {
+            display: block !important;
+        }
+    }
+    @media (max-width: 768px) {
+        .thumbnail-image {
+            display: block !important;
+        }
     }
     .thumbnail-overlay {
         position: absolute;
@@ -591,6 +749,8 @@
         align-items: center;
         justify-content: center;
         padding: 1rem;
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
     }
     .pdf-viewer-container {
         width: 100%;
@@ -641,6 +801,7 @@
         flex: 1;
         width: 100%;
         border: none;
+        -webkit-overflow-scrolling: touch;
     }
     
     /* Empty State */
@@ -668,6 +829,13 @@
         }
         .thumbnail-wrapper {
             height: 150px;
+        }
+        /* Mobile: container selalu tampil, preview menggunakan lazy loading */
+        .thumbnail-pdf {
+            display: block !important;
+        }
+        .thumbnail-image {
+            display: block !important;
         }
         .pdf-icon-wrapper > i {
             font-size: 2.5rem;
@@ -797,6 +965,302 @@
             }
         };
         
+        // Lazy loading PDF dengan Intersection Observer
+        function initLazyPdfLoading() {
+            // Check if Intersection Observer is supported
+            if (!('IntersectionObserver' in window)) {
+                // Fallback: load all PDFs immediately
+                $('.pdf-thumb.lazy-pdf[data-loaded="false"]').each(function() {
+                    var $iframe = $(this);
+                    var src = $iframe.data('src');
+                    if (src) {
+                        $iframe.attr('src', src);
+                        $iframe.attr('data-loaded', 'true');
+                        $iframe.on('load', function() {
+                            $(this).addClass('loaded');
+                            $(this).closest('.thumbnail-pdf').find('.pdf-loading').removeClass('show');
+                        });
+                        $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
+                    }
+                });
+                return;
+            }
+            
+            var pdfObserver = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        var $iframe = $(entry.target);
+                        var src = $iframe.data('src');
+                        
+                        if (src && $iframe.attr('data-loaded') === 'false') {
+                            // Show loading indicator
+                            $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
+                            
+                            // Load PDF
+                            $iframe.attr('src', src);
+                            $iframe.attr('data-loaded', 'true');
+                            
+                            $iframe.on('load', function() {
+                                $(this).addClass('loaded');
+                                $(this).closest('.thumbnail-pdf').find('.pdf-loading').removeClass('show');
+                            });
+                            
+                            // Stop observing this element
+                            pdfObserver.unobserve(entry.target);
+                        }
+                    }
+                });
+            }, {
+                rootMargin: '50px', // Start loading 50px before entering viewport
+                threshold: 0.1
+            });
+            
+            // Observe all lazy PDF iframes
+            $('.pdf-thumb.lazy-pdf[data-loaded="false"]').each(function() {
+                pdfObserver.observe(this);
+            });
+        }
+        
+        // Global observers untuk lazy loading
+        var pdfObserver = null;
+        var imageObserver = null;
+        
+        // Lazy loading dengan Intersection Observer untuk PDF dan gambar
+        window.initLazyLoading = function() {
+            // Check if Intersection Observer is supported
+            if (!('IntersectionObserver' in window)) {
+                // Fallback: load all previews immediately
+                loadAllPreviews();
+                return;
+            }
+            
+            // Buat observer untuk PDF jika belum ada
+            if (!pdfObserver) {
+                pdfObserver = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            var $iframe = $(entry.target);
+                            var src = $iframe.data('src');
+                            
+                            if (src && $iframe.attr('data-loaded') === 'false') {
+                                console.log('IntersectionObserver: Loading PDF:', src);
+                                
+                                // Show loading indicator
+                                $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
+                                
+                                // Load PDF
+                                $iframe.attr('src', src);
+                                $iframe.attr('data-loaded', 'true');
+                                
+                                $iframe.on('load', function() {
+                                    $(this).addClass('loaded');
+                                    $(this).closest('.thumbnail-pdf').find('.pdf-loading').removeClass('show');
+                                    $(this).closest('.thumbnail-pdf').find('.pdf-preview-icon').hide();
+                                });
+                                
+                                // Stop observing this element
+                                pdfObserver.unobserve(entry.target);
+                            }
+                        }
+                    });
+                }, {
+                    root: null, // Use viewport as root
+                    rootMargin: '200px', // Start loading 200px before entering viewport
+                    threshold: 0.01
+                });
+                console.log('PDF Observer created');
+            }
+            
+            // Buat observer untuk gambar jika belum ada
+            if (!imageObserver) {
+                imageObserver = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            var $img = $(entry.target);
+                            var src = $img.data('src');
+                            
+                            if (src && $img.attr('data-loaded') !== 'true') {
+                                console.log('IntersectionObserver: Loading image:', src);
+                                
+                                // Load image
+                                $img.attr('src', src);
+                                $img.attr('data-loaded', 'true');
+                                
+                                $img.on('load', function() {
+                                    $(this).css({
+                                        'opacity': '1',
+                                        'visibility': 'visible'
+                                    });
+                                });
+                                
+                                // Stop observing this element
+                                imageObserver.unobserve(entry.target);
+                            }
+                        }
+                    });
+                }, {
+                    root: null, // Use viewport as root
+                    rootMargin: '200px', // Start loading 200px before entering viewport
+                    threshold: 0.01
+                });
+                console.log('Image Observer created');
+            }
+            
+            // Fungsi untuk check apakah elemen sudah di viewport atau mendekati viewport
+            function isInViewport(element) {
+                var rect = element.getBoundingClientRect();
+                var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+                var windowWidth = window.innerWidth || document.documentElement.clientWidth;
+                var margin = 200; // Margin untuk preload
+                
+                return (
+                    rect.top < windowHeight + margin &&
+                    rect.bottom > -margin &&
+                    rect.left < windowWidth + margin &&
+                    rect.right > -margin
+                );
+            }
+            
+            // Load elemen yang sudah di viewport langsung tanpa observer
+            var pdfCount = 0;
+            var pdfObservedCount = 0;
+            $('.pdf-thumb.lazy-pdf[data-loaded="false"]').each(function() {
+                pdfCount++;
+                var $iframe = $(this);
+                var src = $iframe.data('src');
+                
+                if (!src) {
+                    console.warn('PDF iframe tidak memiliki data-src:', this);
+                    return;
+                }
+                
+                if (isInViewport(this)) {
+                    console.log('Loading PDF immediately (in viewport):', src);
+                    $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
+                    $iframe.attr('src', src);
+                    $iframe.attr('data-loaded', 'true');
+                    $iframe.on('load', function() {
+                        $(this).addClass('loaded');
+                        $(this).closest('.thumbnail-pdf').find('.pdf-loading').removeClass('show');
+                        $(this).closest('.thumbnail-pdf').find('.pdf-preview-icon').hide();
+                    });
+                } else if (!$iframe.data('observed')) {
+                    // Observe elemen yang belum di viewport
+                    try {
+                        pdfObserver.observe(this);
+                        $iframe.data('observed', true);
+                        pdfObservedCount++;
+                        console.log('Observing PDF:', src);
+                    } catch(e) {
+                        console.error('Error observing PDF:', e, src);
+                    }
+                }
+            });
+            console.log('PDF lazy loading initialized:', pdfCount, 'total,', pdfObservedCount, 'observed');
+            
+            // Load gambar yang sudah di viewport langsung tanpa observer
+            var imgCount = 0;
+            var imgObservedCount = 0;
+            $('.thumbnail-image img.lazy-image:not([data-loaded="true"])').each(function() {
+                imgCount++;
+                var $img = $(this);
+                var src = $img.data('src');
+                
+                if (!src) {
+                    console.warn('Image tidak memiliki data-src:', this);
+                    return;
+                }
+                
+                if (isInViewport(this)) {
+                    console.log('Loading image immediately (in viewport):', src);
+                    $img.attr('src', src);
+                    $img.attr('data-loaded', 'true');
+                    $img.on('load', function() {
+                        $(this).css({
+                            'opacity': '1',
+                            'visibility': 'visible'
+                        });
+                    });
+                } else if (!$img.data('observed')) {
+                    // Observe elemen yang belum di viewport
+                    try {
+                        imageObserver.observe(this);
+                        $img.data('observed', true);
+                        imgObservedCount++;
+                        console.log('Observing image:', src);
+                    } catch(e) {
+                        console.error('Error observing image:', e, src);
+                    }
+                }
+            });
+            console.log('Image lazy loading initialized:', imgCount, 'total,', imgObservedCount, 'observed');
+        };
+        
+        // Fallback function untuk browser yang tidak support Intersection Observer
+        function loadAllPreviews() {
+            // Load all PDFs
+            $('.pdf-thumb.lazy-pdf[data-loaded="false"]').each(function() {
+                var $iframe = $(this);
+                var src = $iframe.data('src');
+                if (src) {
+                    $iframe.attr('src', src);
+                    $iframe.attr('data-loaded', 'true');
+                    $iframe.on('load', function() {
+                        $(this).addClass('loaded');
+                        $(this).closest('.thumbnail-pdf').find('.pdf-loading').removeClass('show');
+                        $(this).closest('.thumbnail-pdf').find('.pdf-preview-icon').hide();
+                    });
+                    $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
+                }
+            });
+            
+            // Load all images
+            $('.thumbnail-image img.lazy-image:not([data-loaded="true"])').each(function() {
+                var $img = $(this);
+                var src = $img.data('src');
+                if (src) {
+                    $img.attr('src', src);
+                    $img.attr('data-loaded', 'true');
+                    $img.on('load', function() {
+                        $(this).css({
+                            'opacity': '1',
+                            'visibility': 'visible'
+                        });
+                    });
+                }
+            });
+        }
+        
+        // Initialize lazy loading saat document ready
+        $(document).ready(function() {
+            initLazyLoading();
+            
+            // Juga inisialisasi setelah sedikit delay untuk memastikan DOM sudah siap
+            setTimeout(function() {
+                initLazyLoading();
+            }, 500);
+        });
+        
+        // Re-initialize lazy loading saat scroll (untuk memastikan elemen baru terdeteksi)
+        var scrollTimeout;
+        function handleScroll() {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(function() {
+                initLazyLoading();
+            }, 150);
+        }
+        
+        // Listen scroll pada window dan container
+        $(window).on('scroll', handleScroll);
+        $(document).on('scroll', '.berkas-rm-container, .berkas-groups-container, .berkas-grid', handleScroll);
+        
+        // Juga reinitialize saat resize
+        $(window).on('resize', function() {
+            setTimeout(function() {
+                initLazyLoading();
+            }, 200);
+        });
+        
         // Close PDF viewer on escape key
         $(document).off('keydown.pdfviewer').on('keydown.pdfviewer', function(e) {
             if (e.key === 'Escape' && $('#pdfViewerOverlay').is(':visible')) {
@@ -843,11 +1307,21 @@
         
         // Lightbox for images with gallery support
         // Use custom class instead of data-toggle to prevent double trigger
-        $(document).off('click.lightbox').on('click.lightbox', '.berkas-rm-container .lightbox-trigger', function(event) {
+        function handleImageClick(event) {
             event.preventDefault();
             event.stopPropagation();
+            event.stopImmediatePropagation();
             
-            var $link = $(this);
+            var $link = $(this).closest('.lightbox-trigger');
+            if (!$link.length) {
+                // Jika klik pada card atau thumbnail, cari link terdekat
+                $link = $(this).closest('.berkas-card.is-image').find('.lightbox-trigger').first();
+            }
+            
+            if (!$link.length) {
+                return false;
+            }
+            
             var gallery = $link.data('gallery') || 'berkas-gallery';
             var width = $link.data('width') || 1280;
             var height = $link.data('height') || 700;
@@ -872,23 +1346,96 @@
             }
             
             return false;
+        }
+        
+        // Click handler untuk gambar (support touch untuk mobile/tablet)
+        $(document).off('click.lightbox').on('click.lightbox', '.berkas-rm-container .lightbox-trigger, .berkas-card.is-image .thumbnail-image, .berkas-card.is-image .thumbnail-overlay, .berkas-card.is-image', function(event) {
+            // Skip jika klik pada file-info (untuk aksi lain)
+            if ($(event.target).closest('.file-info').length) {
+                return true;
+            }
+            return handleImageClick.call(this, event);
         });
         
-        // PDF viewer - klik pada kartu atau thumbnail PDF
-        $(document).off('click.pdfview').on('click.pdfview', '.berkas-card.is-pdf, .thumbnail-pdf, .thumbnail-pdf .pdf-overlay', function(event) {
-            // Hindari konflik dengan link lain jika ada
+        // Touch handler khusus untuk mobile/tablet (prevent default behavior)
+        var touchStartTime = 0;
+        var touchStartPos = null;
+        $(document).off('touchstart.imagetouch touchend.imagetouch').on('touchstart.imagetouch', '.berkas-card.is-image', function(event) {
+            touchStartTime = Date.now();
+            var touch = event.originalEvent.touches[0];
+            touchStartPos = { x: touch.clientX, y: touch.clientY };
+        }).on('touchend.imagetouch', '.berkas-card.is-image', function(event) {
+            if (!touchStartPos) return;
+            
+            var touch = event.originalEvent.changedTouches[0];
+            var touchEndPos = { x: touch.clientX, y: touch.clientY };
+            var timeDiff = Date.now() - touchStartTime;
+            var distance = Math.sqrt(Math.pow(touchEndPos.x - touchStartPos.x, 2) + Math.pow(touchEndPos.y - touchStartPos.y, 2));
+            
+            // Hanya trigger jika tap cepat (bukan swipe) dan tidak klik pada file-info
+            if (timeDiff < 300 && distance < 10 && !$(event.target).closest('.file-info').length) {
+                event.preventDefault();
+                event.stopPropagation();
+                handleImageClick.call(this, event);
+            }
+            
+            touchStartTime = 0;
+            touchStartPos = null;
+        });
+        
+        // PDF viewer - klik pada kartu atau thumbnail PDF (support touch events untuk mobile/tablet)
+        function handlePdfClick(event) {
+            // Skip jika klik pada file-info (untuk aksi lain)
+            if ($(event.target).closest('.file-info').length) {
+                return true;
+            }
+            
             event.preventDefault();
             event.stopPropagation();
+            event.stopImmediatePropagation();
+            
             var $card = $(this).closest('.berkas-card');
             if (!$card.length && $(this).hasClass('berkas-card')) {
                 $card = $(this);
             }
-            var $thumb = $card.find('.thumbnail-pdf');
-            var url = $thumb.data('url');
-            var title = $card.find('.file-name').attr('title') || $card.find('.file-name').text() || 'Dokumen PDF';
+            
+            var url = $card.data('file-url') || $card.find('.thumbnail-pdf').data('url');
+            var title = $card.data('file-name') || $card.find('.file-name').attr('title') || $card.find('.file-name').text() || 'Dokumen PDF';
+            
             if (url) {
                 openPdfViewer(url, title);
             }
+            
+            return false;
+        }
+        
+        // Click handler untuk PDF
+        $(document).off('click.pdfview').on('click.pdfview', '.berkas-card.is-pdf, .thumbnail-pdf, .thumbnail-pdf .pdf-overlay, .thumbnail-pdf .pdf-preview-icon', handlePdfClick);
+        
+        // Touch handler khusus untuk mobile/tablet PDF (prevent default behavior)
+        var pdfTouchStartTime = 0;
+        var pdfTouchStartPos = null;
+        $(document).off('touchstart.pdftouch touchend.pdftouch').on('touchstart.pdftouch', '.berkas-card.is-pdf', function(event) {
+            pdfTouchStartTime = Date.now();
+            var touch = event.originalEvent.touches[0];
+            pdfTouchStartPos = { x: touch.clientX, y: touch.clientY };
+        }).on('touchend.pdftouch', '.berkas-card.is-pdf', function(event) {
+            if (!pdfTouchStartPos) return;
+            
+            var touch = event.originalEvent.changedTouches[0];
+            var touchEndPos = { x: touch.clientX, y: touch.clientY };
+            var timeDiff = Date.now() - pdfTouchStartTime;
+            var distance = Math.sqrt(Math.pow(touchEndPos.x - pdfTouchStartPos.x, 2) + Math.pow(touchEndPos.y - pdfTouchStartPos.y, 2));
+            
+            // Hanya trigger jika tap cepat (bukan swipe) dan tidak klik pada file-info
+            if (timeDiff < 300 && distance < 10 && !$(event.target).closest('.file-info').length) {
+                event.preventDefault();
+                event.stopPropagation();
+                handlePdfClick.call(this, event);
+            }
+            
+            pdfTouchStartTime = 0;
+            pdfTouchStartPos = null;
         });
         
         // Function to find and call BerkasRm component
@@ -994,11 +1541,19 @@
         }, 100);
     });
     
-    // Re-apply view preference after Livewire update
+    // Re-apply view preference and reinitialize lazy loading after Livewire update
     if (typeof Livewire !== 'undefined') {
         document.addEventListener('livewire:load', function() {
             Livewire.hook('message.processed', function() {
                 setTimeout(function() {
+                    // Reset observed flag untuk elemen baru setelah Livewire update
+                    $('.pdf-thumb.lazy-pdf[data-loaded="false"]').removeData('observed');
+                    $('.thumbnail-image img.lazy-image:not([data-loaded="true"])').removeData('observed');
+                    
+                    // Reinitialize lazy loading setelah Livewire update
+                    initLazyLoading();
+                    
+                    // Restore view preference
                     try {
                         var savedView = localStorage.getItem('berkas-view-mode');
                         if (savedView === 'list') {
@@ -1010,7 +1565,7 @@
                             }
                         }
                     } catch(e) {}
-                }, 50);
+                }, 200);
             });
         });
     }
