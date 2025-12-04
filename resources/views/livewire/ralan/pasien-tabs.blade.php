@@ -1,4 +1,4 @@
-<div class="pasien-tabs-container" style="height: calc(100vh - 200px); display: flex; flex-direction: column;">
+<div class="pasien-tabs-container" style="height: 100vh; display: flex; flex-direction: column;">
     <div class="card card-primary card-tabs" style="display: flex; flex-direction: column; height: 100%;">
         <div class="card-header p-0 pt-1" style="flex-shrink: 0;">
             <ul class="nav nav-tabs" id="custom-tabs-pasien-tab" role="tablist">
