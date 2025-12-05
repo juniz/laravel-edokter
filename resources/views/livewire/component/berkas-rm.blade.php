@@ -1,5 +1,22 @@
 <div class="berkas-rm-container" wire:key="berkas-rm-{{ $rm ?? 'default' }}">
-    @if($isLoading)
+    @if(!$isInitialized)
+    {{-- Placeholder saat belum di-initialize (lazy load) --}}
+    <div class="lazy-load-placeholder">
+        <div class="placeholder-content">
+            <div class="placeholder-icon">
+                <i class="fas fa-folder-open fa-4x text-muted"></i>
+            </div>
+            <h5 class="text-muted mt-3 mb-2">Berkas Rekam Medis</h5>
+            <p class="text-muted mb-4">Klik tombol di bawah untuk memuat data berkas</p>
+            <button class="btn btn-primary btn-load-berkas" onclick="loadBerkasData()">
+                <i class="fas fa-sync-alt"></i> Muat Data Berkas
+            </button>
+            <p class="text-muted small mt-3 mb-0">
+                <i class="fas fa-info-circle"></i> Data akan dimuat saat modal dibuka
+            </p>
+        </div>
+    </div>
+    @elseif($isLoading)
     <div class="loading-wrapper">
         <div class="loading-content">
             <div class="spinner-border text-info" role="status" style="width: 3rem; height: 3rem;">
@@ -9,7 +26,7 @@
         </div>
     </div>
     @else
-    @if(isset($berkasGrouped) && $berkasGrouped->count() > 0)
+    @if(isset($berkasGrouped) && $berkasGrouped && $berkasGrouped->count() > 0)
     
     {{-- Header Info --}}
     <div class="berkas-header mb-3">
@@ -65,7 +82,14 @@
                     @php
                         $isPdf = strtolower(substr($item->lokasi_file, -3)) == 'pdf';
                         $fileName = basename($item->lokasi_file);
-                        $fileUrl = "https://simrs.rsbhayangkaranganjuk.com/webapps/berkasrawat/{$item->lokasi_file}";
+                        // Gunakan proxy untuk PDF, langsung untuk gambar
+                        if ($isPdf) {
+                            // URL encode path file untuk proxy
+                            // Pastikan path relatif dari basePath di proxy
+                            $fileUrl = "https://simrs.rsbhayangkaranganjuk.com/pdf-proxy.php?file=" . urlencode($item->lokasi_file);
+                        } else {
+                            $fileUrl = "https://simrs.rsbhayangkaranganjuk.com/webapps/berkasrawat/{$item->lokasi_file}";
+                        }
                         $fileExt = strtoupper(pathinfo($item->lokasi_file, PATHINFO_EXTENSION));
                         $fileDate = isset($item->created_at) ? \Carbon\Carbon::parse($item->created_at)->isoFormat('DD MMM YYYY') : '-';
                     @endphp
@@ -78,13 +102,13 @@
                             
                 @if($isPdf)
                 <div class="thumbnail-pdf" data-url="{{ $fileUrl }}" data-title="{{ $fileName }}">
-                    {{-- PDF Preview iframe - lazy load saat scroll --}}
-                    <iframe 
-                        data-src="{{ $fileUrl }}#view=FitH&amp;toolbar=0&amp;navpanes=0" 
+                    {{-- PDF Preview Canvas menggunakan PDF.js - lazy load saat scroll --}}
+                    <canvas 
                         class="pdf-thumb lazy-pdf" 
+                        data-src="{{ $fileUrl }}"
                         data-loaded="false">
-                    </iframe>
-                    {{-- PDF Icon untuk mobile/tablet (fallback) --}}
+                    </canvas>
+                    {{-- PDF Icon untuk fallback --}}
                     <div class="pdf-preview-icon">
                         <i class="fas fa-file-pdf"></i>
                     </div>
@@ -156,15 +180,31 @@
                 </div>
             </div>
             <div class="pdf-viewer-content">
-                <iframe id="pdfViewerFrame" src="" frameborder="0" allowfullscreen></iframe>
-                <object id="pdfViewerObject" data="" type="application/pdf" style="display: none;" width="100%" height="100%">
-                    <param name="src" value="" />
-                    <embed id="pdfViewerEmbed" src="" type="application/pdf" width="100%" height="100%" />
-                    <p class="pdf-viewer-fallback">
-                        Browser Anda tidak mendukung preview PDF. 
-                        <a href="#" id="pdfViewerFallbackLink" target="_blank">Klik di sini untuk membuka PDF</a>
-                    </p>
-                </object>
+                <div id="pdfViewerCanvasContainer" style="width: 100%; height: 100%; overflow: auto; position: relative;">
+                    <canvas id="pdfViewerCanvas"></canvas>
+                </div>
+                {{-- Dock kontrol fixed position di luar container --}}
+                <div id="pdfViewerControls" class="pdf-viewer-controls">
+                    <button id="pdfViewerPrev" class="pdf-control-btn" title="Halaman Sebelumnya">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="pdfViewerPageInfo" class="pdf-page-info">Halaman <span id="pdfCurrentPage">1</span> dari <span id="pdfTotalPages">1</span></span>
+                    <button id="pdfViewerNext" class="pdf-control-btn" title="Halaman Berikutnya">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="pdf-control-separator"></div>
+                    <button id="pdfViewerZoomOut" class="pdf-control-btn" title="Zoom Out (Ctrl + Scroll untuk zoom dengan mouse)">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <span id="pdfViewerZoomInfo" class="pdf-zoom-info"><span id="pdfZoomLevel">100</span>%</span>
+                    <button id="pdfViewerZoomIn" class="pdf-control-btn" title="Zoom In (Ctrl + Scroll untuk zoom dengan mouse)">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
+                <p class="pdf-viewer-fallback" id="pdfViewerFallback" style="display: none;">
+                    Browser Anda tidak mendukung preview PDF. 
+                    <a href="#" id="pdfViewerFallbackLink" target="_blank">Klik di sini untuk membuka PDF</a>
+                </p>
             </div>
         </div>
     </div>
@@ -501,22 +541,29 @@
         height: 100%;
         border: none;
         background: #fff;
-        pointer-events: none; /* biar klik masuk ke container, bukan iframe */
+        pointer-events: none; /* biar klik masuk ke container, bukan canvas */
         display: block;
         position: relative;
         z-index: 0;
         opacity: 0;
         transition: opacity 0.3s ease;
+        object-fit: contain;
     }
     .pdf-thumb.loaded {
         opacity: 1;
+    }
+    /* Canvas untuk PDF.js thumbnail */
+    .pdf-thumb canvas {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain;
+        display: block;
     }
     /* PDF preview dengan lazy loading - sembunyikan jika belum dimuat */
     .pdf-thumb.lazy-pdf[data-loaded="false"] {
         display: none;
     }
-    /* Di mobile, iframe tidak dimuat, jadi sembunyikan */
-    .pdf-thumb.lazy-pdf[data-loaded="skipped-mobile"] {
+    .pdf-thumb.lazy-pdf[data-loaded="error"] {
         display: none;
     }
     .pdf-thumb.lazy-pdf[data-loaded="true"] {
@@ -526,23 +573,19 @@
     .pdf-thumb.lazy-pdf[data-loaded="true"].loaded {
         opacity: 1;
     }
-    /* Tampilkan icon PDF saat belum dimuat atau di mobile */
+    /* Tampilkan icon PDF saat belum dimuat */
     .thumbnail-pdf .pdf-preview-icon {
         display: flex;
     }
-    /* Sembunyikan icon saat PDF sudah dimuat (hanya desktop) */
+    /* Sembunyikan icon saat PDF sudah dimuat */
     .thumbnail-pdf .pdf-thumb[data-loaded="true"] ~ .pdf-preview-icon,
     .thumbnail-pdf .pdf-thumb.loaded ~ .pdf-preview-icon {
         display: none !important;
     }
-    /* Di mobile, icon selalu terlihat karena iframe tidak dimuat */
-    .thumbnail-pdf .pdf-thumb[data-loaded="skipped-mobile"] ~ .pdf-preview-icon {
-        display: flex !important;
-    }
     /* Fallback dengan :has() untuk browser modern */
     @supports selector(:has(*)) {
         .thumbnail-pdf:has(.pdf-thumb[data-loaded="false"]) .pdf-preview-icon,
-        .thumbnail-pdf:has(.pdf-thumb[data-loaded="skipped-mobile"]) .pdf-preview-icon {
+        .thumbnail-pdf:has(.pdf-thumb[data-loaded="error"]) .pdf-preview-icon {
             display: flex !important;
         }
         .thumbnail-pdf:has(.pdf-thumb[data-loaded="true"]) .pdf-preview-icon {
@@ -866,25 +909,138 @@
         -webkit-overflow-scrolling: touch;
         min-height: 0;
     }
-    .pdf-viewer-container iframe {
-        width: 100%;
+    /* PDF.js Canvas Container */
+    #pdfViewerCanvasContainer {
+        background: #525252;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 20px;
+        padding-bottom: 90px; /* Space untuk fixed dock controls */
+        min-height: 100%;
         height: 100%;
-        border: none;
-        display: block;
+        position: relative;
+        overflow-y: auto;
+        overflow-x: auto;
+        cursor: default;
     }
-    .pdf-viewer-container object {
-        width: 100%;
-        height: 100%;
-        min-height: 600px;
-        border: none;
-        display: block;
+    
+    #pdfViewerCanvas {
+        max-width: none; /* Allow canvas to grow beyond container */
+        max-height: none; /* Allow canvas to grow beyond container */
+        width: auto !important;
+        height: auto !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        background: #fff;
+        display: block !important;
+        margin: 20px auto;
+        visibility: visible !important;
+        opacity: 1 !important;
+        cursor: default;
+        user-select: none;
+        -webkit-user-select: none;
     }
-    .pdf-viewer-container embed {
-        width: 100%;
-        height: 100%;
-        min-height: 600px;
+    
+    /* Canvas saat zoom - pastikan bisa di-scroll */
+    #pdfViewerCanvasContainer:has(#pdfViewerCanvas[style*="width"]) {
+        overflow: auto;
+    }
+    
+    /* PDF Viewer Controls - Fixed Position Dock */
+    .pdf-viewer-controls {
+        position: fixed !important;
+        bottom: 20px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        padding: 0.75rem 1.25rem;
+        border-radius: 30px;
+        z-index: 100001 !important; /* Di atas modal overlay (99999) */
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        transition: all 0.3s ease;
+        pointer-events: auto;
+        /* Pastikan dock selalu terlihat */
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Separator antara page controls dan zoom controls */
+    .pdf-control-separator {
+        width: 1px;
+        height: 24px;
+        background: rgba(255,255,255,0.3);
+        margin: 0 0.25rem;
+    }
+    
+    .pdf-control-btn {
+        background: rgba(255,255,255,0.2);
         border: none;
-        display: block;
+        color: #fff;
+        padding: 0.4rem 0.6rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+    
+    .pdf-control-btn:hover:not(:disabled) {
+        background: rgba(255,255,255,0.3);
+    }
+    
+    .pdf-control-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .pdf-page-info,
+    .pdf-zoom-info {
+        color: #fff;
+        font-size: 0.85rem;
+        padding: 0 0.5rem;
+        white-space: nowrap;
+        font-weight: 500;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    /* Hover effect untuk dock */
+    .pdf-viewer-controls:hover {
+        background: rgba(0,0,0,0.95);
+        box-shadow: 0 6px 25px rgba(0,0,0,0.7);
+        transform: translateX(-50%) translateY(-2px) !important;
+    }
+    
+    /* Pastikan dock tidak terpengaruh oleh transform canvas */
+    .pdf-viewer-content {
+        position: relative;
+    }
+    
+    /* Animasi saat dock muncul */
+    @keyframes dockFadeIn {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    }
+    
+    .pdf-viewer-controls {
+        animation: dockFadeIn 0.3s ease-out;
+    }
+    
+    /* Hover effect untuk dock */
+    .pdf-viewer-controls:hover {
+        background: rgba(0,0,0,0.95) !important;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.7) !important;
+        transform: translateX(-50%) translateY(-2px) !important;
     }
     .pdf-viewer-fallback {
         padding: 2rem;
@@ -900,6 +1056,46 @@
     }
     
     /* Empty State */
+    /* Lazy Load Placeholder */
+    .lazy-load-placeholder {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 400px;
+        padding: 3rem 2rem;
+    }
+    .placeholder-content {
+        text-align: center;
+        max-width: 400px;
+    }
+    .placeholder-icon {
+        opacity: 0.5;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 0.5;
+        }
+        50% {
+            opacity: 0.8;
+        }
+    }
+    .btn-load-berkas {
+        padding: 0.75rem 2rem;
+        font-size: 1rem;
+        font-weight: 500;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .btn-load-berkas:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .btn-load-berkas:active {
+        transform: translateY(0);
+    }
+    
     .empty-state {
         text-align: center;
         padding: 4rem 2rem;
@@ -971,12 +1167,38 @@
             overflow: auto;
             -webkit-overflow-scrolling: touch;
         }
-        .pdf-viewer-container object {
-            min-height: 100%;
-            height: auto;
+        #pdfViewerCanvasContainer {
+            padding: 10px;
+            padding-bottom: 80px; /* Space untuk fixed dock controls di mobile */
         }
-        .pdf-viewer-container embed {
-            min-height: 100%;
+        #pdfViewerCanvas {
+            max-height: calc(100vh - 150px);
+        }
+        .pdf-viewer-controls {
+            position: fixed !important;
+            bottom: 15px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.25rem;
+            padding: 0.5rem 0.8rem;
+            width: auto;
+            max-width: 95%;
+            z-index: 100001 !important;
+        }
+        .pdf-control-btn {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.85rem;
+        }
+        .pdf-page-info,
+        .pdf-zoom-info {
+            font-size: 0.75rem;
+            padding: 0 0.3rem;
+        }
+        .pdf-control-separator {
+            height: 20px;
+            margin: 0 0.15rem;
         }
         .pdf-icon-wrapper > i {
             font-size: 2.5rem;
@@ -1058,11 +1280,35 @@
 @endpush
 
 @push('js')
+<!-- PDF.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+    // Set worker path untuk PDF.js - harus dilakukan setelah library dimuat
+    (function() {
+        function initPdfJsWorker() {
+            if (typeof pdfjsLib !== 'undefined') {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                console.log('PDF.js worker initialized');
+            } else {
+                // Retry jika library belum dimuat
+                setTimeout(initPdfJsWorker, 100);
+            }
+        }
+        initPdfJsWorker();
+    })();
+</script>
 <script>
     (function() {
         // Prevent duplicate initialization
         if (window.berkasRmInitialized) return;
         window.berkasRmInitialized = true;
+        
+        // Check if PDF.js is loaded
+        if (typeof pdfjsLib === 'undefined') {
+            console.error('PDF.js library tidak dimuat. Pastikan library sudah di-include.');
+        } else {
+            console.log('PDF.js library loaded successfully');
+        }
         
         // Deteksi mobile device - buat global
         window.isMobileDevice = function() {
@@ -1079,9 +1325,306 @@
         var isMobileDevice = window.isMobileDevice;
         var isAndroid = window.isAndroid;
         
-        // PDF Viewer functions - define globally dengan support mobile
+        // PDF.js variables untuk modal viewer
+        var currentPdfDoc = null;
+        var currentPageNum = 1;
+        var currentScale = 1.0;
+        var pdfRendering = false;
+        var pdfPageNumPending = null;
+        var currentPdfBlobUrl = null; // Untuk menyimpan blob URL
+        
+        // Fungsi helper untuk fetch PDF sebagai blob (mengatasi CORS)
+        function fetchPdfAsBlob(url) {
+            return new Promise(function(resolve, reject) {
+                console.log('Processing PDF URL:', url);
+                
+                // Cek apakah URL sudah menggunakan proxy
+                var isProxyUrl = url.includes('pdf-proxy.php');
+                
+                // Cek apakah URL adalah cross-origin
+                var urlObj = new URL(url, window.location.href);
+                var isCrossOrigin = urlObj.origin !== window.location.origin;
+                
+                // Jika menggunakan proxy, langsung gunakan URL karena proxy sudah handle CORS
+                if (isProxyUrl) {
+                    console.log('Proxy URL detected, using directly');
+                    resolve(url);
+                    return;
+                }
+                
+                if (!isCrossOrigin) {
+                    // Jika same-origin, langsung gunakan URL
+                    console.log('Same-origin URL, using directly');
+                    resolve(url);
+                    return;
+                }
+                
+                // Untuk cross-origin tanpa proxy, coba fetch sebagai blob
+                console.log('Cross-origin URL, fetching as blob...');
+                fetch(url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit',
+                    cache: 'default',
+                    headers: {
+                        'Accept': 'application/pdf,application/octet-stream,*/*'
+                    }
+                }).then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    // Cek content type
+                    var contentType = response.headers.get('content-type');
+                    if (contentType && !contentType.includes('pdf') && !contentType.includes('octet-stream')) {
+                        console.warn('Unexpected content type:', contentType);
+                    }
+                    return response.blob();
+                }).then(function(blob) {
+                    // Validasi bahwa ini adalah PDF
+                    if (blob.size === 0) {
+                        throw new Error('PDF file is empty');
+                    }
+                    console.log('PDF blob created, size:', blob.size, 'bytes');
+                    var blobUrl = URL.createObjectURL(blob);
+                    resolve(blobUrl);
+                }).catch(function(error) {
+                    console.error('Error fetching PDF as blob:', error);
+                    console.error('Error details:', {
+                        name: error.name,
+                        message: error.message
+                    });
+                    // Reject untuk trigger fallback
+                    reject(error);
+                });
+            });
+        }
+        
+        // Fungsi untuk render halaman PDF menggunakan PDF.js
+        function renderPdfPage(num, scale) {
+            if (!currentPdfDoc) {
+                console.error('PDF document tidak tersedia');
+                return;
+            }
+            
+            // Pastikan scale valid
+            if (typeof scale !== 'number' || scale <= 0) {
+                console.warn('Invalid scale:', scale, ', using currentScale:', currentScale);
+                scale = currentScale || 1.0;
+            }
+            
+            // Update currentScale untuk konsistensi
+            currentScale = scale;
+            
+            if (pdfRendering) {
+                pdfPageNumPending = num;
+                // Update scale untuk pending render
+                if (scale !== currentScale) {
+                    currentScale = scale;
+                }
+                return;
+            }
+            pdfRendering = true;
+            
+            // Show loading indicator
+            var canvas = document.getElementById('pdfViewerCanvas');
+            if (canvas) {
+                var context = canvas.getContext('2d');
+                context.fillStyle = '#f0f0f0';
+                context.fillRect(0, 0, canvas.width || 100, canvas.height || 100);
+            }
+            
+            currentPdfDoc.getPage(num).then(function(page) {
+                // Gunakan scale yang diberikan untuk membuat viewport
+                var viewport = page.getViewport({ scale: scale });
+                var canvas = document.getElementById('pdfViewerCanvas');
+                
+                if (!canvas) {
+                    console.error('Canvas tidak ditemukan');
+                    pdfRendering = false;
+                    return;
+                }
+                
+                var context = canvas.getContext('2d');
+                
+                // Set canvas dimensions
+                var outputScale = window.devicePixelRatio || 1;
+                var scaledWidth = viewport.width;
+                var scaledHeight = viewport.height;
+                
+                console.log('Rendering PDF page', num, 'with scale', scale);
+                console.log('Viewport size:', scaledWidth, 'x', scaledHeight);
+                console.log('Output scale (DPI):', outputScale);
+                console.log('Zoom level:', Math.round(scale * 100) + '%');
+                
+                // Set canvas display size
+                canvas.style.width = scaledWidth + 'px';
+                canvas.style.height = scaledHeight + 'px';
+                
+                // Set canvas internal size untuk high DPI
+                var internalWidth = Math.floor(scaledWidth * outputScale);
+                var internalHeight = Math.floor(scaledHeight * outputScale);
+                canvas.width = internalWidth;
+                canvas.height = internalHeight;
+                
+                console.log('Canvas size set to:', internalWidth, 'x', internalHeight, '(internal)');
+                console.log('Canvas display size:', scaledWidth, 'x', scaledHeight);
+                
+                // Scale context untuk high DPI displays
+                context.scale(outputScale, outputScale);
+                
+                // Clear canvas dengan background putih
+                context.fillStyle = '#ffffff';
+                context.fillRect(0, 0, scaledWidth, scaledHeight);
+                
+                var renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                var renderTask = page.render(renderContext);
+                
+                renderTask.promise.then(function() {
+                    console.log('PDF page rendered successfully, canvas size:', canvas.width, 'x', canvas.height);
+                    pdfRendering = false;
+                    if (pdfPageNumPending !== null) {
+                        renderPdfPage(pdfPageNumPending, currentScale);
+                        pdfPageNumPending = null;
+                    }
+                    
+                    // Update page info
+                    $('#pdfCurrentPage').text(currentPageNum);
+                    $('#pdfTotalPages').text(currentPdfDoc.numPages);
+                    $('#pdfZoomLevel').text(Math.round(currentScale * 100));
+                    
+                    // Update button states
+                    $('#pdfViewerPrev').prop('disabled', currentPageNum <= 1);
+                    $('#pdfViewerNext').prop('disabled', currentPageNum >= currentPdfDoc.numPages);
+                    
+                    // Ensure canvas is visible
+                    $(canvas).css({
+                        'display': 'block',
+                        'visibility': 'visible',
+                        'opacity': '1'
+                    });
+                }).catch(function(error) {
+                    console.error('Error dalam render task:', error);
+                    pdfRendering = false;
+                    var errorMsg = error.message || 'Gagal merender halaman PDF';
+                    $('#pdfViewerFallback').html(
+                        '<div class="text-center p-5">' +
+                        '<i class="fas fa-exclamation-triangle fa-3x mb-3 text-warning"></i>' +
+                        '<p class="mb-3">' + errorMsg + '</p>' +
+                        '<a href="' + url + '" class="btn btn-primary" target="_blank" download>' +
+                        '<i class="fas fa-download"></i> Download PDF</a>' +
+                        '</div>'
+                    ).show();
+                });
+            }).catch(function(error) {
+                console.error('Error rendering PDF page:', error);
+                pdfRendering = false;
+                var errorMsg = error.message || 'Gagal memuat halaman PDF';
+                $('#pdfViewerFallback').html(
+                    '<p>Error: ' + errorMsg + '</p>' +
+                    '<a href="#" id="pdfViewerFallbackLink" target="_blank">Klik di sini untuk membuka PDF</a>'
+                ).show();
+            });
+        }
+        
+        // Fungsi untuk render thumbnail PDF menggunakan PDF.js
+        function renderPdfThumbnail(canvas, url) {
+            if (typeof pdfjsLib === 'undefined') {
+                console.error('PDF.js tidak tersedia');
+                return;
+            }
+            
+            var $canvas = $(canvas);
+            var $container = $canvas.closest('.thumbnail-pdf');
+            
+            // Show loading
+            $container.find('.pdf-loading').addClass('show');
+            
+            // Fetch PDF sebagai blob untuk menghindari CORS
+            fetchPdfAsBlob(url).then(function(blobUrl) {
+                // Load PDF dari blob URL
+                var loadingTask = pdfjsLib.getDocument({
+                    url: blobUrl,
+                    httpHeaders: {},
+                    withCredentials: false,
+                    verbosity: 0
+                });
+                
+                return loadingTask.promise;
+            }).catch(function(error) {
+                console.warn('Blob fetch failed, trying direct URL:', error);
+                // Fallback: coba langsung dengan URL asli
+                var loadingTask = pdfjsLib.getDocument({
+                    url: url,
+                    httpHeaders: {},
+                    withCredentials: false,
+                    verbosity: 0
+                });
+                return loadingTask.promise;
+            }).then(function(pdf) {
+                return pdf.getPage(1);
+            }).then(function(page) {
+                var viewport = page.getViewport({ scale: 1.0 });
+                var context = canvas.getContext('2d');
+                
+                // Set canvas size sesuai thumbnail
+                var containerWidth = $container.width() || 200;
+                var containerHeight = $container.height() || 200;
+                var scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height, 1.0);
+                
+                var scaledViewport = page.getViewport({ scale: scale });
+                
+                // Set canvas dimensions dengan high DPI support
+                var outputScale = window.devicePixelRatio || 1;
+                var scaledWidth = scaledViewport.width;
+                var scaledHeight = scaledViewport.height;
+                
+                // Set canvas display size
+                canvas.style.width = scaledWidth + 'px';
+                canvas.style.height = scaledHeight + 'px';
+                
+                // Set canvas internal size untuk high DPI
+                canvas.width = Math.floor(scaledWidth * outputScale);
+                canvas.height = Math.floor(scaledHeight * outputScale);
+                
+                // Scale context untuk high DPI displays
+                context.scale(outputScale, outputScale);
+                
+                // Clear canvas dengan background putih
+                context.fillStyle = '#ffffff';
+                context.fillRect(0, 0, scaledWidth, scaledHeight);
+                
+                var renderContext = {
+                    canvasContext: context,
+                    viewport: scaledViewport
+                };
+                
+                return page.render(renderContext).promise;
+            }).then(function() {
+                $canvas.addClass('loaded');
+                $canvas.attr('data-loaded', 'true');
+                $container.find('.pdf-loading').removeClass('show');
+                $container.find('.pdf-preview-icon').hide();
+            }).catch(function(error) {
+                console.error('Error rendering PDF thumbnail:', error);
+                $container.find('.pdf-loading').removeClass('show');
+                $canvas.attr('data-loaded', 'error');
+                // Tetap tampilkan icon jika error
+                $container.find('.pdf-preview-icon').show();
+            });
+        }
+        
+        // PDF Viewer functions - menggunakan PDF.js
         window.openPdfViewer = function(url, title) {
             var pdfTitle = title || 'Dokumen PDF';
+            
+            if (typeof pdfjsLib === 'undefined') {
+                alert('PDF.js library tidak dimuat. Silakan refresh halaman.');
+                return;
+            }
             
             // Set title
             $('.pdf-viewer-title').text(pdfTitle);
@@ -1091,40 +1634,150 @@
             $('#pdfViewerOpenNew').attr('href', url);
             $('#pdfViewerFallbackLink').attr('href', url);
             
-            // Untuk mobile, gunakan object/embed sebagai alternatif iframe
-            if (isMobileDevice()) {
-                console.log('Mobile device detected, using object/embed for PDF:', url);
+            // Hide fallback
+            $('#pdfViewerFallback').hide();
+            
+            // Reset state
+            currentPageNum = 1;
+            pdfRendering = false;
+            pdfPageNumPending = null;
+            
+            // Calculate initial scale berdasarkan container size
+            var container = document.getElementById('pdfViewerCanvasContainer');
+            if (container) {
+                var containerWidth = container.clientWidth - 40; // minus padding
+                var containerHeight = container.clientHeight - 100; // minus controls
+                // Scale akan dihitung setelah PDF dimuat
+            }
+            
+            // Set initial scale
+            currentScale = 1.0;
+            
+            // Clear canvas dan show loading indicator
+            var canvas = document.getElementById('pdfViewerCanvas');
+            if (canvas) {
+                // Set temporary size untuk loading indicator
+                canvas.width = 800;
+                canvas.height = 600;
+                canvas.style.width = '800px';
+                canvas.style.height = '600px';
                 
-                // Sembunyikan iframe, tampilkan object/embed
-                $('#pdfViewerFrame').css('display', 'none');
-                $('#pdfViewerObject').css('display', 'block');
+                var context = canvas.getContext('2d');
+                context.fillStyle = '#f0f0f0';
+                context.fillRect(0, 0, 800, 600);
+                context.fillStyle = '#333';
+                context.font = '16px Arial';
+                context.textAlign = 'center';
+                context.fillText('Memuat PDF...', 400, 300);
+            }
+            
+            // Load PDF document - fetch sebagai blob untuk menghindari CORS
+            console.log('Loading PDF from URL:', url);
+            
+            // Fetch PDF sebagai blob terlebih dahulu
+            fetchPdfAsBlob(url).then(function(blobUrl) {
+                console.log('PDF blob URL created:', blobUrl);
                 
-                // Set URL ke object dan embed
-                $('#pdfViewerObject').attr('data', url);
-                $('#pdfViewerEmbed').attr('src', url);
+                // Simpan blob URL untuk cleanup nanti
+                if (currentPdfBlobUrl) {
+                    URL.revokeObjectURL(currentPdfBlobUrl);
+                }
+                currentPdfBlobUrl = blobUrl;
                 
-                // Update param di dalam object
-                var $object = $('#pdfViewerObject');
-                var $param = $object.find('param[name="src"]');
-                if ($param.length) {
-                    $param.attr('value', url);
-                } else {
-                    $object.prepend('<param name="src" value="' + url + '" />');
+                // Load PDF dari blob URL
+                var loadingTask = pdfjsLib.getDocument({
+                    url: blobUrl,
+                    httpHeaders: {},
+                    withCredentials: false,
+                    verbosity: 1 // Enable logging untuk debugging
+                });
+                
+                return loadingTask.promise;
+            }).catch(function(error) {
+                console.warn('Blob fetch failed, trying direct URL:', error);
+                // Fallback: coba langsung dengan URL asli
+                var loadingTask = pdfjsLib.getDocument({
+                    url: url,
+                    httpHeaders: {},
+                    withCredentials: false,
+                    verbosity: 1
+                });
+                return loadingTask.promise;
+            }).then(function(pdfDoc) {
+                console.log('PDF loaded successfully, pages:', pdfDoc.numPages);
+                currentPdfDoc = pdfDoc;
+                $('#pdfTotalPages').text(pdfDoc.numPages);
+                currentPageNum = 1;
+                
+                // Calculate optimal scale berdasarkan container dan halaman pertama
+                pdfDoc.getPage(1).then(function(firstPage) {
+                    console.log('First page loaded, calculating scale...');
+                    var viewport = firstPage.getViewport({ scale: 1.0 });
+                    var container = document.getElementById('pdfViewerCanvasContainer');
+                    
+                    if (container) {
+                        var containerWidth = container.clientWidth - 40; // minus padding
+                        var containerHeight = container.clientHeight - 100; // minus controls
+                        console.log('Container size:', containerWidth, 'x', containerHeight);
+                        console.log('Page viewport size:', viewport.width, 'x', viewport.height);
+                        
+                        var scaleX = containerWidth / viewport.width;
+                        var scaleY = containerHeight / viewport.height;
+                        // Gunakan scale yang lebih kecil agar PDF muat di container
+                        currentScale = Math.min(scaleX, scaleY, 1.5); // Max 1.5x untuk readability
+                        console.log('Calculated scale:', currentScale);
+                    } else {
+                        currentScale = 1.0;
+                        console.log('Container not found, using default scale 1.0');
+                    }
+                    
+                    // Render halaman pertama dengan scale yang sudah dihitung
+                    renderPdfPage(1, currentScale);
+                }).catch(function(error) {
+                    console.error('Error getting first page:', error);
+                    currentScale = 1.0;
+                    renderPdfPage(1, 1.0); // Fallback ke scale 1.0
+                });
+            }).catch(function(error) {
+                console.error('Error loading PDF:', error);
+                console.error('Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+                
+                var errorMsg = 'Gagal memuat dokumen PDF';
+                if (error.name === 'InvalidPDFException') {
+                    errorMsg = 'File PDF tidak valid atau rusak';
+                } else if (error.name === 'MissingPDFException') {
+                    errorMsg = 'File PDF tidak ditemukan';
+                } else if (error.name === 'UnexpectedResponseException') {
+                    errorMsg = 'Tidak dapat mengakses file PDF (CORS atau server error)';
+                } else if (error.message) {
+                    errorMsg = error.message;
                 }
                 
-                // Juga set iframe sebagai fallback (hidden)
-                $('#pdfViewerFrame').attr('src', url);
-            } else {
-                // Untuk desktop, gunakan iframe
-                console.log('Desktop device, using iframe for PDF:', url);
+                $('#pdfViewerFallback').html(
+                    '<div class="text-center p-5">' +
+                    '<i class="fas fa-exclamation-triangle fa-3x mb-3 text-warning"></i>' +
+                    '<p class="mb-3"><strong>' + errorMsg + '</strong></p>' +
+                    '<p class="mb-3 text-muted small">URL: ' + url + '</p>' +
+                    '<a href="' + url + '" class="btn btn-primary mr-2" target="_blank" download>' +
+                    '<i class="fas fa-download"></i> Download PDF</a>' +
+                    '<a href="' + url + '" class="btn btn-secondary" target="_blank">' +
+                    '<i class="fas fa-external-link-alt"></i> Buka di Tab Baru</a>' +
+                    '</div>'
+                ).show();
                 
-                // Sembunyikan object/embed, tampilkan iframe
-                $('#pdfViewerObject').css('display', 'none');
-                $('#pdfViewerFrame').css('display', 'block');
-                
-                // Set URL ke iframe
-                $('#pdfViewerFrame').attr('src', url);
-            }
+                // Clear canvas
+                if (canvas) {
+                    var context = canvas.getContext('2d');
+                    canvas.width = 0;
+                    canvas.height = 0;
+                    canvas.style.width = '0px';
+                    canvas.style.height = '0px';
+                }
+            });
             
             // Tampilkan modal
             $('#pdfViewerOverlay').fadeIn(200);
@@ -1134,20 +1787,176 @@
         window.closePdfViewer = function() {
             $('#pdfViewerOverlay').fadeOut(200);
             
-            // Clear semua sumber PDF
-            $('#pdfViewerFrame').attr('src', '');
-            $('#pdfViewerObject').attr('data', '');
-            $('#pdfViewerEmbed').attr('src', '');
+            // Clear PDF document
+            if (currentPdfDoc) {
+                currentPdfDoc.destroy();
+                currentPdfDoc = null;
+            }
             
-            // Clear param di object
-            $('#pdfViewerObject').find('param[name="src"]').attr('value', '');
+            // Revoke blob URL untuk free memory
+            if (currentPdfBlobUrl) {
+                URL.revokeObjectURL(currentPdfBlobUrl);
+                currentPdfBlobUrl = null;
+            }
             
-            // Reset display
-            $('#pdfViewerFrame').css('display', '');
-            $('#pdfViewerObject').css('display', 'none');
+            // Clear canvas
+            var canvas = document.getElementById('pdfViewerCanvas');
+            if (canvas) {
+                var context = canvas.getContext('2d');
+                canvas.width = 0;
+                canvas.height = 0;
+                canvas.style.width = '0px';
+                canvas.style.height = '0px';
+            }
+            
+            // Reset state
+            currentPageNum = 1;
+            currentScale = 1.0;
+            pdfRendering = false;
+            pdfPageNumPending = null;
             
             $('body').css('overflow', '');
         };
+        
+        // PDF Viewer Controls - initialize setelah DOM ready
+        function initPdfViewerControls() {
+            $(document).off('click.pdfprev').on('click.pdfprev', '#pdfViewerPrev', function() {
+                if (currentPageNum <= 1) return;
+                currentPageNum--;
+                renderPdfPage(currentPageNum, currentScale);
+            });
+            
+            $(document).off('click.pdfnext').on('click.pdfnext', '#pdfViewerNext', function() {
+                if (currentPdfDoc && currentPageNum >= currentPdfDoc.numPages) return;
+                currentPageNum++;
+                renderPdfPage(currentPageNum, currentScale);
+            });
+            
+            // Zoom In
+            $(document).off('click.pdfzoomin').on('click.pdfzoomin', '#pdfViewerZoomIn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!currentPdfDoc) return;
+                if (currentScale >= 3.0) {
+                    console.log('Zoom max reached:', currentScale);
+                    return;
+                }
+                
+                var oldScale = currentScale;
+                currentScale = Math.min(currentScale + 0.25, 3.0);
+                console.log('Zoom In:', oldScale, '->', currentScale);
+                
+                // Update zoom level display immediately
+                $('#pdfZoomLevel').text(Math.round(currentScale * 100));
+                
+                // Re-render dengan scale baru
+                renderPdfPage(currentPageNum, currentScale);
+            });
+            
+            // Zoom Out
+            $(document).off('click.pdfzoomout').on('click.pdfzoomout', '#pdfViewerZoomOut', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!currentPdfDoc) return;
+                if (currentScale <= 0.5) {
+                    console.log('Zoom min reached:', currentScale);
+                    return;
+                }
+                
+                var oldScale = currentScale;
+                currentScale = Math.max(currentScale - 0.25, 0.5);
+                console.log('Zoom Out:', oldScale, '->', currentScale);
+                
+                // Update zoom level display immediately
+                $('#pdfZoomLevel').text(Math.round(currentScale * 100));
+                
+                // Re-render dengan scale baru
+                renderPdfPage(currentPageNum, currentScale);
+            });
+            
+            // Mouse wheel zoom dengan Ctrl/Cmd
+            var zoomWheelTimeout = null;
+            var lastWheelTime = 0;
+            $(document).off('wheel.pdfzoom').on('wheel.pdfzoom', '#pdfViewerCanvasContainer, #pdfViewerCanvas', function(e) {
+                // Hanya aktif jika modal terbuka dan PDF sudah dimuat
+                if (!$('#pdfViewerOverlay').is(':visible') || !currentPdfDoc) {
+                    return;
+                }
+                
+                // Cek apakah Ctrl/Cmd ditekan (untuk zoom dengan scroll)
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    var now = Date.now();
+                    var delta = e.originalEvent.deltaY || e.originalEvent.wheelDelta || 0;
+                    var zoomFactor = 0.15; // 15% per scroll untuk lebih responsif
+                    
+                    var oldScale = currentScale;
+                    
+                    // Invert delta untuk wheelDelta (beberapa browser)
+                    if (e.originalEvent.wheelDelta) {
+                        delta = -delta;
+                    }
+                    
+                    if (delta < 0) {
+                        // Scroll up = zoom in
+                        currentScale = Math.min(currentScale + zoomFactor, 3.0);
+                    } else if (delta > 0) {
+                        // Scroll down = zoom out
+                        currentScale = Math.max(currentScale - zoomFactor, 0.5);
+                    } else {
+                        return; // No change
+                    }
+                    
+                    // Throttle untuk performa (max 10 renders per second)
+                    if (now - lastWheelTime < 100) {
+                        return;
+                    }
+                    lastWheelTime = now;
+                    
+                    // Clear previous timeout
+                    clearTimeout(zoomWheelTimeout);
+                    
+                    // Update zoom level display immediately untuk feedback
+                    $('#pdfZoomLevel').text(Math.round(currentScale * 100));
+                    
+                    // Render dengan sedikit delay untuk smooth experience
+                    zoomWheelTimeout = setTimeout(function() {
+                        if (oldScale !== currentScale) {
+                            console.log('Mouse wheel zoom:', oldScale, '->', currentScale);
+                            // Re-render dengan scale baru
+                            renderPdfPage(currentPageNum, currentScale);
+                        }
+                    }, 100); // 100ms delay untuk smooth zoom
+                }
+            });
+            
+            // Double click untuk reset zoom
+            $(document).off('dblclick.pdfzoomreset').on('dblclick.pdfzoomreset', '#pdfViewerCanvas', function(e) {
+                if (!currentPdfDoc) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Reset ke scale 1.0
+                currentScale = 1.0;
+                console.log('Double click: Reset zoom to 1.0');
+                
+                // Update zoom level display
+                $('#pdfZoomLevel').text('100');
+                
+                // Re-render dengan scale 1.0
+                renderPdfPage(currentPageNum, currentScale);
+            });
+        }
+        
+        // Initialize controls saat DOM ready
+        $(document).ready(function() {
+            initPdfViewerControls();
+        });
         
         // View toggle function
         window.toggleBerkasView = function(view) {
@@ -1177,61 +1986,6 @@
             }
         };
         
-        // Lazy loading PDF dengan Intersection Observer
-        function initLazyPdfLoading() {
-            // Check if Intersection Observer is supported
-            if (!('IntersectionObserver' in window)) {
-                // Fallback: load all PDFs immediately
-                $('.pdf-thumb.lazy-pdf[data-loaded="false"]').each(function() {
-                    var $iframe = $(this);
-                    var src = $iframe.data('src');
-                    if (src) {
-                        $iframe.attr('src', src);
-                        $iframe.attr('data-loaded', 'true');
-                        $iframe.on('load', function() {
-                            $(this).addClass('loaded');
-                            $(this).closest('.thumbnail-pdf').find('.pdf-loading').removeClass('show');
-                        });
-                        $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
-                    }
-                });
-                return;
-            }
-            
-            var pdfObserver = new IntersectionObserver(function(entries) {
-                entries.forEach(function(entry) {
-                    if (entry.isIntersecting) {
-                        var $iframe = $(entry.target);
-                        var src = $iframe.data('src');
-                        
-                        if (src && $iframe.attr('data-loaded') === 'false') {
-                            // Show loading indicator
-                            $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
-                            
-                            // Load PDF
-                            $iframe.attr('src', src);
-                            $iframe.attr('data-loaded', 'true');
-                            
-                            $iframe.on('load', function() {
-                                $(this).addClass('loaded');
-                                $(this).closest('.thumbnail-pdf').find('.pdf-loading').removeClass('show');
-                            });
-                            
-                            // Stop observing this element
-                            pdfObserver.unobserve(entry.target);
-                        }
-                    }
-                });
-            }, {
-                rootMargin: '50px', // Start loading 50px before entering viewport
-                threshold: 0.1
-            });
-            
-            // Observe all lazy PDF iframes
-            $('.pdf-thumb.lazy-pdf[data-loaded="false"]').each(function() {
-                pdfObserver.observe(this);
-            });
-        }
         
         // Global observers untuk lazy loading
         var pdfObserver = null;
@@ -1251,32 +2005,23 @@
                 pdfObserver = new IntersectionObserver(function(entries) {
                     entries.forEach(function(entry) {
                         if (entry.isIntersecting) {
-                            var $iframe = $(entry.target);
-                            var src = $iframe.data('src');
+                            var canvas = entry.target;
+                            var $canvas = $(canvas);
+                            var src = $canvas.data('src');
                             
-                            if (src && $iframe.attr('data-loaded') === 'false') {
-                                // Di mobile device, jangan load iframe, biarkan icon PDF tetap terlihat
-                                if (isMobileDevice()) {
-                                    console.log('Mobile device: Skipping PDF iframe load, icon will remain visible');
-                                    $iframe.attr('data-loaded', 'skipped-mobile');
+                            if (src && $canvas.attr('data-loaded') === 'false') {
+                                // Check if PDF.js is available
+                                if (typeof pdfjsLib === 'undefined') {
+                                    console.warn('PDF.js tidak tersedia, skip loading PDF thumbnail');
+                                    $canvas.attr('data-loaded', 'error');
                                     pdfObserver.unobserve(entry.target);
                                     return;
                                 }
                                 
-                                console.log('IntersectionObserver: Loading PDF:', src);
+                                console.log('IntersectionObserver: Loading PDF thumbnail:', src);
                                 
-                                // Show loading indicator
-                                $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
-                                
-                                // Load PDF hanya untuk desktop
-                                $iframe.attr('src', src);
-                                $iframe.attr('data-loaded', 'true');
-                                
-                                $iframe.on('load', function() {
-                                    $(this).addClass('loaded');
-                                    $(this).closest('.thumbnail-pdf').find('.pdf-loading').removeClass('show');
-                                    $(this).closest('.thumbnail-pdf').find('.pdf-preview-icon').hide();
-                                });
+                                // Render PDF thumbnail menggunakan PDF.js
+                                renderPdfThumbnail(canvas, src);
                                 
                                 // Stop observing this element
                                 pdfObserver.unobserve(entry.target);
@@ -1346,36 +2091,30 @@
             var pdfObservedCount = 0;
             $('.pdf-thumb.lazy-pdf[data-loaded="false"]').each(function() {
                 pdfCount++;
-                var $iframe = $(this);
-                var src = $iframe.data('src');
+                var canvas = this;
+                var $canvas = $(canvas);
+                var src = $canvas.data('src');
                 
                 if (!src) {
-                    console.warn('PDF iframe tidak memiliki data-src:', this);
+                    console.warn('PDF canvas tidak memiliki data-src:', this);
                     return;
                 }
                 
-                // Di mobile device, jangan load iframe, biarkan icon PDF tetap terlihat
-                if (isMobileDevice()) {
-                    console.log('Mobile device: Skipping PDF iframe load for:', src);
-                    $iframe.attr('data-loaded', 'skipped-mobile');
+                // Check if PDF.js is available
+                if (typeof pdfjsLib === 'undefined') {
+                    console.warn('PDF.js tidak tersedia, skip loading PDF thumbnail');
+                    $canvas.attr('data-loaded', 'error');
                     return;
                 }
                 
                 if (isInViewport(this)) {
-                    console.log('Loading PDF immediately (in viewport):', src);
-                    $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
-                    $iframe.attr('src', src);
-                    $iframe.attr('data-loaded', 'true');
-                    $iframe.on('load', function() {
-                        $(this).addClass('loaded');
-                        $(this).closest('.thumbnail-pdf').find('.pdf-loading').removeClass('show');
-                        $(this).closest('.thumbnail-pdf').find('.pdf-preview-icon').hide();
-                    });
-                } else if (!$iframe.data('observed')) {
+                    console.log('Loading PDF thumbnail immediately (in viewport):', src);
+                    renderPdfThumbnail(canvas, src);
+                } else if (!$canvas.data('observed')) {
                     // Observe elemen yang belum di viewport
                     try {
                         pdfObserver.observe(this);
-                        $iframe.data('observed', true);
+                        $canvas.data('observed', true);
                         pdfObservedCount++;
                         console.log('Observing PDF:', src);
                     } catch(e) {
@@ -1425,26 +2164,21 @@
         
         // Fallback function untuk browser yang tidak support Intersection Observer
         function loadAllPreviews() {
-            // Load all PDFs (hanya untuk desktop, mobile skip)
+            // Load all PDFs menggunakan PDF.js
             $('.pdf-thumb.lazy-pdf[data-loaded="false"]').each(function() {
-                var $iframe = $(this);
-                var src = $iframe.data('src');
+                var canvas = this;
+                var $canvas = $(canvas);
+                var src = $canvas.data('src');
                 
-                // Di mobile device, jangan load iframe
-                if (isMobileDevice()) {
-                    $iframe.attr('data-loaded', 'skipped-mobile');
+                // Check if PDF.js is available
+                if (typeof pdfjsLib === 'undefined') {
+                    console.warn('PDF.js tidak tersedia, skip loading PDF thumbnail');
+                    $canvas.attr('data-loaded', 'error');
                     return;
                 }
                 
                 if (src) {
-                    $iframe.attr('src', src);
-                    $iframe.attr('data-loaded', 'true');
-                    $iframe.on('load', function() {
-                        $(this).addClass('loaded');
-                        $(this).closest('.thumbnail-pdf').find('.pdf-loading').removeClass('show');
-                        $(this).closest('.thumbnail-pdf').find('.pdf-preview-icon').hide();
-                    });
-                    $iframe.closest('.thumbnail-pdf').find('.pdf-loading').addClass('show');
+                    renderPdfThumbnail(canvas, src);
                 }
             });
             
@@ -1672,23 +2406,23 @@
             pdfTouchStartPos = null;
         });
         
-        // Function to find and call BerkasRm component
-        function callBerkasRmSetRm(rm) {
+        // Function to find and call BerkasRm component untuk lazy load
+        function callBerkasRmInitialize(rm) {
             if (!rm || typeof Livewire === 'undefined') {
                 console.log('Invalid RM or Livewire not available');
                 return false;
             }
             
-            console.log('Attempting to call setRm, RM:', rm);
+            console.log('Attempting to initialize BerkasRm, RM:', rm);
             
             // Find BerkasRm component specifically inside the modal container
             var container = document.querySelector('#berkas-rm-container');
             if (!container) {
                 console.log('Container #berkas-rm-container not found');
                 // Fallback: use event
-                Livewire.emit('setRm', rm);
+                Livewire.emit('initializeBerkas', rm);
                 if (typeof Livewire.dispatch !== 'undefined') {
-                    Livewire.dispatch('setRm', rm);
+                    Livewire.dispatch('initializeBerkas', rm);
                 }
                 return false;
             }
@@ -1697,9 +2431,9 @@
             if (!berkasRmComponent) {
                 console.log('BerkasRm component not found in container');
                 // Fallback: use event
-                Livewire.emit('setRm', rm);
+                Livewire.emit('initializeBerkas', rm);
                 if (typeof Livewire.dispatch !== 'undefined') {
-                    Livewire.dispatch('setRm', rm);
+                    Livewire.dispatch('initializeBerkas', rm);
                 }
                 return false;
             }
@@ -1710,53 +2444,87 @@
             try {
                 var component = Livewire.find(componentId);
                 if (component && typeof component.call === 'function') {
-                    console.log('Calling setRm on BerkasRm component, RM:', rm);
-                    component.call('setRm', rm);
+                    console.log('Calling initializeBerkas on BerkasRm component, RM:', rm);
+                    component.call('initializeBerkas', rm);
                     return true;
                 } else {
                     console.log('Component found but call method not available');
                     // Fallback: use event
-                    Livewire.emit('setRm', rm);
+                    Livewire.emit('initializeBerkas', rm);
                     if (typeof Livewire.dispatch !== 'undefined') {
-                        Livewire.dispatch('setRm', rm);
+                        Livewire.dispatch('initializeBerkas', rm);
                     }
                     return false;
                 }
             } catch(e) {
                 console.log('Error calling component:', e);
                 // Fallback: use event
-                Livewire.emit('setRm', rm);
+                Livewire.emit('initializeBerkas', rm);
                 if (typeof Livewire.dispatch !== 'undefined') {
-                    Livewire.dispatch('setRm', rm);
+                    Livewire.dispatch('initializeBerkas', rm);
                 }
                 return false;
             }
         }
         
-        // Button RM click handler
+        // Function to find and call BerkasRm component (legacy, untuk backward compatibility)
+        function callBerkasRmSetRm(rm) {
+            // Gunakan initializeBerkas untuk lazy load
+            return callBerkasRmInitialize(rm);
+        }
+        
+        // Global function untuk load berkas data (dipanggil dari button placeholder)
+        window.loadBerkasData = function() {
+            var rm = $('#btn-rm').data('rm') || $('#modal-rm').data('rm');
+            if (rm) {
+                console.log('Loading berkas data for RM:', rm);
+                callBerkasRmInitialize(rm);
+            } else {
+                console.warn('RM tidak ditemukan untuk load data');
+                // Coba ambil dari semua button dengan data-rm
+                var $btnRm = $('[data-rm]').first();
+                if ($btnRm.length) {
+                    rm = $btnRm.data('rm');
+                    console.log('Found RM from button:', rm);
+                    callBerkasRmInitialize(rm);
+                } else {
+                    alert('Nomor RM tidak ditemukan. Silakan tutup dan buka kembali modal.');
+                }
+            }
+        };
+        
+        // Button RM click handler - lazy load saat modal dibuka
         $(document).off('click.btnrm').on('click.btnrm', '#btn-rm', function(event) {
             event.preventDefault();
             var rm = $(this).data('rm');
             console.log('RM Button clicked, RM:', rm);
             
+            // Simpan RM ke modal untuk referensi
+            $('#modal-rm').data('rm', rm);
+            
             // Show modal first
             $('#modal-rm').modal('show');
-            
-            // Then trigger event after modal is shown
-            setTimeout(function() {
-                callBerkasRmSetRm(rm);
-            }, 300);
         });
         
-        // Also handle modal shown event to ensure data loads
+        // Handle modal shown event untuk lazy load data
         $('#modal-rm').off('shown.bs.modal.berkas').on('shown.bs.modal.berkas', function() {
-            var rm = $('#btn-rm').data('rm');
-            console.log('Modal shown, RM:', rm);
+            var rm = $('#btn-rm').data('rm') || $('#modal-rm').data('rm');
+            console.log('Modal shown, initializing BerkasRm with RM:', rm);
             
-            // Wait a bit for Livewire to initialize
-            setTimeout(function() {
-                callBerkasRmSetRm(rm);
-            }, 100);
+            if (rm) {
+                // Wait a bit for Livewire to initialize, lalu load data
+                setTimeout(function() {
+                    callBerkasRmInitialize(rm);
+                }, 200);
+            } else {
+                console.warn('RM tidak ditemukan saat modal dibuka');
+            }
+        });
+        
+        // Handle modal hidden event untuk cleanup (optional)
+        $('#modal-rm').off('hidden.bs.modal.berkas').on('hidden.bs.modal.berkas', function() {
+            console.log('Modal hidden');
+            // Bisa tambahkan cleanup logic di sini jika diperlukan
         });
     })();
     

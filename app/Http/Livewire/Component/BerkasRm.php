@@ -8,33 +8,71 @@ use Illuminate\Support\Facades\Log;
 
 class BerkasRm extends Component
 {
-    public $isLoading = true;
+    public $isLoading = false;
     public $rm;
     public $berkas = [];
     public $berkasGrouped;
+    public $isInitialized = false; // Track apakah sudah pernah di-load
+    
+    public function __construct()
+    {
+        parent::__construct();
+        // Initialize berkasGrouped sebagai collection kosong
+        $this->berkasGrouped = collect();
+    }
 
     protected $listeners = [
         'setRm' => 'setRm',
-        'loadBerkas' => 'loadBerkas'
+        'loadBerkas' => 'loadBerkas',
+        'initializeBerkas' => 'initializeBerkas'
     ];
 
     public function mount($rm = null)
     {
         $this->rm = $rm;
+        // Jangan load data di mount, tunggu sampai modal dibuka
+        $this->isLoading = false;
+        $this->isInitialized = false;
+    }
+    
+    /**
+     * Initialize dan load data saat modal dibuka
+     */
+    public function initializeBerkas($rm = null)
+    {
+        // Jika sudah di-initialize, skip
+        if ($this->isInitialized && $this->rm == $rm) {
+            return;
+        }
+        
+        if ($rm) {
+            $this->rm = $rm;
+        }
+        
         if ($this->rm) {
             $this->loadBerkas($this->rm);
-        } else {
-            $this->isLoading = false;
+            $this->isInitialized = true;
         }
     }
 
     public function setRm($rm)
     {
-        $this->loadBerkas($rm);
+        // Set RM dan initialize jika belum
+        if (!$this->isInitialized || $this->rm != $rm) {
+            $this->initializeBerkas($rm);
+        } else {
+            // Jika sudah initialized dengan RM yang sama, tidak perlu load lagi
+            $this->rm = $rm;
+        }
     }
 
     public function render()
     {
+        // Pastikan berkasGrouped selalu ada, bahkan jika kosong
+        if (!isset($this->berkasGrouped) || $this->berkasGrouped === null) {
+            $this->berkasGrouped = collect();
+        }
+        
         return view('livewire.component.berkas-rm', [
             'berkasGrouped' => $this->berkasGrouped
         ]);
