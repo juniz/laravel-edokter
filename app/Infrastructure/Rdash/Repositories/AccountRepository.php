@@ -13,8 +13,7 @@ class AccountRepository implements AccountRepositoryContract
 {
     public function __construct(
         private HttpClient $client
-    ) {
-    }
+    ) {}
 
     public function getProfile(): AccountProfile
     {
@@ -33,19 +32,47 @@ class AccountRepository implements AccountRepositoryContract
     public function getPrices(array $filters = []): array
     {
         $data = $this->client->get('/account/prices', $filters);
-        $prices = $data['data'] ?? [];
 
-        return array_map(
-            fn (array $price) => DomainPrice::fromArray($price),
-            $prices
-        );
+        // Handle error response (404 or other errors)
+        if (isset($data['success']) && $data['success'] === false) {
+            return [
+                'data' => [],
+                'links' => [],
+                'meta' => [],
+            ];
+        }
+
+        $prices = $data['data'] ?? [];
+        $links = $data['links'] ?? [];
+        $meta = $data['meta'] ?? [];
+
+        return [
+            'data' => array_map(
+                fn (array $price) => DomainPrice::fromArray($price),
+                $prices
+            ),
+            'links' => $links,
+            'meta' => $meta,
+        ];
     }
 
     public function getPriceById(int $priceId): ?DomainPrice
     {
-        $data = $this->client->get("/account/prices/{$priceId}");
+        $response = $this->client->get("/account/prices/{$priceId}");
 
-        return empty($data) ? null : DomainPrice::fromArray($data);
+        // Handle 404 response (resource not found)
+        if (isset($response['success']) && $response['success'] === false) {
+            return null;
+        }
+
+        // Handle response wrapper (success, data, message)
+        $data = $response['data'] ?? $response;
+
+        if (empty($data) || ! isset($data['id'])) {
+            return null;
+        }
+
+        return DomainPrice::fromArray($data);
     }
 
     public function getTransactions(array $filters = []): array
@@ -66,4 +93,3 @@ class AccountRepository implements AccountRepositoryContract
         return empty($data) ? null : Transaction::fromArray($data);
     }
 }
-

@@ -59,13 +59,67 @@ class CheckoutDomainService
                 if (! $domainPrice) {
                     return [
                         'success' => false,
-                        'message' => 'Harga domain tidak ditemukan untuk extension: '.$extension,
+                        'message' => 'Harga domain tidak ditemukan untuk extension: ' . $extension,
                     ];
                 }
 
-                // Calculate total price (price * period)
+                // Calculate total price from registration array
                 $period = $data['period'] ?? 1;
-                $subtotalCents = ($domainPrice->price * $period) * 100; // Convert to cents
+                $periodKey = (string) $period;
+
+                // Validate registration array structure
+                if (! is_array($domainPrice->registration) || empty($domainPrice->registration)) {
+                    Log::error('Domain price registration array is invalid or empty', [
+                        'domain_price_id' => $domainPrice->id,
+                        'registration' => $domainPrice->registration,
+                        'period' => $period,
+                    ]);
+
+                    return [
+                        'success' => false,
+                        'message' => 'Harga domain tidak valid. Silakan hubungi administrator.',
+                    ];
+                }
+
+                // Try to get price for the specific period first
+                $price = null;
+                if (isset($domainPrice->registration[$periodKey]) && is_numeric($domainPrice->registration[$periodKey])) {
+                    $price = (int) $domainPrice->registration[$periodKey];
+                } elseif (isset($domainPrice->registration['1']) && is_numeric($domainPrice->registration['1'])) {
+                    // Fallback: calculate from 1-year price
+                    $oneYearPrice = (int) $domainPrice->registration['1'];
+                    $price = $oneYearPrice * $period;
+                } else {
+                    // No valid price found - fail the transaction
+                    Log::error('Domain price not found for period', [
+                        'domain_price_id' => $domainPrice->id,
+                        'registration' => $domainPrice->registration,
+                        'period' => $period,
+                        'period_key' => $periodKey,
+                    ]);
+
+                    return [
+                        'success' => false,
+                        'message' => 'Harga domain tidak ditemukan untuk periode yang dipilih. Silakan pilih periode lain atau hubungi administrator.',
+                    ];
+                }
+
+                // Validate price is greater than zero
+                if ($price <= 0) {
+                    Log::error('Domain price is zero or negative', [
+                        'domain_price_id' => $domainPrice->id,
+                        'price' => $price,
+                        'period' => $period,
+                        'registration' => $domainPrice->registration,
+                    ]);
+
+                    return [
+                        'success' => false,
+                        'message' => 'Harga domain tidak valid. Silakan hubungi administrator.',
+                    ];
+                }
+
+                $subtotalCents = $price * 100; // Convert to cents
                 $totalCents = $subtotalCents; // No tax/discount for now
 
                 // Create order
@@ -107,15 +161,14 @@ class CheckoutDomainService
                     'notes' => "Pembayaran untuk domain: {$domainName}",
                 ]);
 
-                // Add invoice item dengan link ke domain
-                $invoice->items()->create([
+                // Add invoice item (domain_id will be added after domain creation)
+                $invoiceItem = $invoice->items()->create([
                     'description' => "Domain {$domainName} ({$period} tahun)",
                     'qty' => 1,
                     'unit_price_cents' => $subtotalCents,
                     'total_cents' => $subtotalCents,
                     'meta' => [
                         'type' => 'domain',
-                        'domain_id' => $domain->id,
                         'domain_name' => $domainName,
                         'period' => $period,
                         'extension' => $extension,
@@ -128,7 +181,15 @@ class CheckoutDomainService
                     ],
                 ]);
 
-                // Create domain record dengan status pending (belum register ke RDASH)
+                // Create payment via Midtrans
+                $paymentOptions = [
+                    'payment_method' => $data['payment_method'] ?? null,
+                ];
+
+                $payment = $this->paymentAdapter->createCharge($invoice, $paymentOptions);
+
+                // Create domain record setelah payment berhasil (dalam transaction)
+                // Jika payment gagal, transaction akan di-rollback termasuk domain
                 $domain = Domain::create([
                     'customer_id' => $customer->id,
                     'name' => $domainName,
@@ -137,17 +198,17 @@ class CheckoutDomainService
                     'rdash_sync_status' => 'pending',
                 ]);
 
-                // Link domain ke invoice via meta
-                $invoice->update([
-                    'notes' => $invoice->notes."\nDomain ID: {$domain->id}",
+                // Update invoice item dengan domain_id
+                $invoiceItem->update([
+                    'meta' => array_merge($invoiceItem->meta, [
+                        'domain_id' => $domain->id,
+                    ]),
                 ]);
 
-                // Create payment via Midtrans
-                $paymentOptions = [
-                    'payment_method' => $data['payment_method'] ?? null,
-                ];
-
-                $payment = $this->paymentAdapter->createCharge($invoice, $paymentOptions);
+                // Link domain ke invoice via meta
+                $invoice->update([
+                    'notes' => $invoice->notes . "\nDomain ID: {$domain->id}",
+                ]);
 
                 Log::info('Domain checkout completed', [
                     'domain' => $domainName,
@@ -172,7 +233,7 @@ class CheckoutDomainService
 
             return [
                 'success' => false,
-                'message' => 'Gagal checkout domain: '.$e->getMessage(),
+                'message' => 'Gagal checkout domain: ' . $e->getMessage(),
             ];
         }
     }
@@ -188,7 +249,7 @@ class CheckoutDomainService
         }
 
         // Ambil extension (bagian terakhir)
-        return '.'.end($parts);
+        return '.' . end($parts);
     }
 
     /**
@@ -197,16 +258,16 @@ class CheckoutDomainService
     private function getDomainPrice(string $extension): ?\App\Domain\Rdash\Account\ValueObjects\DomainPrice
     {
         try {
-            $prices = $this->accountRepository->getPrices([
-                'domainExtension.extension' => $extension,
+            $result = $this->accountRepository->getPrices([
+                'domainExtension[extension]' => $extension,
             ]);
 
-            if (empty($prices)) {
+            if (empty($result['data'])) {
                 return null;
             }
 
             // Return price pertama yang ditemukan
-            return $prices[0];
+            return $result['data'][0];
         } catch (\Exception $e) {
             Log::error('Failed to get domain price from RDASH', [
                 'extension' => $extension,

@@ -36,6 +36,7 @@ class RolePermissionSeeder extends Seeder
                 'customer-ssl-create',
                 'customer-ssl-edit',
                 'customer-ssl-delete',
+                'customer-domain-prices-view',
             ],
             'Admin Catalog' => [
                 'admin-catalog-view',
@@ -159,6 +160,7 @@ class RolePermissionSeeder extends Seeder
             'customer-domains-edit',
             'customer-ssl-view',
             'customer-ssl-create',
+            'customer-domain-prices-view',
         ]);
 
         // Assign permissions to support role
@@ -197,6 +199,7 @@ class RolePermissionSeeder extends Seeder
             'customer-domains-view',
             'customer-domains-create',
             'customer-domains-edit',
+            'customer-domain-prices-view',
         ]);
     }
 }

@@ -18,9 +18,23 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+        $customer = $user->customer;
+
         return Inertia::render('settings/profile', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'customer' => $customer ? [
+                'organization' => $customer->organization,
+                'phone' => $customer->phone,
+                'street_1' => $customer->street_1,
+                'street_2' => $customer->street_2,
+                'city' => $customer->city,
+                'state' => $customer->state,
+                'country_code' => $customer->country_code,
+                'postal_code' => $customer->postal_code,
+                'fax' => $customer->fax,
+            ] : null,
         ]);
     }
 
@@ -29,15 +43,58 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Update user data
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
 
-        return to_route('profile.edit');
+        // Update or create customer data
+        $customer = $user->customer;
+
+        if ($customer) {
+            $customer->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? $customer->phone,
+                'organization' => $validated['organization'] ?? $customer->organization,
+                'street_1' => $validated['street_1'] ?? $customer->street_1,
+                'street_2' => $validated['street_2'] ?? $customer->street_2,
+                'city' => $validated['city'] ?? $customer->city,
+                'state' => $validated['state'] ?? $customer->state,
+                'country_code' => $validated['country_code'] ?? $customer->country_code,
+                'postal_code' => $validated['postal_code'] ?? $customer->postal_code,
+                'fax' => $validated['fax'] ?? $customer->fax,
+            ]);
+        } else {
+            // Create customer if doesn't exist
+            // Use validated input with sensible defaults, consistent with update logic
+            $user->customer()->create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? null,
+                'organization' => $validated['organization'] ?? $validated['name'],
+                'street_1' => $validated['street_1'] ?? null,
+                'street_2' => $validated['street_2'] ?? null,
+                'city' => $validated['city'] ?? null,
+                'state' => $validated['state'] ?? null,
+                'country_code' => $validated['country_code'] ?? null,
+                'postal_code' => $validated['postal_code'] ?? null,
+                'fax' => $validated['fax'] ?? null,
+                'rdash_sync_status' => 'pending',
+            ]);
+        }
+
+        return to_route('profile.edit')->with('status', 'profile-updated');
     }
 
     /**

@@ -23,20 +23,21 @@ use App\Http\Controllers\SettingAppController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserFileController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
+
+// Test email route (without queue)
+Route::get('/send_email', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'testSend'])
+    ->name('test.send-email');
 
 // Public catalog routes
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/catalog/{slug}', [CatalogController::class, 'show'])->name('catalog.show');
 
 Route::middleware(['auth', 'menu.permission'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     // Customer routes
     Route::prefix('customer')->name('customer.')->group(function () {
@@ -68,6 +69,11 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
 
         // Customer SSL
         Route::get('/ssl', [DomainSslController::class, 'index'])->name('ssl.index');
+
+        // Customer Domain Prices
+        Route::get('/domain-prices', [DomainPriceController::class, 'index'])->name('domain-prices.index');
+        Route::get('/domain-prices/by-extension', [DomainPriceController::class, 'getByExtension'])->name('domain-prices.by-extension');
+        Route::get('/domain-prices/{priceId}', [DomainPriceController::class, 'show'])->name('domain-prices.show');
     });
 
     // Admin routes
@@ -107,6 +113,8 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
 
         // Domain price management (RDASH domain prices)
         Route::get('/domain-prices', [DomainPriceController::class, 'index'])->name('domain-prices.index');
+        Route::get('/domain-prices/by-extension', [DomainPriceController::class, 'getByExtension'])->name('domain-prices.by-extension');
+        Route::get('/domain-prices/{priceId}', [DomainPriceController::class, 'show'])->name('domain-prices.show');
 
         // SSL management
         Route::get('/ssl', [DomainSslController::class, 'index'])->name('ssl.index');
@@ -137,5 +145,5 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::resource('media', MediaFolderController::class);
 });
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';

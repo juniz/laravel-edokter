@@ -2,20 +2,29 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Application\Rdash\User\SyncUserToRdashService;
+use App\Domain\Customer\Contracts\CustomerRepository;
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Auth\Events\Registered;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ValidateStep1Request;
+use App\Http\Requests\Auth\ValidateStep2Request;
+use App\Mail\EmailVerificationMailSync;
+use App\Models\EmailVerification;
+use App\Models\PendingRegistration;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 class RegisteredUserController extends Controller
 {
+    public function __construct(
+        private CustomerRepository $customerRepository,
+        private SyncUserToRdashService $syncUserToRdashService
+    ) {}
+
     /**
      * Show the registration page.
      */
@@ -25,30 +34,110 @@ class RegisteredUserController extends Controller
     }
 
     /**
+     * Validate step 1 (Account Information)
+     */
+    public function validateStep1(ValidateStep1Request $request): RedirectResponse
+    {
+        // Validation passed, redirect back (Inertia will handle this)
+        return redirect()->back();
+    }
+
+    /**
+     * Validate step 2 (RDASH Customer Data)
+     */
+    public function validateStep2(ValidateStep2Request $request): RedirectResponse
+    {
+        // Validation passed, redirect back (Inertia will handle this)
+        return redirect()->back();
+    }
+
+    /**
      * Handle an incoming registration request.
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(RegisterRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        Log::info('Registration form submitted', [
+            'email' => $request->input('email'),
+            'all_input' => $request->all(),
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+        $validated = $request->validated();
+
+        Log::info('Registration form validated', [
+            'email' => $validated['email'] ?? null,
+            'validated_fields' => array_keys($validated),
         ]);
 
-        $user->assignRole(Role::where('name', 'user')->first());
+        // Check if email already exists in pending registrations
+        $existingPending = PendingRegistration::where('email', $validated['email'])->first();
+        if ($existingPending) {
+            // Delete old pending registration
+            $existingPending->delete();
+        }
 
-        event(new Registered($user));
+        // Store registration data temporarily (will be used after email verification)
+        try {
+            $pendingRegistration = PendingRegistration::create([
+                'email' => $validated['email'],
+                'name' => $validated['name'],
+                'password' => Hash::make($validated['password']), // Hash password before storing
+                'organization' => $validated['organization'],
+                'phone' => $validated['phone'],
+                'street_1' => $validated['street_1'],
+                'street_2' => $validated['street_2'] ?? null,
+                'city' => $validated['city'],
+                'state' => $validated['state'] ?? null,
+                'country_code' => $validated['country_code'],
+                'postal_code' => $validated['postal_code'],
+                'fax' => $validated['fax'] ?? null,
+                'expires_at' => now()->addHours(24), // Expires in 24 hours
+            ]);
 
-        Auth::login($user);
+            Log::info('PendingRegistration created successfully', [
+                'email' => $validated['email'],
+                'pending_registration_id' => $pendingRegistration->id,
+                'expires_at' => $pendingRegistration->expires_at,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create PendingRegistration', [
+                'email' => $validated['email'],
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-        return to_route('dashboard');
+            return redirect()->back()->withErrors(['email' => 'Gagal menyimpan data registrasi. Silakan coba lagi.']);
+        }
+
+        // Send email verification code immediately (without queue)
+        try {
+            $verification = EmailVerification::createOrUpdate($validated['email']);
+            // Use EmailVerificationMailSync which doesn't use queue for immediate delivery
+            Mail::to($validated['email'])->send(
+                new EmailVerificationMailSync($validated['name'], $verification->code)
+            );
+
+            // Log successful email sending
+            Log::info('Verification email sent during registration', [
+                'email' => $validated['email'],
+                'pending_registration_id' => $pendingRegistration->id,
+                'verification_id' => $verification->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send verification email during registration', [
+                'email' => $validated['email'],
+                'pending_registration_id' => $pendingRegistration->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Delete pending registration if email fails
+            $pendingRegistration->delete();
+
+            return redirect()->back()->withErrors(['email' => 'Gagal mengirim kode verifikasi. Silakan coba lagi.']);
+        }
+
+        // Return to register page with success message
+        return redirect()->back()->with('success', 'Kode verifikasi telah dikirim ke email Anda. Silakan verifikasi email untuk menyelesaikan registrasi.');
     }
 }

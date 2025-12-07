@@ -9,8 +9,11 @@ use Illuminate\Support\Facades\Log;
 class HttpClient
 {
     private PendingRequest $client;
+
     private string $baseUrl;
+
     private string $resellerId;
+
     private string $apiKey;
 
     public function __construct()
@@ -28,7 +31,7 @@ class HttpClient
     /**
      * Make GET request
      *
-     * @param array<string, mixed> $query
+     * @param  array<string, mixed>  $query
      * @return array<string, mixed>
      */
     public function get(string $endpoint, array $query = []): array
@@ -38,6 +41,17 @@ class HttpClient
 
             if ($response->successful()) {
                 return $response->json() ?? [];
+            }
+
+            // Handle 404 gracefully (resource not found)
+            if ($response->status() === 404) {
+                $body = $response->json() ?? [];
+                Log::info('RDASH API Resource Not Found', [
+                    'endpoint' => $endpoint,
+                    'body' => $body,
+                ]);
+
+                return $body; // Return the response body which may contain error message
             }
 
             $this->handleError($response, 'GET', $endpoint);
@@ -56,7 +70,7 @@ class HttpClient
     /**
      * Make POST request
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
     public function post(string $endpoint, array $data = []): array
@@ -84,7 +98,7 @@ class HttpClient
     /**
      * Make PUT request
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
     public function put(string $endpoint, array $data = []): array
@@ -154,8 +168,7 @@ class HttpClient
 
         // Format error message yang lebih informatif
         $errorMessage = "HTTP request returned status code {$status}: {$bodyString}";
-        
+
         throw new \RuntimeException($errorMessage, $status);
     }
 }
-

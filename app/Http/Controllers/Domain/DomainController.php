@@ -133,11 +133,12 @@ class DomainController extends Controller
             'include_premium_domains' => 'nullable|boolean',
             'registrant_contact_id' => 'nullable|integer',
             'auto_renew' => 'nullable|boolean',
-            'payment_method' => 'nullable|string|in:midtrans,manual', // Payment method
+            'payment_method' => 'nullable|string|in:credit_card,bank_transfer,bca_va,bni_va,bri_va,mandiri_va,permata_va,cimb_va,danamon_va,bsi_va,qris,gopay,shopeepay,dana,ovo,linkaja,cstore,indomaret,alfamart,manual', // Payment method
         ]);
 
-        // Jika payment_method adalah midtrans, gunakan checkout service
-        if ($request->has('payment_method') && $request->payment_method === 'midtrans') {
+        // Jika payment_method bukan manual, gunakan checkout service dengan Midtrans
+        // Check validated array to ensure payment_method is set and not null or manual
+        if (isset($validated['payment_method']) && $validated['payment_method'] !== null && $validated['payment_method'] !== 'manual') {
             return $this->checkoutWithPayment($request, $validated, $customerId);
         }
 
@@ -197,7 +198,7 @@ class DomainController extends Controller
             'period' => $validated['period'],
             'customer_id' => $customerId ?? $validated['customer_id'],
             'auto_renew' => $validated['auto_renew'] ?? false,
-            'payment_method' => $validated['payment_method'] ?? 'midtrans',
+            'payment_method' => $validated['payment_method'] ?? 'credit_card',
         ];
 
         if (isset($validated['nameserver'])) {
@@ -225,15 +226,22 @@ class DomainController extends Controller
         // Redirect ke invoice payment page dengan payment token
         $payment = $result['payment'];
         $redirectUrl = $payment->raw_payload['redirect_url'] ?? null;
+        $paymentMethod = $payment->raw_payload['payment_method'] ?? null;
 
+        // Untuk payment method yang memiliki redirect_url (credit card, e-wallet dengan deeplink)
         if ($redirectUrl) {
-            // Redirect ke Midtrans payment page
             return redirect($redirectUrl);
         }
 
-        // Fallback: redirect ke invoice page
+        // Untuk payment method tanpa redirect_url (VA, convenience store)
+        // Redirect ke invoice page dengan payment details
         return redirect()->route('invoices.show', $result['invoice']->id)
-            ->with('success', $result['message']);
+            ->with('success', $result['message'])
+            ->with('payment_details', [
+                'method' => $paymentMethod,
+                'order_id' => $payment->raw_payload['order_id'] ?? null,
+                'core_api_response' => $payment->raw_payload['core_api_response'] ?? null,
+            ]);
     }
 
     /**

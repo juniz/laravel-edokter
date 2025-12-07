@@ -13,8 +13,7 @@ class AccountController extends Controller
     public function __construct(
         private AccountRepository $accountRepository,
         private GetAccountProfileService $getAccountProfileService
-    ) {
-    }
+    ) {}
 
     /**
      * Get reseller profile
@@ -47,18 +46,31 @@ class AccountController extends Controller
      */
     public function prices(Request $request): JsonResponse
     {
-        $filters = $request->only([
-            'domainExtension.extension',
-            'promo',
-            'page',
-            'limit',
-        ]);
+        $filters = [];
 
-        $prices = $this->accountRepository->getPrices($filters);
+        if ($request->has('domainExtension.extension')) {
+            $filters['domainExtension[extension]'] = $request->input('domainExtension.extension');
+        }
+
+        if ($request->has('promo')) {
+            $filters['promo'] = filter_var($request->input('promo'), FILTER_VALIDATE_BOOLEAN);
+        }
+
+        if ($request->has('page')) {
+            $filters['page'] = (int) $request->input('page');
+        }
+
+        if ($request->has('limit')) {
+            $filters['limit'] = (int) $request->input('limit');
+        }
+
+        $result = $this->accountRepository->getPrices($filters);
 
         return response()->json([
             'success' => true,
-            'data' => array_map(fn ($price) => $price->toArray(), $prices),
+            'data' => array_map(fn ($price) => $price->toArray(), $result['data']),
+            'links' => $result['links'] ?? [],
+            'meta' => $result['meta'] ?? [],
         ]);
     }
 
@@ -125,4 +137,3 @@ class AccountController extends Controller
         ]);
     }
 }
-

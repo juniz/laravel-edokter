@@ -628,13 +628,19 @@ Menu Customer Area (`/customer/*`) berisi sub-menu untuk mengelola berbagai laya
 > - Verification Status: `0` Waiting, `1` Verifying, `2` Document Validating, `3` Active
 > - Required Document: `0` False, `1` True
 >
-> **Pembayaran Domain via Midtrans**:
+> **Pembayaran Domain via Midtrans Core API**:
 >
-> - Domain dapat dibeli dengan pembayaran melalui Midtrans payment gateway
-> - Flow: User pilih domain → Check availability → Get price dari RDASH → Checkout dengan payment method Midtrans → Create Order & Invoice → Create Payment via Midtrans → Redirect ke Midtrans payment page → Setelah payment success → Register domain ke RDASH secara otomatis
+> - Domain dapat dibeli dengan pembayaran melalui Midtrans Core API (`/v2/charge`)
+> - Flow: User pilih domain → Check availability → Get price dari RDASH → Pilih payment method → Checkout → Create Order & Invoice → Create Payment via Midtrans Core API → Redirect sesuai payment method (3DS untuk credit card, atau tampilkan VA/QR code) → Setelah payment success → Register domain ke RDASH secara otomatis
 > - Service `CheckoutDomainService` menangani proses checkout domain dengan payment
 > - Listener `RegisterDomainOnInvoicePaid` akan otomatis register domain ke RDASH setelah invoice paid
 > - Domain dibuat dengan status `pending` terlebih dahulu, baru di-register ke RDASH setelah payment berhasil
+> - Payment method yang dipilih user menentukan parameter yang dikirim ke Core API:
+>   - Credit Card: `payment_type: credit_card` → redirect ke 3DS jika diperlukan
+>   - Bank Transfer: `payment_type: bank_transfer` dengan `bank` spesifik → tampilkan VA number
+>   - E-Wallet: `payment_type: gopay/shopeepay/dana/ovo/linkaja` → tampilkan deeplink atau QR code
+>   - QRIS: `payment_type: qris` → tampilkan QR code
+>   - Convenience Store: `payment_type: cstore` dengan `store` spesifik → tampilkan payment code
 
 ### 9) Support
 
@@ -999,13 +1005,13 @@ Komponen React dipetakan ke halaman Inertia. Pakai form helpers + zod/yup untuk 
 
 ### Domain Purchase dengan Payment Use Cases
 
-- `CheckoutDomainService` - Checkout domain dengan payment gateway (Midtrans)
+- `CheckoutDomainService` - Checkout domain dengan payment gateway (Midtrans Core API)
   - Get domain price dari RDASH API berdasarkan extension
   - Create Order dengan item domain
   - Generate Invoice untuk domain purchase
   - Create Domain record dengan status `pending` (belum register ke RDASH)
-  - Create Payment via Midtrans adapter
-  - Return invoice dan payment untuk redirect ke payment page
+  - Create Payment via Midtrans Core API adapter dengan payment method yang dipilih user
+  - Return invoice dan payment untuk redirect atau tampilkan payment details (VA/QR code/payment code)
 - `RegisterDomainOnInvoicePaid` (Listener) - Register domain ke RDASH setelah invoice paid
   - Triggered oleh event `InvoicePaid`
   - Cek apakah invoice untuk domain purchase (via invoice item meta)
@@ -1215,6 +1221,24 @@ MIDTRANS_IS_PRODUCTION=false
 - Untuk development/testing, gunakan `MIDTRANS_IS_PRODUCTION=false` (sandbox mode)
 - Untuk production, set `MIDTRANS_IS_PRODUCTION=true` dan gunakan production server key
 - Midtrans webhook URL: `https://your-domain.com/api/payments/midtrans/webhook`
+
+**Integrasi Midtrans Core API**:
+
+- Aplikasi menggunakan **Midtrans Core API** (`/v2/charge`) untuk pembayaran langsung tanpa Snap.js
+- Core API memberikan kontrol lebih besar terhadap payment flow dan response handling
+- Metode pembayaran yang didukung:
+  - **Credit Card**: Visa, Mastercard, JCB, Amex (dengan 3DS jika diperlukan)
+  - **Bank Transfer**: BCA VA, BNI VA, BRI VA, Mandiri VA, Permata VA, CIMB VA, Danamon VA, BSI VA
+  - **E-Wallet**: GoPay, ShopeePay, DANA, OVO, LinkAja
+  - **QRIS**: QRIS untuk berbagai e-wallet
+  - **Convenience Store**: Indomaret, Alfamart
+- Response Core API berbeda berdasarkan payment method:
+  - Credit Card: `redirect_url` untuk 3DS authentication
+  - Bank Transfer: `va_numbers` array dengan bank dan VA number
+  - E-Wallet: `actions` dengan deeplink atau QR code
+  - QRIS: `actions` dengan QR code URL
+  - Convenience Store: `actions` dengan payment code
+- Payment details (VA number, QR code, payment code) disimpan di `raw_payload` untuk ditampilkan ke user
 
 **Keuntungan Pendekatan DDD untuk RDASH:**
 

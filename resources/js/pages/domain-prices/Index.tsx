@@ -12,8 +12,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { type BreadcrumbItem } from '@/types';
-import { Percent, Search, Tags, X } from 'lucide-react';
+import { Percent, Search, Tags, X, Loader2, Info } from 'lucide-react';
+import axios from 'axios';
+
+// Determine breadcrumbs based on route
+const getBreadcrumbs = (): BreadcrumbItem[] => {
+  const path = window.location.pathname;
+  if (path.startsWith('/customer/domain-prices')) {
+    return [
+      {
+        title: 'Domain Prices',
+        href: '/customer/domain-prices',
+      },
+    ];
+  }
+  return [
+    {
+      title: 'Domain Management',
+      href: '/admin/domains',
+    },
+    {
+      title: 'Domain Prices',
+      href: '/admin/domain-prices',
+    },
+  ];
+};
+
+const breadcrumbs = getBreadcrumbs();
 
 interface DomainExtension {
   id: number;
@@ -87,17 +120,6 @@ interface Props {
   };
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Domain Management',
-    href: '/admin/domains',
-  },
-  {
-    title: 'Domain Prices',
-    href: '/admin/domain-prices',
-  },
-];
-
 function formatCurrency(amount: number | string | undefined | null, currency: string = 'IDR'): string {
   if (!amount || amount === '' || amount === '0' || amount === '0.00') {
     return '-';
@@ -120,6 +142,14 @@ export default function DomainPricesIndex({ prices, filters = {} }: Props) {
   const [searchExtension, setSearchExtension] = useState(filters.extension || '');
   const [selectedPromo, setSelectedPromo] = useState(filters.promo || 'all');
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPriceId, setSelectedPriceId] = useState<number | null>(null);
+  const [priceDetail, setPriceDetail] = useState<DomainPrice | null>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
+
+  const isCustomerRoute = window.location.pathname.startsWith('/customer/domain-prices');
+  const basePath = isCustomerRoute ? '/customer/domain-prices' : '/admin/domain-prices';
 
   const handleSearch = (value: string) => {
     setSearchExtension(value);
@@ -157,7 +187,7 @@ export default function DomainPricesIndex({ prices, filters = {} }: Props) {
     // Reset to page 1 when filters change
     params.delete('page');
 
-    router.get(`/admin/domain-prices?${params.toString()}`, {}, { preserveState: true, preserveScroll: false });
+    router.get(`${basePath}?${params.toString()}`, {}, { preserveState: true, preserveScroll: false });
   };
 
   const handlePageChange = (url: string | null) => {
@@ -166,14 +196,14 @@ export default function DomainPricesIndex({ prices, filters = {} }: Props) {
     try {
       const urlObj = new URL(url);
       const params = new URLSearchParams(urlObj.search);
-      router.get(`/admin/domain-prices?${params.toString()}`, {}, { preserveState: true, preserveScroll: false });
+      router.get(`${basePath}?${params.toString()}`, {}, { preserveState: true, preserveScroll: false });
     } catch (e) {
       const pageMatch = url.match(/[?&]page=(\d+)/);
       if (pageMatch) {
         const page = pageMatch[1];
         const params = new URLSearchParams(window.location.search);
         params.set('page', page);
-        router.get(`/admin/domain-prices?${params.toString()}`, {}, { preserveState: true, preserveScroll: false });
+        router.get(`${basePath}?${params.toString()}`, {}, { preserveState: true, preserveScroll: false });
       }
     }
   };
@@ -181,10 +211,43 @@ export default function DomainPricesIndex({ prices, filters = {} }: Props) {
   const handleResetFilters = () => {
     setSearchExtension('');
     setSelectedPromo('all');
-    router.get('/admin/domain-prices', {}, { preserveState: true, preserveScroll: false });
+    router.get(basePath, {}, { preserveState: true, preserveScroll: false });
   };
 
   const hasActiveFilters = searchExtension || (selectedPromo && selectedPromo !== 'all');
+
+  const handleRowClick = (priceId: number) => {
+    setSelectedPriceId(priceId);
+    setIsModalOpen(true);
+    setIsLoadingDetail(true);
+    setErrorDetail(null);
+    setPriceDetail(null);
+
+    // Fetch price detail
+    axios
+      .get(`${basePath}/${priceId}`)
+      .then((response) => {
+        if (response.data.success && response.data.data) {
+          setPriceDetail(response.data.data);
+        } else {
+          setErrorDetail('Gagal memuat detail harga domain');
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching price detail:', error);
+        setErrorDetail(error.response?.data?.message || 'Gagal memuat detail harga domain');
+      })
+      .finally(() => {
+        setIsLoadingDetail(false);
+      });
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPriceId(null);
+    setPriceDetail(null);
+    setErrorDetail(null);
+  };
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -195,8 +258,9 @@ export default function DomainPricesIndex({ prices, filters = {} }: Props) {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Domain Prices</h1>
             <p className="text-muted-foreground mt-1">
-              Lihat harga domain dari RDASH untuk setiap ekstensi. Data ini bersifat read-only dan
-              mengikuti harga terbaru dari RDASH.
+              {isCustomerRoute
+                ? 'Lihat harga domain terbaru untuk berbagai ekstensi. Pilih domain dengan harga terbaik untuk kebutuhan Anda.'
+                : 'Lihat harga domain dari RDASH untuk setiap ekstensi. Data ini bersifat read-only dan mengikuti harga terbaru dari RDASH.'}
             </p>
           </div>
         </div>
@@ -284,9 +348,11 @@ export default function DomainPricesIndex({ prices, filters = {} }: Props) {
                       <th className="px-4 py-3 text-center font-medium text-xs text-muted-foreground uppercase tracking-wide">
                         Promo
                       </th>
-                      <th className="px-4 py-3 text-left font-medium text-xs text-muted-foreground uppercase tracking-wide">
-                        Registry
-                      </th>
+                      {!isCustomerRoute && (
+                        <th className="px-4 py-3 text-left font-medium text-xs text-muted-foreground uppercase tracking-wide">
+                          Registry
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
@@ -295,7 +361,11 @@ export default function DomainPricesIndex({ prices, filters = {} }: Props) {
                       const hasPromo = price.promo && !!promoPrice;
 
                       return (
-                        <tr key={price.id} className="hover:bg-muted/40">
+                        <tr
+                          key={price.id}
+                          className="hover:bg-muted/40 cursor-pointer"
+                          onClick={() => handleRowClick(price.id)}
+                        >
                           <td className="px-4 py-3 whitespace-nowrap">
                             <div className="flex flex-col">
                               <span className="text-sm font-medium">{price.extension}</span>
@@ -357,11 +427,13 @@ export default function DomainPricesIndex({ prices, filters = {} }: Props) {
                               <span className="text-xs text-muted-foreground">-</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span className="text-xs text-muted-foreground">
-                              {price.domain_extension.registry_name}
-                            </span>
-                          </td>
+                          {!isCustomerRoute && (
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span className="text-xs text-muted-foreground">
+                                {price.domain_extension.registry_name}
+                              </span>
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
@@ -404,7 +476,140 @@ export default function DomainPricesIndex({ prices, filters = {} }: Props) {
             </CardContent>
           </Card>
         )}
+
+        {/* Detail Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                {priceDetail ? (
+                  <>
+                    {priceDetail.extension}
+                    {priceDetail.promo && priceDetail.promo_registration?.registration && (
+                      <Badge className="ml-2 bg-emerald-600 text-white">
+                        <Percent className="w-3 h-3 mr-1" />
+                        Promo
+                      </Badge>
+                    )}
+                  </>
+                ) : (
+                  'Detail Harga Domain'
+                )}
+              </DialogTitle>
+            </DialogHeader>
+
+            {isLoadingDetail ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Memuat detail harga...</span>
+              </div>
+            ) : errorDetail ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <X className="h-8 w-8 text-destructive mb-2" />
+                <p className="text-destructive">{errorDetail}</p>
+                <Button variant="outline" onClick={handleCloseModal} className="mt-4">
+                  Tutup
+                </Button>
+              </div>
+            ) : priceDetail ? (
+              <div className="space-y-6">
+                {/* Main Price Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="px-4 py-3 text-left font-semibold uppercase text-xs tracking-wide">YEAR</th>
+                        <th className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wide">REGISTRATION</th>
+                        <th className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wide">RENEWAL</th>
+                        <th className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wide">TRANSFER</th>
+                        <th className="px-4 py-3 text-right font-semibold uppercase text-xs tracking-wide">REDEMPTION</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {Array.from({ length: 10 }, (_, i) => i + 1).map((year) => {
+                        const yearKey = year.toString();
+                        // Try multiple ways to access the data
+                        const normalPrice = 
+                          priceDetail.registration?.[yearKey] || 
+                          priceDetail.registration?.[year] ||
+                          (priceDetail.registration && typeof priceDetail.registration === 'object' ? priceDetail.registration[yearKey] : null);
+                        const promoPrice = 
+                          priceDetail.promo_registration?.registration?.[yearKey] || 
+                          priceDetail.promo_registration?.registration?.[year] ||
+                          (priceDetail.promo_registration?.registration && typeof priceDetail.promo_registration.registration === 'object' ? priceDetail.promo_registration.registration[yearKey] : null);
+                        const hasPromo = promoPrice && promoPrice !== '' && promoPrice !== null && promoPrice !== undefined;
+                        const renewalPrice = 
+                          priceDetail.renewal?.[yearKey] || 
+                          priceDetail.renewal?.[year] ||
+                          (priceDetail.renewal && typeof priceDetail.renewal === 'object' ? priceDetail.renewal[yearKey] : null);
+                        const transferPrice = year === 1 ? (priceDetail.transfer || priceDetail.transfer_price || null) : null;
+                        const redemptionPrice = year === 1 ? (priceDetail.redemption || priceDetail.redemption_price || null) : null;
+
+                        return (
+                          <tr key={year} className="hover:bg-muted/40">
+                            <td className="px-4 py-3 font-medium">{year}</td>
+                            <td className="px-4 py-3 text-right">
+                              {hasPromo ? (
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className="text-red-600 dark:text-red-400 font-medium">
+                                    {formatCurrency(promoPrice, priceDetail.currency)}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground line-through">
+                                    {formatCurrency(normalPrice, priceDetail.currency)}
+                                  </span>
+                                </div>
+                              ) : normalPrice && normalPrice !== 0 ? (
+                                <span>{formatCurrency(normalPrice, priceDetail.currency)}</span>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {renewalPrice && renewalPrice !== 0 ? (
+                                <span>{formatCurrency(renewalPrice, priceDetail.currency)}</span>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {transferPrice && transferPrice !== '0' && transferPrice !== '0.00' ? (
+                                <span>{formatCurrency(transferPrice, priceDetail.currency)}</span>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {redemptionPrice && redemptionPrice !== '0' && redemptionPrice !== '0.00' ? (
+                                <span>{formatCurrency(redemptionPrice, priceDetail.currency)}</span>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Promo Terms */}
+                {priceDetail.promo_registration?.description && (
+                  <div className="space-y-3 pt-4 border-t">
+                    <h3 className="text-lg font-semibold">Ketentuan Promo:</h3>
+                    <div
+                      className="prose prose-sm max-w-none dark:prose-invert [&_ul]:list-none [&_ul]:space-y-2 [&_li]:flex [&_li]:items-start [&_li]:gap-2 [&_li]:before:content-[''] [&_li]:before:w-2 [&_li]:before:h-2 [&_li]:before:mt-2 [&_li]:before:flex-shrink-0 [&_li]:before:bg-orange-500 [&_li]:before:rounded-sm [&_li]:before:rotate-45 [&_p]:m-0 [&_strong]:font-semibold"
+                      dangerouslySetInnerHTML={{
+                        __html: priceDetail.promo_registration.description,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
 }
+

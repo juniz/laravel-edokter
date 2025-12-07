@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { type BreadcrumbItem } from '@/types';
-import { ArrowLeft, Globe, Search, Loader2 } from 'lucide-react';
+import { ArrowLeft, Globe, Search, Loader2, ChevronDown, CreditCard } from 'lucide-react';
 import axios from 'axios';
 
 // Determine breadcrumbs based on route
@@ -57,6 +58,24 @@ interface Props {
   customers: Customer[];
 }
 
+// Helper function untuk format currency tanpa Rp prefix (hanya angka)
+function formatCurrencyNumber(amount: number | string | undefined | null): string {
+  if (!amount || amount === '' || amount === '0' || amount === '0.00') {
+    return '0';
+  }
+
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+
+  if (isNaN(numAmount) || numAmount <= 0) {
+    return '0';
+  }
+
+  return new Intl.NumberFormat('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(numAmount);
+}
+
 export default function DomainForm({ customers }: Props) {
   // Set customer_id otomatis jika customer sendiri
   const isCustomer = window.location.pathname.startsWith('/customer');
@@ -71,6 +90,7 @@ export default function DomainForm({ customers }: Props) {
     include_premium_domains: false,
     registrant_contact_id: null as number | null,
     auto_renew: false,
+    payment_method: 'credit_card',
   });
 
   const [availabilityCheck, setAvailabilityCheck] = useState<{
@@ -84,6 +104,74 @@ export default function DomainForm({ customers }: Props) {
     message: '',
     connectionError: false,
   });
+
+  const [domainPrice, setDomainPrice] = useState<{
+    registration: Record<string, number | string>;
+    promo_registration?: {
+      registration: Record<string, string>;
+    } | null;
+    currency: string;
+  } | null>(null);
+  const [loadingPrice, setLoadingPrice] = useState(false);
+
+  // Extract extension from domain name
+  // Handles domains like: example.com -> .com, example.co.id -> .co.id, abahweb.id -> .id
+  const extractExtension = (domainName: string): string => {
+    const parts = domainName.split('.');
+    if (parts.length < 2) {
+      return '';
+    }
+
+    // Indonesian domain extensions (2 parts)
+    const indonesianExtensions = ['co', 'web', 'biz', 'my', 'or', 'ac', 'sch'];
+    const lastPart = parts[parts.length - 1];
+    const secondLast = parts.length >= 2 ? parts[parts.length - 2] : '';
+
+    // Check if it's an Indonesian domain extension (e.g., .co.id, .web.id)
+    if (lastPart === 'id' && indonesianExtensions.includes(secondLast)) {
+      return '.' + secondLast + '.' + lastPart;
+    }
+
+    // Standard extension (single part, e.g., .com, .net, .id)
+    return '.' + lastPart;
+  };
+
+  // Fetch domain price by extension
+  const fetchDomainPrice = async (extension: string) => {
+    if (!extension) {
+      setDomainPrice(null);
+      return;
+    }
+
+    setLoadingPrice(true);
+    try {
+      const basePath = window.location.pathname.startsWith('/customer')
+        ? '/customer/domain-prices'
+        : '/admin/domain-prices';
+
+      const response = await axios.get(`${basePath}/by-extension`, {
+        params: { extension },
+      });
+
+      if (response.data.success && response.data.data) {
+        setDomainPrice({
+          registration: response.data.data.registration || {},
+          promo_registration: response.data.data.promo_registration || null,
+          currency: response.data.data.currency || 'IDR',
+        });
+      } else {
+        console.warn('Price not found for extension:', extension, response.data);
+        setDomainPrice(null);
+      }
+    } catch (error: any) {
+      console.error('Error fetching domain price:', error);
+      // Don't show error to user, just silently fail
+      // The UI will show "Silakan cek ketersediaan domain terlebih dahulu"
+      setDomainPrice(null);
+    } finally {
+      setLoadingPrice(false);
+    }
+  };
 
   const handleCheckAvailability = async () => {
     if (!data.name) {
@@ -169,6 +257,19 @@ export default function DomainForm({ customers }: Props) {
       setData('nameserver', newNameservers);
     }
   };
+
+  // Fetch domain price when domain name changes and is available
+  useEffect(() => {
+    if (data.name && availabilityCheck.available === true) {
+      const extension = extractExtension(data.name);
+      if (extension) {
+        fetchDomainPrice(extension);
+      }
+    } else if (!data.name || availabilityCheck.available === false) {
+      setDomainPrice(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.name, availabilityCheck.available]);
 
   // Fungsi untuk menerjemahkan error message ke bahasa Indonesia
   const translateError = (errorKey: string, errorMessage: string): string => {
@@ -383,28 +484,74 @@ export default function DomainForm({ customers }: Props) {
 
               {/* Period */}
               <div className="space-y-2">
-                <Label htmlFor="period">Periode Pendaftaran (Tahun) *</Label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Pilih berapa tahun Anda ingin mendaftarkan domain ini
-                </p>
-                <Select
-                  value={data.period.toString()}
-                  onValueChange={(value) => setData('period', parseInt(value))}
-                >
-                  <SelectTrigger 
-                    id="period"
-                    className={errors.period ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year} {year === 1 ? 'Tahun' : 'Tahun'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="period">DOMAIN PERIOD *</Label>
+                {loadingPrice && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Memuat harga domain...</span>
+                  </div>
+                )}
+                {!loadingPrice && !domainPrice && availabilityCheck.available === true && (
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Harga domain sedang dimuat...
+                  </p>
+                )}
+                {!loadingPrice && domainPrice && (
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((year) => {
+                      const yearKey = year.toString();
+                      const normalPrice = domainPrice.registration?.[yearKey] || domainPrice.registration?.[year];
+                      const promoPrice = domainPrice.promo_registration?.registration?.[yearKey] || domainPrice.promo_registration?.registration?.[year];
+                      const hasPromo = promoPrice && promoPrice !== '' && promoPrice !== null && promoPrice !== undefined;
+                      const isSelected = data.period === year;
+
+                      return (
+                        <button
+                          key={year}
+                          type="button"
+                          onClick={() => setData('period', year)}
+                          className={`
+                            flex-shrink-0 min-w-[110px] p-4 rounded-lg border-2 transition-all cursor-pointer
+                            ${isSelected
+                              ? 'border-red-500 bg-card shadow-md'
+                              : 'border-border bg-card hover:border-primary/50 hover:bg-muted/50'
+                            }
+                            ${errors.period ? 'border-red-500' : ''}
+                          `}
+                        >
+                          <div className="text-center space-y-1.5">
+                            <div className="text-sm font-medium text-foreground">
+                              {year} Year{year > 1 ? '(s)' : '(s)'}
+                            </div>
+                            <div className="text-xs font-bold">
+                              {hasPromo ? (
+                                <div className="space-y-0.5">
+                                  <div className="text-red-600 dark:text-red-400">
+                                    Rp{formatCurrencyNumber(promoPrice)}
+                                  </div>
+                                  <div className="text-muted-foreground line-through text-[10px] font-normal">
+                                    Rp{formatCurrencyNumber(normalPrice)}
+                                  </div>
+                                </div>
+                              ) : normalPrice ? (
+                                <div className="text-foreground">
+                                  Rp{formatCurrencyNumber(normalPrice)}
+                                </div>
+                              ) : (
+                                <div className="text-muted-foreground font-normal">-</div>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {!loadingPrice && !domainPrice && availabilityCheck.available !== true && (
+                  <div className="text-sm text-muted-foreground p-3 bg-muted rounded-lg">
+                    Silakan cek ketersediaan domain terlebih dahulu untuk melihat harga
+                  </div>
+                )}
                 {errors.period && <p className="text-sm text-red-500 mt-1">{translateError('period', errors.period)}</p>}
               </div>
 
@@ -501,6 +648,255 @@ export default function DomainForm({ customers }: Props) {
                 <Button type="button" variant="outline" onClick={handleAddNameserver}>
                   Tambah Nameserver
                 </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Metode Pembayaran</CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                Pilih metode pembayaran yang ingin Anda gunakan untuk pembayaran domain ini
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {errors.payment_method && (
+                <div className="p-3 rounded bg-red-50 text-red-700 border border-red-200">
+                  <p className="text-sm font-medium">{translateError('payment_method', errors.payment_method)}</p>
+                </div>
+              )}
+
+              {/* QRIS Section */}
+              <Collapsible defaultOpen className="group space-y-3">
+                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-card p-4 hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <span className="text-xl">📱</span>
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold">QRIS</h3>
+                      <p className="text-xs text-muted-foreground">GoPay, OVO, DANA, ShopeePay, LinkAja, dan lainnya</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-2">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { value: 'qris', label: 'QRIS', icon: '📱', description: 'Semua E-Wallet' },
+                      { value: 'gopay', label: 'GoPay', icon: '💙', description: 'GoPay' },
+                      { value: 'shopeepay', label: 'ShopeePay', icon: '🛍️', description: 'ShopeePay' },
+                      { value: 'dana', label: 'DANA', icon: '💙', description: 'DANA' },
+                      { value: 'ovo', label: 'OVO', icon: '💜', description: 'OVO' },
+                      { value: 'linkaja', label: 'LinkAja', icon: '🔴', description: 'LinkAja' },
+                    ].map((method) => (
+                      <button
+                        key={method.value}
+                        type="button"
+                        onClick={() => setData('payment_method', method.value)}
+                        className={`
+                          relative flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all
+                          ${data.payment_method === method.value
+                            ? 'border-primary bg-primary/5 shadow-md'
+                            : 'border-border bg-card hover:border-primary/50 hover:bg-muted/50'
+                          }
+                        `}
+                      >
+                        <div className="text-2xl mb-2">{method.icon}</div>
+                        <div className="text-sm font-medium text-center">{method.label}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{method.description}</div>
+                        {data.payment_method === method.value && (
+                          <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                            <div className="h-2 w-2 rounded-full bg-white" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Virtual Account Section */}
+              <Collapsible className="group space-y-3">
+                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-card p-4 hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <span className="text-xl">🏦</span>
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold">Virtual Account</h3>
+                      <p className="text-xs text-muted-foreground">Transfer Bank via Virtual Account</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-2">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { value: 'bca_va', label: 'BCA', icon: '🏦', description: 'BCA Virtual Account' },
+                      { value: 'bni_va', label: 'BNI', icon: '🏦', description: 'BNI Virtual Account' },
+                      { value: 'bri_va', label: 'BRI', icon: '🏦', description: 'BRIVA' },
+                      { value: 'mandiri_va', label: 'Mandiri', icon: '🏦', description: 'Mandiri VA' },
+                      { value: 'permata_va', label: 'Permata', icon: '🏦', description: 'Permata VA' },
+                      { value: 'bank_transfer', label: 'Bank Lain', icon: '🏦', description: 'Pilih Otomatis' },
+                    ].map((method) => (
+                      <button
+                        key={method.value}
+                        type="button"
+                        onClick={() => setData('payment_method', method.value)}
+                        className={`
+                          relative flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all
+                          ${data.payment_method === method.value
+                            ? 'border-primary bg-primary/5 shadow-md'
+                            : 'border-border bg-card hover:border-primary/50 hover:bg-muted/50'
+                          }
+                        `}
+                      >
+                        <div className="text-2xl mb-2">{method.icon}</div>
+                        <div className="text-sm font-medium text-center">{method.label}</div>
+                        <div className="text-xs text-muted-foreground mt-1 text-center">{method.description}</div>
+                        {data.payment_method === method.value && (
+                          <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                            <div className="h-2 w-2 rounded-full bg-white" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Credit Card Section */}
+              <Collapsible className="group space-y-3">
+                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-card p-4 hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <CreditCard className="h-5 w-5" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold">Kartu Kredit/Debit</h3>
+                      <p className="text-xs text-muted-foreground">Visa, Mastercard, JCB, Amex</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setData('payment_method', 'credit_card')}
+                    className={`
+                      w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all
+                      ${data.payment_method === 'credit_card'
+                        ? 'border-primary bg-primary/5 shadow-md'
+                        : 'border-border bg-card hover:border-primary/50 hover:bg-muted/50'
+                      }
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="h-6 w-6" />
+                      <div className="text-left">
+                        <div className="font-medium">Kartu Kredit/Debit</div>
+                        <div className="text-xs text-muted-foreground">Visa, Mastercard, JCB, American Express</div>
+                      </div>
+                    </div>
+                    {data.payment_method === 'credit_card' && (
+                      <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                        <div className="h-2 w-2 rounded-full bg-white" />
+                      </div>
+                    )}
+                  </button>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Convenience Store Section */}
+              <Collapsible className="group space-y-3">
+                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-card p-4 hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <span className="text-xl">🏪</span>
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold">Convenience Store</h3>
+                      <p className="text-xs text-muted-foreground">Indomaret, Alfamart, dan lainnya</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-2">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { value: 'indomaret', label: 'Indomaret', icon: '🏪', description: 'Indomaret' },
+                      { value: 'alfamart', label: 'Alfamart', icon: '🏪', description: 'Alfamart' },
+                      { value: 'cstore', label: 'Store Lain', icon: '🏪', description: 'Pilih Otomatis' },
+                    ].map((method) => (
+                      <button
+                        key={method.value}
+                        type="button"
+                        onClick={() => setData('payment_method', method.value)}
+                        className={`
+                          relative flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all
+                          ${data.payment_method === method.value
+                            ? 'border-primary bg-primary/5 shadow-md'
+                            : 'border-border bg-card hover:border-primary/50 hover:bg-muted/50'
+                          }
+                        `}
+                      >
+                        <div className="text-2xl mb-2">{method.icon}</div>
+                        <div className="text-sm font-medium text-center">{method.label}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{method.description}</div>
+                        {data.payment_method === method.value && (
+                          <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                            <div className="h-2 w-2 rounded-full bg-white" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Manual Transfer (Admin Only) */}
+              {!window.location.pathname.startsWith('/customer') && (
+                <Collapsible className="group space-y-3">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-card p-4 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                        <span className="text-xl">💵</span>
+                      </div>
+                      <div className="text-left">
+                        <h3 className="font-semibold">Transfer Manual</h3>
+                        <p className="text-xs text-muted-foreground">Untuk Admin</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setData('payment_method', 'manual')}
+                      className={`
+                        w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all
+                        ${data.payment_method === 'manual'
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-border bg-card hover:border-primary/50 hover:bg-muted/50'
+                        }
+                      `}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">💵</span>
+                        <div className="text-left">
+                          <div className="font-medium">Transfer Manual</div>
+                          <div className="text-xs text-muted-foreground">Pembayaran manual untuk admin</div>
+                        </div>
+                      </div>
+                      {data.payment_method === 'manual' && (
+                        <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                          <div className="h-2 w-2 rounded-full bg-white" />
+                        </div>
+                      )}
+                    </button>
+                  </CollapsibleContent>
+                </Collapsible>
               )}
             </CardContent>
           </Card>

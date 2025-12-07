@@ -16,6 +16,20 @@ Route::middleware('guest')->group(function () {
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
+    // Step validation routes
+    Route::post('register/validate-step1', [RegisteredUserController::class, 'validateStep1'])
+        ->name('register.validate-step1');
+    Route::post('register/validate-step2', [RegisteredUserController::class, 'validateStep2'])
+        ->name('register.validate-step2');
+
+    // Email verification routes
+    Route::post('email-verification/send', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'send'])
+        ->name('email-verification.send');
+    Route::post('email-verification/verify', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'verify'])
+        ->name('email-verification.verify');
+    Route::post('email-verification/resend', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'resend'])
+        ->name('email-verification.resend');
+
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 

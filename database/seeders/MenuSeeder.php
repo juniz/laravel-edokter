@@ -106,6 +106,16 @@ class MenuSeeder extends Seeder
             ]
         );
 
+        Menu::updateOrCreate(
+            ['route' => '/customer/domain-prices', 'parent_id' => $customerArea->id],
+            [
+                'title' => 'Domain Prices',
+                'icon' => 'Tags',
+                'order' => 7,
+                'permission_name' => 'customer-domain-prices-view',
+            ]
+        );
+
         // GROUP: Admin - Catalog Management
         $adminCatalog = Menu::updateOrCreate(
             ['route' => '#', 'title' => 'Catalog Management'],
@@ -411,6 +421,7 @@ class MenuSeeder extends Seeder
             'customer-subscriptions-view',
             'customer-tickets-view',
             'customer-ssl-view',
+            'customer-domain-prices-view',
         ]);
     }
 }
