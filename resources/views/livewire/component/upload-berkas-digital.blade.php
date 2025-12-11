@@ -8,11 +8,11 @@
                 <input type="file" id="file" wire:model="file" class="filepond" />
                 @error('file') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
-            <div class="form-group">
+            {{-- <div class="form-group">
                 <label for="file_name">Nama File</label>
                 <input type="text" id="file_name" wire:model.lazy="fileName" class="form-control" placeholder="Masukkan nama file" />
                 @error('fileName') <span class="text-danger">{{ $message }}</span> @enderror
-            </div>
+            </div> --}}
             <div class="form-group">
                 <label for="kdBerkas">Jenis Berkas Digital</label>
                 <select id="kdBerkas" wire:model.lazy="kdBerkas" class="form-control">
