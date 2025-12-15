@@ -24,3 +24,5 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+frankenphp
+public/frankenphp-worker.php
