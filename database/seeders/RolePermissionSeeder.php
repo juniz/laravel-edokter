@@ -123,6 +123,7 @@ class RolePermissionSeeder extends Seeder
             'Utilities' => [
                 'utilities-view',
                 'log-view',
+                'log-viewer-view',
                 'filemanager-view',
                 'filemanager-upload',
                 'filemanager-delete',

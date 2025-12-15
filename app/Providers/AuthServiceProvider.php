@@ -14,6 +14,9 @@ class AuthServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        // Gate untuk Log Viewer authorization
+        \Illuminate\Support\Facades\Gate::define('viewLogViewer', function ($user) {
+            return $user->hasPermissionTo('log-viewer-view');
+        });
     }
 }

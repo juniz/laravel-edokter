@@ -58,6 +58,7 @@ export default function ServersIndex({ servers }: ServersProps) {
       cpanel: 'cPanel',
       directadmin: 'DirectAdmin',
       proxmox: 'Proxmox',
+      aapanel: 'aaPanel',
     };
     return labels[type] || type;
   };

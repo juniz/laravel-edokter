@@ -21,7 +21,8 @@ class CheckoutDomainService
         private PlaceOrderService $placeOrderService,
         private GenerateInvoiceService $generateInvoiceService,
         private PaymentAdapterInterface $paymentAdapter,
-        private InvoiceRepository $invoiceRepository
+        private InvoiceRepository $invoiceRepository,
+        private CalculateMarginService $calculateMarginService
     ) {}
 
     /**
@@ -59,7 +60,7 @@ class CheckoutDomainService
                 if (! $domainPrice) {
                     return [
                         'success' => false,
-                        'message' => 'Harga domain tidak ditemukan untuk extension: ' . $extension,
+                        'message' => 'Harga domain tidak ditemukan untuk extension: '.$extension,
                     ];
                 }
 
@@ -119,7 +120,10 @@ class CheckoutDomainService
                     ];
                 }
 
-                $subtotalCents = $price * 100; // Convert to cents
+                // Apply margin keuntungan
+                $priceWithMargin = $this->calculateMarginService->calculateDomainPrice($price);
+
+                $subtotalCents = $priceWithMargin * 100; // Convert to cents
                 $totalCents = $subtotalCents; // No tax/discount for now
 
                 // Create order
@@ -207,7 +211,7 @@ class CheckoutDomainService
 
                 // Link domain ke invoice via meta
                 $invoice->update([
-                    'notes' => $invoice->notes . "\nDomain ID: {$domain->id}",
+                    'notes' => $invoice->notes."\nDomain ID: {$domain->id}",
                 ]);
 
                 Log::info('Domain checkout completed', [
@@ -233,7 +237,7 @@ class CheckoutDomainService
 
             return [
                 'success' => false,
-                'message' => 'Gagal checkout domain: ' . $e->getMessage(),
+                'message' => 'Gagal checkout domain: '.$e->getMessage(),
             ];
         }
     }
@@ -249,7 +253,7 @@ class CheckoutDomainService
         }
 
         // Ambil extension (bagian terakhir)
-        return '.' . end($parts);
+        return '.'.end($parts);
     }
 
     /**

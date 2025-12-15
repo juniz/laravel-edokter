@@ -373,6 +373,16 @@ class MenuSeeder extends Seeder
             ]
         );
 
+        Menu::updateOrCreate(
+            ['route' => '/settings/margin', 'parent_id' => $settings->id],
+            [
+                'title' => 'Margin Keuntungan',
+                'icon' => 'TrendingUp',
+                'order' => 4,
+                'permission_name' => 'margin-settings-view',
+            ]
+        );
+
         // GROUP: Utilities
         $utilities = Menu::updateOrCreate(
             ['route' => '#', 'title' => 'Utilities'],
@@ -395,11 +405,21 @@ class MenuSeeder extends Seeder
         );
 
         Menu::updateOrCreate(
+            ['route' => '/utilities/log-viewer', 'parent_id' => $utilities->id],
+            [
+                'title' => 'Log Viewer',
+                'icon' => 'FileText',
+                'order' => 3,
+                'permission_name' => 'log-viewer-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
             ['route' => '/files', 'parent_id' => $utilities->id],
             [
                 'title' => 'File Manager',
                 'icon' => 'Folder',
-                'order' => 3,
+                'order' => 4,
                 'permission_name' => 'filemanager-view',
             ]
         );

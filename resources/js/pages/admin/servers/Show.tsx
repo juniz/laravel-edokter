@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Edit, Server, UserCircle } from 'lucide-react';
+import { Edit, Server, UserCircle, Wifi, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import dayjs from 'dayjs';
+import { toast } from 'sonner';
 
 interface PanelAccount {
   id: string;
@@ -46,10 +47,63 @@ interface ServerShowProps {
 }
 
 export default function ServerShow({ server }: ServerShowProps) {
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+
   const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Servers', href: '/admin/servers' },
     { title: server.name, href: route('admin.servers.show', server.id) },
   ];
+
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    setConnectionStatus(null);
+
+    try {
+      const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
+
+      const response = await fetch(route('admin.servers.test-connection', server.id), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken || '',
+          'X-Requested-With': 'XMLHttpRequest',
+          Accept: 'application/json',
+        },
+        credentials: 'same-origin',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setConnectionStatus({
+          success: true,
+          message: result.message || 'Koneksi berhasil',
+        });
+        toast.success(result.message || 'Koneksi berhasil');
+      } else {
+        setConnectionStatus({
+          success: false,
+          message: result.message || 'Koneksi gagal',
+        });
+        toast.error(result.message || 'Koneksi gagal');
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Gagal test koneksi';
+      setConnectionStatus({
+        success: false,
+        message: errorMessage,
+      });
+      toast.error(errorMessage);
+    } finally {
+      setTestingConnection(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
@@ -65,6 +119,7 @@ export default function ServerShow({ server }: ServerShowProps) {
       cpanel: 'cPanel',
       directadmin: 'DirectAdmin',
       proxmox: 'Proxmox',
+      aapanel: 'aaPanel',
     };
     return labels[type] || type;
   };
@@ -180,6 +235,40 @@ export default function ServerShow({ server }: ServerShowProps) {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleTestConnection}
+                  disabled={testingConnection}
+                >
+                  {testingConnection ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Testing...
+                    </>
+                  ) : (
+                    <>
+                      <Wifi className="w-4 h-4 mr-2" />
+                      Test Connection
+                    </>
+                  )}
+                </Button>
+                {connectionStatus && (
+                  <div
+                    className={`p-3 rounded-md text-sm flex items-center gap-2 ${
+                      connectionStatus.success
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                        : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                    }`}
+                  >
+                    {connectionStatus.success ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      <XCircle className="w-4 h-4" />
+                    )}
+                    <span>{connectionStatus.message}</span>
+                  </div>
+                )}
                 <Link href={route('admin.servers.edit', server.id)} className="block">
                   <Button variant="outline" className="w-full">
                     <Edit className="w-4 h-4 mr-2" />

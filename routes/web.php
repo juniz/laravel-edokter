@@ -15,6 +15,7 @@ use App\Http\Controllers\Domain\Provisioning\ServerController;
 use App\Http\Controllers\Domain\Ssl\SslController as DomainSslController;
 use App\Http\Controllers\Domain\Subscription\SubscriptionController;
 use App\Http\Controllers\Domain\Support\TicketController;
+use App\Http\Controllers\LogViewerController;
 use App\Http\Controllers\MediaFolderController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\PermissionController;
@@ -80,8 +81,10 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::resource('products', ProductController::class);
         Route::resource('plans', PlanController::class);
+        Route::post('servers/{id}/test-connection', [ServerController::class, 'testConnection'])->name('servers.test-connection');
         Route::resource('servers', ServerController::class);
         Route::get('/panel-accounts', [PanelAccountController::class, 'index'])->name('panel-accounts.index');
+        Route::post('/panel-accounts', [PanelAccountController::class, 'create'])->name('panel-accounts.create');
         Route::get('/panel-accounts/{id}', [PanelAccountController::class, 'show'])->name('panel-accounts.show');
         Route::get('/provision-tasks', [ProvisionTaskController::class, 'index'])->name('provision-tasks.index');
         Route::get('/provision-tasks/{id}', [ProvisionTaskController::class, 'show'])->name('provision-tasks.show');
@@ -134,7 +137,10 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::put('/users/{user}/rdash-customer', [UserController::class, 'updateRdashCustomer'])->name('users.update-rdash-customer');
     Route::get('/settingsapp', [SettingAppController::class, 'edit'])->name('setting.edit');
     Route::post('/settingsapp', [SettingAppController::class, 'update'])->name('setting.update');
+    Route::get('/settings/margin', [\App\Http\Controllers\Settings\MarginController::class, 'edit'])->name('margin.edit')->middleware('admin');
+    Route::put('/settings/margin', [\App\Http\Controllers\Settings\MarginController::class, 'update'])->name('margin.update')->middleware('admin');
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    Route::get('/utilities/log-viewer', [LogViewerController::class, 'index'])->name('log-viewer.index');
     Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');
     Route::post('/backup/run', [BackupController::class, 'run'])->name('backup.run');
     Route::get('/backup/download/{file}', [BackupController::class, 'download'])->name('backup.download');
@@ -145,5 +151,5 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::resource('media', MediaFolderController::class);
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
