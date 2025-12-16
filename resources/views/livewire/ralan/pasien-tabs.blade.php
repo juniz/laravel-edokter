@@ -1737,8 +1737,7 @@
                                         </div>
                             <div class="alert alert-warning mt-3 mb-0" role="alert">
                                 <i class="fas fa-exclamation-triangle"></i> 
-                                <strong>Catatan:</strong> Nilai ini hanya merupakan <strong>perkiraan biaya</strong> berdasarkan tarif tindakan dokter. 
-                                Biaya aktual mungkin berbeda tergantung kebijakan rumah sakit dan diskon yang berlaku.
+                                <strong>Catatan:</strong> Nilai ini hanya merupakan <strong>perkiraan biaya</strong> berdasarkan tarif tindakan dokter. Nilai bisa berubah tergantung pada klaim BPJS atau perawatan lainnya.
                                     </div>
                                 </div>
                             </div>
