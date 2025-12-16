@@ -43,63 +43,176 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <div class="card card-info">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-walking"></i> Rawat Jalan (Ralan)
-                    </h3>
+    <div class="row mb-4">
+        <div class="col-6 col-md-4 col-lg mb-3 mb-lg-0">
+            <div class="card card-info h-100 shadow-sm">
+                <div class="card-header text-center p-2">
+                    <h5 class="card-title mb-0" style="font-size: 0.85rem;">
+                        <i class="fas fa-walking"></i> Rawat Jalan
+                    </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="description-block border-right">
-                                <span class="description-percentage text-success">
+                <div class="card-body p-2">
+                    <div class="row no-gutters text-center">
+                        <div class="col-6 border-right">
+                            <div class="description-block">
+                                <span class="description-percentage text-success" style="font-size: 1.3rem;">
                                     <i class="fas fa-list"></i>
                                 </span>
-                                <h5 class="description-header">{{ number_format($totalRalanTindakan) }}</h5>
-                                <span class="description-text">Total Tindakan</span>
+                                <h5 class="description-header mb-1" style="font-size: 1rem; font-weight: 600;">
+                                    {{ number_format($totalRalanTindakan) }}
+                                </h5>
+                                <span class="description-text" style="font-size: 0.7rem;">Total Tindakan</span>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="description-block">
-                                <span class="description-percentage text-primary">
+                                <span class="description-percentage text-primary" style="font-size: 1.3rem;">
                                     <i class="fas fa-money-bill-wave"></i>
                                 </span>
-                                <h5 class="description-header">Rp {{ number_format($totalRalan, 0, ',', '.') }}</h5>
-                                <span class="description-text">Total Biaya</span>
+                                <h5 class="description-header mb-1" style="font-size: 0.85rem; font-weight: 600;">
+                                    Rp {{ number_format($totalRalan, 0, ',', '.') }}
+                                </h5>
+                                <span class="description-text" style="font-size: 0.7rem;">Total Biaya</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card card-success">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-bed"></i> Rawat Inap (Ranap)
-                    </h3>
+        <div class="col-6 col-md-4 col-lg mb-3 mb-lg-0">
+            <div class="card card-success h-100 shadow-sm">
+                <div class="card-header text-center p-2">
+                    <h5 class="card-title mb-0" style="font-size: 0.85rem;">
+                        <i class="fas fa-bed"></i> Rawat Inap
+                    </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="description-block border-right">
-                                <span class="description-percentage text-success">
+                <div class="card-body p-2">
+                    <div class="row no-gutters text-center">
+                        <div class="col-6 border-right">
+                            <div class="description-block">
+                                <span class="description-percentage text-success" style="font-size: 1.3rem;">
                                     <i class="fas fa-list"></i>
                                 </span>
-                                <h5 class="description-header">{{ number_format($totalRanapTindakan) }}</h5>
-                                <span class="description-text">Total Tindakan</span>
+                                <h5 class="description-header mb-1" style="font-size: 1rem; font-weight: 600;">
+                                    {{ number_format($totalRanapTindakan) }}
+                                </h5>
+                                <span class="description-text" style="font-size: 0.7rem;">Total Tindakan</span>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="description-block">
-                                <span class="description-percentage text-primary">
+                                <span class="description-percentage text-primary" style="font-size: 1.3rem;">
                                     <i class="fas fa-money-bill-wave"></i>
                                 </span>
-                                <h5 class="description-header">Rp {{ number_format($totalRanap, 0, ',', '.') }}</h5>
-                                <span class="description-text">Total Biaya</span>
+                                <h5 class="description-header mb-1" style="font-size: 0.85rem; font-weight: 600;">
+                                    Rp {{ number_format($totalRanap, 0, ',', '.') }}
+                                </h5>
+                                <span class="description-text" style="font-size: 0.7rem;">Total Biaya</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg mb-3 mb-lg-0">
+            <div class="card card-warning h-100 shadow-sm">
+                <div class="card-header text-center p-2">
+                    <h5 class="card-title mb-0" style="font-size: 0.85rem;">
+                        <i class="fas fa-x-ray"></i> Radiologi
+                    </h5>
+                </div>
+                <div class="card-body p-2">
+                    <div class="row no-gutters text-center">
+                        <div class="col-6 border-right">
+                            <div class="description-block">
+                                <span class="description-percentage text-warning" style="font-size: 1.3rem;">
+                                    <i class="fas fa-list"></i>
+                                </span>
+                                <h5 class="description-header mb-1" style="font-size: 1rem; font-weight: 600;">
+                                    {{ number_format($totalRadiologiTindakan) }}
+                                </h5>
+                                <span class="description-text" style="font-size: 0.7rem;">Total Tindakan</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="description-block">
+                                <span class="description-percentage text-warning" style="font-size: 1.3rem;">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </span>
+                                <h5 class="description-header mb-1" style="font-size: 0.85rem; font-weight: 600;">
+                                    Rp {{ number_format($totalRadiologi, 0, ',', '.') }}
+                                </h5>
+                                <span class="description-text" style="font-size: 0.7rem;">Total Biaya</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg mb-3 mb-lg-0">
+            <div class="card card-danger h-100 shadow-sm">
+                <div class="card-header text-center p-2">
+                    <h5 class="card-title mb-0" style="font-size: 0.85rem;">
+                        <i class="fas fa-flask"></i> Laboratorium
+                    </h5>
+                </div>
+                <div class="card-body p-2">
+                    <div class="row no-gutters text-center">
+                        <div class="col-6 border-right">
+                            <div class="description-block">
+                                <span class="description-percentage text-danger" style="font-size: 1.3rem;">
+                                    <i class="fas fa-list"></i>
+                                </span>
+                                <h5 class="description-header mb-1" style="font-size: 1rem; font-weight: 600;">
+                                    {{ number_format($totalLabTindakan) }}
+                                </h5>
+                                <span class="description-text" style="font-size: 0.7rem;">Total Tindakan</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="description-block">
+                                <span class="description-percentage text-danger" style="font-size: 1.3rem;">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </span>
+                                <h5 class="description-header mb-1" style="font-size: 0.85rem; font-weight: 600;">
+                                    Rp {{ number_format($totalLab, 0, ',', '.') }}
+                                </h5>
+                                <span class="description-text" style="font-size: 0.7rem;">Total Biaya</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg mb-3 mb-lg-0">
+            <div class="card card-secondary h-100 shadow-sm">
+                <div class="card-header text-center p-2">
+                    <h5 class="card-title mb-0" style="font-size: 0.85rem;">
+                        <i class="fas fa-procedures"></i> Operasi
+                    </h5>
+                </div>
+                <div class="card-body p-2">
+                    <div class="row no-gutters text-center">
+                        <div class="col-6 border-right">
+                            <div class="description-block">
+                                <span class="description-percentage text-secondary" style="font-size: 1.3rem;">
+                                    <i class="fas fa-list"></i>
+                                </span>
+                                <h5 class="description-header mb-1" style="font-size: 1rem; font-weight: 600;">
+                                    {{ number_format($totalOperasiTindakan) }}
+                                </h5>
+                                <span class="description-text" style="font-size: 0.7rem;">Total Tindakan</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="description-block">
+                                <span class="description-percentage text-secondary" style="font-size: 1.3rem;">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </span>
+                                <h5 class="description-header mb-1" style="font-size: 0.85rem; font-weight: 600;">
+                                    Rp {{ number_format($totalOperasi, 0, ',', '.') }}
+                                </h5>
+                                <span class="description-text" style="font-size: 0.7rem;">Total Biaya</span>
                             </div>
                         </div>
                     </div>
@@ -108,7 +221,7 @@
         </div>
     </div>
 
-    <!-- Tabs untuk Ralan dan Ranap -->
+    <!-- Tabs untuk Ralan, Ranap, dan Radiologi -->
     <div class="card card-primary card-tabs">
         <div class="card-header p-0 pt-1">
             <ul class="nav nav-tabs" id="custom-tabs-tindakan-tab" role="tablist">
@@ -131,6 +244,39 @@
                         <i class="fas fa-bed"></i> Rawat Inap 
                         @if($activeTab === 'ranap' && $ranapGrouped->count() > 0)
                         <span class="badge badge-light ml-2">{{ $ranapGrouped->total() }} Pasien</span>
+                        @endif
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ $activeTab === 'radiologi' ? 'active' : '' }}"
+                       wire:click="setActiveTab('radiologi')"
+                       href="#"
+                       role="tab">
+                        <i class="fas fa-x-ray"></i> Radiologi
+                        @if($activeTab === 'radiologi' && $radiologiGrouped->count() > 0)
+                        <span class="badge badge-light ml-2">{{ $radiologiGrouped->total() }} Pasien</span>
+                        @endif
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ $activeTab === 'lab' ? 'active' : '' }}"
+                       wire:click="setActiveTab('lab')"
+                       href="#"
+                       role="tab">
+                        <i class="fas fa-flask"></i> Laboratorium
+                        @if($activeTab === 'lab' && $labGrouped->count() > 0)
+                        <span class="badge badge-light ml-2">{{ $labGrouped->total() }} Pasien</span>
+                        @endif
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ $activeTab === 'operasi' ? 'active' : '' }}"
+                       wire:click="setActiveTab('operasi')"
+                       href="#"
+                       role="tab">
+                        <i class="fas fa-procedures"></i> Operasi
+                        @if($activeTab === 'operasi' && $operasiGrouped->count() > 0)
+                        <span class="badge badge-light ml-2">{{ $operasiGrouped->total() }} Pasien</span>
                         @endif
                     </a>
                 </li>
@@ -346,6 +492,334 @@
                     @else
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle"></i> Tidak ada data tindakan dokter untuk periode yang dipilih.
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                <!-- Tab Radiologi -->
+                @if($activeTab === 'radiologi')
+                <div class="tab-pane fade show active">
+                    @if($radiologiGrouped->count() > 0)
+                        @foreach($radiologiGrouped as $pasien)
+                        <div class="card mb-4 border-left-warning" style="border-left-width: 4px;">
+                            <div class="card-header bg-warning text-white">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <i class="fas fa-user"></i> {{ $pasien['nm_pasien'] }}
+                                        </h5>
+                                        <small class="text-dark-50">
+                                            <i class="fas fa-id-card"></i> No. RM: {{ $pasien['no_rkm_medis'] }} |
+                                            <i class="fas fa-book-medical"></i> No. Rawat: {{ $pasien['no_rawat'] }} |
+                                            <i class="fas fa-notes-medical"></i> Status: {{ $pasien['status'] }}
+                                        </small>
+                                    </div>
+                                    <div class="mt-2 mt-md-0">
+                                        <span class="badge badge-light" style="font-size: 0.9rem; padding: 0.5rem 0.75rem;">
+                                            <i class="fas fa-list"></i> {{ $pasien['total_tindakan'] }} Tindakan |
+                                            <i class="fas fa-money-bill-wave"></i> Rp {{ number_format($pasien['total_biaya'], 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover table-striped mb-0">
+                                        <thead class="thead-dark">
+                                            <tr>
+                                                <th style="width: 5%;">No</th>
+                                                <th style="width: 40%;">Nama Pemeriksaan</th>
+                                                <th style="width: 15%;">Tanggal</th>
+                                                <th style="width: 12%;">Jam</th>
+                                                <th style="width: 13%;">Status</th>
+                                                <th style="width: 15%;" class="text-right">Tarif Dokter</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($pasien['tindakan'] as $tindakan)
+                                            @php
+                                            $tglPeriksa = date_create($tindakan->tgl_periksa ?? '0000-00-00');
+                                            $datePeriksa = date_format($tglPeriksa,"d M Y");
+                                            @endphp
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>
+                                                    <strong class="text-dark">
+                                                        <i class="fas fa-x-ray"></i> {{ $tindakan->nm_perawatan }}
+                                                    </strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <i class="fas fa-calendar text-muted"></i> {{ $datePeriksa }}
+                                                </td>
+                                                <td>
+                                                    <i class="fas fa-clock text-muted"></i> {{ $tindakan->jam ?? '-' }}
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-pill {{ $tindakan->status === 'Ranap' ? 'badge-success' : 'badge-info' }}">
+                                                        {{ $tindakan->status }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-right">
+                                                    <strong class="text-success">
+                                                        Rp {{ number_format($tindakan->tarif_tindakan_dokter ?? 0, 0, ',', '.') }}
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="thead-light">
+                                            <tr>
+                                                <th colspan="5" class="text-right">
+                                                    <strong>Subtotal:</strong>
+                                                </th>
+                                                <th class="text-right">
+                                                    <strong class="text-success">
+                                                        Rp {{ number_format($pasien['total_biaya'], 0, ',', '.') }}
+                                                    </strong>
+                                                </th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+
+                        <!-- Pagination -->
+                        <div class="d-flex justify-content-center mt-4">
+                            {{ $radiologiGrouped->links() }}
+                        </div>
+                    @else
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Tidak ada data tindakan radiologi untuk periode yang dipilih.
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                <!-- Tab Lab -->
+                @if($activeTab === 'lab')
+                <div class="tab-pane fade show active">
+                    @if($labGrouped->count() > 0)
+                        @foreach($labGrouped as $pasien)
+                        <div class="card mb-4 border-left-danger" style="border-left-width: 4px;">
+                            <div class="card-header bg-danger text-white">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <i class="fas fa-user"></i> {{ $pasien['nm_pasien'] }}
+                                        </h5>
+                                        <small class="text-white-50">
+                                            <i class="fas fa-id-card"></i> No. RM: {{ $pasien['no_rkm_medis'] }} |
+                                            <i class="fas fa-book-medical"></i> No. Rawat: {{ $pasien['no_rawat'] }} |
+                                            <i class="fas fa-notes-medical"></i> Status: {{ $pasien['status'] }}
+                                        </small>
+                                    </div>
+                                    <div class="mt-2 mt-md-0">
+                                        <span class="badge badge-light" style="font-size: 0.9rem; padding: 0.5rem 0.75rem;">
+                                            <i class="fas fa-list"></i> {{ $pasien['total_tindakan'] }} Tindakan |
+                                            <i class="fas fa-money-bill-wave"></i> Rp {{ number_format($pasien['total_biaya'], 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover table-striped mb-0">
+                                        <thead class="thead-dark">
+                                            <tr>
+                                                <th style="width: 5%;">No</th>
+                                                <th style="width: 40%;">Nama Pemeriksaan</th>
+                                                <th style="width: 15%;">Tanggal</th>
+                                                <th style="width: 12%;">Jam</th>
+                                                <th style="width: 13%;">Status</th>
+                                                <th style="width: 15%;" class="text-right">Tarif Dokter</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($pasien['tindakan'] as $tindakan)
+                                            @php
+                                            $tglPeriksa = date_create($tindakan->tgl_periksa ?? '0000-00-00');
+                                            $datePeriksa = date_format($tglPeriksa,"d M Y");
+                                            @endphp
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>
+                                                    <strong class="text-dark">
+                                                        <i class="fas fa-flask"></i> {{ $tindakan->nm_perawatan }}
+                                                    </strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <i class="fas fa-calendar text-muted"></i> {{ $datePeriksa }}
+                                                </td>
+                                                <td>
+                                                    <i class="fas fa-clock text-muted"></i> {{ $tindakan->jam ?? '-' }}
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-pill {{ $tindakan->status === 'Ranap' ? 'badge-success' : 'badge-info' }}">
+                                                        {{ $tindakan->status }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-right">
+                                                    <strong class="text-success">
+                                                        Rp {{ number_format($tindakan->tarif_tindakan_dokter ?? 0, 0, ',', '.') }}
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="thead-light">
+                                            <tr>
+                                                <th colspan="5" class="text-right">
+                                                    <strong>Subtotal:</strong>
+                                                </th>
+                                                <th class="text-right">
+                                                    <strong class="text-success">
+                                                        Rp {{ number_format($pasien['total_biaya'], 0, ',', '.') }}
+                                                    </strong>
+                                                </th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+
+                        <!-- Pagination -->
+                        <div class="d-flex justify-content-center mt-4">
+                            {{ $labGrouped->links() }}
+                        </div>
+                    @else
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Tidak ada data tindakan laboratorium untuk periode yang dipilih.
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                <!-- Tab Operasi -->
+                @if($activeTab === 'operasi')
+                <div class="tab-pane fade show active">
+                    @if($operasiGrouped->count() > 0)
+                        @foreach($operasiGrouped as $pasien)
+                        <div class="card mb-4 border-left-secondary" style="border-left-width: 4px;">
+                            <div class="card-header bg-secondary text-white">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <i class="fas fa-user"></i> {{ $pasien['nm_pasien'] }}
+                                        </h5>
+                                        <small class="text-white-50">
+                                            <i class="fas fa-id-card"></i> No. RM: {{ $pasien['no_rkm_medis'] }} |
+                                            <i class="fas fa-book-medical"></i> No. Rawat: {{ $pasien['no_rawat'] }} |
+                                            <i class="fas fa-notes-medical"></i> Status: {{ $pasien['status'] }}
+                                        </small>
+                                    </div>
+                                    <div class="mt-2 mt-md-0">
+                                        <span class="badge badge-light" style="font-size: 0.9rem; padding: 0.5rem 0.75rem;">
+                                            <i class="fas fa-list"></i> {{ $pasien['total_tindakan'] }} Tindakan |
+                                            <i class="fas fa-money-bill-wave"></i> Rp {{ number_format($pasien['total_biaya'], 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover table-striped mb-0">
+                                        <thead class="thead-dark">
+                                            <tr>
+                                                <th style="width: 5%;">No</th>
+                                                <th style="width: 30%;">Nama Paket Operasi</th>
+                                                <th style="width: 12%;">Tanggal</th>
+                                                <th style="width: 15%;">Kategori</th>
+                                                <th style="width: 15%;">Peran Dokter</th>
+                                                <th style="width: 13%;">Status</th>
+                                                <th style="width: 10%;" class="text-right">Biaya</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($pasien['tindakan'] as $tindakan)
+                                            @php
+                                            $tglOperasi = date_create($tindakan->tgl_operasi ?? '0000-00-00');
+                                            $dateOperasi = date_format($tglOperasi,"d M Y");
+                                            $jamOperasi = date_format($tglOperasi,"H:i");
+                                            @endphp
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>
+                                                    <strong class="text-dark">
+                                                        <i class="fas fa-procedures"></i> {{ $tindakan->nm_perawatan }}
+                                                    </strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-code"></i> {{ $tindakan->kode_paket }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <i class="fas fa-calendar text-muted"></i> {{ $dateOperasi }}
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-clock"></i> {{ $jamOperasi }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-pill badge-info">
+                                                        {{ $tindakan->kategori ?? '-' }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-pill badge-secondary">
+                                                        {{ $tindakan->peran_dokter }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-pill {{ $tindakan->status === 'Ranap' ? 'badge-success' : 'badge-info' }}">
+                                                        {{ $tindakan->status }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-right">
+                                                    <strong class="text-success">
+                                                        Rp {{ number_format($tindakan->biaya_dokter ?? 0, 0, ',', '.') }}
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="thead-light">
+                                            <tr>
+                                                <th colspan="6" class="text-right">
+                                                    <strong>Subtotal:</strong>
+                                                </th>
+                                                <th class="text-right">
+                                                    <strong class="text-success">
+                                                        Rp {{ number_format($pasien['total_biaya'], 0, ',', '.') }}
+                                                    </strong>
+                                                </th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+
+                        <!-- Pagination -->
+                        <div class="d-flex justify-content-center mt-4">
+                            {{ $operasiGrouped->links() }}
+                        </div>
+                    @else
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Tidak ada data tindakan operasi untuk periode yang dipilih.
                     </div>
                     @endif
                 </div>

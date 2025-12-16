@@ -924,8 +924,12 @@
                      aria-labelledby="tindakan-dokter-tab">
                     @php
                     $statusLanjut = $this->getStatusLanjut($noRawat);
-                    $tindakanDokter = $this->getTindakanDokter($noRawat);
-                    $totalBiaya = $this->getTotalTindakanDokter($noRawat);
+                    $tindakanRalan = $this->getTindakanRalan($noRawat);
+                    $tindakanRanap = $this->getTindakanRanap($noRawat);
+                    $tindakanRadiologi = $this->getTindakanRadiologi($noRawat);
+                    $tindakanLab = $this->getTindakanLab($noRawat);
+                    $tindakanOperasi = $this->getTindakanOperasi($noRawat);
+                    $totalSemua = $this->getTotalSemuaTindakanDokter($noRawat);
                     @endphp
                     
                     <div class="card mb-3 border-left-primary" style="border-left-width: 4px;">
@@ -954,37 +958,781 @@
                         </div>
                     </div>
 
-                    @if(count($tindakanDokter) > 0)
-                    <!-- Summary Card -->
-                    <div class="card mb-4 border-left-success" style="border-left-width: 4px;">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-calculator"></i> Ringkasan Biaya Tindakan Dokter
-                            </h5>
+                    <!-- Tabs untuk Kategori Tindakan -->
+                    <div class="card card-primary card-tabs">
+                        <div class="card-header p-0 pt-1">
+                            <ul class="nav nav-tabs" id="custom-tabs-tindakan-kategori-tab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link {{ $activeTabTindakan === 'ralan' ? 'active' : '' }}" 
+                                       wire:click="setActiveTabTindakan('ralan')" 
+                                       href="#" 
+                                       role="tab">
+                                        <i class="fas fa-walking"></i> Rawat Jalan 
+                                        @if(count($tindakanRalan) > 0)
+                                        <span class="badge badge-light ml-2">{{ count($tindakanRalan) }}</span>
+                                        @endif
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {{ $activeTabTindakan === 'ranap' ? 'active' : '' }}" 
+                                       wire:click="setActiveTabTindakan('ranap')" 
+                                       href="#" 
+                                       role="tab">
+                                        <i class="fas fa-bed"></i> Rawat Inap 
+                                        @if(count($tindakanRanap) > 0)
+                                        <span class="badge badge-light ml-2">{{ count($tindakanRanap) }}</span>
+                                        @endif
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {{ $activeTabTindakan === 'radiologi' ? 'active' : '' }}"
+                                       wire:click="setActiveTabTindakan('radiologi')"
+                                       href="#"
+                                       role="tab">
+                                        <i class="fas fa-x-ray"></i> Radiologi
+                                        @if(count($tindakanRadiologi) > 0)
+                                        <span class="badge badge-light ml-2">{{ count($tindakanRadiologi) }}</span>
+                                        @endif
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {{ $activeTabTindakan === 'lab' ? 'active' : '' }}"
+                                       wire:click="setActiveTabTindakan('lab')"
+                                       href="#"
+                                       role="tab">
+                                        <i class="fas fa-flask"></i> Laboratorium
+                                        @if(count($tindakanLab) > 0)
+                                        <span class="badge badge-light ml-2">{{ count($tindakanLab) }}</span>
+                                        @endif
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {{ $activeTabTindakan === 'operasi' ? 'active' : '' }}"
+                                       wire:click="setActiveTabTindakan('operasi')"
+                                       href="#"
+                                       role="tab">
+                                        <i class="fas fa-procedures"></i> Operasi
+                                        @if(count($tindakanOperasi) > 0)
+                                        <span class="badge badge-light ml-2">{{ count($tindakanOperasi) }}</span>
+                                        @endif
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3 mb-md-0">
-                                    <div class="d-flex align-items-center">
-                                        <div class="mr-3">
-                                            <i class="fas fa-list-check fa-3x text-success"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="text-muted mb-0">Total Tindakan</h6>
-                                            <h3 class="mb-0 text-success">{{ count($tindakanDokter) }} Tindakan</h3>
-                                        </div>
+                            <div class="tab-content">
+                                <!-- Tab Ralan -->
+                                @if($activeTabTindakan === 'ralan')
+                                <div class="tab-pane fade show active">
+                                    @if(count($tindakanRalan) > 0)
+                                    <!-- Desktop Table View -->
+                                    <div class="table-responsive d-none d-md-block">
+                                        <table class="table table-sm table-hover table-striped mb-0">
+                                            <thead class="thead-dark">
+                                                <tr>
+                                                    <th style="width: 5%;">No</th>
+                                                    <th style="width: 30%;">Nama Tindakan</th>
+                                                    {{-- <th style="width: 15%;">Kode</th>
+                                                    <th style="width: 15%;">Dokter</th> --}}
+                                                    <th style="width: 12%;">Tanggal</th>
+                                                    <th style="width: 8%;">Jam</th>
+                                                    <th style="width: 15%;" class="text-right">Tarif Tindakan</th>
+                                                    <th style="width: 10%;" class="text-center">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($tindakanRalan as $tindakan)
+                                                @php
+                                                $tglTindakan = date_create($tindakan->tgl_perawatan ?? '0000-00-00');
+                                                $dateTindakan = date_format($tglTindakan,"d M Y");
+                                                $statusBayar = $tindakan->stts_bayar ?? 'Belum';
+                                                $badgeStatus = $statusBayar == 'Sudah' ? 'success' : ($statusBayar == 'Suspen' ? 'warning' : 'secondary');
+                                                @endphp
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>
+                                                        <strong class="text-primary">
+                                                            <i class="fas fa-procedures"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                        </strong>
+                                                    </td>
+                                                    {{-- <td>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
+                                                        </small>
+                                                    </td>
+                                                    <td>
+                                                        <i class="fas fa-user-md text-info"></i> {{ $tindakan->nm_dokter ?? '-' }}
+                                                    </td> --}}
+                                                    <td>
+                                                        <i class="fas fa-calendar text-muted"></i> {{ $dateTindakan }}
+                                                    </td>
+                                                    <td>
+                                                        <i class="fas fa-clock text-muted"></i> {{ $tindakan->jam_rawat ?? '-' }}
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <strong class="text-success">
+                                                            Rp {{ number_format($tindakan->tarif_tindakandr ?? 0, 0, ',', '.') }}
+                                                        </strong>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge badge-{{ $badgeStatus }}">
+                                                            {{ $statusBayar }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
                                     </div>
+                                    
+                                    <!-- Mobile Card View -->
+                                    <div class="d-block d-md-none">
+                                        @foreach($tindakanRalan as $tindakan)
+                                        @php
+                                        $tglTindakan = date_create($tindakan->tgl_perawatan ?? '0000-00-00');
+                                        $dateTindakan = date_format($tglTindakan,"d M Y");
+                                        $statusBayar = $tindakan->stts_bayar ?? 'Belum';
+                                        $badgeStatus = $statusBayar == 'Sudah' ? 'success' : ($statusBayar == 'Suspen' ? 'warning' : 'secondary');
+                                        @endphp
+                                        <div class="card mb-3 shadow-sm border-left-info" style="border-left-width: 4px;">
+                                            <div class="card-header bg-info text-white">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-1" style="font-size: 0.95rem; line-height: 1.4;">
+                                                            <i class="fas fa-procedures"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                        </h6>
+                                                        <small class="text-white-50 d-block mt-1">
+                                                            <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
+                                                        </small>
+                                                    </div>
+                                                    <span class="badge badge-light ml-2" style="font-size: 0.85rem;">#{{ $loop->iteration }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="row mb-3">
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fas fa-calendar text-muted mr-2"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Tanggal</small>
+                                                                <strong style="font-size: 0.9rem;">{{ $dateTindakan }}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fas fa-clock text-muted mr-2"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Jam</small>
+                                                                <strong style="font-size: 0.9rem;">{{ $tindakan->jam_rawat ?? '-' }}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @if($tindakan->nm_dokter)
+                                                <div class="mb-3 pb-3 border-bottom">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-user-md text-info mr-2"></i>
+                                                        <div class="flex-grow-1">
+                                                            <small class="text-muted d-block" style="font-size: 0.75rem;">Dokter</small>
+                                                            <strong class="text-info" style="font-size: 0.9rem;">{{ $tindakan->nm_dokter }}</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @endif
+                                                <div class="row align-items-end">
+                                                    <div class="col-7">
+                                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Tarif Tindakan</small>
+                                                        <strong class="text-success" style="font-size: 1.1rem; font-weight: 600;">
+                                                            Rp {{ number_format($tindakan->tarif_tindakandr ?? 0, 0, ',', '.') }}
+                                                        </strong>
+                                                    </div>
+                                                    <div class="col-5 text-right">
+                                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Status</small>
+                                                        <span class="badge badge-{{ $badgeStatus }}" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+                                                            {{ $statusBayar }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    @else
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> Tidak ada data tindakan rawat jalan untuk pasien ini.
+                                    </div>
+                                    @endif
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center">
-                                        <div class="mr-3">
-                                            <i class="fas fa-money-bill-wave fa-3x text-primary"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="text-muted mb-0">Total Biaya (Perkiraan)</h6>
-                                            <h3 class="mb-0 text-primary">Rp {{ number_format($totalBiaya, 0, ',', '.') }}</h3>
-                                        </div>
+                                @endif
+
+                                <!-- Tab Ranap -->
+                                @if($activeTabTindakan === 'ranap')
+                                <div class="tab-pane fade show active">
+                                    @if(count($tindakanRanap) > 0)
+                                    <!-- Desktop Table View -->
+                                    <div class="table-responsive d-none d-md-block">
+                                        <table class="table table-sm table-hover table-striped mb-0">
+                                            <thead class="thead-dark">
+                                                <tr>
+                                                    <th style="width: 5%;">No</th>
+                                                    <th style="width: 30%;">Nama Tindakan</th>
+                                                    {{-- <th style="width: 15%;">Kode</th>
+                                                    <th style="width: 15%;">Dokter</th> --}}
+                                                    <th style="width: 12%;">Tanggal</th>
+                                                    <th style="width: 8%;">Jam</th>
+                                                    <th style="width: 15%;" class="text-right">Tarif Tindakan</th>
+                                                    <th style="width: 10%;" class="text-center">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($tindakanRanap as $tindakan)
+                                                @php
+                                                $tglTindakan = date_create($tindakan->tgl_perawatan ?? '0000-00-00');
+                                                $dateTindakan = date_format($tglTindakan,"d M Y");
+                                                $statusBayar = $tindakan->stts_bayar ?? 'Belum';
+                                                $badgeStatus = $statusBayar == 'Sudah' ? 'success' : ($statusBayar == 'Suspen' ? 'warning' : 'secondary');
+                                                @endphp
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>
+                                                        <strong class="text-primary">
+                                                            <i class="fas fa-procedures"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                        </strong>
+                                                    </td>
+                                                    {{-- <td>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
+                                                        </small>
+                                                    </td>
+                                                    <td>
+                                                        <i class="fas fa-user-md text-info"></i> {{ $tindakan->nm_dokter ?? '-' }}
+                                                    </td> --}}
+                                                    <td>
+                                                        <i class="fas fa-calendar text-muted"></i> {{ $dateTindakan }}
+                                                    </td>
+                                                    <td>
+                                                        <i class="fas fa-clock text-muted"></i> {{ $tindakan->jam_rawat ?? '-' }}
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <strong class="text-success">
+                                                            Rp {{ number_format($tindakan->tarif_tindakandr ?? 0, 0, ',', '.') }}
+                                                        </strong>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge badge-{{ $badgeStatus }}">
+                                                            {{ $statusBayar }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
                                     </div>
+                                    
+                                    <!-- Mobile Card View -->
+                                    <div class="d-block d-md-none">
+                                        @foreach($tindakanRanap as $tindakan)
+                                        @php
+                                        $tglTindakan = date_create($tindakan->tgl_perawatan ?? '0000-00-00');
+                                        $dateTindakan = date_format($tglTindakan,"d M Y");
+                                        $statusBayar = $tindakan->stts_bayar ?? 'Belum';
+                                        $badgeStatus = $statusBayar == 'Sudah' ? 'success' : ($statusBayar == 'Suspen' ? 'warning' : 'secondary');
+                                        @endphp
+                                        <div class="card mb-3 shadow-sm border-left-success" style="border-left-width: 4px;">
+                                            <div class="card-header bg-success text-white">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-1" style="font-size: 0.95rem; line-height: 1.4;">
+                                                            <i class="fas fa-procedures"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                        </h6>
+                                                        <small class="text-white-50 d-block mt-1">
+                                                            <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
+                                                        </small>
+                                                    </div>
+                                                    <span class="badge badge-light ml-2" style="font-size: 0.85rem;">#{{ $loop->iteration }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="row mb-3">
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fas fa-calendar text-muted mr-2"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Tanggal</small>
+                                                                <strong style="font-size: 0.9rem;">{{ $dateTindakan }}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fas fa-clock text-muted mr-2"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Jam</small>
+                                                                <strong style="font-size: 0.9rem;">{{ $tindakan->jam_rawat ?? '-' }}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @if($tindakan->nm_dokter)
+                                                <div class="mb-3 pb-3 border-bottom">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-user-md text-info mr-2"></i>
+                                                        <div class="flex-grow-1">
+                                                            <small class="text-muted d-block" style="font-size: 0.75rem;">Dokter</small>
+                                                            <strong class="text-info" style="font-size: 0.9rem;">{{ $tindakan->nm_dokter }}</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @endif
+                                                <div class="row align-items-end">
+                                                    <div class="col-7">
+                                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Tarif Tindakan</small>
+                                                        <strong class="text-success" style="font-size: 1.1rem; font-weight: 600;">
+                                                            Rp {{ number_format($tindakan->tarif_tindakandr ?? 0, 0, ',', '.') }}
+                                                        </strong>
+                                                    </div>
+                                                    <div class="col-5 text-right">
+                                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Status</small>
+                                                        <span class="badge badge-{{ $badgeStatus }}" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+                                                            {{ $statusBayar }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    @else
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> Tidak ada data tindakan rawat inap untuk pasien ini.
+                                    </div>
+                                    @endif
+                                </div>
+                                @endif
+
+                                <!-- Tab Radiologi -->
+                                @if($activeTabTindakan === 'radiologi')
+                                <div class="tab-pane fade show active">
+                                    @if(count($tindakanRadiologi) > 0)
+                                    <!-- Desktop Table View -->
+                                    <div class="table-responsive d-none d-md-block">
+                                        <table class="table table-sm table-hover table-striped mb-0">
+                                            <thead class="thead-dark">
+                                                <tr>
+                                                    <th style="width: 5%;">No</th>
+                                                    <th style="width: 35%;">Nama Pemeriksaan</th>
+                                                    {{-- <th style="width: 15%;">Kode</th> --}}
+                                                    <th style="width: 12%;">Tanggal</th>
+                                                    <th style="width: 8%;">Jam</th>
+                                                    <th style="width: 10%;" class="text-center">Status</th>
+                                                    <th style="width: 15%;" class="text-right">Tarif Dokter</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($tindakanRadiologi as $tindakan)
+                                                @php
+                                                $tglPeriksa = date_create($tindakan->tgl_periksa ?? '0000-00-00');
+                                                $datePeriksa = date_format($tglPeriksa,"d M Y");
+                                                @endphp
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>
+                                                        <strong class="text-dark">
+                                                            <i class="fas fa-x-ray"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                        </strong>
+                                                    </td>
+                                                    {{-- <td>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
+                                                        </small>
+                                                    </td> --}}
+                                                    <td>
+                                                        <i class="fas fa-calendar text-muted"></i> {{ $datePeriksa }}
+                                                    </td>
+                                                    <td>
+                                                        <i class="fas fa-clock text-muted"></i> {{ $tindakan->jam ?? '-' }}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge badge-pill {{ $tindakan->status === 'Ranap' ? 'badge-success' : 'badge-info' }}">
+                                                            {{ $tindakan->status }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <strong class="text-success">
+                                                            Rp {{ number_format($tindakan->tarif_tindakan_dokter ?? 0, 0, ',', '.') }}
+                                                        </strong>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Mobile Card View -->
+                                    <div class="d-block d-md-none">
+                                        @foreach($tindakanRadiologi as $tindakan)
+                                        @php
+                                        $tglPeriksa = date_create($tindakan->tgl_periksa ?? '0000-00-00');
+                                        $datePeriksa = date_format($tglPeriksa,"d M Y");
+                                        @endphp
+                                        <div class="card mb-3 shadow-sm border-left-warning" style="border-left-width: 4px;">
+                                            <div class="card-header bg-warning text-dark">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-1" style="font-size: 0.95rem; line-height: 1.4;">
+                                                            <i class="fas fa-x-ray"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                        </h6>
+                                                        <small class="text-dark-50 d-block mt-1">
+                                                            <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
+                                                        </small>
+                                                    </div>
+                                                    <span class="badge badge-light ml-2" style="font-size: 0.85rem;">#{{ $loop->iteration }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="row mb-3">
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fas fa-calendar text-muted mr-2"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Tanggal</small>
+                                                                <strong style="font-size: 0.9rem;">{{ $datePeriksa }}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fas fa-clock text-muted mr-2"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Jam</small>
+                                                                <strong style="font-size: 0.9rem;">{{ $tindakan->jam ?? '-' }}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3 pb-3 border-bottom">
+                                                    <span class="badge badge-pill {{ $tindakan->status === 'Ranap' ? 'badge-success' : 'badge-info' }}">
+                                                        {{ $tindakan->status }}
+                                                    </span>
+                                                </div>
+                                                <div class="row align-items-end">
+                                                    <div class="col-12">
+                                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Tarif Dokter</small>
+                                                        <strong class="text-success" style="font-size: 1.1rem; font-weight: 600;">
+                                                            Rp {{ number_format($tindakan->tarif_tindakan_dokter ?? 0, 0, ',', '.') }}
+                                                        </strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    @else
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> Tidak ada data tindakan radiologi untuk pasien ini.
+                                    </div>
+                                    @endif
+                                </div>
+                                @endif
+
+                                <!-- Tab Lab -->
+                                @if($activeTabTindakan === 'lab')
+                                <div class="tab-pane fade show active">
+                                    @if(count($tindakanLab) > 0)
+                                    <!-- Desktop Table View -->
+                                    <div class="table-responsive d-none d-md-block">
+                                        <table class="table table-sm table-hover table-striped mb-0">
+                                            <thead class="thead-dark">
+                                                <tr>
+                                                    <th style="width: 5%;">No</th>
+                                                    <th style="width: 35%;">Nama Pemeriksaan</th>
+                                                    {{-- <th style="width: 15%;">Kode</th> --}}
+                                                    <th style="width: 12%;">Tanggal</th>
+                                                    <th style="width: 8%;">Jam</th>
+                                                    <th style="width: 10%;" class="text-center">Status</th>
+                                                    <th style="width: 15%;" class="text-right">Tarif Dokter</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($tindakanLab as $tindakan)
+                                                @php
+                                                $tglPeriksa = date_create($tindakan->tgl_periksa ?? '0000-00-00');
+                                                $datePeriksa = date_format($tglPeriksa,"d M Y");
+                                                @endphp
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>
+                                                        <strong class="text-dark">
+                                                            <i class="fas fa-flask"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                        </strong>
+                                                    </td>
+                                                    {{-- <td>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
+                                                        </small>
+                                                    </td> --}}
+                                                    <td>
+                                                        <i class="fas fa-calendar text-muted"></i> {{ $datePeriksa }}
+                                                    </td>
+                                                    <td>
+                                                        <i class="fas fa-clock text-muted"></i> {{ $tindakan->jam ?? '-' }}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge badge-pill {{ $tindakan->status === 'Ranap' ? 'badge-success' : 'badge-info' }}">
+                                                            {{ $tindakan->status }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <strong class="text-success">
+                                                            Rp {{ number_format($tindakan->tarif_tindakan_dokter ?? 0, 0, ',', '.') }}
+                                                        </strong>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Mobile Card View -->
+                                    <div class="d-block d-md-none">
+                                        @foreach($tindakanLab as $tindakan)
+                                        @php
+                                        $tglPeriksa = date_create($tindakan->tgl_periksa ?? '0000-00-00');
+                                        $datePeriksa = date_format($tglPeriksa,"d M Y");
+                                        @endphp
+                                        <div class="card mb-3 shadow-sm border-left-danger" style="border-left-width: 4px;">
+                                            <div class="card-header bg-danger text-white">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-1" style="font-size: 0.95rem; line-height: 1.4;">
+                                                            <i class="fas fa-flask"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                        </h6>
+                                                        <small class="text-white-50 d-block mt-1">
+                                                            <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
+                                                        </small>
+                                                    </div>
+                                                    <span class="badge badge-light ml-2" style="font-size: 0.85rem;">#{{ $loop->iteration }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="row mb-3">
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fas fa-calendar text-muted mr-2"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Tanggal</small>
+                                                                <strong style="font-size: 0.9rem;">{{ $datePeriksa }}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fas fa-clock text-muted mr-2"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Jam</small>
+                                                                <strong style="font-size: 0.9rem;">{{ $tindakan->jam ?? '-' }}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3 pb-3 border-bottom">
+                                                    <span class="badge badge-pill {{ $tindakan->status === 'Ranap' ? 'badge-success' : 'badge-info' }}">
+                                                        {{ $tindakan->status }}
+                                                    </span>
+                                                </div>
+                                                <div class="row align-items-end">
+                                                    <div class="col-12">
+                                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Tarif Dokter</small>
+                                                        <strong class="text-success" style="font-size: 1.1rem; font-weight: 600;">
+                                                            Rp {{ number_format($tindakan->tarif_tindakan_dokter ?? 0, 0, ',', '.') }}
+                                                        </strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    @else
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> Tidak ada data tindakan laboratorium untuk pasien ini.
+                                    </div>
+                                    @endif
+                                </div>
+                                @endif
+
+                                <!-- Tab Operasi -->
+                                @if($activeTabTindakan === 'operasi')
+                                <div class="tab-pane fade show active">
+                                    @if(count($tindakanOperasi) > 0)
+                                    <!-- Desktop Table View -->
+                                    <div class="table-responsive d-none d-md-block">
+                                        <table class="table table-sm table-hover table-striped mb-0">
+                                            <thead class="thead-dark">
+                                                <tr>
+                                                    <th style="width: 5%;">No</th>
+                                                    <th style="width: 25%;">Nama Paket Operasi</th>
+                                                    {{-- <th style="width: 12%;">Kode</th> --}}
+                                                    <th style="width: 10%;">Tanggal</th>
+                                                    <th style="width: 8%;">Jam</th>
+                                                    <th style="width: 12%;" class="text-center">Kategori</th>
+                                                    <th style="width: 13%;" class="text-center">Peran Dokter</th>
+                                                    <th style="width: 10%;" class="text-center">Status</th>
+                                                    <th style="width: 15%;" class="text-right">Biaya Dokter</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($tindakanOperasi as $tindakan)
+                                                @php
+                                                $tglOperasi = date_create($tindakan->tgl_operasi ?? '0000-00-00');
+                                                $dateOperasi = date_format($tglOperasi,"d M Y");
+                                                $jamOperasi = date_format($tglOperasi,"H:i");
+                                                @endphp
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>
+                                                        <strong class="text-dark">
+                                                            <i class="fas fa-procedures"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                        </strong>
+                                                    </td>
+                                                    {{-- <td>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-code"></i> {{ $tindakan->kode_paket ?? '-' }}
+                                                        </small>
+                                                    </td> --}}
+                                                    <td>
+                                                        <i class="fas fa-calendar text-muted"></i> {{ $dateOperasi }}
+                                                    </td>
+                                                    <td>
+                                                        <i class="fas fa-clock text-muted"></i> {{ $jamOperasi }}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge badge-pill badge-info">
+                                                            {{ $tindakan->kategori ?? '-' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge badge-pill badge-secondary">
+                                                            {{ $tindakan->peran_dokter ?? '-' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge badge-pill {{ $tindakan->status === 'Ranap' ? 'badge-success' : 'badge-info' }}">
+                                                            {{ $tindakan->status }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <strong class="text-success">
+                                                            Rp {{ number_format($tindakan->biaya_dokter ?? 0, 0, ',', '.') }}
+                                                        </strong>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Mobile Card View -->
+                                    <div class="d-block d-md-none">
+                                        @foreach($tindakanOperasi as $tindakan)
+                                        @php
+                                        $tglOperasi = date_create($tindakan->tgl_operasi ?? '0000-00-00');
+                                        $dateOperasi = date_format($tglOperasi,"d M Y");
+                                        $jamOperasi = date_format($tglOperasi,"H:i");
+                                        @endphp
+                                        <div class="card mb-3 shadow-sm border-left-secondary" style="border-left-width: 4px;">
+                                            <div class="card-header bg-secondary text-white">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-1" style="font-size: 0.95rem; line-height: 1.4;">
+                                                            <i class="fas fa-procedures"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                        </h6>
+                                                        <small class="text-white-50 d-block mt-1">
+                                                            <i class="fas fa-code"></i> {{ $tindakan->kode_paket ?? '-' }}
+                                                        </small>
+                                                    </div>
+                                                    <span class="badge badge-light ml-2" style="font-size: 0.85rem;">#{{ $loop->iteration }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="row mb-3">
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fas fa-calendar text-muted mr-2"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Tanggal</small>
+                                                                <strong style="font-size: 0.9rem;">{{ $dateOperasi }}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="fas fa-clock text-muted mr-2"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Jam</small>
+                                                                <strong style="font-size: 0.9rem;">{{ $jamOperasi }}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @if($tindakan->kategori)
+                                                <div class="mb-2">
+                                                    <span class="badge badge-pill badge-info">
+                                                        {{ $tindakan->kategori }}
+                                                    </span>
+                                                </div>
+                                                @endif
+                                                @if($tindakan->peran_dokter)
+                                                <div class="mb-3 pb-3 border-bottom">
+                                                    <span class="badge badge-pill badge-secondary">
+                                                        {{ $tindakan->peran_dokter }}
+                                                    </span>
+                                                </div>
+                                                @endif
+                                                <div class="mb-2">
+                                                    <span class="badge badge-pill {{ $tindakan->status === 'Ranap' ? 'badge-success' : 'badge-info' }}">
+                                                        {{ $tindakan->status }}
+                                                    </span>
+                                                </div>
+                                                <div class="row align-items-end mt-3">
+                                                    <div class="col-12">
+                                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Biaya Dokter</small>
+                                                        <strong class="text-success" style="font-size: 1.1rem; font-weight: 600;">
+                                                            Rp {{ number_format($tindakan->biaya_dokter ?? 0, 0, ',', '.') }}
+                                                        </strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    @else
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> Tidak ada data tindakan operasi untuk pasien ini.
+                                    </div>
+                                    @endif
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Summary Card -->
+                    <div class="card mt-4 border-left-success shadow-sm" style="border-left-width: 4px;">
+                        <div class="card-body bg-light">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="mb-1 text-muted">
+                                        <i class="fas fa-calculator text-success"></i> Total Biaya Tindakan Dokter (Perkiraan)
+                                    </h5>
+                                    <small class="text-muted">
+                                        Total dari semua kategori tindakan yang tercatat
+                                    </small>
+                                </div>
+                                <div class="col-md-4 text-md-right mt-3 mt-md-0">
+                                    <h3 class="mb-0 text-primary" style="font-weight: 700;">
+                                        Rp {{ number_format($totalSemua['total'], 0, ',', '.') }}
+                                    </h3>
                                 </div>
                             </div>
                             <div class="alert alert-warning mt-3 mb-0" role="alert">
@@ -994,128 +1742,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Detail Tindakan -->
-                    <x-adminlte-card theme="primary" title="Detail Tindakan Dokter" icon="fas fa-stethoscope" theme-mode="outline" collapsible="collapsed" maximizable>
-                        <!-- Card View untuk Semua Device -->
-                        <div class="row">
-                            @foreach($tindakanDokter as $tindakan)
-                            @php
-                            $tglTindakan = date_create($tindakan->tgl_perawatan ?? '0000-00-00');
-                            $dateTindakan = date_format($tglTindakan,"d M Y");
-                            $statusBayar = $tindakan->stts_bayar ?? 'Belum';
-                            $badgeStatus = $statusBayar == 'Sudah' ? 'success' : ($statusBayar == 'Suspen' ? 'warning' : 'secondary');
-                            @endphp
-                            <div class="col-12 col-md-6 col-lg-4 mb-4">
-                                <div class="card h-100 shadow-sm border-left-primary" style="border-left-width: 4px; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'">
-                                    <div class="card-header bg-primary text-white">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1" style="font-size: 0.95rem; line-height: 1.4;">
-                                                    <i class="fas fa-procedures"></i> {{ $tindakan->nm_perawatan ?? '-' }}
-                                                </h6>
-                                                <small class="text-white-50 d-block mt-1">
-                                                    <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
-                                                </small>
-                                            </div>
-                                            <span class="badge badge-light ml-2" style="font-size: 0.85rem;">#{{ $loop->iteration }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <!-- Tanggal & Jam -->
-                                        <div class="row mb-3">
-                                            <div class="col-6">
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <i class="fas fa-calendar text-muted mr-2"></i>
-                                                    <div>
-                                                        <small class="text-muted d-block" style="font-size: 0.75rem;">Tanggal</small>
-                                                        <strong style="font-size: 0.9rem;">{{ $dateTindakan }}</strong>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <i class="fas fa-clock text-muted mr-2"></i>
-                                                    <div>
-                                                        <small class="text-muted d-block" style="font-size: 0.75rem;">Jam</small>
-                                                        <strong style="font-size: 0.9rem;">{{ $tindakan->jam_rawat ?? '-' }}</strong>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Dokter -->
-                                        @if($tindakan->nm_dokter)
-                                        <div class="mb-3 pb-3 border-bottom">
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-user-md text-info mr-2"></i>
-                                                <div class="flex-grow-1">
-                                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Dokter</small>
-                                                    <strong class="text-info" style="font-size: 0.9rem;">{{ $tindakan->nm_dokter }}</strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @endif
-
-                                        <!-- Tarif & Status -->
-                                        <div class="row align-items-end">
-                                            <div class="col-7">
-                                                <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Tarif Tindakan</small>
-                                                <strong class="text-success" style="font-size: 1.1rem; font-weight: 600;">
-                                                    Rp {{ number_format($tindakan->tarif_tindakandr ?? 0, 0, ',', '.') }}
-                                                </strong>
-                                            </div>
-                                            <div class="col-5 text-right">
-                                                <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Status</small>
-                                                <span class="badge badge-{{ $badgeStatus }}" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
-                                                    {{ $statusBayar }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                        
-                        <!-- Total Summary Card -->
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="card border-left-success shadow-sm" style="border-left-width: 4px;">
-                                    <div class="card-body bg-light">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-8">
-                                                <h5 class="mb-1 text-muted">
-                                                    <i class="fas fa-calculator text-success"></i> Total Biaya Tindakan Dokter (Perkiraan)
-                                                </h5>
-                                                <small class="text-muted">
-                                                    Total dari {{ count($tindakanDokter) }} tindakan yang tercatat
-                                                </small>
-                                            </div>
-                                            <div class="col-md-4 text-md-right mt-3 mt-md-0">
-                                                <h3 class="mb-0 text-primary" style="font-weight: 700;">
-                                                    Rp {{ number_format($totalBiaya, 0, ',', '.') }}
-                                                </h3>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </x-adminlte-card>
-                    @else
-                    <div class="text-center py-5">
-                        <div class="mb-4">
-                            <i class="fas fa-stethoscope fa-4x text-muted mb-3" style="opacity: 0.5;"></i>
-                        </div>
-                        <h4 class="text-muted mb-2">
-                            <i class="fas fa-info-circle"></i> Tidak Ada Data Tindakan Dokter
-                        </h4>
-                        <p class="text-muted">
-                            Belum ada tindakan dokter yang tercatat untuk pasien ini.
-                        </p>
-                    </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -1294,6 +1920,28 @@
     
     #filterRiwayatIcon {
         transition: all 0.3s ease;
+    }
+    
+    /* Style untuk summary cards */
+    .description-block {
+        text-align: center;
+    }
+    .description-block .description-percentage {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    .description-block .description-header {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+    .description-block .description-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    .nav-link {
+        cursor: pointer;
     }
 </style>
 @endpush

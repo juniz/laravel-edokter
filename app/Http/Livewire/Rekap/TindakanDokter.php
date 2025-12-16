@@ -57,6 +57,133 @@ class TindakanDokter extends Component
         $this->page = (int)$page;
     }
 
+    /**
+     * Ambil data tindakan radiologi berdasarkan dokter dan periode.
+     */
+    private function getDataRadiologi()
+    {
+        return DB::table('periksa_radiologi')
+            ->join('reg_periksa', 'periksa_radiologi.no_rawat', '=', 'reg_periksa.no_rawat')
+            ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+            ->join('jns_perawatan_radiologi', 'periksa_radiologi.kd_jenis_prw', '=', 'jns_perawatan_radiologi.kd_jenis_prw')
+            ->whereBetween('periksa_radiologi.tgl_periksa', [
+                $this->tanggalMulai . ' 00:00:00',
+                $this->tanggalAkhir . ' 23:59:59'
+            ])
+            ->where('periksa_radiologi.kd_dokter', session()->get('username'))
+            ->select(
+                'periksa_radiologi.no_rawat',
+                'reg_periksa.no_rkm_medis',
+                'pasien.nm_pasien',
+                'periksa_radiologi.kd_jenis_prw',
+                'jns_perawatan_radiologi.nm_perawatan',
+                'periksa_radiologi.kd_dokter',
+                'periksa_radiologi.tgl_periksa',
+                'periksa_radiologi.jam',
+                'periksa_radiologi.status',
+                'periksa_radiologi.tarif_tindakan_dokter'
+            )
+            ->orderBy('periksa_radiologi.tgl_periksa', 'desc')
+            ->orderBy('periksa_radiologi.jam', 'desc');
+    }
+
+    /**
+     * Ambil data tindakan laboratorium berdasarkan dokter dan periode.
+     */
+    private function getDataLab()
+    {
+        return DB::table('periksa_lab')
+            ->join('reg_periksa', 'periksa_lab.no_rawat', '=', 'reg_periksa.no_rawat')
+            ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+            ->join('jns_perawatan_lab', 'periksa_lab.kd_jenis_prw', '=', 'jns_perawatan_lab.kd_jenis_prw')
+            ->whereBetween('periksa_lab.tgl_periksa', [
+                $this->tanggalMulai . ' 00:00:00',
+                $this->tanggalAkhir . ' 23:59:59'
+            ])
+            ->where('periksa_lab.kd_dokter', session()->get('username'))
+            ->select(
+                'periksa_lab.no_rawat',
+                'reg_periksa.no_rkm_medis',
+                'pasien.nm_pasien',
+                'periksa_lab.kd_jenis_prw',
+                'jns_perawatan_lab.nm_perawatan',
+                'periksa_lab.kd_dokter',
+                'periksa_lab.tgl_periksa',
+                'periksa_lab.jam',
+                'periksa_lab.status',
+                'periksa_lab.tarif_tindakan_dokter'
+            )
+            ->orderBy('periksa_lab.tgl_periksa', 'desc')
+            ->orderBy('periksa_lab.jam', 'desc');
+    }
+
+    /**
+     * Ambil data tindakan operasi berdasarkan dokter dan periode.
+     * Dokter bisa terlibat sebagai operator1, operator2, operator3, dokter_anak, dokter_anestesi, dokter_pjanak, atau dokter_umum.
+     */
+    private function getDataOperasi()
+    {
+        $kdDokter = session()->get('username');
+        // Escape kdDokter untuk mencegah SQL injection
+        $kdDokterEscaped = DB::connection()->getPdo()->quote($kdDokter);
+
+        return DB::table('operasi')
+            ->join('reg_periksa', 'operasi.no_rawat', '=', 'reg_periksa.no_rawat')
+            ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+            ->join('paket_operasi', 'operasi.kode_paket', '=', 'paket_operasi.kode_paket')
+            ->whereBetween('operasi.tgl_operasi', [
+                $this->tanggalMulai . ' 00:00:00',
+                $this->tanggalAkhir . ' 23:59:59'
+            ])
+            ->where(function ($query) use ($kdDokter) {
+                $query->where('operasi.operator1', $kdDokter)
+                    ->orWhere('operasi.operator2', $kdDokter)
+                    ->orWhere('operasi.operator3', $kdDokter)
+                    ->orWhere('operasi.dokter_anak', $kdDokter)
+                    ->orWhere('operasi.dokter_anestesi', $kdDokter)
+                    ->orWhere('operasi.dokter_pjanak', $kdDokter)
+                    ->orWhere('operasi.dokter_umum', $kdDokter);
+            })
+            ->select(
+                'operasi.no_rawat',
+                'reg_periksa.no_rkm_medis',
+                'pasien.nm_pasien',
+                'operasi.kode_paket',
+                'paket_operasi.nm_perawatan',
+                'operasi.tgl_operasi',
+                'operasi.status',
+                'operasi.kategori',
+                'operasi.operator1',
+                'operasi.operator2',
+                'operasi.operator3',
+                'operasi.dokter_anak',
+                'operasi.dokter_anestesi',
+                'operasi.dokter_pjanak',
+                'operasi.dokter_umum',
+                DB::raw("CASE 
+                    WHEN operasi.operator1 = " . $kdDokterEscaped . " THEN operasi.biayaoperator1
+                    WHEN operasi.operator2 = " . $kdDokterEscaped . " THEN operasi.biayaoperator2
+                    WHEN operasi.operator3 = " . $kdDokterEscaped . " THEN operasi.biayaoperator3
+                    WHEN operasi.dokter_anak = " . $kdDokterEscaped . " THEN operasi.biayadokter_anak
+                    WHEN operasi.dokter_anestesi = " . $kdDokterEscaped . " THEN operasi.biayadokter_anestesi
+                    WHEN operasi.dokter_pjanak = " . $kdDokterEscaped . " THEN operasi.biaya_dokter_pjanak
+                    WHEN operasi.dokter_umum = " . $kdDokterEscaped . " THEN operasi.biaya_dokter_umum
+                    ELSE 0
+                END as biaya_dokter"),
+                DB::raw("CASE 
+                    WHEN operasi.operator1 = " . $kdDokterEscaped . " THEN 'Operator 1'
+                    WHEN operasi.operator2 = " . $kdDokterEscaped . " THEN 'Operator 2'
+                    WHEN operasi.operator3 = " . $kdDokterEscaped . " THEN 'Operator 3'
+                    WHEN operasi.dokter_anak = " . $kdDokterEscaped . " THEN 'Dokter Anak'
+                    WHEN operasi.dokter_anestesi = " . $kdDokterEscaped . " THEN 'Dokter Anestesi'
+                    WHEN operasi.dokter_pjanak = " . $kdDokterEscaped . " THEN 'Dokter PJ Anak'
+                    WHEN operasi.dokter_umum = " . $kdDokterEscaped . " THEN 'Dokter Umum'
+                    ELSE '-'
+                END as peran_dokter")
+            )
+            ->orderBy('operasi.tgl_operasi', 'desc');
+    }
+
     private function getDataRalan()
     {
         return DB::table('pasien')
@@ -168,11 +295,100 @@ class TindakanDokter extends Component
         })->values();
     }
 
+    /**
+     * Grouping khusus untuk radiologi berdasarkan no_rawat.
+     */
+    private function groupRadiologiByPasien($data)
+    {
+        return $data->groupBy('no_rawat')->map(function ($items) {
+            $first = $items->first();
+
+            return [
+                'no_rawat'       => $first->no_rawat,
+                'no_rkm_medis'   => $first->no_rkm_medis,
+                'nm_pasien'      => $first->nm_pasien,
+                'status'         => $first->status,
+                'tindakan'       => $items,
+                'total_biaya'    => $items->sum('tarif_tindakan_dokter'),
+                'total_tindakan' => $items->count(),
+            ];
+        })->values();
+    }
+
+    /**
+     * Grouping khusus untuk laboratorium berdasarkan no_rawat.
+     */
+    private function groupLabByPasien($data)
+    {
+        return $data->groupBy('no_rawat')->map(function ($items) {
+            $first = $items->first();
+
+            return [
+                'no_rawat'       => $first->no_rawat,
+                'no_rkm_medis'   => $first->no_rkm_medis,
+                'nm_pasien'      => $first->nm_pasien,
+                'status'         => $first->status,
+                'tindakan'       => $items,
+                'total_biaya'    => $items->sum('tarif_tindakan_dokter'),
+                'total_tindakan' => $items->count(),
+            ];
+        })->values();
+    }
+
+    /**
+     * Grouping khusus untuk operasi berdasarkan no_rawat.
+     */
+    private function groupOperasiByPasien($data)
+    {
+        return $data->groupBy('no_rawat')->map(function ($items) {
+            $first = $items->first();
+
+            return [
+                'no_rawat'       => $first->no_rawat,
+                'no_rkm_medis'   => $first->no_rkm_medis,
+                'nm_pasien'      => $first->nm_pasien,
+                'status'         => $first->status,
+                'tindakan'       => $items,
+                'total_biaya'    => $items->sum('biaya_dokter'),
+                'total_tindakan' => $items->count(),
+            ];
+        })->values();
+    }
+
     public function render()
     {
+        // Rekap Ralan (selalu dihitung untuk semua tab)
+        $ralanQuery = $this->getDataRalan();
+        $ralanData = $ralanQuery->get();
+        $totalRalan = $ralanData->sum('tarif_tindakandr');
+        $totalRalanTindakan = $ralanData->count();
+
+        // Rekap Ranap (selalu dihitung untuk semua tab)
+        $ranapQuery = $this->getDataRanap();
+        $ranapData = $ranapQuery->get();
+        $totalRanap = $ranapData->sum('tarif_tindakandr');
+        $totalRanapTindakan = $ranapData->count();
+
+        // Rekap radiologi (berdasarkan kd_dokter dan tarif_tindakan_dokter)
+        $radiologiQuery = $this->getDataRadiologi();
+        $radiologiData = $radiologiQuery->get();
+        $totalRadiologi = $radiologiData->sum('tarif_tindakan_dokter');
+        $totalRadiologiTindakan = $radiologiData->count();
+
+        // Rekap laboratorium (berdasarkan kd_dokter dan tarif_tindakan_dokter)
+        $labQuery = $this->getDataLab();
+        $labData = $labQuery->get();
+        $totalLab = $labData->sum('tarif_tindakan_dokter');
+        $totalLabTindakan = $labData->count();
+
+        // Rekap operasi (berdasarkan operator1, operator2, operator3, dokter_anak, dokter_anestesi, dokter_pjanak, dokter_umum)
+        $operasiQuery = $this->getDataOperasi();
+        $operasiData = $operasiQuery->get();
+        $totalOperasi = $operasiData->sum('biaya_dokter');
+        $totalOperasiTindakan = $operasiData->count();
+
         if ($this->activeTab === 'ralan') {
-            $query = $this->getDataRalan();
-            $allData = $query->get();
+            $allData = $ralanData;
             $grouped = $this->groupByPasien($allData, false);
 
             // Paginate grouped data using Livewire pagination
@@ -197,20 +413,34 @@ class TindakanDokter extends Component
             $paginator->appends(request()->except('page'));
 
             $ralanGrouped = $paginator;
-            $totalRalan = $allData->sum('tarif_tindakandr');
-            $totalRalanTindakan = $allData->count();
+            $radiologiGrouped = collect([]);
+            $labGrouped = collect([]);
+            $operasiGrouped = collect([]);
 
             return view('livewire.rekap.tindakan-dokter', [
-                'ralanGrouped' => $ralanGrouped,
-                'ranapGrouped' => collect([]),
-                'totalRalan' => $totalRalan,
-                'totalRanap' => 0,
-                'totalRalanTindakan' => $totalRalanTindakan,
-                'totalRanapTindakan' => 0,
+                'ralanGrouped'             => $ralanGrouped,
+                'ranapGrouped'             => collect([]),
+                'radiologiGrouped'         => $radiologiGrouped,
+                'labGrouped'               => $labGrouped,
+                'operasiGrouped'           => $operasiGrouped,
+                // Ralan
+                'totalRalan'               => $totalRalan,
+                'totalRalanTindakan'       => $totalRalanTindakan,
+                // Ranap
+                'totalRanap'               => $totalRanap,
+                'totalRanapTindakan'       => $totalRanapTindakan,
+                // Radiologi
+                'totalRadiologi'           => $totalRadiologi,
+                'totalRadiologiTindakan'   => $totalRadiologiTindakan,
+                // Lab
+                'totalLab'                 => $totalLab,
+                'totalLabTindakan'         => $totalLabTindakan,
+                // Operasi
+                'totalOperasi'             => $totalOperasi,
+                'totalOperasiTindakan'     => $totalOperasiTindakan,
             ]);
-        } else {
-            $query = $this->getDataRanap();
-            $allData = $query->get();
+        } elseif ($this->activeTab === 'ranap') {
+            $allData = $ranapData;
             $grouped = $this->groupByPasien($allData, true);
 
             // Paginate grouped data using Livewire pagination
@@ -235,16 +465,175 @@ class TindakanDokter extends Component
             $paginator->appends(request()->except('page'));
 
             $ranapGrouped = $paginator;
-            $totalRanap = $allData->sum('tarif_tindakandr');
-            $totalRanapTindakan = $allData->count();
+            $radiologiGrouped = collect([]);
+            $labGrouped = collect([]);
+            $operasiGrouped = collect([]);
 
             return view('livewire.rekap.tindakan-dokter', [
-                'ralanGrouped' => collect([]),
-                'ranapGrouped' => $ranapGrouped,
-                'totalRalan' => 0,
-                'totalRanap' => $totalRanap,
-                'totalRalanTindakan' => 0,
-                'totalRanapTindakan' => $totalRanapTindakan,
+                'ralanGrouped'             => collect([]),
+                'ranapGrouped'             => $ranapGrouped,
+                'radiologiGrouped'         => $radiologiGrouped,
+                'labGrouped'               => $labGrouped,
+                'operasiGrouped'           => $operasiGrouped,
+                // Ralan
+                'totalRalan'               => $totalRalan,
+                'totalRalanTindakan'       => $totalRalanTindakan,
+                // Ranap
+                'totalRanap'               => $totalRanap,
+                'totalRanapTindakan'       => $totalRanapTindakan,
+                // Radiologi
+                'totalRadiologi'           => $totalRadiologi,
+                'totalRadiologiTindakan'   => $totalRadiologiTindakan,
+                // Lab
+                'totalLab'                 => $totalLab,
+                'totalLabTindakan'         => $totalLabTindakan,
+                // Operasi
+                'totalOperasi'             => $totalOperasi,
+                'totalOperasiTindakan'     => $totalOperasiTindakan,
+            ]);
+        } elseif ($this->activeTab === 'radiologi') {
+            // Tab Radiologi
+            $allData = $radiologiData;
+            $grouped = $this->groupRadiologiByPasien($allData);
+
+            $currentPage = $this->page ?? request()->get('page', 1);
+            $perPage = $this->perPage;
+            $items = $grouped->slice(($currentPage - 1) * $perPage, $perPage)->values();
+            $total = $grouped->count();
+
+            $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                $items,
+                $total,
+                $perPage,
+                $currentPage,
+                [
+                    'path'     => request()->url(),
+                    'pageName' => 'page',
+                ]
+            );
+
+            $paginator->appends(request()->except('page'));
+
+            $radiologiGrouped = $paginator;
+            $labGrouped = collect([]);
+            $operasiGrouped = collect([]);
+
+            return view('livewire.rekap.tindakan-dokter', [
+                'ralanGrouped'             => collect([]),
+                'ranapGrouped'             => collect([]),
+                'radiologiGrouped'         => $radiologiGrouped,
+                'labGrouped'               => $labGrouped,
+                'operasiGrouped'           => $operasiGrouped,
+                // Ralan & Ranap
+                'totalRalan'               => $totalRalan,
+                'totalRalanTindakan'       => $totalRalanTindakan,
+                'totalRanap'               => $totalRanap,
+                'totalRanapTindakan'       => $totalRanapTindakan,
+                // Radiologi
+                'totalRadiologi'           => $totalRadiologi,
+                'totalRadiologiTindakan'   => $totalRadiologiTindakan,
+                // Lab
+                'totalLab'                 => $totalLab,
+                'totalLabTindakan'         => $totalLabTindakan,
+                // Operasi
+                'totalOperasi'             => $totalOperasi,
+                'totalOperasiTindakan'     => $totalOperasiTindakan,
+            ]);
+        } elseif ($this->activeTab === 'lab') {
+            // Tab Lab
+            $allData = $labData;
+            $grouped = $this->groupLabByPasien($allData);
+
+            $currentPage = $this->page ?? request()->get('page', 1);
+            $perPage = $this->perPage;
+            $items = $grouped->slice(($currentPage - 1) * $perPage, $perPage)->values();
+            $total = $grouped->count();
+
+            $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                $items,
+                $total,
+                $perPage,
+                $currentPage,
+                [
+                    'path'     => request()->url(),
+                    'pageName' => 'page',
+                ]
+            );
+
+            $paginator->appends(request()->except('page'));
+
+            $labGrouped = $paginator;
+            $radiologiGrouped = collect([]);
+            $operasiGrouped = collect([]);
+
+            return view('livewire.rekap.tindakan-dokter', [
+                'ralanGrouped'             => collect([]),
+                'ranapGrouped'             => collect([]),
+                'radiologiGrouped'         => $radiologiGrouped,
+                'labGrouped'               => $labGrouped,
+                'operasiGrouped'           => $operasiGrouped,
+                // Ralan & Ranap
+                'totalRalan'               => $totalRalan,
+                'totalRalanTindakan'       => $totalRalanTindakan,
+                'totalRanap'               => $totalRanap,
+                'totalRanapTindakan'       => $totalRanapTindakan,
+                // Radiologi
+                'totalRadiologi'           => $totalRadiologi,
+                'totalRadiologiTindakan'   => $totalRadiologiTindakan,
+                // Lab
+                'totalLab'                 => $totalLab,
+                'totalLabTindakan'         => $totalLabTindakan,
+                // Operasi
+                'totalOperasi'             => $totalOperasi,
+                'totalOperasiTindakan'     => $totalOperasiTindakan,
+            ]);
+        } else {
+            // Tab Operasi
+            $allData = $operasiData;
+            $grouped = $this->groupOperasiByPasien($allData);
+
+            $currentPage = $this->page ?? request()->get('page', 1);
+            $perPage = $this->perPage;
+            $items = $grouped->slice(($currentPage - 1) * $perPage, $perPage)->values();
+            $total = $grouped->count();
+
+            $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                $items,
+                $total,
+                $perPage,
+                $currentPage,
+                [
+                    'path'     => request()->url(),
+                    'pageName' => 'page',
+                ]
+            );
+
+            $paginator->appends(request()->except('page'));
+
+            $operasiGrouped = $paginator;
+            $radiologiGrouped = collect([]);
+            $labGrouped = collect([]);
+
+            return view('livewire.rekap.tindakan-dokter', [
+                'ralanGrouped'             => collect([]),
+                'ranapGrouped'             => collect([]),
+                'radiologiGrouped'         => $radiologiGrouped,
+                'labGrouped'               => $labGrouped,
+                'operasiGrouped'           => $operasiGrouped,
+                // Ralan & Ranap
+                'totalRalan'               => $totalRalan,
+                'totalRalanTindakan'       => $totalRalanTindakan,
+                'totalRanap'               => $totalRanap,
+                'totalRanapTindakan'       => $totalRanapTindakan,
+                // Radiologi
+                'totalRadiologi'           => $totalRadiologi,
+                'totalRadiologiTindakan'   => $totalRadiologiTindakan,
+                // Lab
+                'totalLab'                 => $totalLab,
+                'totalLabTindakan'         => $totalLabTindakan,
+                // Operasi
+                'totalOperasi'             => $totalOperasi,
+                'totalOperasiTindakan'     => $totalOperasiTindakan,
             ]);
         }
     }

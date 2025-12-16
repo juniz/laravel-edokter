@@ -15,6 +15,7 @@ class PasienTabs extends Component
     public $tanggalAkhir = "";
     public $jenisPerawatan = ""; // "" untuk semua, "Ralan" untuk ralan, "Ranap" untuk ranap
     public $activeTab = 'riwayat'; // 'detail' atau 'riwayat'
+    public $activeTabTindakan = 'ralan'; // 'ralan', 'ranap', 'lab', 'radiologi', 'operasi'
     protected $listeners = ['loadRiwayatPasien' => 'init'];
 
     public function mount($noRawat)
@@ -42,6 +43,9 @@ class PasienTabs extends Component
         if ($tab === 'riwayat') {
             // Selalu reload data ketika kembali ke tab riwayat untuk memastikan data fresh
             $this->init();
+        } elseif ($tab === 'tindakan') {
+            // Set default tab tindakan ke ralan
+            $this->activeTabTindakan = 'ralan';
         } else {
             // Reset data dan filter ketika kembali ke tab detail untuk menghindari error
             $this->data = [];
@@ -63,57 +67,200 @@ class PasienTabs extends Component
         return $data ? $data->status_lanjut : 'Ralan';
     }
 
-    public function getTindakanDokter($noRawat)
+    public function setActiveTabTindakan($tab)
     {
-        $statusLanjut = $this->getStatusLanjut($noRawat);
-
-        if ($statusLanjut == 'Ralan') {
-            // Ambil dari rawat_jl_dr untuk Ralan
-            $data = DB::table('rawat_jl_dr')
-                ->join('jns_perawatan', 'rawat_jl_dr.kd_jenis_prw', '=', 'jns_perawatan.kd_jenis_prw')
-                ->leftJoin('dokter', 'rawat_jl_dr.kd_dokter', '=', 'dokter.kd_dokter')
-                ->where('rawat_jl_dr.no_rawat', $noRawat)
-                ->where('rawat_jl_dr.kd_dokter', session()->get('username'))
-                ->select(
-                    'rawat_jl_dr.*',
-                    'jns_perawatan.nm_perawatan',
-                    'dokter.nm_dokter',
-                    'rawat_jl_dr.tarif_tindakandr'
-                )
-                ->orderBy('rawat_jl_dr.tgl_perawatan', 'desc')
-                ->orderBy('rawat_jl_dr.jam_rawat', 'desc')
-                ->get();
-        } else {
-            // Ambil dari rawat_inap_dr untuk Ranap
-            $data = DB::table('rawat_inap_dr')
-                ->join('jns_perawatan_inap', 'rawat_inap_dr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
-                ->leftJoin('dokter', 'rawat_inap_dr.kd_dokter', '=', 'dokter.kd_dokter')
-                ->where('rawat_inap_dr.no_rawat', $noRawat)
-                ->where('rawat_inap_dr.kd_dokter', session()->get('username'))
-                ->select(
-                    'rawat_inap_dr.*',
-                    'jns_perawatan_inap.nm_perawatan',
-                    'dokter.nm_dokter',
-                    'rawat_inap_dr.tarif_tindakandr'
-                )
-                ->orderBy('rawat_inap_dr.tgl_perawatan', 'desc')
-                ->orderBy('rawat_inap_dr.jam_rawat', 'desc')
-                ->get();
-        }
-
-        return $data;
+        $this->activeTabTindakan = $tab;
     }
 
-    public function getTotalTindakanDokter($noRawat)
+    /**
+     * Ambil data tindakan Ralan berdasarkan dokter dan no_rawat.
+     */
+    public function getTindakanRalan($noRawat)
     {
-        $tindakan = $this->getTindakanDokter($noRawat);
-        $total = 0;
+        return DB::table('rawat_jl_dr')
+            ->join('jns_perawatan', 'rawat_jl_dr.kd_jenis_prw', '=', 'jns_perawatan.kd_jenis_prw')
+            ->leftJoin('dokter', 'rawat_jl_dr.kd_dokter', '=', 'dokter.kd_dokter')
+            ->where('rawat_jl_dr.no_rawat', $noRawat)
+            ->where('rawat_jl_dr.kd_dokter', session()->get('username'))
+            ->select(
+                'rawat_jl_dr.*',
+                'jns_perawatan.nm_perawatan',
+                'jns_perawatan.kd_jenis_prw',
+                'dokter.nm_dokter',
+                'rawat_jl_dr.tarif_tindakandr'
+            )
+            ->orderBy('rawat_jl_dr.tgl_perawatan', 'desc')
+            ->orderBy('rawat_jl_dr.jam_rawat', 'desc')
+            ->get();
+    }
 
-        foreach ($tindakan as $item) {
-            $total += $item->tarif_tindakandr ?? 0;
-        }
+    /**
+     * Ambil data tindakan Ranap berdasarkan dokter dan no_rawat.
+     */
+    public function getTindakanRanap($noRawat)
+    {
+        return DB::table('rawat_inap_dr')
+            ->join('jns_perawatan_inap', 'rawat_inap_dr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
+            ->leftJoin('dokter', 'rawat_inap_dr.kd_dokter', '=', 'dokter.kd_dokter')
+            ->where('rawat_inap_dr.no_rawat', $noRawat)
+            ->where('rawat_inap_dr.kd_dokter', session()->get('username'))
+            ->select(
+                'rawat_inap_dr.*',
+                'jns_perawatan_inap.nm_perawatan',
+                'jns_perawatan_inap.kd_jenis_prw',
+                'dokter.nm_dokter',
+                'rawat_inap_dr.tarif_tindakandr'
+            )
+            ->orderBy('rawat_inap_dr.tgl_perawatan', 'desc')
+            ->orderBy('rawat_inap_dr.jam_rawat', 'desc')
+            ->get();
+    }
 
-        return $total;
+    /**
+     * Ambil data tindakan radiologi berdasarkan dokter dan no_rawat.
+     */
+    public function getTindakanRadiologi($noRawat)
+    {
+        return DB::table('periksa_radiologi')
+            ->join('reg_periksa', 'periksa_radiologi.no_rawat', '=', 'reg_periksa.no_rawat')
+            ->join('jns_perawatan_radiologi', 'periksa_radiologi.kd_jenis_prw', '=', 'jns_perawatan_radiologi.kd_jenis_prw')
+            ->where('periksa_radiologi.no_rawat', $noRawat)
+            ->where('periksa_radiologi.kd_dokter', session()->get('username'))
+            ->select(
+                'periksa_radiologi.no_rawat',
+                'periksa_radiologi.kd_jenis_prw',
+                'jns_perawatan_radiologi.nm_perawatan',
+                'periksa_radiologi.kd_dokter',
+                'periksa_radiologi.tgl_periksa',
+                'periksa_radiologi.jam',
+                'periksa_radiologi.status',
+                'periksa_radiologi.tarif_tindakan_dokter'
+            )
+            ->orderBy('periksa_radiologi.tgl_periksa', 'desc')
+            ->orderBy('periksa_radiologi.jam', 'desc')
+            ->get();
+    }
+
+    /**
+     * Ambil data tindakan laboratorium berdasarkan dokter dan no_rawat.
+     */
+    public function getTindakanLab($noRawat)
+    {
+        return DB::table('periksa_lab')
+            ->join('reg_periksa', 'periksa_lab.no_rawat', '=', 'reg_periksa.no_rawat')
+            ->join('jns_perawatan_lab', 'periksa_lab.kd_jenis_prw', '=', 'jns_perawatan_lab.kd_jenis_prw')
+            ->where('periksa_lab.no_rawat', $noRawat)
+            ->where('periksa_lab.kd_dokter', session()->get('username'))
+            ->select(
+                'periksa_lab.no_rawat',
+                'periksa_lab.kd_jenis_prw',
+                'jns_perawatan_lab.nm_perawatan',
+                'periksa_lab.kd_dokter',
+                'periksa_lab.tgl_periksa',
+                'periksa_lab.jam',
+                'periksa_lab.status',
+                'periksa_lab.tarif_tindakan_dokter'
+            )
+            ->orderBy('periksa_lab.tgl_periksa', 'desc')
+            ->orderBy('periksa_lab.jam', 'desc')
+            ->get();
+    }
+
+    /**
+     * Ambil data tindakan operasi berdasarkan dokter dan no_rawat.
+     * Dokter bisa terlibat sebagai operator1, operator2, operator3, dokter_anak, dokter_anestesi, dokter_pjanak, atau dokter_umum.
+     */
+    public function getTindakanOperasi($noRawat)
+    {
+        $kdDokter = session()->get('username');
+        // Escape kdDokter untuk mencegah SQL injection
+        $kdDokterEscaped = DB::connection()->getPdo()->quote($kdDokter);
+
+        return DB::table('operasi')
+            ->join('reg_periksa', 'operasi.no_rawat', '=', 'reg_periksa.no_rawat')
+            ->join('paket_operasi', 'operasi.kode_paket', '=', 'paket_operasi.kode_paket')
+            ->where('operasi.no_rawat', $noRawat)
+            ->where(function ($query) use ($kdDokter) {
+                $query->where('operasi.operator1', $kdDokter)
+                    ->orWhere('operasi.operator2', $kdDokter)
+                    ->orWhere('operasi.operator3', $kdDokter)
+                    ->orWhere('operasi.dokter_anak', $kdDokter)
+                    ->orWhere('operasi.dokter_anestesi', $kdDokter)
+                    ->orWhere('operasi.dokter_pjanak', $kdDokter)
+                    ->orWhere('operasi.dokter_umum', $kdDokter);
+            })
+            ->select(
+                'operasi.no_rawat',
+                'operasi.kode_paket',
+                'paket_operasi.nm_perawatan',
+                'operasi.tgl_operasi',
+                'operasi.status',
+                'operasi.kategori',
+                'operasi.operator1',
+                'operasi.operator2',
+                'operasi.operator3',
+                'operasi.dokter_anak',
+                'operasi.dokter_anestesi',
+                'operasi.dokter_pjanak',
+                'operasi.dokter_umum',
+                DB::raw("CASE 
+                    WHEN operasi.operator1 = " . $kdDokterEscaped . " THEN operasi.biayaoperator1
+                    WHEN operasi.operator2 = " . $kdDokterEscaped . " THEN operasi.biayaoperator2
+                    WHEN operasi.operator3 = " . $kdDokterEscaped . " THEN operasi.biayaoperator3
+                    WHEN operasi.dokter_anak = " . $kdDokterEscaped . " THEN operasi.biayadokter_anak
+                    WHEN operasi.dokter_anestesi = " . $kdDokterEscaped . " THEN operasi.biayadokter_anestesi
+                    WHEN operasi.dokter_pjanak = " . $kdDokterEscaped . " THEN operasi.biaya_dokter_pjanak
+                    WHEN operasi.dokter_umum = " . $kdDokterEscaped . " THEN operasi.biaya_dokter_umum
+                    ELSE 0
+                END as biaya_dokter"),
+                DB::raw("CASE 
+                    WHEN operasi.operator1 = " . $kdDokterEscaped . " THEN 'Operator 1'
+                    WHEN operasi.operator2 = " . $kdDokterEscaped . " THEN 'Operator 2'
+                    WHEN operasi.operator3 = " . $kdDokterEscaped . " THEN 'Operator 3'
+                    WHEN operasi.dokter_anak = " . $kdDokterEscaped . " THEN 'Dokter Anak'
+                    WHEN operasi.dokter_anestesi = " . $kdDokterEscaped . " THEN 'Dokter Anestesi'
+                    WHEN operasi.dokter_pjanak = " . $kdDokterEscaped . " THEN 'Dokter PJ Anak'
+                    WHEN operasi.dokter_umum = " . $kdDokterEscaped . " THEN 'Dokter Umum'
+                    ELSE '-'
+                END as peran_dokter")
+            )
+            ->orderBy('operasi.tgl_operasi', 'desc')
+            ->get();
+    }
+
+    /**
+     * Hitung total biaya untuk semua kategori tindakan dokter.
+     */
+    public function getTotalSemuaTindakanDokter($noRawat)
+    {
+        $totalRalan = $this->getTindakanRalan($noRawat)->sum('tarif_tindakandr');
+        $totalRanap = $this->getTindakanRanap($noRawat)->sum('tarif_tindakandr');
+        $totalRadiologi = $this->getTindakanRadiologi($noRawat)->sum('tarif_tindakan_dokter');
+        $totalLab = $this->getTindakanLab($noRawat)->sum('tarif_tindakan_dokter');
+        $totalOperasi = $this->getTindakanOperasi($noRawat)->sum('biaya_dokter');
+
+        return [
+            'ralan' => $totalRalan,
+            'ranap' => $totalRanap,
+            'radiologi' => $totalRadiologi,
+            'lab' => $totalLab,
+            'operasi' => $totalOperasi,
+            'total' => $totalRalan + $totalRanap + $totalRadiologi + $totalLab + $totalOperasi
+        ];
+    }
+
+    /**
+     * Hitung total tindakan untuk semua kategori.
+     */
+    public function getTotalSemuaTindakanCount($noRawat)
+    {
+        return [
+            'ralan' => $this->getTindakanRalan($noRawat)->count(),
+            'ranap' => $this->getTindakanRanap($noRawat)->count(),
+            'radiologi' => $this->getTindakanRadiologi($noRawat)->count(),
+            'lab' => $this->getTindakanLab($noRawat)->count(),
+            'operasi' => $this->getTindakanOperasi($noRawat)->count(),
+        ];
     }
 
     public function init()
