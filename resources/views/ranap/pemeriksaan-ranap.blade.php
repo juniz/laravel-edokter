@@ -15,7 +15,11 @@
             {{-- <x-ralan.pasien :no-rawat="request()->get('no_rawat')" /> --}}
         </div>
         <div class="col-md-6">
-            <x-ranap.pemeriksaan-ranap :no-rawat="request()->get('no_rawat')" />
+            {{-- <x-ranap.pemeriksaan-ranap :no-rawat="request()->get('no_rawat')" /> --}}
+            <x-adminlte-card title="Pemeriksaan" theme="info" icon="fas fa-lg fa-bell" collapsible maximizable>
+                <livewire:ranap.pemeriksaan :noRawat="request()->get('no_rawat')" :noRm="request()->get('no_rm')" />
+                <livewire:ranap.modal.edit-pemeriksaan />
+            </x-adminlte-card>
             <x-ranap.resep-ranap />
             <livewire:ranap.resume-pasien :no-rawat="request()->get('no_rawat')" />
             <livewire:ranap.catatan-pasien :noRawat="request()->get('no_rawat')" :noRm="request()->get('no_rm')" />

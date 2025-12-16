@@ -1083,7 +1083,7 @@
                                                 @endforeach
                                             </tbody>
                                         </table>
-                                    </div>
+                                        </div>
                                     
                                     <!-- Mobile Card View -->
                                     <div class="d-block d-md-none">
@@ -1113,12 +1113,12 @@
                                                     <div class="col-6">
                                                         <div class="d-flex align-items-center mb-2">
                                                             <i class="fas fa-calendar text-muted mr-2"></i>
-                                                            <div>
+                                        <div>
                                                                 <small class="text-muted d-block" style="font-size: 0.75rem;">Tanggal</small>
                                                                 <strong style="font-size: 0.9rem;">{{ $dateTindakan }}</strong>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                        </div>
+                                    </div>
+                                </div>
                                                     <div class="col-6">
                                                         <div class="d-flex align-items-center mb-2">
                                                             <i class="fas fa-clock text-muted mr-2"></i>
@@ -1131,14 +1131,14 @@
                                                 </div>
                                                 @if($tindakan->nm_dokter)
                                                 <div class="mb-3 pb-3 border-bottom">
-                                                    <div class="d-flex align-items-center">
+                                    <div class="d-flex align-items-center">
                                                         <i class="fas fa-user-md text-info mr-2"></i>
                                                         <div class="flex-grow-1">
                                                             <small class="text-muted d-block" style="font-size: 0.75rem;">Dokter</small>
                                                             <strong class="text-info" style="font-size: 0.9rem;">{{ $tindakan->nm_dokter }}</strong>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                        </div>
+                                        </div>
+                                    </div>
                                                 @endif
                                                 <div class="row align-items-end">
                                                     <div class="col-7">
@@ -1146,16 +1146,16 @@
                                                         <strong class="text-success" style="font-size: 1.1rem; font-weight: 600;">
                                                             Rp {{ number_format($tindakan->tarif_tindakandr ?? 0, 0, ',', '.') }}
                                                         </strong>
-                                                    </div>
+                                </div>
                                                     <div class="col-5 text-right">
                                                         <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Status</small>
                                                         <span class="badge badge-{{ $badgeStatus }}" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
                                                             {{ $statusBayar }}
                                                         </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
                                         @endforeach
                                     </div>
                                     @else
@@ -1187,12 +1187,12 @@
                                             </thead>
                                             <tbody>
                                                 @foreach($tindakanRanap as $tindakan)
-                                                @php
-                                                $tglTindakan = date_create($tindakan->tgl_perawatan ?? '0000-00-00');
-                                                $dateTindakan = date_format($tglTindakan,"d M Y");
-                                                $statusBayar = $tindakan->stts_bayar ?? 'Belum';
-                                                $badgeStatus = $statusBayar == 'Sudah' ? 'success' : ($statusBayar == 'Suspen' ? 'warning' : 'secondary');
-                                                @endphp
+                            @php
+                            $tglTindakan = date_create($tindakan->tgl_perawatan ?? '0000-00-00');
+                            $dateTindakan = date_format($tglTindakan,"d M Y");
+                            $statusBayar = $tindakan->stts_bayar ?? 'Belum';
+                            $badgeStatus = $statusBayar == 'Sudah' ? 'success' : ($statusBayar == 'Suspen' ? 'warning' : 'secondary');
+                            @endphp
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td>
@@ -1241,68 +1241,68 @@
                                         @endphp
                                         <div class="card mb-3 shadow-sm border-left-success" style="border-left-width: 4px;">
                                             <div class="card-header bg-success text-white">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div class="flex-grow-1">
-                                                        <h6 class="mb-1" style="font-size: 0.95rem; line-height: 1.4;">
-                                                            <i class="fas fa-procedures"></i> {{ $tindakan->nm_perawatan ?? '-' }}
-                                                        </h6>
-                                                        <small class="text-white-50 d-block mt-1">
-                                                            <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
-                                                        </small>
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1" style="font-size: 0.95rem; line-height: 1.4;">
+                                                    <i class="fas fa-procedures"></i> {{ $tindakan->nm_perawatan ?? '-' }}
+                                                </h6>
+                                                <small class="text-white-50 d-block mt-1">
+                                                    <i class="fas fa-code"></i> {{ $tindakan->kd_jenis_prw ?? '-' }}
+                                                </small>
+                                            </div>
+                                            <span class="badge badge-light ml-2" style="font-size: 0.85rem;">#{{ $loop->iteration }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="row mb-3">
+                                            <div class="col-6">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-calendar text-muted mr-2"></i>
+                                                    <div>
+                                                        <small class="text-muted d-block" style="font-size: 0.75rem;">Tanggal</small>
+                                                        <strong style="font-size: 0.9rem;">{{ $dateTindakan }}</strong>
                                                     </div>
-                                                    <span class="badge badge-light ml-2" style="font-size: 0.85rem;">#{{ $loop->iteration }}</span>
                                                 </div>
                                             </div>
-                                            <div class="card-body p-3">
-                                                <div class="row mb-3">
-                                                    <div class="col-6">
-                                                        <div class="d-flex align-items-center mb-2">
-                                                            <i class="fas fa-calendar text-muted mr-2"></i>
-                                                            <div>
-                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Tanggal</small>
-                                                                <strong style="font-size: 0.9rem;">{{ $dateTindakan }}</strong>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="d-flex align-items-center mb-2">
-                                                            <i class="fas fa-clock text-muted mr-2"></i>
-                                                            <div>
-                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Jam</small>
-                                                                <strong style="font-size: 0.9rem;">{{ $tindakan->jam_rawat ?? '-' }}</strong>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                @if($tindakan->nm_dokter)
-                                                <div class="mb-3 pb-3 border-bottom">
-                                                    <div class="d-flex align-items-center">
-                                                        <i class="fas fa-user-md text-info mr-2"></i>
-                                                        <div class="flex-grow-1">
-                                                            <small class="text-muted d-block" style="font-size: 0.75rem;">Dokter</small>
-                                                            <strong class="text-info" style="font-size: 0.9rem;">{{ $tindakan->nm_dokter }}</strong>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                @endif
-                                                <div class="row align-items-end">
-                                                    <div class="col-7">
-                                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Tarif Tindakan</small>
-                                                        <strong class="text-success" style="font-size: 1.1rem; font-weight: 600;">
-                                                            Rp {{ number_format($tindakan->tarif_tindakandr ?? 0, 0, ',', '.') }}
-                                                        </strong>
-                                                    </div>
-                                                    <div class="col-5 text-right">
-                                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Status</small>
-                                                        <span class="badge badge-{{ $badgeStatus }}" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
-                                                            {{ $statusBayar }}
-                                                        </span>
+                                            <div class="col-6">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-clock text-muted mr-2"></i>
+                                                    <div>
+                                                        <small class="text-muted d-block" style="font-size: 0.75rem;">Jam</small>
+                                                        <strong style="font-size: 0.9rem;">{{ $tindakan->jam_rawat ?? '-' }}</strong>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        @endforeach
+                                        @if($tindakan->nm_dokter)
+                                        <div class="mb-3 pb-3 border-bottom">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-md text-info mr-2"></i>
+                                                <div class="flex-grow-1">
+                                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Dokter</small>
+                                                    <strong class="text-info" style="font-size: 0.9rem;">{{ $tindakan->nm_dokter }}</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
+                                        <div class="row align-items-end">
+                                            <div class="col-7">
+                                                <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Tarif Tindakan</small>
+                                                <strong class="text-success" style="font-size: 1.1rem; font-weight: 600;">
+                                                    Rp {{ number_format($tindakan->tarif_tindakandr ?? 0, 0, ',', '.') }}
+                                                </strong>
+                                            </div>
+                                            <div class="col-5 text-right">
+                                                <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Status</small>
+                                                <span class="badge badge-{{ $badgeStatus }}" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+                                                    {{ $statusBayar }}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
+                                </div>
+                                        @endforeach
+                            </div>
                                     @else
                                     <div class="alert alert-info">
                                         <i class="fas fa-info-circle"></i> Tidak ada data tindakan rawat inap untuk pasien ini.
@@ -1364,11 +1364,11 @@
                                                         </strong>
                                                     </td>
                                                 </tr>
-                                                @endforeach
+                            @endforeach
                                             </tbody>
                                         </table>
-                                    </div>
-                                    
+                        </div>
+                        
                                     <!-- Mobile Card View -->
                                     <div class="d-block d-md-none">
                                         @foreach($tindakanRadiologi as $tindakan)
@@ -1417,7 +1417,7 @@
                                                     </span>
                                                 </div>
                                                 <div class="row align-items-end">
-                                                    <div class="col-12">
+                            <div class="col-12">
                                                         <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Tarif Dokter</small>
                                                         <strong class="text-success" style="font-size: 1.1rem; font-weight: 600;">
                                                             Rp {{ number_format($tindakan->tarif_tindakan_dokter ?? 0, 0, ',', '.') }}
@@ -1719,31 +1719,31 @@
 
                     <!-- Total Summary Card -->
                     <div class="card mt-4 border-left-success shadow-sm" style="border-left-width: 4px;">
-                        <div class="card-body bg-light">
-                            <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <h5 class="mb-1 text-muted">
-                                        <i class="fas fa-calculator text-success"></i> Total Biaya Tindakan Dokter (Perkiraan)
-                                    </h5>
-                                    <small class="text-muted">
+                                    <div class="card-body bg-light">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <h5 class="mb-1 text-muted">
+                                                    <i class="fas fa-calculator text-success"></i> Total Biaya Tindakan Dokter (Perkiraan)
+                                                </h5>
+                                                <small class="text-muted">
                                         Total dari semua kategori tindakan yang tercatat
-                                    </small>
-                                </div>
-                                <div class="col-md-4 text-md-right mt-3 mt-md-0">
-                                    <h3 class="mb-0 text-primary" style="font-weight: 700;">
+                                                </small>
+                                            </div>
+                                            <div class="col-md-4 text-md-right mt-3 mt-md-0">
+                                                <h3 class="mb-0 text-primary" style="font-weight: 700;">
                                         Rp {{ number_format($totalSemua['total'], 0, ',', '.') }}
-                                    </h3>
-                                </div>
-                            </div>
+                                                </h3>
+                                            </div>
+                                        </div>
                             <div class="alert alert-warning mt-3 mb-0" role="alert">
                                 <i class="fas fa-exclamation-triangle"></i> 
                                 <strong>Catatan:</strong> Nilai ini hanya merupakan <strong>perkiraan biaya</strong> berdasarkan tarif tindakan dokter. 
                                 Biaya aktual mungkin berbeda tergantung kebijakan rumah sakit dan diskon yang berlaku.
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
+                        </div>
         </div>
     </div>
 </div>
