@@ -100,6 +100,15 @@
                             <span class="berkas-badge">{{ $index + 1 }}</span>
                             <span class="file-ext-badge {{ $isPdf ? 'badge-pdf' : 'badge-img' }}">{{ $fileExt }}</span>
                             
+                            {{-- Icon untuk List View --}}
+                            <div class="list-view-icon">
+                                @if($isPdf)
+                                    <i class="fas fa-file-pdf"></i>
+                                @else
+                                    <i class="fas fa-file-image"></i>
+                                @endif
+                            </div>
+                            
                 @if($isPdf)
                 <div class="thumbnail-pdf" data-url="{{ $fileUrl }}" data-title="{{ $fileName }}">
                     {{-- PDF Preview menggunakan iframe - lazy load dengan Intersection Observer --}}
@@ -123,10 +132,6 @@
                             <div class="thumbnail-image">
                                 <a href="{{ $fileUrl }}" class="lightbox-trigger" data-gallery="berkas-gallery" data-width="1280" data-height="700" data-title="{{ $fileName }}" onclick="return false;">
                                     <img data-src="{{ $fileUrl }}" alt="{{ $fileName }}" loading="lazy" class="lazy-image" onerror="this.onerror=null; this.src='/images/no-image.png'; this.parentElement.classList.add('img-error');">
-                                    <div class="thumbnail-overlay">
-                                        <i class="fas fa-search-plus"></i>
-                                        <span>Klik untuk memperbesar</span>
-                                    </div>
                                 </a>
                             </div>
                             @endif
@@ -298,8 +303,8 @@
     /* Grid View */
     .berkas-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1.25rem;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 1.5rem;
     }
     
     /* List View */
@@ -333,14 +338,38 @@
         width: 120px !important;
         min-width: 120px !important;
         max-width: 120px !important;
-        height: 90px !important;
+        height: 170px !important;
         border-radius: 0 !important;
         flex-shrink: 0;
     }
+    /* Sembunyikan preview di list view, tampilkan icon saja */
     .berkas-grid.list-view .thumbnail-pdf,
     .berkas-grid.list-view .thumbnail-image {
-        width: 100%;
-        height: 100%;
+        display: none !important;
+    }
+    
+    /* Icon untuk list view */
+    .list-view-icon {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 5;
+    }
+    .berkas-grid.list-view .list-view-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .berkas-grid.list-view .list-view-icon i {
+        font-size: 3rem;
+    }
+    .berkas-grid.list-view .list-view-icon i.fa-file-pdf {
+        color: #dc3545;
+    }
+    .berkas-grid.list-view .list-view-icon i.fa-file-image {
+        color: #28a745;
     }
     .berkas-grid.list-view .berkas-badge {
         width: 20px;
@@ -432,7 +461,7 @@
     /* Thumbnail Wrapper */
     .thumbnail-wrapper {
         position: relative;
-        height: 200px;
+        height: 650px;
         background: linear-gradient(145deg, #f5f7fa 0%, #e4e8ec 100%);
         overflow: hidden;
     }
@@ -575,25 +604,12 @@
     .thumbnail-pdf:active .pdf-overlay {
         opacity: 1;
     }
-    /* List view PDF thumbnail - tampilkan preview di semua device */
+    /* List view - preview disembunyikan, hanya icon yang ditampilkan */
     .berkas-grid.list-view .thumbnail-pdf {
-        display: block !important;
-    }
-    .berkas-grid.list-view .thumbnail-pdf .pdf-preview-icon {
         display: none !important;
     }
-    .berkas-grid.list-view .thumbnail-pdf .pdf-thumb {
-        display: block !important;
-        visibility: visible !important;
-    }
-    /* List view image thumbnail - tampilkan preview di semua device */
     .berkas-grid.list-view .thumbnail-image {
-        display: block !important;
-    }
-    .berkas-grid.list-view .thumbnail-image img {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+        display: none !important;
     }
     
     /* Thumbnail Image - lazy loading */
@@ -617,10 +633,12 @@
     .thumbnail-image img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
+        object-position: center;
         transition: transform 0.4s ease, opacity 0.3s ease;
         display: block !important;
         pointer-events: none;
+        background: #f8f9fa;
     }
     /* Lazy image - sembunyikan sampai dimuat */
     .thumbnail-image img.lazy-image:not([data-loaded="true"]) {
@@ -949,7 +967,7 @@
             gap: 1rem;
         }
         .thumbnail-wrapper {
-            height: 150px;
+            height: 200px;
         }
         /* Mobile: container selalu tampil, preview menggunakan lazy loading */
         .thumbnail-pdf {
@@ -1023,10 +1041,13 @@
             font-size: 0.8rem;
         }
         .berkas-grid.list-view .thumbnail-wrapper {
-            width: 80px !important;
-            min-width: 80px !important;
-            max-width: 80px !important;
-            height: 70px !important;
+            width: 100px !important;
+            min-width: 100px !important;
+            max-width: 100px !important;
+            height: 141px !important;
+        }
+        .berkas-grid.list-view .list-view-icon i {
+            font-size: 2.5rem;
         }
         .berkas-grid.list-view .file-details {
             flex-direction: column !important;
@@ -1044,6 +1065,7 @@
     @media (max-width: 576px) {
         .berkas-grid {
             grid-template-columns: 1fr;
+            gap: 1.25rem;
         }
         .berkas-grid.list-view {
             display: flex !important;
@@ -1053,10 +1075,13 @@
             flex-direction: row !important;
         }
         .berkas-grid.list-view .thumbnail-wrapper {
-            width: 70px !important;
-            min-width: 70px !important;
-            max-width: 70px !important;
-            height: 60px !important;
+            width: 80px !important;
+            min-width: 80px !important;
+            max-width: 80px !important;
+            height: 113px !important;
+        }
+        .berkas-grid.list-view .list-view-icon i {
+            font-size: 2rem;
         }
         .berkas-grid.list-view .file-name {
             max-width: 150px;
