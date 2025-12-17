@@ -24,16 +24,17 @@ class ValidateStep1Request extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'filled'],
             'email' => [
                 'required',
                 'string',
                 'lowercase',
                 'email:rfc,dns',
                 'max:255',
+                'filled',
                 'unique:'.User::class,
             ],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'string', 'filled', 'confirmed', Rules\Password::defaults()],
         ];
     }
 

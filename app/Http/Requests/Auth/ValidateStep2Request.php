@@ -22,14 +22,14 @@ class ValidateStep2Request extends FormRequest
     public function rules(): array
     {
         return [
-            'organization' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'min:9', 'max:20', 'regex:/^[0-9+\-\s()]+$/'],
-            'street_1' => ['required', 'string', 'max:255'],
+            'organization' => ['required', 'string', 'max:255', 'filled'],
+            'phone' => ['required', 'string', 'min:9', 'max:20', 'filled', 'regex:/^[0-9+\-\s()]+$/'],
+            'street_1' => ['required', 'string', 'max:255', 'filled'],
             'street_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'country_code' => ['required', 'string', 'size:2', 'regex:/^[A-Z]{2}$/'],
-            'postal_code' => ['required', 'string', 'max:20'],
+            'city' => ['required', 'string', 'max:255', 'filled'],
+            'state' => ['required', 'string', 'max:255', 'filled'],
+            'country_code' => ['required', 'string', 'size:2', 'filled', 'regex:/^[A-Z]{2}$/'],
+            'postal_code' => ['required', 'string', 'max:20', 'filled'],
             'fax' => ['nullable', 'string', 'max:20'],
         ];
     }
@@ -57,6 +57,7 @@ class ValidateStep2Request extends FormRequest
             'city.required' => 'Kota wajib diisi.',
             'city.string' => 'Kota harus berupa teks.',
             'city.max' => 'Kota maksimal 255 karakter.',
+            'state.required' => 'Provinsi wajib diisi.',
             'state.string' => 'Provinsi harus berupa teks.',
             'state.max' => 'Provinsi maksimal 255 karakter.',
             'country_code.required' => 'Kode negara wajib diisi.',

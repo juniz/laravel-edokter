@@ -24,13 +24,14 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'filled'],
             'email' => [
                 'required',
                 'string',
                 'lowercase',
                 'email:rfc,dns',
                 'max:255',
+                'filled',
                 // Check unique in both users and pending_registrations
                 function ($attribute, $value, $fail) {
                     if (User::where('email', $value)->exists()) {
@@ -39,16 +40,16 @@ class RegisterRequest extends FormRequest
                     // Allow same email in pending_registrations (will be replaced)
                 },
             ],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'string', 'filled', 'confirmed', Rules\Password::defaults()],
             // RDASH customer fields
-            'organization' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'min:9', 'max:20', 'regex:/^[0-9+\-\s()]+$/'],
-            'street_1' => ['required', 'string', 'max:255'],
+            'organization' => ['required', 'string', 'max:255', 'filled'],
+            'phone' => ['required', 'string', 'min:9', 'max:20', 'filled', 'regex:/^[0-9+\-\s()]+$/'],
+            'street_1' => ['required', 'string', 'max:255', 'filled'],
             'street_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'country_code' => ['required', 'string', 'size:2', 'regex:/^[A-Z]{2}$/'],
-            'postal_code' => ['required', 'string', 'max:20'],
+            'city' => ['required', 'string', 'max:255', 'filled'],
+            'state' => ['required', 'string', 'max:255', 'filled'],
+            'country_code' => ['required', 'string', 'size:2', 'filled', 'regex:/^[A-Z]{2}$/'],
+            'postal_code' => ['required', 'string', 'max:20', 'filled'],
             'fax' => ['nullable', 'string', 'max:20'],
         ];
     }
@@ -74,6 +75,7 @@ class RegisterRequest extends FormRequest
             'phone.regex' => 'Nomor telepon hanya boleh berisi angka, +, -, spasi, dan tanda kurung.',
             'street_1.required' => 'Alamat jalan wajib diisi.',
             'city.required' => 'Kota wajib diisi.',
+            'state.required' => 'Provinsi wajib diisi.',
             'country_code.required' => 'Kode negara wajib diisi.',
             'country_code.size' => 'Kode negara harus 2 karakter.',
             'country_code.regex' => 'Kode negara harus berupa 2 huruf kapital (contoh: ID, US, SG).',

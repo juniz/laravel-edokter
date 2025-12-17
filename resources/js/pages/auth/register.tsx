@@ -36,7 +36,7 @@ export default function Register() {
 		street_1: string;
 		street_2?: string;
 		city: string;
-		state?: string;
+		state: string;
 		country_code: string;
 		postal_code: string;
 		fax?: string;
@@ -148,26 +148,64 @@ export default function Register() {
 		return translatedMessage;
 	};
 
+	// Helper function untuk memvalidasi field tidak kosong setelah trim
+	const isFieldNotEmpty = (value: string | undefined | null): boolean => {
+		return !!value && value.trim().length > 0;
+	};
+
+	// Helper function untuk memvalidasi format email dasar
+	const isValidEmailFormat = (email: string): boolean => {
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		return emailRegex.test(email.trim());
+	};
+
 	// Validasi step 1 (Informasi Akun)
 	const validateStep1 = (): boolean => {
-		return !!(
-			data.name &&
-			data.email &&
-			data.password &&
-			data.password_confirmation
-		);
+		// Validasi semua field required tidak kosong
+		if (!isFieldNotEmpty(data.name)) {
+			return false;
+		}
+		if (!isFieldNotEmpty(data.email) || !isValidEmailFormat(data.email)) {
+			return false;
+		}
+		if (!isFieldNotEmpty(data.password)) {
+			return false;
+		}
+		if (!isFieldNotEmpty(data.password_confirmation)) {
+			return false;
+		}
+		// Validasi password match
+		if (data.password !== data.password_confirmation) {
+			return false;
+		}
+		return true;
 	};
 
 	// Validasi step 2 (Informasi Customer RDASH)
 	const validateStep2 = (): boolean => {
-		return !!(
-			data.organization &&
-			data.phone &&
-			data.street_1 &&
-			data.city &&
-			data.country_code &&
-			data.postal_code
-		);
+		// Validasi semua field required tidak kosong
+		if (!isFieldNotEmpty(data.organization)) {
+			return false;
+		}
+		if (!isFieldNotEmpty(data.phone)) {
+			return false;
+		}
+		if (!isFieldNotEmpty(data.street_1)) {
+			return false;
+		}
+		if (!isFieldNotEmpty(data.city)) {
+			return false;
+		}
+		if (!isFieldNotEmpty(data.state)) {
+			return false;
+		}
+		if (!isFieldNotEmpty(data.country_code)) {
+			return false;
+		}
+		if (!isFieldNotEmpty(data.postal_code)) {
+			return false;
+		}
+		return true;
 	};
 
 	const [isValidatingStep, setIsValidatingStep] = useState(false);
@@ -889,9 +927,6 @@ export default function Register() {
 								<h3 className="text-lg font-semibold mb-1">
 									Informasi Customer RDASH
 								</h3>
-								<p className="text-sm text-muted-foreground">
-									Data ini diperlukan untuk integrasi dengan sistem RDASH
-								</p>
 							</div>
 
 							<div className="grid gap-2">
@@ -1007,10 +1042,11 @@ export default function Register() {
 								</div>
 
 								<div className="grid gap-2">
-									<Label htmlFor="state">Provinsi (Opsional)</Label>
+									<Label htmlFor="state">Provinsi *</Label>
 									<Input
 										id="state"
 										type="text"
+										required
 										tabIndex={10}
 										value={data.state}
 										onChange={(e) => setData("state", e.target.value)}

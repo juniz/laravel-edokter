@@ -88,7 +88,7 @@ class RegisteredUserController extends Controller
                 'street_1' => $validated['street_1'],
                 'street_2' => $validated['street_2'] ?? null,
                 'city' => $validated['city'],
-                'state' => $validated['state'] ?? null,
+                'state' => $validated['state'],
                 'country_code' => $validated['country_code'],
                 'postal_code' => $validated['postal_code'],
                 'fax' => $validated['fax'] ?? null,
