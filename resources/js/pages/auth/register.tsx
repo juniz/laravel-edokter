@@ -1,6 +1,13 @@
 import { Head, useForm, usePage, router } from "@inertiajs/react";
-import { LoaderCircle, Check, ChevronRight, Mail } from "lucide-react";
+import {
+	LoaderCircle,
+	Check,
+	ChevronRight,
+	Mail,
+	AlertCircle,
+} from "lucide-react";
 import { FormEventHandler, useState, useEffect } from "react";
+import axios from "axios";
 
 import InputError from "@/components/input-error";
 import TextLink from "@/components/text-link";
@@ -17,8 +24,8 @@ import {
 import AuthLayout from "@/layouts/auth-layout";
 
 export default function Register() {
-	const [currentStep, setCurrentStep] = useState(1);
-	const totalSteps = 3;
+	const [currentStep, setCurrentStep] = useState(0); // Start from step 0 (email check)
+	const totalSteps = 4; // Step 0: Email check, Step 1: Account, Step 2: RDASH, Step 3: Verification
 	const [verificationCode, setVerificationCode] = useState("");
 	const [verificationError, setVerificationError] = useState("");
 	const [isVerifying, setIsVerifying] = useState(false);
@@ -26,6 +33,36 @@ export default function Register() {
 	const [emailSent, setEmailSent] = useState(false);
 	const [resendCooldown, setResendCooldown] = useState(0);
 	const [isInitialEmailSent, setIsInitialEmailSent] = useState(false);
+
+	// Step 0 states
+	const [emailCheckEmail, setEmailCheckEmail] = useState("");
+	const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+	const [emailCheckStatus, setEmailCheckStatus] = useState<{
+		status:
+			| "idle"
+			| "already_registered"
+			| "pending_registration"
+			| "new_registration";
+		message: string;
+		pendingData?: {
+			email: string;
+			name: string;
+			organization: string;
+			phone: string;
+			street_1: string;
+			street_2?: string;
+			city: string;
+			state: string;
+			country_code: string;
+			postal_code: string;
+			fax?: string;
+			created_at: string;
+			expires_at: string;
+		};
+	}>({
+		status: "idle",
+		message: "",
+	});
 	const { data, setData, post, processing, errors } = useForm<{
 		name: string;
 		email: string;
@@ -213,6 +250,142 @@ export default function Register() {
 		Record<string, string>
 	>({});
 
+	// Handle email check (Step 0)
+	const handleCheckEmail = async () => {
+		if (!emailCheckEmail || !isValidEmailFormat(emailCheckEmail)) {
+			setEmailCheckStatus({
+				status: "idle",
+				message: "Mohon masukkan alamat email yang valid.",
+			});
+			return;
+		}
+
+		setIsCheckingEmail(true);
+		setEmailCheckStatus({ status: "idle", message: "" });
+
+		try {
+			const response = await axios.post(route("register.check-email"), {
+				email: emailCheckEmail.toLowerCase().trim(),
+			});
+
+			if (response.data.success) {
+				const status = response.data.status;
+				setEmailCheckStatus({
+					status,
+					message: response.data.message,
+					pendingData: response.data.data || null,
+				});
+
+				if (status === "new_registration") {
+					// Set email and move to step 1
+					setData("email", emailCheckEmail.toLowerCase().trim());
+					setCurrentStep(1);
+				} else if (status === "pending_registration") {
+					// Show option to resume or start new
+					// Status already set above
+				}
+			} else {
+				setEmailCheckStatus({
+					status: response.data.status || "idle",
+					message:
+						response.data.message || "Terjadi kesalahan saat memeriksa email.",
+				});
+			}
+		} catch (err) {
+			let errorMessage = "Terjadi kesalahan saat memeriksa email.";
+			if (axios.isAxiosError(err) && err.response?.data?.message) {
+				errorMessage = err.response.data.message;
+			}
+			setEmailCheckStatus({
+				status: "idle",
+				message: errorMessage,
+			});
+		} finally {
+			setIsCheckingEmail(false);
+		}
+	};
+
+	// Handle resume pending registration
+	const handleResume = async () => {
+		if (!emailCheckEmail) {
+			return;
+		}
+
+		setIsCheckingEmail(true);
+
+		try {
+			const response = await axios.post(route("register.resume"), {
+				email: emailCheckEmail.toLowerCase().trim(),
+			});
+
+			if (response.data.success) {
+				const pendingData = response.data.data;
+				// Load pending data into form
+				setData({
+					...data,
+					email: pendingData.email,
+					name: pendingData.name,
+					organization: pendingData.organization,
+					phone: pendingData.phone,
+					street_1: pendingData.street_1,
+					street_2: pendingData.street_2 || "",
+					city: pendingData.city,
+					state: pendingData.state,
+					country_code: pendingData.country_code,
+					postal_code: pendingData.postal_code,
+					fax: pendingData.fax || "",
+					// Password tidak bisa di-restore, user harus input ulang
+					password: "",
+					password_confirmation: "",
+				});
+				// Move to step 1 (user perlu input password)
+				setCurrentStep(1);
+			}
+		} catch (err) {
+			let errorMessage = "Gagal memuat data pendaftaran.";
+			if (axios.isAxiosError(err) && err.response?.data?.message) {
+				errorMessage = err.response.data.message;
+			}
+			setEmailCheckStatus({
+				status: "idle",
+				message: errorMessage,
+			});
+		} finally {
+			setIsCheckingEmail(false);
+		}
+	};
+
+	// Handle start new registration
+	const handleStartNew = async () => {
+		if (!emailCheckEmail) {
+			return;
+		}
+
+		setIsCheckingEmail(true);
+
+		try {
+			await axios.post(route("register.start-new"), {
+				email: emailCheckEmail.toLowerCase().trim(),
+			});
+
+			// Set email and move to step 1
+			setData("email", emailCheckEmail.toLowerCase().trim());
+			setEmailCheckStatus({ status: "idle", message: "" });
+			setCurrentStep(1);
+		} catch (err) {
+			let errorMessage = "Gagal memulai pendaftaran baru.";
+			if (axios.isAxiosError(err) && err.response?.data?.message) {
+				errorMessage = err.response.data.message;
+			}
+			setEmailCheckStatus({
+				status: "idle",
+				message: errorMessage,
+			});
+		} finally {
+			setIsCheckingEmail(false);
+		}
+	};
+
 	const handleNext = () => {
 		if (currentStep === 1 && validateStep1()) {
 			setIsValidatingStep(true);
@@ -254,7 +427,7 @@ export default function Register() {
 	};
 
 	const handlePrevious = () => {
-		if (currentStep > 1) {
+		if (currentStep > 0) {
 			setCurrentStep(currentStep - 1);
 		}
 	};
@@ -618,6 +791,11 @@ export default function Register() {
 
 	const submit: FormEventHandler = (e) => {
 		e.preventDefault();
+		if (currentStep === 0) {
+			// Handle email check
+			handleCheckEmail();
+			return;
+		}
 		if (currentStep === 2 && validateStep2()) {
 			// Submit registration form - email verification code will be sent automatically
 			// This will create PendingRegistration and send verification email
@@ -717,7 +895,38 @@ export default function Register() {
 			<form className="flex flex-col gap-6" onSubmit={submit}>
 				{/* Stepper Indicator */}
 				<div className="flex items-center justify-center mb-6">
-					<div className="flex items-center w-full max-w-md">
+					<div className="flex items-center w-full max-w-2xl">
+						{/* Step 0: Email Check */}
+						<div className="flex flex-col items-center flex-1">
+							<div
+								className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
+									currentStep >= 0
+										? "bg-primary text-primary-foreground border-primary"
+										: "bg-background border-muted-foreground text-muted-foreground"
+								}`}
+							>
+								{currentStep > 0 ? (
+									<Check className="w-5 h-5" />
+								) : (
+									<span className="text-sm font-semibold">0</span>
+								)}
+							</div>
+							<p
+								className={`text-xs font-medium mt-2 hidden sm:block ${
+									currentStep >= 0 ? "text-foreground" : "text-muted-foreground"
+								}`}
+							>
+								Email
+							</p>
+						</div>
+
+						{/* Connector 0 */}
+						<div
+							className={`h-2 flex-1 mx-2 transition-colors rounded-full -mt-5 ${
+								currentStep > 0 ? "bg-primary" : "bg-gray-300 dark:bg-gray-700"
+							}`}
+						/>
+
 						{/* Step 1 */}
 						<div className="flex flex-col items-center flex-1">
 							<div
@@ -803,6 +1012,119 @@ export default function Register() {
 				</div>
 
 				<div className="grid gap-6">
+					{/* Step 0: Cek Email */}
+					{currentStep === 0 && (
+						<div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+							<div className="mb-4">
+								<h3 className="text-lg font-semibold mb-1">Cek Email Anda</h3>
+								<p className="text-sm text-muted-foreground">
+									Masukkan email Anda untuk memeriksa status pendaftaran
+								</p>
+							</div>
+
+							<div className="grid gap-2">
+								<Label htmlFor="email-check">Alamat Email *</Label>
+								<Input
+									id="email-check"
+									type="email"
+									required
+									autoFocus
+									tabIndex={1}
+									autoComplete="email"
+									value={emailCheckEmail}
+									onChange={(e) => {
+										setEmailCheckEmail(e.target.value);
+										setEmailCheckStatus({ status: "idle", message: "" });
+									}}
+									disabled={isCheckingEmail}
+									placeholder="email@contoh.com"
+									onKeyDown={(e) => {
+										if (e.key === "Enter" && !isCheckingEmail) {
+											e.preventDefault();
+											handleCheckEmail();
+										}
+									}}
+								/>
+								{emailCheckStatus.status === "already_registered" && (
+									<div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+										<div className="flex items-start gap-3">
+											<AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+											<div className="flex-1">
+												<p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+													{emailCheckStatus.message}
+												</p>
+												<div className="mt-2">
+													<TextLink href={route("login")} className="text-sm">
+														Klik di sini untuk masuk
+													</TextLink>
+												</div>
+											</div>
+										</div>
+									</div>
+								)}
+								{emailCheckStatus.status === "pending_registration" &&
+									emailCheckStatus.pendingData && (
+										<div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-3">
+											<div className="flex items-start gap-3">
+												<Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+												<div className="flex-1">
+													<p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+														{emailCheckStatus.message}
+													</p>
+													<p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+														Pendaftaran dimulai pada:{" "}
+														{new Date(
+															emailCheckStatus.pendingData.created_at
+														).toLocaleString("id-ID")}
+													</p>
+												</div>
+											</div>
+											<div className="flex gap-2">
+												<Button
+													type="button"
+													onClick={handleResume}
+													disabled={isCheckingEmail}
+													className="flex-1"
+												>
+													{isCheckingEmail ? (
+														<>
+															<LoaderCircle className="w-4 h-4 animate-spin mr-2" />
+															Memuat...
+														</>
+													) : (
+														"Lanjutkan Pendaftaran"
+													)}
+												</Button>
+												<Button
+													type="button"
+													variant="outline"
+													onClick={handleStartNew}
+													disabled={isCheckingEmail}
+													className="flex-1"
+												>
+													Mulai Baru
+												</Button>
+											</div>
+										</div>
+									)}
+								{emailCheckStatus.status === "new_registration" &&
+									emailCheckStatus.message && (
+										<div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+											<p className="text-sm text-green-800 dark:text-green-200">
+												✓ {emailCheckStatus.message}
+											</p>
+										</div>
+									)}
+								{emailCheckStatus.message &&
+									emailCheckStatus.status === "idle" && (
+										<p className="text-sm text-destructive">
+											{emailCheckStatus.message}
+										</p>
+									)}
+							</div>
+						</div>
+					)}
+
 					{/* Step 1: Informasi Akun */}
 					{currentStep === 1 && (
 						<div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -1216,15 +1538,37 @@ export default function Register() {
 
 					{/* Navigation Buttons */}
 					<div className="flex gap-4 mt-6">
-						{currentStep > 1 && (
+						{currentStep > 0 && (
 							<Button
 								type="button"
 								variant="outline"
 								onClick={handlePrevious}
-								disabled={processing}
+								disabled={processing || isCheckingEmail}
 								className="flex-1"
 							>
 								Kembali
+							</Button>
+						)}
+						{currentStep === 0 && (
+							<Button
+								type="button"
+								onClick={handleCheckEmail}
+								disabled={
+									isCheckingEmail || !isValidEmailFormat(emailCheckEmail)
+								}
+								className="flex-1"
+							>
+								{isCheckingEmail ? (
+									<>
+										<LoaderCircle className="w-4 h-4 animate-spin mr-2" />
+										Memeriksa...
+									</>
+								) : (
+									<>
+										Selanjutnya
+										<ChevronRight className="w-4 h-4 ml-2" />
+									</>
+								)}
 							</Button>
 						)}
 						{currentStep === 1 && (

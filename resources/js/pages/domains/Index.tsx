@@ -151,8 +151,8 @@ export default function DomainIndex({ domains, filters = {} }: Props) {
             </h1>
             <p className="text-muted-foreground mt-1">
               {window.location.pathname.startsWith('/customer') 
-                ? 'Kelola semua domain yang terdaftar melalui sistem RDASH. Daftarkan domain baru, pantau status verifikasi, dan kelola pengaturan domain Anda di sini.' 
-                : 'Kelola semua domain yang terdaftar melalui sistem RDASH. Pantau status domain, verifikasi, dan kelola pengaturan untuk semua customer.'}
+                ? 'Kelola semua domain yang terdaftar melalui sistem. Daftarkan domain baru, pantau status verifikasi, dan kelola pengaturan domain Anda di sini.' 
+                : 'Kelola semua domain yang terdaftar melalui sistem. Pantau status domain, verifikasi, dan kelola pengaturan untuk semua customer.'}
             </p>
           </div>
           <Link href={window.location.pathname.startsWith('/customer') ? '/customer/domains/create' : '/admin/domains/create'}>

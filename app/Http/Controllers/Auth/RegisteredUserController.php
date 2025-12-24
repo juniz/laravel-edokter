@@ -11,7 +11,10 @@ use App\Http\Requests\Auth\ValidateStep2Request;
 use App\Mail\EmailVerificationMailSync;
 use App\Models\EmailVerification;
 use App\Models\PendingRegistration;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -31,6 +34,142 @@ class RegisteredUserController extends Controller
     public function create(): Response
     {
         return Inertia::render('auth/register');
+    }
+
+    /**
+     * Check email status and return pending registration if exists
+     */
+    public function checkEmail(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'lowercase'],
+        ]);
+
+        $email = $validated['email'];
+
+        // Check if user already exists
+        $userExists = User::where('email', $email)->exists();
+        if ($userExists) {
+            return response()->json([
+                'success' => false,
+                'status' => 'already_registered',
+                'message' => 'Email sudah terdaftar. Silakan login dengan email tersebut.',
+            ]);
+        }
+
+        // Check for pending registration
+        $pendingRegistration = PendingRegistration::where('email', $email)->first();
+
+        if ($pendingRegistration) {
+            // Check if expired
+            if ($pendingRegistration->isExpired()) {
+                $pendingRegistration->delete();
+                return response()->json([
+                    'success' => true,
+                    'status' => 'new_registration',
+                    'message' => 'Email tersedia. Silakan lanjutkan pendaftaran.',
+                ]);
+            }
+
+            // Return pending registration data (without sensitive info)
+            return response()->json([
+                'success' => true,
+                'status' => 'pending_registration',
+                'message' => 'Anda memiliki pendaftaran yang belum selesai. Apakah Anda ingin melanjutkan?',
+                'data' => [
+                    'email' => $pendingRegistration->email,
+                    'name' => $pendingRegistration->name,
+                    'organization' => $pendingRegistration->organization,
+                    'phone' => $pendingRegistration->phone,
+                    'street_1' => $pendingRegistration->street_1,
+                    'street_2' => $pendingRegistration->street_2,
+                    'city' => $pendingRegistration->city,
+                    'state' => $pendingRegistration->state,
+                    'country_code' => $pendingRegistration->country_code,
+                    'postal_code' => $pendingRegistration->postal_code,
+                    'fax' => $pendingRegistration->fax,
+                    'created_at' => $pendingRegistration->created_at->toIso8601String(),
+                    'expires_at' => $pendingRegistration->expires_at->toIso8601String(),
+                ],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => 'new_registration',
+            'message' => 'Email tersedia. Silakan lanjutkan pendaftaran.',
+        ]);
+    }
+
+    /**
+     * Resume pending registration by loading data
+     */
+    public function resume(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'lowercase'],
+        ]);
+
+        $email = $validated['email'];
+
+        $pendingRegistration = PendingRegistration::where('email', $email)->first();
+
+        if (! $pendingRegistration) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data pendaftaran tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($pendingRegistration->isExpired()) {
+            $pendingRegistration->delete();
+            return response()->json([
+                'success' => false,
+                'message' => 'Data pendaftaran telah kedaluwarsa. Silakan mulai dari awal.',
+            ], 400);
+        }
+
+        // Return all data except password (password tidak bisa di-restore karena sudah di-hash)
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'email' => $pendingRegistration->email,
+                'name' => $pendingRegistration->name,
+                'organization' => $pendingRegistration->organization,
+                'phone' => $pendingRegistration->phone,
+                'street_1' => $pendingRegistration->street_1,
+                'street_2' => $pendingRegistration->street_2,
+                'city' => $pendingRegistration->city,
+                'state' => $pendingRegistration->state,
+                'country_code' => $pendingRegistration->country_code,
+                'postal_code' => $pendingRegistration->postal_code,
+                'fax' => $pendingRegistration->fax,
+            ],
+            'message' => 'Data pendaftaran berhasil dimuat. Silakan lengkapi password dan lanjutkan.',
+        ]);
+    }
+
+    /**
+     * Start new registration (delete pending if exists)
+     */
+    public function startNew(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'lowercase'],
+        ]);
+
+        $email = $validated['email'];
+
+        // Delete pending registration if exists
+        $pendingRegistration = PendingRegistration::where('email', $email)->first();
+        if ($pendingRegistration) {
+            $pendingRegistration->delete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Silakan mulai pendaftaran baru.',
+        ]);
     }
 
     /**

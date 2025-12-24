@@ -16,6 +16,14 @@ Route::middleware('guest')->group(function () {
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
+    // Email check and resume routes
+    Route::post('register/check-email', [RegisteredUserController::class, 'checkEmail'])
+        ->name('register.check-email');
+    Route::post('register/resume', [RegisteredUserController::class, 'resume'])
+        ->name('register.resume');
+    Route::post('register/start-new', [RegisteredUserController::class, 'startNew'])
+        ->name('register.start-new');
+
     // Step validation routes
     Route::post('register/validate-step1', [RegisteredUserController::class, 'validateStep1'])
         ->name('register.validate-step1');
