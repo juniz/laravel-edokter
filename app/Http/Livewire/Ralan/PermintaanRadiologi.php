@@ -76,6 +76,16 @@ class PermintaanRadiologi extends Component
 
         try {
             DB::beginTransaction();
+
+            // Ambil status_lanjut dari reg_periksa
+            $regPeriksa = DB::table('reg_periksa')
+                ->where('no_rawat', $this->noRawat)
+                ->select('status_lanjut')
+                ->first();
+
+            // Konversi status_lanjut ke lowercase (Ralan -> ralan, Ranap -> ranap)
+            $status = $regPeriksa ? strtolower($regPeriksa->status_lanjut) : 'ralan';
+
             $getNumber = DB::table('permintaan_radiologi')
                 ->where('tgl_permintaan', date('Y-m-d'))
                 ->selectRaw('ifnull(MAX(CONVERT(RIGHT(noorder,4),signed)),0) as no')
@@ -94,7 +104,7 @@ class PermintaanRadiologi extends Component
                     'dokter_perujuk' => session()->get('username'),
                     'diagnosa_klinis' =>  $this->klinis,
                     'informasi_tambahan' =>  $this->info,
-                    'status' => 'ralan'
+                    'status' => $status
                 ]);
 
             foreach ($processedPemeriksaan as $pemeriksaan) {

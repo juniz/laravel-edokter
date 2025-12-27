@@ -47,55 +47,53 @@ class PermintaanRadiologi extends Component
     {
         $this->validate();
 
-        try{
+        try {
             DB::beginTransaction();
             $getNumber = DB::table('permintaan_radiologi')
-                            ->where('tgl_permintaan', date('Y-m-d'))
-                            ->selectRaw('ifnull(MAX(CONVERT(RIGHT(noorder,4),signed)),0) as no')
-                            ->first();
+                ->where('tgl_permintaan', date('Y-m-d'))
+                ->selectRaw('ifnull(MAX(CONVERT(RIGHT(noorder,4),signed)),0) as no')
+                ->first();
 
             $lastNumber = substr($getNumber->no, 0, 4);
             $getNextNumber = sprintf('%04s', ($lastNumber + 1));
-            $noOrder = 'PR'.date('Ymd').$getNextNumber;
+            $noOrder = 'PR' . date('Ymd') . $getNextNumber;
 
             DB::table('permintaan_radiologi')
+                ->insert([
+                    'noorder' => $noOrder,
+                    'no_rawat' => $this->noRawat,
+                    'tgl_permintaan' => date('Y-m-d'),
+                    'jam_permintaan' => date('H:i:s'),
+                    'dokter_perujuk' => session()->get('username'),
+                    'diagnosa_klinis' =>  $this->klinis,
+                    'informasi_tambahan' =>  $this->info,
+                    'status' => 'ralan'
+                ]);
+
+            foreach ($this->jns_pemeriksaan as $pemeriksaan) {
+                DB::table('permintaan_pemeriksaan_radiologi')
                     ->insert([
                         'noorder' => $noOrder,
-                        'no_rawat' => $this->noRawat,
-                        'tgl_permintaan' => date('Y-m-d'),
-                        'jam_permintaan' => date('H:i:s'),
-                        'dokter_perujuk' => session()->get('username'),
-                        'diagnosa_klinis' =>  $this->klinis,
-                        'informasi_tambahan' =>  $this->info,
-                        'status' => 'ralan'
+                        'kd_jenis_prw' => $pemeriksaan,
+                        'stts_bayar' => 'Belum'
                     ]);
-
-            foreach( $this->jns_pemeriksaan as $pemeriksaan){
-                DB::table('permintaan_pemeriksaan_radiologi')
-                        ->insert([
-                            'noorder' => $noOrder,
-                            'kd_jenis_prw' => $pemeriksaan,
-                            'stts_bayar' => 'Belum'
-                        ]);
             }
             DB::commit();
             $this->getPermintaanRadiologi();
             $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi berhasil ditambahkab"));
             $this->emit('select2Rad');
-
-        }catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
 
             $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi gagal ditambahkan", 'error'));
         }
-
     }
 
     public function getPermintaanRadiologi()
     {
         $this->permintaanRad = DB::table('permintaan_radiologi')
-                                    ->where('no_rawat', $this->noRawat)
-                                    ->get();
+            ->where('no_rawat', $this->noRawat)
+            ->get();
     }
 
     public function collapsed()
@@ -106,15 +104,15 @@ class PermintaanRadiologi extends Component
     public function getDetailPemeriksaan($noOrder)
     {
         return DB::table('permintaan_pemeriksaan_radiologi')
-                    ->join('jns_perawatan_radiologi', 'permintaan_pemeriksaan_radiologi.kd_jenis_prw', '=', 'jns_perawatan_radiologi.kd_jenis_prw')
-                    ->where('permintaan_pemeriksaan_radiologi.noorder', $noOrder)
-                    ->select('jns_perawatan_radiologi.*')
-                    ->get();
+            ->join('jns_perawatan_radiologi', 'permintaan_pemeriksaan_radiologi.kd_jenis_prw', '=', 'jns_perawatan_radiologi.kd_jenis_prw')
+            ->where('permintaan_pemeriksaan_radiologi.noorder', $noOrder)
+            ->select('jns_perawatan_radiologi.*')
+            ->get();
     }
 
     public function deletePermintaanRadiologi($noOrder)
     {
-        try{
+        try {
             DB::beginTransaction();
             DB::table('permintaan_radiologi')
                 ->where('noorder', $noOrder)
@@ -123,8 +121,7 @@ class PermintaanRadiologi extends Component
             $this->getPermintaanRadiologi();
             DB::commit();
             $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi berhasil dihapus"));
-            
-        }catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
             $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi gagal dihapus", 'error'));
         }
