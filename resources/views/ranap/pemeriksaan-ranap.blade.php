@@ -27,7 +27,8 @@
                 <livewire:component.konsultasi-medik :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" />
             </x-adminlte-card>
             <livewire:ranap.permintaan-lab :no-rawat="request()->get('no_rawat')" />
-            <livewire:ranap.permintaan-radiologi :no-rawat="request()->get('no_rawat')" />
+            {{-- <livewire:ranap.permintaan-radiologi :no-rawat="request()->get('no_rawat')" /> --}}
+            <livewire:ralan.permintaan-radiologi :no-rawat="request()->get('no_rawat')" />
             <x-adminlte-card title="Laporan Operasi" icon='fas fa-stethoscope' theme="info" maximizable collapsible="collapsed">
                 <livewire:ranap.lap-operasi :no-rawat="request()->get('no_rawat')" />
                 <livewire:ranap.template-lap-operasi />
