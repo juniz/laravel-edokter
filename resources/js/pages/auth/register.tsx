@@ -455,6 +455,43 @@ export default function Register() {
 		return "";
 	};
 
+	// Refresh CSRF token dengan melakukan request ke endpoint yang aman
+	const refreshCsrfToken = async (): Promise<string | null> => {
+		try {
+			// Gunakan route yang tidak memerlukan CSRF untuk refresh token
+			// Atau gunakan GET request ke halaman yang sama untuk refresh session
+			const response = await fetch(window.location.href, {
+				method: "GET",
+				credentials: "same-origin",
+				headers: {
+					Accept: "text/html,application/xhtml+xml",
+					"X-Requested-With": "XMLHttpRequest",
+				},
+			});
+
+			// Parse HTML response untuk mendapatkan token baru dari meta tag
+			const html = await response.text();
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(html, "text/html");
+			const newToken = doc
+				.querySelector('meta[name="csrf-token"]')
+				?.getAttribute("content");
+
+			if (newToken) {
+				// Update meta tag dengan token baru
+				const metaTag = document.querySelector('meta[name="csrf-token"]');
+				if (metaTag) {
+					metaTag.setAttribute("content", newToken);
+				}
+				return newToken;
+			}
+		} catch (error) {
+			console.error("Failed to refresh CSRF token:", error);
+		}
+
+		return null;
+	};
+
 	const handleVerifyCode = async () => {
 		if (verificationCode.length !== 6) {
 			setVerificationError("Kode verifikasi harus 6 digit");
@@ -472,6 +509,7 @@ export default function Register() {
 				setVerificationError(
 					"Route tidak ditemukan. Silakan refresh halaman dan coba lagi."
 				);
+				setIsVerifying(false);
 				return;
 			}
 
@@ -479,7 +517,22 @@ export default function Register() {
 			const fullUrl = verifyUrl.startsWith("http")
 				? verifyUrl
 				: window.location.origin + verifyUrl;
-			const csrfToken = getCsrfToken();
+
+			// Refresh CSRF token sebelum request untuk memastikan token masih valid
+			let csrfToken = getCsrfToken();
+			if (!csrfToken) {
+				// Try to refresh token
+				const refreshedToken = await refreshCsrfToken();
+				if (refreshedToken) {
+					csrfToken = refreshedToken;
+				} else {
+					setVerificationError(
+						"CSRF token tidak ditemukan. Silakan refresh halaman dan coba lagi."
+					);
+					setIsVerifying(false);
+					return;
+				}
+			}
 
 			// Check Service Worker status and try to bypass it
 			if ("serviceWorker" in navigator) {
@@ -499,13 +552,6 @@ export default function Register() {
 				}
 			}
 
-			if (!csrfToken) {
-				setVerificationError(
-					"CSRF token tidak ditemukan. Silakan refresh halaman dan coba lagi."
-				);
-				return;
-			}
-
 			// Use AbortController for timeout and bypass service worker cache
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
@@ -520,7 +566,7 @@ export default function Register() {
 				headers: {
 					"Content-Type": "application/json",
 					Accept: "application/json",
-					"X-CSRF-TOKEN": getCsrfToken(),
+					"X-CSRF-TOKEN": csrfToken,
 					"X-Requested-With": "XMLHttpRequest",
 					"Cache-Control": "no-cache, no-store, must-revalidate",
 					Pragma: "no-cache",
@@ -531,7 +577,7 @@ export default function Register() {
 				cache: "no-store", // Bypass service worker cache
 				signal: controller.signal,
 				// Force bypass service worker by using different fetch mode
-				credentials: "same-origin",
+				credentials: "same-origin", // Penting: kirim cookie termasuk session cookie
 			};
 
 			// Add timestamp to URL to bypass service worker cache
@@ -542,9 +588,45 @@ export default function Register() {
 			// Use fullUrl instead of verifyUrl to ensure correct URL
 			// Try to bypass service worker by using fetch with different approach
 			// Make the fetch request
-			const response = await fetch(urlWithTimestamp, fetchOptions);
+			let response = await fetch(urlWithTimestamp, fetchOptions);
 
 			clearTimeout(timeoutId);
+
+			// Handle CSRF token mismatch (419) - refresh token dan retry sekali
+			if (response.status === 419) {
+				// Try to refresh CSRF token and retry once
+				const refreshedToken = await refreshCsrfToken();
+				if (refreshedToken) {
+					// Retry dengan token baru
+					const retryController = new AbortController();
+					const retryTimeoutId = setTimeout(
+						() => retryController.abort(),
+						30000
+					);
+
+					const retryFetchOptions: RequestInit = {
+						...fetchOptions,
+						headers: {
+							...fetchOptions.headers,
+							"X-CSRF-TOKEN": refreshedToken,
+						},
+						signal: retryController.signal,
+					};
+
+					const retryUrlWithTimestamp = `${fullUrl}${
+						fullUrl.includes("?") ? "&" : "?"
+					}_t=${Date.now()}`;
+
+					response = await fetch(retryUrlWithTimestamp, retryFetchOptions);
+					clearTimeout(retryTimeoutId);
+				} else {
+					setVerificationError(
+						"Sesi telah berakhir. Silakan refresh halaman dan coba lagi."
+					);
+					setIsVerifying(false);
+					return;
+				}
+			}
 
 			// Check if response is JSON
 			const contentType = response.headers.get("content-type");
@@ -578,6 +660,7 @@ export default function Register() {
 					setVerificationError(
 						"Service Worker mengintercept request. Silakan refresh halaman (Ctrl+Shift+R atau Cmd+Shift+R) untuk me-reload tanpa cache, atau unregister Service Worker di Developer Tools > Application > Service Workers."
 					);
+					setIsVerifying(false);
 					return;
 				}
 
@@ -597,6 +680,7 @@ export default function Register() {
 				}
 
 				setVerificationError(errorMessage);
+				setIsVerifying(false);
 				return;
 			}
 
@@ -670,16 +754,32 @@ export default function Register() {
 		setVerificationError("");
 
 		try {
+			// Refresh CSRF token sebelum request untuk memastikan token masih valid
+			let csrfToken = getCsrfToken();
+			if (!csrfToken) {
+				// Try to refresh token
+				const refreshedToken = await refreshCsrfToken();
+				if (refreshedToken) {
+					csrfToken = refreshedToken;
+				} else {
+					setVerificationError(
+						"CSRF token tidak ditemukan. Silakan refresh halaman dan coba lagi."
+					);
+					setIsResending(false);
+					return;
+				}
+			}
+
 			// Use AbortController for timeout and bypass service worker cache
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
 
-			const response = await fetch(route("email-verification.resend"), {
+			let response = await fetch(route("email-verification.resend"), {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 					Accept: "application/json",
-					"X-CSRF-TOKEN": getCsrfToken(),
+					"X-CSRF-TOKEN": csrfToken,
 					"X-Requested-With": "XMLHttpRequest",
 					"Cache-Control": "no-cache, no-store, must-revalidate",
 					Pragma: "no-cache",
@@ -690,7 +790,49 @@ export default function Register() {
 				}),
 				cache: "no-store", // Bypass service worker cache
 				signal: controller.signal,
+				credentials: "same-origin", // Penting: kirim cookie termasuk session cookie
 			});
+
+			// Handle CSRF token mismatch (419) - refresh token dan retry sekali
+			if (response.status === 419) {
+				// Try to refresh CSRF token and retry once
+				const refreshedToken = await refreshCsrfToken();
+				if (refreshedToken) {
+					// Retry dengan token baru
+					const retryController = new AbortController();
+					const retryTimeoutId = setTimeout(
+						() => retryController.abort(),
+						30000
+					);
+
+					response = await fetch(route("email-verification.resend"), {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Accept: "application/json",
+							"X-CSRF-TOKEN": refreshedToken,
+							"X-Requested-With": "XMLHttpRequest",
+							"Cache-Control": "no-cache, no-store, must-revalidate",
+							Pragma: "no-cache",
+						},
+						body: JSON.stringify({
+							email: data.email,
+							name: data.name,
+						}),
+						cache: "no-store",
+						signal: retryController.signal,
+						credentials: "same-origin",
+					});
+
+					clearTimeout(retryTimeoutId);
+				} else {
+					setVerificationError(
+						"Sesi telah berakhir. Silakan refresh halaman dan coba lagi."
+					);
+					setIsResending(false);
+					return;
+				}
+			}
 
 			clearTimeout(timeoutId);
 
