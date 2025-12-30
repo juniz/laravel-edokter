@@ -59,6 +59,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="/booking" class="dock-item" data-route="booking">
+                        <i class="fas fa-book"></i>
+                        <span>Booking</span>
+                    </a>
+                </li>
+                <li>
                     <a href="/ralan/pasien" class="dock-item" data-route="ralan">
                         <i class="fas fa-stethoscope"></i>
                         <span>Ralan</span>
