@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import InputError from '@/components/input-error';
-import { UserCircle, Eye, Plus } from 'lucide-react';
+import { UserCircle, Eye, Plus, Users, RefreshCw } from 'lucide-react';
 import dayjs from 'dayjs';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -61,6 +61,7 @@ interface PanelAccountsProps {
 
 export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: PanelAccountsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVirtualModalOpen, setIsVirtualModalOpen] = useState(false);
 
   const { data, setData, post, processing, errors, reset } = useForm({
     server_id: '',
@@ -73,6 +74,44 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
     type_id: '0',
     description: '',
   });
+
+  const {
+    data: virtualData,
+    setData: setVirtualData,
+    post: postVirtual,
+    processing: processingVirtual,
+    errors: errorsVirtual,
+    reset: resetVirtual,
+  } = useForm({
+    server_id: '',
+    create_website: '0', // 0 = No, 1 = Yes
+    username: '',
+    password: '',
+    email: '',
+    expire_type: 'perpetual', // 'perpetual' or 'custom'
+    expire_date: '0000-00-00',
+    package_id: '1',
+    storage_disk: '/',
+    disk_space_quota: '0',
+    monthly_bandwidth_limit: '0',
+    max_site_limit: '5',
+    max_database: '5',
+    php_start_children: '1',
+    php_max_children: '5',
+    remark: '',
+    automatic_dns: '0',
+    domain: '',
+  });
+
+  // Generate random password
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let password = '';
+    for (let i = 0; i < 16; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setVirtualData('password', password);
+  };
 
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
@@ -104,6 +143,31 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
     reset();
   };
 
+  const handleSubmitVirtual = (e: React.FormEvent) => {
+    e.preventDefault();
+    postVirtual(route('admin.panel-accounts.create-virtual'), {
+      preserveScroll: true,
+      onSuccess: () => {
+        setIsVirtualModalOpen(false);
+        resetVirtual();
+      },
+    });
+  };
+
+  const handleOpenVirtualModal = () => {
+    resetVirtual();
+    setIsVirtualModalOpen(true);
+    // Generate password otomatis setelah reset
+    setTimeout(() => {
+      generatePassword();
+    }, 100);
+  };
+
+  const handleCloseVirtualModal = () => {
+    setIsVirtualModalOpen(false);
+    resetVirtual();
+  };
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Panel Accounts" />
@@ -114,10 +178,16 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
             <p className="text-gray-600 dark:text-gray-400 mt-2">Kelola akun panel hosting</p>
           </div>
           {aapanelServers.length > 0 && (
-            <Button onClick={handleOpenModal}>
-              <Plus className="w-4 h-4 mr-2" />
-              Tambah Account
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleOpenModal} variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Tambah Website Account
+              </Button>
+              <Button onClick={handleOpenVirtualModal}>
+                <Users className="w-4 h-4 mr-2" />
+                Tambah Virtual Account
+              </Button>
+            </div>
           )}
         </div>
 
@@ -347,6 +417,248 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                 </Button>
                 <Button type="submit" disabled={processing}>
                   {processing ? 'Membuat...' : 'Buat Account'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Virtual Account Modal */}
+        <Dialog open={isVirtualModalOpen} onOpenChange={setIsVirtualModalOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New account</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmitVirtual} className="space-y-4">
+              <div>
+                <Label htmlFor="virtual_server_id">Server *</Label>
+                <Select
+                  value={virtualData.server_id}
+                  onValueChange={(value) => setVirtualData('server_id', value)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Pilih server aaPanel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {aapanelServers.map((server) => (
+                      <SelectItem key={server.id} value={server.id}>
+                        {server.name} ({server.endpoint})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <InputError message={errorsVirtual.server_id} className="mt-2" />
+              </div>
+
+              {/* Create a website and email */}
+              <div>
+                <Label className="mb-2 block">Create a website and email</Label>
+                <div className="flex gap-6 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="create_website"
+                      value="1"
+                      checked={virtualData.create_website === '1'}
+                      onChange={(e) => setVirtualData('create_website', e.target.value)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span>Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="create_website"
+                      value="0"
+                      checked={virtualData.create_website === '0'}
+                      onChange={(e) => setVirtualData('create_website', e.target.value)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span>No</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Username */}
+              <div>
+                <Label htmlFor="virtual_username">
+                  Username <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="virtual_username"
+                  value={virtualData.username}
+                  onChange={(e) => setVirtualData('username', e.target.value)}
+                  className="mt-1"
+                  placeholder="Please Input"
+                  maxLength={16}
+                  required
+                />
+                <InputError message={errorsVirtual.username} className="mt-2" />
+                <p className="text-xs text-gray-500 mt-1">
+                  Maksimal 16 karakter, hanya huruf kecil, angka, dan underscore
+                </p>
+              </div>
+
+              {/* Password */}
+              <div>
+                <Label htmlFor="virtual_password">
+                  Password <span className="text-red-500">*</span>
+                </Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    id="virtual_password"
+                    type="text"
+                    value={virtualData.password}
+                    onChange={(e) => setVirtualData('password', e.target.value)}
+                    placeholder="Please Input"
+                    required
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={generatePassword}
+                    className="shrink-0"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </div>
+                <InputError message={errorsVirtual.password} className="mt-2" />
+              </div>
+
+              {/* Email */}
+              <div>
+                <Label htmlFor="virtual_email">
+                  Email <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="virtual_email"
+                  type="email"
+                  value={virtualData.email}
+                  onChange={(e) => setVirtualData('email', e.target.value)}
+                  className="mt-1"
+                  placeholder="Please Input"
+                  required
+                />
+                <InputError message={errorsVirtual.email} className="mt-2" />
+              </div>
+
+              {/* Expiration Date */}
+              <div>
+                <Label className="mb-2 block">Expiration Date</Label>
+                <div className="flex gap-6 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="expire_type"
+                      value="perpetual"
+                      checked={virtualData.expire_type === 'perpetual'}
+                      onChange={(e) => {
+                        setVirtualData('expire_type', e.target.value);
+                        setVirtualData('expire_date', '0000-00-00');
+                      }}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span>Perpetual</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="expire_type"
+                      value="custom"
+                      checked={virtualData.expire_type === 'custom'}
+                      onChange={(e) => setVirtualData('expire_type', e.target.value)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span>Custom</span>
+                  </label>
+                </div>
+                {virtualData.expire_type === 'custom' && (
+                  <Input
+                    type="date"
+                    value={virtualData.expire_date === '0000-00-00' ? '' : virtualData.expire_date}
+                    onChange={(e) => setVirtualData('expire_date', e.target.value || '0000-00-00')}
+                    className="mt-2"
+                  />
+                )}
+                <InputError message={errorsVirtual.expire_date} className="mt-2" />
+              </div>
+
+              {/* Remarks */}
+              <div>
+                <Label htmlFor="virtual_remark">Remarks</Label>
+                <Input
+                  id="virtual_remark"
+                  value={virtualData.remark}
+                  onChange={(e) => setVirtualData('remark', e.target.value)}
+                  className="mt-1"
+                  placeholder="Please Input"
+                />
+                <InputError message={errorsVirtual.remark} className="mt-2" />
+              </div>
+
+              {/* Select Resource Package */}
+              <div>
+                <Label htmlFor="virtual_package_id">Select Resource Package</Label>
+                <div className="flex gap-2 items-center mt-1">
+                  <Select
+                    value={virtualData.package_id}
+                    onValueChange={(value) => setVirtualData('package_id', value)}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Default" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Default</SelectItem>
+                      <SelectItem value="2">Package 2</SelectItem>
+                      <SelectItem value="3">Package 3</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="link" className="text-sm">
+                    View Options
+                  </Button>
+                </div>
+                <InputError message={errorsVirtual.package_id} className="mt-2" />
+              </div>
+
+              {/* Storage Disk */}
+              <div>
+                <Label htmlFor="virtual_storage_disk">Storage Disk</Label>
+                <Select
+                  value={virtualData.storage_disk}
+                  onValueChange={(value) => setVirtualData('storage_disk', value)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="/">/ (Quota: Disable)</SelectItem>
+                    <SelectItem value="/home">/home (Quota: Enable)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <InputError message={errorsVirtual.storage_disk} className="mt-2" />
+              </div>
+
+              {/* Info message */}
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                <p className="text-sm text-blue-600 dark:text-blue-400">
+                  Automatic: If the API is not open or 127.0.0.1 is not added to the API whitelist, it will not be possible to deploy web certificates and add post office domain names and deploy post office domain name certificates
+                </p>
+              </div>
+
+              {errorsVirtual.error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <p className="text-sm text-red-600 dark:text-red-400">{errorsVirtual.error}</p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={handleCloseVirtualModal}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={processingVirtual} className="bg-green-600 hover:bg-green-700">
+                  {processingVirtual ? 'Creating...' : 'Confirm'}
                 </Button>
               </div>
             </form>

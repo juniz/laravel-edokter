@@ -353,4 +353,100 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
 
         return $panelAccount;
     }
+
+    /**
+     * Create virtual account/sub user di aaPanel
+     * Endpoint: /v2/virtual/create_account.json
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function createVirtualAccount(Server $server, array $data): PanelAccount
+    {
+        // Initialize client dengan server
+        if (! $this->client || $this->defaultServer?->id !== $server->id) {
+            $this->initializeClient($server);
+        }
+
+        $username = $data['username'];
+        $password = $data['password'] ?? Str::random(16);
+        $email = $data['email'] ?? '';
+
+        // Handle expire_date berdasarkan expire_type
+        $expireDate = '0000-00-00';
+        if (isset($data['expire_type']) && $data['expire_type'] === 'custom' && ! empty($data['expire_date'])) {
+            $expireDate = $data['expire_date'];
+        }
+
+        // Gunakan storage_disk sebagai mountpoint jika ada
+        $mountpoint = $data['storage_disk'] ?? $data['mountpoint'] ?? '/';
+
+        // Prepare data untuk create virtual account
+        $virtualAccountData = [
+            'username' => $username,
+            'password' => $password,
+            'email' => $email,
+            'expire_date' => $expireDate,
+            'package_id' => $data['package_id'] ?? 1,
+            'mountpoint' => $mountpoint,
+            'disk_space_quota' => $data['disk_space_quota'] ?? 0,
+            'monthly_bandwidth_limit' => $data['monthly_bandwidth_limit'] ?? 0,
+            'max_site_limit' => $data['max_site_limit'] ?? 5,
+            'max_database' => $data['max_database'] ?? 5,
+            'php_start_children' => $data['php_start_children'] ?? 1,
+            'php_max_children' => $data['php_max_children'] ?? 5,
+            'remark' => $data['remark'] ?? '',
+            'automatic_dns' => $data['automatic_dns'] ?? 0,
+        ];
+
+        // Create virtual account di aaPanel
+        // Endpoint menggunakan /v2/virtual/create_account.json
+        $response = $this->client->post('v2/virtual/create_account.json', $virtualAccountData);
+
+        // Check response success
+        if (! isset($response['status']) || ! $response['status']) {
+            $errorMsg = $response['msg'] ?? 'Failed to create virtual account in aaPanel';
+            Log::error('aaPanel create virtual account failed', [
+                'server_id' => $server->id,
+                'username' => $username,
+                'response' => $response,
+            ]);
+            throw new \Exception($errorMsg);
+        }
+
+        // Create panel account record
+        $panelAccount = PanelAccount::create([
+            'server_id' => $server->id,
+            'subscription_id' => null, // Virtual account tidak punya subscription
+            'username' => $username,
+            'domain' => $data['domain'] ?? $username . '.local', // Default domain jika tidak ada
+            'status' => 'active',
+            'meta' => [
+                'virtual_account' => true,
+                'create_website' => $data['create_website'] ?? '0',
+                'email' => $email,
+                'expire_type' => $data['expire_type'] ?? 'perpetual',
+                'expire_date' => $virtualAccountData['expire_date'],
+                'package_id' => $virtualAccountData['package_id'],
+                'storage_disk' => $mountpoint,
+                'mountpoint' => $mountpoint,
+                'disk_space_quota' => $virtualAccountData['disk_space_quota'],
+                'monthly_bandwidth_limit' => $virtualAccountData['monthly_bandwidth_limit'],
+                'max_site_limit' => $virtualAccountData['max_site_limit'],
+                'max_database' => $virtualAccountData['max_database'],
+                'php_start_children' => $virtualAccountData['php_start_children'],
+                'php_max_children' => $virtualAccountData['php_max_children'],
+                'remark' => $virtualAccountData['remark'],
+                'automatic_dns' => $virtualAccountData['automatic_dns'],
+                'created_manually' => true,
+            ],
+        ]);
+
+        Log::info('aaPanel virtual account created successfully', [
+            'server_id' => $server->id,
+            'username' => $username,
+            'panel_account_id' => $panelAccount->id,
+        ]);
+
+        return $panelAccount;
+    }
 }

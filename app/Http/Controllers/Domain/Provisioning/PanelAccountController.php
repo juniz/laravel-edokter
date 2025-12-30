@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Domain\Provisioning;
 
 use App\Application\Provisioning\CreatePanelAccountService;
+use App\Application\Provisioning\CreateVirtualAccountService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Domain\Provisioning\PanelAccountCreateRequest;
+use App\Http\Requests\Domain\Provisioning\VirtualAccountCreateRequest;
 use App\Models\Domain\Provisioning\PanelAccount;
 use App\Models\Domain\Provisioning\Server;
 use Illuminate\Http\Request;
@@ -63,5 +65,20 @@ class PanelAccountController extends Controller
         return Inertia::render('admin/panel-accounts/Show', [
             'account' => $account,
         ]);
+    }
+
+    public function createVirtualAccount(VirtualAccountCreateRequest $request, CreateVirtualAccountService $createService)
+    {
+        try {
+            $data = $request->validated();
+            $panelAccount = $createService->execute($data);
+
+            return redirect()->route('admin.panel-accounts.show', $panelAccount->id)
+                ->with('success', 'Virtual account berhasil dibuat.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withErrors(['error' => $e->getMessage()])
+                ->withInput();
+        }
     }
 }

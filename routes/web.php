@@ -85,6 +85,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::resource('servers', ServerController::class);
         Route::get('/panel-accounts', [PanelAccountController::class, 'index'])->name('panel-accounts.index');
         Route::post('/panel-accounts', [PanelAccountController::class, 'create'])->name('panel-accounts.create');
+        Route::post('/panel-accounts/virtual', [PanelAccountController::class, 'createVirtualAccount'])->name('panel-accounts.create-virtual');
         Route::get('/panel-accounts/{id}', [PanelAccountController::class, 'show'])->name('panel-accounts.show');
         Route::get('/provision-tasks', [ProvisionTaskController::class, 'index'])->name('provision-tasks.index');
         Route::get('/provision-tasks/{id}', [ProvisionTaskController::class, 'show'])->name('provision-tasks.show');
