@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Domain\Catalog;
 
-use App\Http\Controllers\Controller;
-use App\Domain\Catalog\Contracts\ProductRepository;
+use App\Application\Catalog\CheckoutCatalogService;
 use App\Domain\Catalog\Contracts\PlanRepository;
+use App\Domain\Catalog\Contracts\ProductRepository;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,7 +14,8 @@ class CatalogController extends Controller
 {
     public function __construct(
         private ProductRepository $productRepository,
-        private PlanRepository $planRepository
+        private PlanRepository $planRepository,
+        private CheckoutCatalogService $checkoutCatalogService
     ) {}
 
     public function index(): Response
@@ -28,8 +30,8 @@ class CatalogController extends Controller
     public function show(string $slug): Response
     {
         $product = $this->productRepository->findBySlug($slug);
-        
-        if (!$product) {
+
+        if (! $product) {
             abort(404);
         }
 
@@ -39,5 +41,42 @@ class CatalogController extends Controller
             'product' => $product,
             'plans' => $plans,
         ]);
+    }
+
+    public function checkout(Request $request)
+    {
+        $request->validate([
+            'plan_id' => ['required', 'string'],
+            'payment_method' => ['required', 'string'],
+        ]);
+
+        $user = $request->user();
+
+        if (! $user) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu untuk melakukan pembayaran.');
+        }
+
+        $customer = $user->customer;
+
+        if (! $customer) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Customer profile tidak ditemukan. Silakan lengkapi profil Anda.']);
+        }
+
+        try {
+            $payment = $this->checkoutCatalogService->execute($customer, [
+                'plan_id' => $request->plan_id,
+                'payment_method' => $request->payment_method,
+            ]);
+
+            // Redirect ke halaman payment
+            return redirect()->route('payments.show', $payment->id)
+                ->with('success', 'Pembayaran berhasil dibuat. Silakan selesaikan pembayaran Anda.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withErrors(['error' => $e->getMessage()])
+                ->withInput();
+        }
     }
 }

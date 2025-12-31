@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\Domain\Billing\InvoiceController;
+use App\Http\Controllers\Domain\Billing\PaymentController;
 use App\Http\Controllers\Domain\Catalog\CatalogController;
 use App\Http\Controllers\Domain\Catalog\PlanController;
 use App\Http\Controllers\Domain\Catalog\ProductController;
@@ -36,6 +37,7 @@ Route::get('/send_email', [\App\Http\Controllers\Auth\EmailVerificationControlle
 // Public catalog routes
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/catalog/{slug}', [CatalogController::class, 'show'])->name('catalog.show');
+Route::post('/catalog/checkout', [CatalogController::class, 'checkout'])->name('catalog.checkout')->middleware('auth');
 
 Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
@@ -49,6 +51,8 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::get('/invoices/{id}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+
+        Route::get('/payments/{id}', [PaymentController::class, 'show'])->name('payments.show');
 
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
         Route::get('/subscriptions/{id}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
