@@ -210,7 +210,7 @@ class LapOperasi extends Component
             'nip_asisten_bedah' => '197911162014-121-002',
             'kd_ruang_ok' => $this->kd_ruang_ok,
             'nip_instrumen' => '-',
-            'kd_ahli_anestesi' => '86062112',
+            'kd_ahli_anestesi' => '-',
             'obat_anestesi' => '-',
             'jumlah_pendarahan' => '-',
             'jumlah_cairan_transfusi' => '-',
