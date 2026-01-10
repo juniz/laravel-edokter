@@ -5,6 +5,14 @@ import { type BreadcrumbItem } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     FileText,
     Calendar,
@@ -23,6 +31,7 @@ import {
     Loader2,
     RotateCcw,
     Check,
+    Search,
 } from 'lucide-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -50,7 +59,19 @@ interface Invoice {
 }
 
 interface InvoicesProps {
-    invoices: Invoice[];
+    invoices: {
+        data: Invoice[];
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        links: { url: string | null; label: string; active: boolean }[];
+    };
+    filters?: {
+        status?: string;
+        search?: string;
+        per_page?: number;
+    };
 }
 
 function getStatusConfig(status: string) {
@@ -69,10 +90,12 @@ function getDaysUntilDue(dueDate: string) {
     return dayjs(dueDate).diff(dayjs(), 'day');
 }
 
-export default function Invoices({ invoices }: InvoicesProps) {
+export default function Invoices({ invoices, filters = {} }: InvoicesProps) {
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('bca_va');
+    const [searchQuery, setSearchQuery] = useState(filters.search || '');
+    const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
     const { props } = usePage();
     const flash = (props?.flash as { open_payment_modal?: boolean; invoice_id?: string }) ?? {};
@@ -89,10 +112,42 @@ export default function Invoices({ invoices }: InvoicesProps) {
         }).format(cents);
     };
 
+    const handleSearch = (value: string) => {
+        setSearchQuery(value);
+        
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+        }
+
+        const timer = setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            if (value) {
+                params.set('search', value);
+            } else {
+                params.delete('search');
+            }
+            params.delete('page'); // Reset to first page on new search
+            router.get(`/customer/invoices?${params.toString()}`, {}, { preserveState: true, preserveScroll: false });
+        }, 500);
+
+        setDebounceTimer(timer);
+    };
+
+    const handleFilterChange = (key: string, value: string) => {
+        const params = new URLSearchParams(window.location.search);
+        if (value && value !== 'all') {
+            params.set(key, value);
+        } else {
+            params.delete(key);
+        }
+        params.delete('page'); // Reset to first page on filter change
+        router.get(`/customer/invoices?${params.toString()}`, {}, { preserveState: true, preserveScroll: false });
+    };
+
     // Handle flash message untuk membuka modal pembayaran
     useEffect(() => {
         if (flash.open_payment_modal && flash.invoice_id) {
-            const invoice = invoices.find((inv) => inv.id === flash.invoice_id);
+            const invoice = invoices.data.find((inv) => inv.id === flash.invoice_id);
             if (invoice) {
                 setSelectedInvoice(invoice);
                 setIsPaymentModalOpen(true);
@@ -131,13 +186,13 @@ export default function Invoices({ invoices }: InvoicesProps) {
         });
     };
 
-    const totalUnpaid = invoices
+    const totalUnpaid = invoices.data
         .filter(inv => inv.status === 'unpaid' || inv.status === 'overdue')
         .reduce((sum, inv) => sum + inv.total_cents, 0);
 
-    const unpaidCount = invoices.filter(inv => inv.status === 'unpaid').length;
-    const overdueCount = invoices.filter(inv => inv.status === 'overdue').length;
-    const paidCount = invoices.filter(inv => inv.status === 'paid').length;
+    const unpaidCount = invoices.data.filter(inv => inv.status === 'unpaid').length;
+    const overdueCount = invoices.data.filter(inv => inv.status === 'overdue').length;
+    const paidCount = invoices.data.filter(inv => inv.status === 'paid').length;
 
     const getPaymentLogo = (method: string): string | null => {
         const logos: Record<string, string> = {
@@ -199,7 +254,7 @@ export default function Invoices({ invoices }: InvoicesProps) {
                                     <FileText className="h-5 w-5 text-white" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold">{invoices.length}</p>
+                                    <p className="text-2xl font-bold">{invoices.total}</p>
                                     <p className="text-xs text-muted-foreground">Total Invoice</p>
                                 </div>
                             </div>
@@ -273,8 +328,45 @@ export default function Invoices({ invoices }: InvoicesProps) {
                     </Card>
                 )}
 
+                {/* Filters */}
+                <Card>
+                    <CardContent className="p-4">
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Cari nomor invoice..."
+                                        value={searchQuery}
+                                        onChange={(e) => handleSearch(e.target.value)}
+                                        className="pl-10"
+                                    />
+                                </div>
+                            </div>
+                            <div className="w-full md:w-48">
+                                <Select
+                                    value={filters.status || 'all'}
+                                    onValueChange={(value) => handleFilterChange('status', value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Filter Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua Status</SelectItem>
+                                        <SelectItem value="paid">Lunas</SelectItem>
+                                        <SelectItem value="unpaid">Belum Dibayar</SelectItem>
+                                        <SelectItem value="overdue">Jatuh Tempo</SelectItem>
+                                        <SelectItem value="void">Dibatalkan</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Invoices List */}
-                {invoices.length === 0 ? (
+                {invoices.data.length === 0 ? (
                     <Card variant="premium">
                         <CardContent className="p-12 text-center">
                             <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center mx-auto mb-4">
@@ -288,7 +380,7 @@ export default function Invoices({ invoices }: InvoicesProps) {
                     </Card>
                 ) : (
                     <div className="space-y-3">
-                        {invoices.map((invoice) => {
+                        {invoices.data.map((invoice) => {
                             const statusConfig = getStatusConfig(invoice.status);
                             const StatusIcon = statusConfig.icon;
                             const daysUntilDue = getDaysUntilDue(invoice.due_at);
@@ -374,6 +466,34 @@ export default function Invoices({ invoices }: InvoicesProps) {
                             );
                         })}
                     </div>
+                )}
+
+                {/* Pagination */}
+                {invoices.links && invoices.links.length > 3 && (
+                    <Card>
+                        <CardContent className="p-4">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div className="text-sm text-muted-foreground">
+                                    Menampilkan {((invoices.current_page - 1) * invoices.per_page) + 1} sampai{' '}
+                                    {Math.min(invoices.current_page * invoices.per_page, invoices.total)} dari {invoices.total} invoice
+                                </div>
+                                <div className="flex flex-wrap gap-2 justify-center">
+                                    {invoices.links.map((link, index) => (
+                                        <Link
+                                            key={index}
+                                            href={link.url || '#'}
+                                            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                                link.active
+                                                    ? 'bg-primary text-primary-foreground'
+                                                    : 'bg-background hover:bg-muted text-foreground'
+                                            } ${!link.url ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 )}
             </div>
 

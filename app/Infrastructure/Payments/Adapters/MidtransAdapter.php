@@ -31,9 +31,21 @@ class MidtransAdapter implements PaymentAdapterInterface
         $orderId = 'INV-'.$invoice->number.'-'.time();
 
         // Prepare transaction details
+        // Midtrans expects gross_amount in rupiah (not cents)
+        // Data di database sudah dalam format rupiah (meskipun field namanya _cents)
+        // Jadi tidak perlu dibagi 100
+        $grossAmount = $invoice->total_cents;
+
+        Log::info('Midtrans payment amount conversion', [
+            'invoice_id' => $invoice->id,
+            'invoice_total_cents' => $invoice->total_cents,
+            'gross_amount_sent' => $grossAmount,
+            'currency' => $invoice->currency,
+        ]);
+
         $transactionDetails = [
             'order_id' => $orderId,
-            'gross_amount' => $invoice->total_cents / 100, // Convert cents to amount
+            'gross_amount' => $grossAmount,
         ];
 
         // Prepare customer details
@@ -44,11 +56,12 @@ class MidtransAdapter implements PaymentAdapterInterface
         ];
 
         // Prepare item details
+        // Data sudah dalam format rupiah, tidak perlu dibagi 100
         $itemDetails = [];
         foreach ($invoice->items as $item) {
             $itemDetails[] = [
                 'id' => $item->id,
-                'price' => ($item->unit_price_cents ?? 0) / 100,
+                'price' => $item->unit_price_cents ?? 0,
                 'quantity' => $item->qty ?? 1,
                 'name' => $item->description ?? 'Item',
             ];

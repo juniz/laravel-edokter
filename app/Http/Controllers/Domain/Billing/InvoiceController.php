@@ -36,28 +36,45 @@ class InvoiceController extends Controller
 
         if (! $customer) {
             return Inertia::render('invoices/Index', [
-                'invoices' => [],
+                'invoices' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),
+                'filters' => $request->only(['status', 'search', 'per_page']),
             ]);
         }
 
-        $invoices = $this->invoiceRepository->findByCustomer($customer->id);
+        // Build query dengan filter
+        $query = \App\Models\Domain\Billing\Invoice::where('customer_id', $customer->id)
+            ->with(['customer', 'payments']);
+
+        // Filter by status
+        if ($request->has('status') && $request->status && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Search by invoice number
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where('number', 'like', "%{$search}%");
+        }
+
+        // Paginate results
+        $perPage = $request->get('per_page', 15);
+        $invoices = $query->latest()->paginate($perPage);
 
         // Load pending payments untuk setiap invoice
-        $invoicesWithPayments = collect($invoices)->map(function ($invoice) {
+        $invoices->getCollection()->transform(function ($invoice) {
             $pendingPayment = \App\Models\Domain\Billing\Payment::where('invoice_id', $invoice->id)
                 ->where('status', 'pending')
                 ->latest()
                 ->first();
 
-            // Convert invoice to array dan tambahkan pending_payment_id
-            $invoiceArray = $invoice->toArray();
-            $invoiceArray['pending_payment_id'] = $pendingPayment?->id;
+            $invoice->pending_payment_id = $pendingPayment?->id;
 
-            return $invoiceArray;
-        })->toArray();
+            return $invoice;
+        });
 
         return Inertia::render('invoices/Index', [
-            'invoices' => $invoicesWithPayments,
+            'invoices' => $invoices,
+            'filters' => $request->only(['status', 'search', 'per_page']),
         ]);
     }
 
@@ -161,10 +178,28 @@ class InvoiceController extends Controller
         $companyPhone = null;
         $companyEmail = null;
         $companyWebsite = null;
+        $companyLogo = null;
+
+        // Get logo path
+        if ($setting && $setting->logo) {
+            $logoPath = storage_path('app/public/' . $setting->logo);
+            if (file_exists($logoPath)) {
+                // Convert logo to base64 for PDF
+                $logoData = file_get_contents($logoPath);
+                $logoMime = mime_content_type($logoPath);
+                $companyLogo = 'data:' . $logoMime . ';base64,' . base64_encode($logoData);
+            }
+        }
 
         // You can extend this to get more company info from settings or config
         if ($setting && isset($setting->seo)) {
-            $seo = is_array($setting->seo) ? $setting->seo : json_decode($setting->seo, true);
+            $seo = $setting->seo;
+            if (is_string($seo)) {
+                $seo = json_decode($seo, true) ?? [];
+            }
+            if (! is_array($seo)) {
+                $seo = [];
+            }
             $companyAddress = $seo['address'] ?? null;
             $companyPhone = $seo['phone'] ?? null;
             $companyEmail = $seo['email'] ?? null;
@@ -186,6 +221,7 @@ class InvoiceController extends Controller
             'companyPhone' => $companyPhone,
             'companyEmail' => $companyEmail,
             'companyWebsite' => $companyWebsite,
+            'companyLogo' => $companyLogo,
         ])->render();
 
         $dompdf->loadHtml($html);

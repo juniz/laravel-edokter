@@ -43,6 +43,19 @@
             vertical-align: top;
         }
 
+        .company-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .company-logo {
+            max-height: 40px;
+            max-width: 120px;
+            object-fit: contain;
+        }
+
         .company-name {
             font-size: 18px;
             font-weight: bold;
@@ -280,7 +293,12 @@
         <div class="header">
             <div class="header-row">
                 <div class="company-info">
-                    <div class="company-name">{{ $companyName ?? 'Abahost' }}</div>
+                    <div class="company-logo-container">
+                        @if(isset($companyLogo) && $companyLogo)
+                            <img src="{{ $companyLogo }}" alt="{{ $companyName ?? 'Logo' }}" class="company-logo" />
+                        @endif
+                        <div class="company-name">{{ $companyName ?? 'Abahost' }}</div>
+                    </div>
                     <div class="company-details">
                         @if(isset($companyAddress)){{ $companyAddress }}<br>@endif
                         @if(isset($companyPhone))Tel: {{ $companyPhone }} @endif

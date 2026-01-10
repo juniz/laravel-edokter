@@ -126,12 +126,13 @@ export default function CatalogShow({ product, plans }: CatalogShowProps) {
     };
 
   const handleAddToCart = (plan: Plan) => {
-    addToCartForm.setData('plan_id', plan.id);
+    addToCartForm.transform((data) => ({
+      ...data,
+      plan_id: plan.id,
+    }));
+
     addToCartForm.post(route('customer.cart.add'), {
       preserveScroll: true,
-      onSuccess: () => {
-        // Show success message
-      },
     });
   };
 
