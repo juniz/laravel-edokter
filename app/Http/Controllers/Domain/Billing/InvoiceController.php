@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Domain\Billing;
 
 use App\Domain\Billing\Contracts\InvoiceRepository;
 use App\Http\Controllers\Controller;
+use App\Models\SettingApp;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -133,7 +136,7 @@ class InvoiceController extends Controller
         }
     }
 
-    public function download(string $id)
+    public function download(Request $request, string $id)
     {
         $invoice = $this->invoiceRepository->findByUlid($id);
 
@@ -141,7 +144,56 @@ class InvoiceController extends Controller
             abort(404);
         }
 
-        // TODO: Generate PDF invoice
-        return response()->json(['message' => 'PDF generation not implemented yet']);
+        // Check ownership for customer route
+        if ($request->routeIs('customer.invoices.download')) {
+            if ($request->user()->customer->id !== $invoice->customer_id) {
+                abort(403);
+            }
+        }
+
+        // Load relationships
+        $invoice->load(['items', 'payments', 'customer']);
+
+        // Get company info from settings
+        $setting = SettingApp::first();
+        $companyName = $setting?->nama_app ?? 'Abahost';
+        $companyAddress = null;
+        $companyPhone = null;
+        $companyEmail = null;
+        $companyWebsite = null;
+
+        // You can extend this to get more company info from settings or config
+        if ($setting && isset($setting->seo)) {
+            $seo = is_array($setting->seo) ? $setting->seo : json_decode($setting->seo, true);
+            $companyAddress = $seo['address'] ?? null;
+            $companyPhone = $seo['phone'] ?? null;
+            $companyEmail = $seo['email'] ?? null;
+            $companyWebsite = $seo['website'] ?? null;
+        }
+
+        // Generate PDF
+        $options = new Options;
+        $options->set('isRemoteEnabled', true);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('defaultFont', 'DejaVu Sans');
+
+        $dompdf = new Dompdf($options);
+
+        $html = view('pdf.invoice', [
+            'invoice' => $invoice,
+            'companyName' => $companyName,
+            'companyAddress' => $companyAddress,
+            'companyPhone' => $companyPhone,
+            'companyEmail' => $companyEmail,
+            'companyWebsite' => $companyWebsite,
+        ])->render();
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = 'Invoice-'.$invoice->number.'.pdf';
+
+        return $dompdf->stream($filename, ['Attachment' => true]);
     }
 }

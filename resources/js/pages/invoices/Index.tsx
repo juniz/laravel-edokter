@@ -352,10 +352,12 @@ export default function Invoices({ invoices }: InvoicesProps) {
                                                         </Button>
                                                     )}
                                                     {invoice.status === 'paid' && (
-                                                        <Button variant="ghost" size="sm">
-                                                            <Download className="h-4 w-4 mr-1" />
-                                                            PDF
-                                                        </Button>
+                                                        <Link href={route('customer.invoices.download', invoice.id)}>
+                                                            <Button variant="ghost" size="sm">
+                                                                <Download className="h-4 w-4 mr-1" />
+                                                                PDF
+                                                            </Button>
+                                                        </Link>
                                                     )}
                                                 </div>
                                             </div>
