@@ -369,6 +369,46 @@ curl -X POST https://yourdomain.com/api/payments/midtrans/webhook \
 - [Midtrans Dashboard](https://dashboard.midtrans.com)
 - [Midtrans API Reference](https://api-docs.midtrans.com/)
 
+## Troubleshooting Error Production
+
+### Error: Interface "PaymentRepository" not found
+
+Jika terjadi error `Interface "App\Domain\Billing\Contracts\PaymentRepository" not found` di production:
+
+1. **Pastikan file interface sudah ada:**
+
+   ```bash
+   ls -la app/Domain/Billing/Contracts/PaymentRepository.php
+   ```
+
+2. **Jalankan composer dump-autoload:**
+
+   ```bash
+   composer dump-autoload --optimize
+   ```
+
+3. **Clear cache Laravel:**
+
+   ```bash
+   php artisan config:clear
+   php artisan cache:clear
+   php artisan route:clear
+   ```
+
+4. **Pastikan file terdeploy dengan benar:**
+   - File `app/Domain/Billing/Contracts/PaymentRepository.php` harus ada
+   - File `app/Domain/Billing/Contracts/InvoiceRepository.php` tidak boleh berisi interface `PaymentRepository`
+
+### Checklist Deployment
+
+Sebelum deploy ke production, pastikan:
+
+- [ ] File `app/Domain/Billing/Contracts/PaymentRepository.php` ada
+- [ ] File `app/Domain/Billing/Contracts/InvoiceRepository.php` tidak berisi interface `PaymentRepository`
+- [ ] Jalankan `composer dump-autoload --optimize`
+- [ ] Clear semua cache Laravel
+- [ ] Test webhook dengan curl atau Midtrans Dashboard
+
 ## Support
 
 Jika ada masalah dengan webhook, silakan:
