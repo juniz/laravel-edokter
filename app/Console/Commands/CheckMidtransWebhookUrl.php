@@ -88,7 +88,7 @@ class CheckMidtransWebhookUrl extends Command
                 return Command::FAILURE;
             }
         } catch (\Exception $e) {
-            $this->error('  ✗ Error saat mengecek route: '.$e->getMessage());
+            $this->error('  ✗ Error saat mengecek route: ' . $e->getMessage());
 
             return Command::FAILURE;
         }
@@ -108,12 +108,12 @@ class CheckMidtransWebhookUrl extends Command
                 [
                     'MIDTRANS_SERVER_KEY',
                     $midtransServerKey ? '✓ Set' : '✗ Not Set',
-                    $midtransServerKey ? substr($midtransServerKey, 0, 20).'...' : 'Not configured',
+                    $midtransServerKey ? substr($midtransServerKey, 0, 20) . '...' : 'Not configured',
                 ],
                 [
                     'MIDTRANS_CLIENT_KEY',
                     $midtransClientKey ? '✓ Set' : '✗ Not Set',
-                    $midtransClientKey ? substr($midtransClientKey, 0, 20).'...' : 'Not configured',
+                    $midtransClientKey ? substr($midtransClientKey, 0, 20) . '...' : 'Not configured',
                 ],
                 [
                     'MIDTRANS_IS_PRODUCTION',
@@ -139,7 +139,7 @@ class CheckMidtransWebhookUrl extends Command
         $this->line('2. Masuk ke Settings > Configuration');
         $this->newLine();
         $this->line('3. Set Payment Notification URL ke:');
-        $this->line('   '.$webhookUrl);
+        $this->line('   ' . $webhookUrl);
         $this->newLine();
         $this->line('4. Pastikan HTTP Notification diaktifkan');
         $this->newLine();
@@ -164,7 +164,7 @@ class CheckMidtransWebhookUrl extends Command
         $this->info('🧪 Cara Testing Webhook:');
         $this->newLine();
         $this->line('1. Test dengan curl:');
-        $this->line('   curl -X POST '.$webhookUrl.' \\');
+        $this->line('   curl -X POST ' . $webhookUrl . ' \\');
         $this->line('     -H "Content-Type: application/json" \\');
         $this->line('     -d \'{"order_id":"test123","transaction_status":"settlement","status_code":"200"}\'');
         $this->newLine();
@@ -189,6 +189,6 @@ class CheckMidtransWebhookUrl extends Command
         $appUrl = rtrim(config('app.url'), '/');
         $webhookPath = '/api/payments/midtrans/webhook';
 
-        return $appUrl.$webhookPath;
+        return $appUrl . $webhookPath;
     }
 }
