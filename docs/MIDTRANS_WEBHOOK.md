@@ -12,6 +12,21 @@ Sistem ini menggunakan Midtrans sebagai payment gateway dan menerima webhook not
 
 **Authentication:** Tidak diperlukan (endpoint publik, diverifikasi via signature)
 
+### Pengecekan URL Webhook
+
+Untuk mengecek konfigurasi URL webhook dan konfigurasi yang diperlukan, jalankan command berikut:
+
+```bash
+php artisan midtrans:check-webhook-url
+```
+
+Command ini akan menampilkan:
+
+- URL webhook yang benar berdasarkan `APP_URL`
+- Status konfigurasi environment (server key, client key, dll)
+- Instruksi setup di Midtrans Dashboard
+- Cara testing webhook
+
 ## Konfigurasi
 
 ### 1. Setup di Midtrans Dashboard
