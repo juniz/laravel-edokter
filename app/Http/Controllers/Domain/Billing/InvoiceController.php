@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers\Domain\Billing;
 
-use App\Http\Controllers\Controller;
 use App\Domain\Billing\Contracts\InvoiceRepository;
-use App\Domain\Billing\Contracts\PaymentAdapterInterface;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,8 +30,8 @@ class InvoiceController extends Controller
 
         // Customer route
         $customer = $request->user()->customer;
-        
-        if (!$customer) {
+
+        if (! $customer) {
             return Inertia::render('invoices/Index', [
                 'invoices' => [],
             ]);
@@ -40,8 +39,22 @@ class InvoiceController extends Controller
 
         $invoices = $this->invoiceRepository->findByCustomer($customer->id);
 
+        // Load pending payments untuk setiap invoice
+        $invoicesWithPayments = collect($invoices)->map(function ($invoice) {
+            $pendingPayment = \App\Models\Domain\Billing\Payment::where('invoice_id', $invoice->id)
+                ->where('status', 'pending')
+                ->latest()
+                ->first();
+
+            // Convert invoice to array dan tambahkan pending_payment_id
+            $invoiceArray = $invoice->toArray();
+            $invoiceArray['pending_payment_id'] = $pendingPayment?->id;
+
+            return $invoiceArray;
+        })->toArray();
+
         return Inertia::render('invoices/Index', [
-            'invoices' => $invoices,
+            'invoices' => $invoicesWithPayments,
         ]);
     }
 
@@ -49,7 +62,7 @@ class InvoiceController extends Controller
     {
         $invoice = $this->invoiceRepository->findByUlid($id);
 
-        if (!$invoice) {
+        if (! $invoice) {
             abort(404);
         }
 
@@ -67,13 +80,9 @@ class InvoiceController extends Controller
 
     public function pay(Request $request, string $id)
     {
-        $request->validate([
-            'payment_method' => ['required', 'string'],
-        ]);
-
         $invoice = $this->invoiceRepository->findByUlid($id);
 
-        if (!$invoice) {
+        if (! $invoice) {
             abort(404);
         }
 
@@ -87,6 +96,30 @@ class InvoiceController extends Controller
                 ->with('info', 'Invoice ini sudah dibayar.');
         }
 
+        // Cek apakah sudah ada payment pending untuk invoice ini
+        $pendingPayment = \App\Models\Domain\Billing\Payment::where('invoice_id', $invoice->id)
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+
+        // Jika sudah ada payment pending, langsung redirect ke halaman payment
+        if ($pendingPayment) {
+            return redirect()->route('customer.payments.show', $pendingPayment->id)
+                ->with('info', 'Anda sudah memiliki pembayaran yang sedang menunggu. Silakan selesaikan pembayaran tersebut.');
+        }
+
+        // Jika payment_method tidak ada di request, berarti user belum memilih metode pembayaran
+        // Redirect kembali dengan error untuk membuka modal pilihan metode pembayaran
+        if (! $request->has('payment_method')) {
+            return redirect()->back()
+                ->with('open_payment_modal', true)
+                ->with('invoice_id', $invoice->id);
+        }
+
+        $request->validate([
+            'payment_method' => ['required', 'string'],
+        ]);
+
         try {
             $payment = $this->paymentAdapter->createCharge($invoice, [
                 'payment_method' => $request->payment_method,
@@ -96,7 +129,7 @@ class InvoiceController extends Controller
                 ->with('success', 'Silakan selesaikan pembayaran Anda.');
         } catch (\Exception $e) {
             return redirect()->back()
-                ->withErrors(['error' => 'Gagal memproses pembayaran: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Gagal memproses pembayaran: '.$e->getMessage()]);
         }
     }
 
@@ -104,7 +137,7 @@ class InvoiceController extends Controller
     {
         $invoice = $this->invoiceRepository->findByUlid($id);
 
-        if (!$invoice) {
+        if (! $invoice) {
             abort(404);
         }
 

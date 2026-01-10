@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -46,6 +46,7 @@ interface Invoice {
     due_at: string;
     created_at: string;
     paid_at?: string;
+    pending_payment_id?: string;
 }
 
 interface InvoicesProps {
@@ -73,6 +74,9 @@ export default function Invoices({ invoices }: InvoicesProps) {
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('bca_va');
 
+    const { props } = usePage();
+    const flash = (props?.flash as { open_payment_modal?: boolean; invoice_id?: string }) ?? {};
+
     const paymentForm = useForm({
         payment_method: 'bca_va',
     });
@@ -85,7 +89,25 @@ export default function Invoices({ invoices }: InvoicesProps) {
         }).format(cents);
     };
 
+    // Handle flash message untuk membuka modal pembayaran
+    useEffect(() => {
+        if (flash.open_payment_modal && flash.invoice_id) {
+            const invoice = invoices.find((inv) => inv.id === flash.invoice_id);
+            if (invoice) {
+                setSelectedInvoice(invoice);
+                setIsPaymentModalOpen(true);
+            }
+        }
+    }, [flash.open_payment_modal, flash.invoice_id, invoices]);
+
     const handleOpenPayment = (invoice: Invoice) => {
+        // Jika sudah ada payment pending, langsung redirect ke halaman payment
+        if (invoice.pending_payment_id) {
+            router.visit(route('customer.payments.show', invoice.pending_payment_id));
+            return;
+        }
+
+        // Jika belum ada payment pending, buka modal untuk pilih metode pembayaran
         setSelectedInvoice(invoice);
         setIsPaymentModalOpen(true);
     };

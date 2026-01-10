@@ -160,6 +160,24 @@ export default function PaymentShow({
         setTimeout(() => setCopied(null), 2000);
     };
 
+    const getPaymentLogo = (method: string): string | null => {
+        const logos: Record<string, string> = {
+            // Bank
+            bca_va: '/images/payment/bank/bca.png',
+            bni_va: '/images/payment/bank/bni.png',
+            bri_va: '/images/payment/bank/bri.png',
+            mandiri_va: '/images/payment/bank/mandiri.png',
+            permata_va: '/images/payment/bank/permata.png',
+            // E-Wallet
+            gopay: '/images/payment/wallet/gopay.png',
+            shopeepay: '/images/payment/wallet/shopeepay.png',
+            dana: '/images/payment/wallet/dana.png',
+            ovo: '/images/payment/wallet/ovo.png',
+            linkaja: '/images/payment/wallet/linkaja.png',
+        };
+        return logos[method] || null;
+    };
+
     const statusConfig = getStatusConfig(payment.status);
     const isVA = va_number && (payment_method?.includes('_va') || payment_method === 'mandiri_va');
     const isQRIS = payment_method === 'qris' && qr_code_url;
@@ -173,6 +191,8 @@ export default function PaymentShow({
         if (isEWallet || payment_method === 'qris') return <Wallet className="w-6 h-6 text-primary" />;
         return <CreditCard className="w-6 h-6 text-primary" />;
     };
+
+    const paymentLogoPath = payment_method ? getPaymentLogo(payment_method) : null;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -223,8 +243,20 @@ export default function PaymentShow({
                             {/* Payment Instruction Box */}
                             <div className="bg-muted/30 rounded-xl p-6 border border-border/50 space-y-4">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        {getPaymentMethodIcon()}
+                                    <div className={`h-16 w-16 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                        paymentLogoPath 
+                                            ? 'bg-white dark:bg-white/80 p-2' 
+                                            : 'bg-primary/10'
+                                    }`}>
+                                        {paymentLogoPath ? (
+                                            <img 
+                                                src={paymentLogoPath} 
+                                                alt={payment_method?.replace(/_/g, ' ') || 'Payment method'}
+                                                className="h-full w-auto object-contain"
+                                            />
+                                        ) : (
+                                            getPaymentMethodIcon()
+                                        )}
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Metode Pembayaran</p>

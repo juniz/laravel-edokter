@@ -101,6 +101,7 @@ export default function CatalogShow({ product, plans }: CatalogShowProps) {
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('bca_va');
+    const [isSubmittingCheckout, setIsSubmittingCheckout] = useState(false);
 
     const typeConfig = getProductTypeConfig(product.type);
     const TypeIcon = typeConfig.icon;
@@ -140,14 +141,23 @@ export default function CatalogShow({ product, plans }: CatalogShowProps) {
     };
 
     const handleClosePaymentModal = () => {
+        // Reset semua state saat modal ditutup
         setIsPaymentModalOpen(false);
         setSelectedPlan(null);
         setSelectedPaymentMethod('bca_va');
+        setIsSubmittingCheckout(false);
     };
 
     const handleCheckout = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedPlan) return;
+        
+        // Prevent duplicate submission
+        if (!selectedPlan || isSubmittingCheckout || checkoutForm.processing) {
+            return;
+        }
+
+        // Set flag untuk mencegah multiple submissions
+        setIsSubmittingCheckout(true);
 
         checkoutForm.transform((data) => ({
             ...data,
@@ -156,15 +166,21 @@ export default function CatalogShow({ product, plans }: CatalogShowProps) {
         }));
 
         checkoutForm.post(route('catalog.checkout'), {
-            preserveScroll: true,
             onSuccess: () => {
-                setIsPaymentModalOpen(false);
                 // Backend akan redirect ke halaman pembayaran (payments.show)
                 // Halaman pembayaran akan otomatis refresh setiap 5 detik untuk mengecek status pembayaran
                 // Setelah webhook Midtrans mengirim notifikasi, status akan terupdate secara real-time
+                setIsPaymentModalOpen(false);
+                setIsSubmittingCheckout(false);
             },
             onError: (errors: Record<string, string>) => {
                 console.error('Checkout failed:', errors);
+                // Reset flag jika terjadi error agar user bisa coba lagi
+                setIsSubmittingCheckout(false);
+            },
+            onFinish: () => {
+                // Reset flag setelah request selesai (success atau error)
+                setIsSubmittingCheckout(false);
             },
         });
     };
@@ -527,9 +543,9 @@ export default function CatalogShow({ product, plans }: CatalogShowProps) {
                                                             variant="gradient"
                                                             className="w-full"
                                                             size="lg"
-                                                            disabled={checkoutForm.processing || !selectedPlan}
+                                                            disabled={checkoutForm.processing || !selectedPlan || isSubmittingCheckout}
                                                         >
-                                                            {checkoutForm.processing ? (
+                                                            {checkoutForm.processing || isSubmittingCheckout ? (
                                                                 <>
                                                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                                                                     Memproses...

@@ -74,7 +74,7 @@ class CatalogController extends Controller
             // Setelah redirect, halaman pembayaran akan otomatis refresh setiap 5 detik
             // untuk mengecek status pembayaran. Setelah webhook Midtrans mengirim notifikasi,
             // status akan terupdate secara real-time (maksimal 5 detik delay)
-            return redirect()->route('payments.show', $payment->id)
+            return redirect()->route('customer.payments.show', $payment->id)
                 ->with('success', 'Pembayaran berhasil dibuat. Silakan selesaikan pembayaran Anda.');
         } catch (\Exception $e) {
             return redirect()->back()
