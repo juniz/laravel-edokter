@@ -112,6 +112,11 @@ export default function Invoices({ invoices }: InvoicesProps) {
         setIsPaymentModalOpen(true);
     };
 
+    const handleDownloadPdf = (invoiceId: string) => {
+        // Gunakan window.open untuk bypass Inertia dan download PDF
+        window.open(route('customer.invoices.download', invoiceId), '_blank');
+    };
+
     const handleProcessPayment = (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedInvoice) return;
@@ -352,12 +357,14 @@ export default function Invoices({ invoices }: InvoicesProps) {
                                                         </Button>
                                                     )}
                                                     {invoice.status === 'paid' && (
-                                                        <Link href={route('customer.invoices.download', invoice.id)}>
-                                                            <Button variant="ghost" size="sm">
-                                                                <Download className="h-4 w-4 mr-1" />
-                                                                PDF
-                                                            </Button>
-                                                        </Link>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDownloadPdf(invoice.id)}
+                                                        >
+                                                            <Download className="h-4 w-4 mr-1" />
+                                                            PDF
+                                                        </Button>
                                                     )}
                                                 </div>
                                             </div>

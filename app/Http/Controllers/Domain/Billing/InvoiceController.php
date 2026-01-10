@@ -132,7 +132,7 @@ class InvoiceController extends Controller
                 ->with('success', 'Silakan selesaikan pembayaran Anda.');
         } catch (\Exception $e) {
             return redirect()->back()
-                ->withErrors(['error' => 'Gagal memproses pembayaran: '.$e->getMessage()]);
+                ->withErrors(['error' => 'Gagal memproses pembayaran: ' . $e->getMessage()]);
         }
     }
 
@@ -192,8 +192,13 @@ class InvoiceController extends Controller
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
-        $filename = 'Invoice-'.$invoice->number.'.pdf';
+        $filename = 'Invoice-' . $invoice->number . '.pdf';
 
-        return $dompdf->stream($filename, ['Attachment' => true]);
+        // Return PDF sebagai download stream
+        return response()->streamDownload(function () use ($dompdf) {
+            echo $dompdf->output();
+        }, $filename, [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 }

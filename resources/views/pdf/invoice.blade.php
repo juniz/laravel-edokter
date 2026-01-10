@@ -13,82 +13,85 @@
 
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 12px;
+            font-size: 10px;
             color: #1f2937;
-            line-height: 1.6;
+            line-height: 1.4;
             background: #ffffff;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 40px 30px;
+            padding: 15px 25px;
         }
 
         /* Header */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
-            padding-bottom: 30px;
-            border-bottom: 3px solid #3b82f6;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3b82f6;
+        }
+
+        .header-row {
+            display: table;
+            width: 100%;
         }
 
         .company-info {
-            flex: 1;
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
         }
 
         .company-name {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
             color: #1e40af;
-            margin-bottom: 8px;
+            margin-bottom: 3px;
         }
 
         .company-details {
-            font-size: 11px;
+            font-size: 9px;
             color: #6b7280;
-            line-height: 1.8;
+            line-height: 1.5;
         }
 
         .invoice-info {
+            display: table-cell;
+            width: 50%;
             text-align: right;
-            flex: 1;
+            vertical-align: top;
         }
 
         .invoice-title {
-            font-size: 32px;
+            font-size: 22px;
             font-weight: bold;
             color: #1e40af;
-            margin-bottom: 10px;
-            letter-spacing: -1px;
+            margin-bottom: 3px;
         }
 
         .invoice-number {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 5px;
+            font-size: 11px;
+            color: #374151;
+            font-weight: 600;
         }
 
         .invoice-date {
-            font-size: 11px;
+            font-size: 9px;
             color: #6b7280;
+            margin-top: 3px;
         }
 
         /* Status Badge */
-        .status-section {
-            margin-bottom: 30px;
-        }
-
         .status-badge {
             display: inline-block;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 8px;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+            margin-bottom: 10px;
         }
 
         .status-paid {
@@ -108,42 +111,39 @@
 
         /* Billing Info */
         .billing-section {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 40px;
-            gap: 40px;
+            margin-bottom: 12px;
         }
 
         .billing-box {
-            flex: 1;
             background: #f9fafb;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #3b82f6;
+            padding: 10px 12px;
+            border-radius: 4px;
+            border-left: 3px solid #3b82f6;
         }
 
         .billing-label {
-            font-size: 10px;
+            font-size: 8px;
             text-transform: uppercase;
             color: #6b7280;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
             font-weight: bold;
         }
 
         .billing-content {
-            font-size: 12px;
+            font-size: 9px;
             color: #1f2937;
-            line-height: 1.8;
+            line-height: 1.5;
         }
 
         .billing-content strong {
             color: #111827;
+            font-size: 10px;
         }
 
         /* Items Table */
         .items-section {
-            margin-bottom: 30px;
+            margin-bottom: 10px;
         }
 
         .table {
@@ -158,22 +158,18 @@
         }
 
         .table th {
-            padding: 12px 15px;
+            padding: 6px 8px;
             text-align: left;
-            font-size: 11px;
+            font-size: 8px;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
 
         .table td {
-            padding: 15px;
+            padding: 8px;
             border-bottom: 1px solid #e5e7eb;
-            font-size: 12px;
-        }
-
-        .table tbody tr:hover {
-            background: #f9fafb;
+            font-size: 9px;
         }
 
         .table tbody tr:last-child td {
@@ -190,16 +186,25 @@
 
         /* Totals */
         .totals-section {
-            margin-top: 20px;
+            margin-top: 8px;
             margin-left: auto;
-            width: 300px;
+            width: 220px;
         }
 
         .total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            font-size: 12px;
+            display: table;
+            width: 100%;
+            padding: 4px 0;
+            font-size: 9px;
+        }
+
+        .total-row .total-label,
+        .total-row .total-value {
+            display: table-cell;
+        }
+
+        .total-row .total-value {
+            text-align: right;
         }
 
         .total-row.subtotal,
@@ -209,10 +214,10 @@
         }
 
         .total-row.grand-total {
-            border-top: 2px solid #3b82f6;
-            padding-top: 15px;
-            margin-top: 10px;
-            font-size: 16px;
+            border-top: 1px solid #3b82f6;
+            padding-top: 6px;
+            margin-top: 4px;
+            font-size: 11px;
             font-weight: bold;
             color: #1e40af;
         }
@@ -225,121 +230,102 @@
             font-weight: 600;
         }
 
-        /* Footer */
-        .footer {
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 2px solid #e5e7eb;
-            text-align: center;
-            font-size: 10px;
-            color: #6b7280;
-        }
-
-        .footer-note {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f3f4f6;
-            border-radius: 6px;
-            font-size: 11px;
-            color: #4b5563;
-            line-height: 1.6;
-        }
-
+        /* Payment Info */
         .payment-info {
-            margin-top: 30px;
-            padding: 20px;
+            margin-top: 12px;
+            padding: 8px 10px;
             background: #eff6ff;
-            border-left: 4px solid #3b82f6;
-            border-radius: 6px;
+            border-left: 3px solid #3b82f6;
+            border-radius: 4px;
         }
 
         .payment-info-title {
-            font-size: 12px;
+            font-size: 9px;
             font-weight: bold;
             color: #1e40af;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
         }
 
         .payment-info-content {
-            font-size: 11px;
+            font-size: 8px;
             color: #1f2937;
-            line-height: 1.8;
+            line-height: 1.5;
         }
 
-        /* Utility */
-        .mt-2 { margin-top: 10px; }
-        .mb-2 { margin-bottom: 10px; }
+        /* Notes */
+        .footer-note {
+            margin-top: 10px;
+            padding: 8px 10px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-size: 8px;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 8px;
+            color: #9ca3af;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div class="company-info">
-                <div class="company-name">{{ $companyName ?? 'Abahost' }}</div>
-                <div class="company-details">
-                    @if(isset($companyAddress))
-                        {{ $companyAddress }}<br>
-                    @endif
-                    @if(isset($companyPhone))
-                        Tel: {{ $companyPhone }}<br>
-                    @endif
-                    @if(isset($companyEmail))
-                        Email: {{ $companyEmail }}<br>
-                    @endif
-                    @if(isset($companyWebsite))
-                        {{ $companyWebsite }}
-                    @endif
+            <div class="header-row">
+                <div class="company-info">
+                    <div class="company-name">{{ $companyName ?? 'Abahost' }}</div>
+                    <div class="company-details">
+                        @if(isset($companyAddress)){{ $companyAddress }}<br>@endif
+                        @if(isset($companyPhone))Tel: {{ $companyPhone }} @endif
+                        @if(isset($companyEmail))| {{ $companyEmail }}@endif
+                    </div>
                 </div>
-            </div>
-            <div class="invoice-info">
-                <div class="invoice-title">INVOICE</div>
-                <div class="invoice-number">No: {{ $invoice->number }}</div>
-                <div class="invoice-date">
-                    Tanggal: {{ \Carbon\Carbon::parse($invoice->created_at)->format('d F Y') }}<br>
-                    Jatuh Tempo: {{ \Carbon\Carbon::parse($invoice->due_at)->format('d F Y') }}
+                <div class="invoice-info">
+                    <div class="invoice-title">INVOICE</div>
+                    <div class="invoice-number">{{ $invoice->number }}</div>
+                    <div class="invoice-date">
+                        Tanggal: {{ \Carbon\Carbon::parse($invoice->created_at)->format('d M Y') }} |
+                        Jatuh Tempo: {{ \Carbon\Carbon::parse($invoice->due_at)->format('d M Y') }}
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Status -->
-        <div class="status-section">
-            @php
-                $statusConfig = [
-                    'paid' => ['class' => 'status-paid', 'label' => 'Lunas'],
-                    'unpaid' => ['class' => 'status-unpaid', 'label' => 'Belum Dibayar'],
-                    'overdue' => ['class' => 'status-overdue', 'label' => 'Jatuh Tempo'],
-                ];
-                $status = $statusConfig[$invoice->status] ?? ['class' => 'status-unpaid', 'label' => ucfirst($invoice->status)];
-            @endphp
-            <span class="status-badge {{ $status['class'] }}">{{ $status['label'] }}</span>
-        </div>
-
-        <!-- Billing Info -->
-        <div class="billing-section">
-            <div class="billing-box">
-                <div class="billing-label">Tagihan Kepada</div>
-                <div class="billing-content">
-                    <strong>{{ $invoice->customer->name }}</strong><br>
-                    {{ $invoice->customer->email }}<br>
-                    @if($invoice->customer->phone)
-                        {{ $invoice->customer->phone }}<br>
-                    @endif
-                    @if($invoice->customer->organization)
-                        {{ $invoice->customer->organization }}<br>
-                    @endif
-                    @if($invoice->customer->street_1)
-                        {{ $invoice->customer->street_1 }}<br>
-                    @endif
-                    @if($invoice->customer->city)
-                        {{ $invoice->customer->city }}, {{ $invoice->customer->state ?? '' }}<br>
-                    @endif
-                    @if($invoice->customer->postal_code)
-                        {{ $invoice->customer->postal_code }}<br>
-                    @endif
-                    @if($invoice->customer->country_code)
-                        {{ $invoice->customer->country_code }}
-                    @endif
+        <!-- Status & Billing in one row -->
+        <div style="display: table; width: 100%; margin-bottom: 12px;">
+            <div style="display: table-cell; width: 30%; vertical-align: top;">
+                @php
+                    $statusConfig = [
+                        'paid' => ['class' => 'status-paid', 'label' => 'Lunas'],
+                        'unpaid' => ['class' => 'status-unpaid', 'label' => 'Belum Dibayar'],
+                        'overdue' => ['class' => 'status-overdue', 'label' => 'Jatuh Tempo'],
+                    ];
+                    $status = $statusConfig[$invoice->status] ?? ['class' => 'status-unpaid', 'label' => ucfirst($invoice->status)];
+                @endphp
+                <span class="status-badge {{ $status['class'] }}">{{ $status['label'] }}</span>
+            </div>
+            <div style="display: table-cell; width: 70%; vertical-align: top;">
+                <div class="billing-box">
+                    <div class="billing-label">Tagihan Kepada</div>
+                    <div class="billing-content">
+                        <strong>{{ $invoice->customer->name }}</strong> | {{ $invoice->customer->email }}
+                        @if($invoice->customer->phone) | {{ $invoice->customer->phone }}@endif
+                        @if($invoice->customer->organization || $invoice->customer->street_1 || $invoice->customer->city)
+                            <br>
+                            @if($invoice->customer->organization){{ $invoice->customer->organization }}, @endif
+                            @if($invoice->customer->street_1){{ $invoice->customer->street_1 }}, @endif
+                            @if($invoice->customer->city){{ $invoice->customer->city }}@endif
+                            @if($invoice->customer->postal_code), {{ $invoice->customer->postal_code }}@endif
+                            @if($invoice->customer->country_code) - {{ $invoice->customer->country_code }}@endif
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -349,37 +335,25 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 45%;">Deskripsi</th>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 50%;">Deskripsi</th>
                         <th class="text-center" style="width: 10%;">Qty</th>
-                        <th class="text-right" style="width: 20%;">Harga Satuan</th>
-                        <th class="text-right" style="width: 20%;">Total</th>
+                        <th class="text-right" style="width: 17%;">Harga</th>
+                        <th class="text-right" style="width: 18%;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($invoice->items as $index => $item)
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td>
-                                {{ $item->description }}
-                                @if(isset($item->meta) && is_array($item->meta) && !empty($item->meta))
-                                    <br><small style="color: #6b7280;">
-                                        @if(isset($item->meta['product_name']))
-                                            Produk: {{ $item->meta['product_name'] }}
-                                        @endif
-                                        @if(isset($item->meta['plan_code']))
-                                            | Paket: {{ $item->meta['plan_code'] }}
-                                        @endif
-                                    </small>
-                                @endif
-                            </td>
+                            <td>{{ $item->description }}</td>
                             <td class="text-center">{{ $item->qty }}</td>
-                            <td class="text-right">{{ number_format($item->unit_price_cents / 100, 0, ',', '.') }} {{ strtoupper($invoice->currency) }}</td>
-                            <td class="text-right">{{ number_format($item->total_cents / 100, 0, ',', '.') }} {{ strtoupper($invoice->currency) }}</td>
+                            <td class="text-right">{{ number_format($item->unit_price_cents, 0, ',', '.') }}</td>
+                            <td class="text-right">{{ number_format($item->total_cents, 0, ',', '.') }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center" style="padding: 30px; color: #6b7280;">
+                            <td colspan="5" class="text-center" style="padding: 15px; color: #6b7280;">
                                 Tidak ada item
                             </td>
                         </tr>
@@ -392,23 +366,23 @@
         <div class="totals-section">
             <div class="total-row subtotal">
                 <span class="total-label">Subtotal</span>
-                <span class="total-value">{{ number_format($invoice->subtotal_cents / 100, 0, ',', '.') }} {{ strtoupper($invoice->currency) }}</span>
+                <span class="total-value">{{ number_format($invoice->subtotal_cents, 0, ',', '.') }}</span>
             </div>
             @if($invoice->discount_cents > 0)
                 <div class="total-row discount">
                     <span class="total-label">Diskon</span>
-                    <span class="total-value">-{{ number_format($invoice->discount_cents / 100, 0, ',', '.') }} {{ strtoupper($invoice->currency) }}</span>
+                    <span class="total-value">-{{ number_format($invoice->discount_cents, 0, ',', '.') }}</span>
                 </div>
             @endif
             @if($invoice->tax_cents > 0)
                 <div class="total-row tax">
                     <span class="total-label">Pajak</span>
-                    <span class="total-value">{{ number_format($invoice->tax_cents / 100, 0, ',', '.') }} {{ strtoupper($invoice->currency) }}</span>
+                    <span class="total-value">{{ number_format($invoice->tax_cents, 0, ',', '.') }}</span>
                 </div>
             @endif
             <div class="total-row grand-total">
-                <span class="total-label">Total Pembayaran</span>
-                <span class="total-value">{{ number_format($invoice->total_cents / 100, 0, ',', '.') }} {{ strtoupper($invoice->currency) }}</span>
+                <span class="total-label">Total</span>
+                <span class="total-value">{{ number_format($invoice->total_cents, 0, ',', '.') }} {{ strtoupper($invoice->currency) }}</span>
             </div>
         </div>
 
@@ -420,13 +394,13 @@
             <div class="payment-info">
                 <div class="payment-info-title">Informasi Pembayaran</div>
                 <div class="payment-info-content">
-                    Status: <strong>Lunas</strong><br>
+                    <strong>Lunas</strong>
                     @if($successfulPayment->paid_at)
-                        Tanggal Pembayaran: {{ \Carbon\Carbon::parse($successfulPayment->paid_at)->format('d F Y H:i') }}<br>
+                        | {{ \Carbon\Carbon::parse($successfulPayment->paid_at)->format('d M Y H:i') }}
                     @endif
-                    Metode: <strong>{{ ucfirst(str_replace('_', ' ', $successfulPayment->provider ?? 'N/A')) }}</strong><br>
+                    | {{ ucfirst(str_replace('_', ' ', $successfulPayment->provider ?? 'N/A')) }}
                     @if($successfulPayment->provider_ref)
-                        Referensi: {{ $successfulPayment->provider_ref }}
+                        | Ref: {{ $successfulPayment->provider_ref }}
                     @endif
                 </div>
             </div>
@@ -435,15 +409,13 @@
         <!-- Notes -->
         @if($invoice->notes)
             <div class="footer-note">
-                <strong>Catatan:</strong><br>
-                {{ $invoice->notes }}
+                <strong>Catatan:</strong> {{ $invoice->notes }}
             </div>
         @endif
 
         <!-- Footer -->
         <div class="footer">
-            <p>Terima kasih atas kepercayaan Anda menggunakan layanan kami.</p>
-            <p style="margin-top: 10px;">Dokumen ini dibuat secara otomatis dan sah secara hukum.</p>
+            Terima kasih atas kepercayaan Anda. Dokumen ini dibuat secara otomatis dan sah secara hukum.
         </div>
     </div>
 </body>

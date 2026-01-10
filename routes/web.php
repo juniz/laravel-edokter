@@ -40,6 +40,12 @@ Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index
 Route::get('/catalog/{slug}', [CatalogController::class, 'show'])->name('catalog.show');
 Route::post('/catalog/checkout', [CatalogController::class, 'checkout'])->name('catalog.checkout')->middleware('auth');
 
+// Route download PDF invoice - tanpa middleware Inertia untuk direct file download
+Route::get('/customer/invoices/{id}/download', [InvoiceController::class, 'download'])
+    ->name('customer.invoices.download')
+    ->middleware('auth')
+    ->withoutMiddleware(\App\Http\Middleware\HandleInertiaRequests::class);
+
 Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
@@ -59,7 +65,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
 
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
-        Route::get('/invoices/{id}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+        // Route download dipindahkan ke luar middleware group
         Route::post('/invoices/{id}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
 
         Route::get('/payments/{id}', [PaymentController::class, 'show'])->name('payments.show');
@@ -167,5 +173,5 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::resource('media', MediaFolderController::class);
 });
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';
