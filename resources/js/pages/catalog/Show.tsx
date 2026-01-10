@@ -159,7 +159,9 @@ export default function CatalogShow({ product, plans }: CatalogShowProps) {
             preserveScroll: true,
             onSuccess: () => {
                 setIsPaymentModalOpen(false);
-                // Backend akan redirect ke payments.show dengan instruksi pembayaran Midtrans
+                // Backend akan redirect ke halaman pembayaran (payments.show)
+                // Halaman pembayaran akan otomatis refresh setiap 5 detik untuk mengecek status pembayaran
+                // Setelah webhook Midtrans mengirim notifikasi, status akan terupdate secara real-time
             },
             onError: (errors: Record<string, string>) => {
                 console.error('Checkout failed:', errors);

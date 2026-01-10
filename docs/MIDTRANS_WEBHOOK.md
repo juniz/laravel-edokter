@@ -116,21 +116,37 @@ Midtrans akan mengirim POST request dengan payload JSON berikut:
 ## Flow Processing
 
 ```
-1. Midtrans mengirim webhook → POST /api/payments/midtrans/webhook
-2. Controller menerima request
-3. Validasi payload (order_id harus ada)
-4. Simpan webhook log ke database
-5. Verifikasi signature (jika enabled)
-6. Cari payment berdasarkan order_id
-7. Process webhook via MidtransAdapter
-8. Update payment status sesuai transaction_status
-9. Jika payment succeeded:
-   - Mark payment as succeeded
-   - Mark invoice as paid
-   - Trigger InvoicePaid event
-10. Update webhook log dengan hasil processing
-11. Return response ke Midtrans
+1. User melakukan checkout di halaman catalog → POST /catalog/checkout
+2. Backend membuat order, invoice, dan payment
+3. Backend redirect ke halaman pembayaran → GET /customer/payments/{id}
+4. User melihat instruksi pembayaran (VA number, QR code, dll)
+5. Halaman pembayaran otomatis refresh setiap 5 detik untuk mengecek status
+6. User melakukan pembayaran di aplikasi bank/e-wallet
+7. Midtrans mengirim webhook → POST /api/payments/midtrans/webhook
+8. Controller menerima request
+9. Validasi payload (order_id harus ada)
+10. Simpan webhook log ke database
+11. Verifikasi signature (jika enabled)
+12. Cari payment berdasarkan order_id
+13. Process webhook via MidtransAdapter
+14. Update payment status sesuai transaction_status
+15. Jika payment succeeded:
+    - Mark payment as succeeded
+    - Mark invoice as paid
+    - Trigger InvoicePaid event
+16. Update webhook log dengan hasil processing
+17. Return response ke Midtrans
+18. Halaman pembayaran otomatis terupdate pada refresh berikutnya (maksimal 5 detik)
+19. User melihat status pembayaran berhasil
 ```
+
+### Real-time Status Update
+
+Halaman pembayaran (`/customer/payments/{id}`) menggunakan auto-refresh untuk update status secara real-time:
+
+- **Auto-refresh interval**: 5 detik (hanya untuk payment dengan status `pending`)
+- **Props yang di-refresh**: `payment`, `va_number`, `payment_code`, `qr_code_url`, `payment_method`, `expiry_time`
+- **Setelah webhook Midtrans**: Status pembayaran akan terupdate maksimal dalam 5 detik setelah webhook diterima
 
 ## Response Format
 

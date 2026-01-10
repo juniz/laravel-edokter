@@ -67,12 +67,17 @@ export default function PaymentShow({
     useEffect(() => {
         if (payment.status === 'pending') {
             const interval = setInterval(() => {
-                router.reload({ only: ['payment'] });
+                // Reload page data to check for payment status update from webhook
+                router.reload({
+                    preserveScroll: true,
+                    preserveState: true,
+                    only: ['payment', 'va_number', 'payment_code', 'qr_code_url', 'payment_method', 'expiry_time'],
+                });
             }, 5000); // Check every 5 seconds
 
             return () => clearInterval(interval);
         }
-    }, [payment.status]);
+    }, [payment.status, payment.id]);
 
     // Countdown Timer logic
     useEffect(() => {
