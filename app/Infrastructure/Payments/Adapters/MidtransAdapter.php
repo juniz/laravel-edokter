@@ -20,15 +20,15 @@ class MidtransAdapter implements PaymentAdapterInterface
         $serverKey = config('payment.midtrans.server_key');
         $isProduction = config('payment.midtrans.is_production', false);
         $baseUrl = $isProduction
-            ? 'https://app.midtrans.com/v2'
-            : 'https://app.sandbox.midtrans.com/v2';
+            ? 'https://api.midtrans.com/v2'
+            : 'https://api.sandbox.midtrans.com/v2';
 
         // Load customer untuk mendapatkan data customer
         $invoice->load('customer');
         $customer = $invoice->customer;
 
         // Generate order ID
-        $orderId = 'INV-' . $invoice->number . '-' . time();
+        $orderId = 'INV-'.$invoice->number.'-'.time();
 
         // Prepare transaction details
         $transactionDetails = [
@@ -55,7 +55,7 @@ class MidtransAdapter implements PaymentAdapterInterface
         }
 
         // Get payment method from options
-        $paymentMethod = $options['payment_method'] ?? 'credit_card';
+        $paymentMethod = $options['payment_method'] ?? 'bca_va';
 
         // Prepare request payload untuk Midtrans Core API
         $payload = [
@@ -72,7 +72,7 @@ class MidtransAdapter implements PaymentAdapterInterface
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Basic ' . base64_encode($serverKey . ':'),
+                'Authorization' => 'Basic '.base64_encode($serverKey.':'),
             ])->post("{$baseUrl}/charge", $payload);
 
             if (! $response->successful()) {
@@ -81,7 +81,7 @@ class MidtransAdapter implements PaymentAdapterInterface
                     'body' => $response->body(),
                     'payment_method' => $paymentMethod,
                 ]);
-                throw new \RuntimeException('Failed to create Midtrans payment: ' . $response->body());
+                throw new \RuntimeException('Failed to create Midtrans payment: '.$response->body());
             }
 
             $responseData = $response->json();
@@ -108,7 +108,7 @@ class MidtransAdapter implements PaymentAdapterInterface
                     'status_message' => $responseData['status_message'] ?? null,
                     'response' => $responseData,
                 ]);
-                throw new \RuntimeException('Midtrans payment failed: ' . ($responseData['status_message'] ?? 'Unknown error'));
+                throw new \RuntimeException('Midtrans payment failed: '.($responseData['status_message'] ?? 'Unknown error'));
             }
 
             // Extract payment information berdasarkan payment method
@@ -240,8 +240,9 @@ class MidtransAdapter implements PaymentAdapterInterface
                 break;
 
             default:
-                // Default ke credit_card jika payment method tidak dikenali
-                $payload['payment_type'] = 'credit_card';
+                // Default ke bank_transfer jika payment method tidak dikenali
+                $payload['payment_type'] = 'bank_transfer';
+                $payload['bank_transfer'] = ['bank' => 'bca'];
                 break;
         }
     }
@@ -300,66 +301,205 @@ class MidtransAdapter implements PaymentAdapterInterface
             return null;
         }
 
-        // Verify webhook signature (optional, recommended for production)
-        // $signature = $payload['signature_key'] ?? null;
-        // if (!$this->verifySignature($payload, $signature)) {
-        //     Log::warning('Midtrans webhook signature verification failed', ['order_id' => $orderId]);
-        //     return null;
-        // }
+        // Verify webhook signature untuk keamanan
+        $shouldVerifySignature = config('payment.midtrans.verify_webhook_signature', true);
+        if ($shouldVerifySignature) {
+            $signature = $payload['signature_key'] ?? null;
+            if (! $this->verifySignature($payload, $signature)) {
+                Log::warning('Midtrans webhook signature verification failed', [
+                    'order_id' => $orderId,
+                    'payload' => $payload,
+                ]);
+
+                return null;
+            }
+        }
 
         $payment = Payment::where('provider_ref', $orderId)->first();
 
         if (! $payment) {
-            Log::warning('Midtrans webhook payment not found', ['order_id' => $orderId]);
+            Log::warning('Midtrans webhook payment not found', [
+                'order_id' => $orderId,
+                'payload' => $payload,
+            ]);
 
             return null;
         }
 
+        // Idempotency check: jika payment sudah succeeded, jangan proses lagi
+        if ($payment->status === 'succeeded') {
+            Log::info('Midtrans webhook: Payment already succeeded, skipping', [
+                'order_id' => $orderId,
+                'payment_id' => $payment->id,
+            ]);
+
+            return $payment;
+        }
+
         $transactionStatus = $payload['transaction_status'] ?? null;
         $fraudStatus = $payload['fraud_status'] ?? null;
+        $paymentType = $payload['payment_type'] ?? null;
 
-        // Handle different transaction statuses
-        // settlement = payment success
-        // pending = waiting payment
-        // cancel/expire = failed
-        if ($transactionStatus === 'settlement' && $fraudStatus === 'accept') {
-            // Payment successful
-            $this->paymentRepository->markAsSucceeded($payment, $payload);
-            Log::info("Midtrans payment succeeded for order: {$orderId}");
-        } elseif (in_array($transactionStatus, ['cancel', 'expire', 'deny'])) {
-            // Payment failed
-            $payment->update([
-                'status' => 'failed',
-                'raw_payload' => $payload,
-            ]);
-            Log::info("Midtrans payment failed for order: {$orderId}", [
-                'status' => $transactionStatus,
-            ]);
-        } else {
-            // Still pending
-            $payment->update([
-                'raw_payload' => $payload,
-            ]);
-            Log::info("Midtrans payment still pending for order: {$orderId}", [
-                'status' => $transactionStatus,
-            ]);
+        Log::info('Midtrans webhook processing', [
+            'order_id' => $orderId,
+            'payment_id' => $payment->id,
+            'transaction_status' => $transactionStatus,
+            'fraud_status' => $fraudStatus,
+            'payment_type' => $paymentType,
+        ]);
+
+        // Handle different transaction statuses berdasarkan dokumentasi Midtrans
+        // https://docs.midtrans.com/docs/core-api-status-code
+        switch ($transactionStatus) {
+            case 'settlement':
+                // Payment berhasil (settlement = payment success)
+                // Untuk credit card, perlu cek fraud_status
+                if ($paymentType === 'credit_card') {
+                    if ($fraudStatus === 'accept') {
+                        // Payment berhasil dan aman
+                        $this->paymentRepository->markAsSucceeded($payment, $payload);
+                        Log::info("Midtrans payment succeeded (settlement + fraud accept) for order: {$orderId}");
+                    } elseif ($fraudStatus === 'challenge') {
+                        // Payment dalam challenge (pending review)
+                        $payment->update([
+                            'status' => 'pending',
+                            'raw_payload' => array_merge($payment->raw_payload ?? [], $payload),
+                        ]);
+                        Log::info("Midtrans payment in challenge for order: {$orderId}");
+                    } else {
+                        // Fraud status tidak diketahui atau deny
+                        $payment->update([
+                            'status' => 'pending',
+                            'raw_payload' => array_merge($payment->raw_payload ?? [], $payload),
+                        ]);
+                        Log::warning("Midtrans payment settlement with unknown fraud_status for order: {$orderId}", [
+                            'fraud_status' => $fraudStatus,
+                        ]);
+                    }
+                } else {
+                    // Untuk payment method selain credit card, settlement langsung berarti success
+                    $this->paymentRepository->markAsSucceeded($payment, $payload);
+                    Log::info("Midtrans payment succeeded (settlement) for order: {$orderId}");
+                }
+                break;
+
+            case 'capture':
+                // Credit card: payment captured (success)
+                if ($fraudStatus === 'accept') {
+                    $this->paymentRepository->markAsSucceeded($payment, $payload);
+                    Log::info("Midtrans payment succeeded (capture + fraud accept) for order: {$orderId}");
+                } elseif ($fraudStatus === 'challenge') {
+                    $payment->update([
+                        'status' => 'pending',
+                        'raw_payload' => array_merge($payment->raw_payload ?? [], $payload),
+                    ]);
+                    Log::info("Midtrans payment in challenge (capture) for order: {$orderId}");
+                } else {
+                    $payment->update([
+                        'status' => 'pending',
+                        'raw_payload' => array_merge($payment->raw_payload ?? [], $payload),
+                    ]);
+                    Log::warning("Midtrans payment capture with unknown fraud_status for order: {$orderId}", [
+                        'fraud_status' => $fraudStatus,
+                    ]);
+                }
+                break;
+
+            case 'pending':
+                // Payment masih pending (menunggu pembayaran)
+                $payment->update([
+                    'status' => 'pending',
+                    'raw_payload' => array_merge($payment->raw_payload ?? [], $payload),
+                ]);
+                Log::info("Midtrans payment still pending for order: {$orderId}");
+                break;
+
+            case 'deny':
+                // Payment ditolak
+                $payment->update([
+                    'status' => 'failed',
+                    'raw_payload' => array_merge($payment->raw_payload ?? [], $payload),
+                ]);
+                Log::info("Midtrans payment denied for order: {$orderId}");
+                break;
+
+            case 'cancel':
+            case 'expire':
+                // Payment dibatalkan atau expired
+                $payment->update([
+                    'status' => 'failed',
+                    'raw_payload' => array_merge($payment->raw_payload ?? [], $payload),
+                ]);
+                Log::info("Midtrans payment {$transactionStatus} for order: {$orderId}");
+                break;
+
+            case 'refund':
+            case 'partial_refund':
+                // Payment di-refund (partial atau full)
+                $payment->update([
+                    'status' => 'refunded',
+                    'raw_payload' => array_merge($payment->raw_payload ?? [], $payload),
+                ]);
+                Log::info("Midtrans payment refunded for order: {$orderId}", [
+                    'refund_type' => $transactionStatus,
+                ]);
+                break;
+
+            default:
+                // Status tidak dikenali, update raw_payload saja
+                $payment->update([
+                    'raw_payload' => array_merge($payment->raw_payload ?? [], $payload),
+                ]);
+                Log::warning("Midtrans webhook received unknown transaction_status for order: {$orderId}", [
+                    'transaction_status' => $transactionStatus,
+                    'payload' => $payload,
+                ]);
+                break;
         }
 
         return $payment;
     }
 
     /**
-     * Verify webhook signature (optional, recommended for production)
+     * Verify webhook signature untuk keamanan
+     *
+     * Midtrans menggunakan signature_key yang dihitung dari:
+     * SHA512(order_id + status_code + gross_amount + server_key)
      */
     private function verifySignature(array $payload, ?string $signature): bool
     {
         if (! $signature) {
+            Log::warning('Midtrans webhook signature missing', ['payload' => $payload]);
+
             return false;
         }
 
         $serverKey = config('payment.midtrans.server_key');
-        $expectedSignature = hash('sha512', $payload['order_id'] . $payload['status_code'] . $payload['gross_amount'] . $serverKey);
 
-        return hash_equals($expectedSignature, $signature);
+        if (! $serverKey) {
+            Log::error('Midtrans server_key not configured');
+
+            return false;
+        }
+
+        $orderId = $payload['order_id'] ?? '';
+        $statusCode = $payload['status_code'] ?? '';
+        $grossAmount = $payload['gross_amount'] ?? '';
+
+        // Hitung expected signature sesuai dokumentasi Midtrans
+        $signatureString = $orderId.$statusCode.$grossAmount.$serverKey;
+        $expectedSignature = hash('sha512', $signatureString);
+
+        $isValid = hash_equals($expectedSignature, $signature);
+
+        if (! $isValid) {
+            Log::warning('Midtrans webhook signature mismatch', [
+                'order_id' => $orderId,
+                'expected' => substr($expectedSignature, 0, 16).'...',
+                'received' => substr($signature, 0, 16).'...',
+            ]);
+        }
+
+        return $isValid;
     }
 }

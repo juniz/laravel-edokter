@@ -9,6 +9,7 @@ use App\Http\Controllers\Domain\Catalog\PlanController;
 use App\Http\Controllers\Domain\Catalog\ProductController;
 use App\Http\Controllers\Domain\DomainController;
 use App\Http\Controllers\Domain\DomainPriceController;
+use App\Http\Controllers\Domain\Order\CartController;
 use App\Http\Controllers\Domain\Order\OrderController;
 use App\Http\Controllers\Domain\Provisioning\PanelAccountController;
 use App\Http\Controllers\Domain\Provisioning\ProvisionTaskController;
@@ -44,6 +45,14 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
 
     // Customer routes
     Route::prefix('customer')->name('customer.')->group(function () {
+        // Cart routes
+        Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+        Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+        Route::put('/cart/items/{id}', [CartController::class, 'update'])->name('cart.update');
+        Route::delete('/cart/items/{id}', [CartController::class, 'remove'])->name('cart.remove');
+        Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+        Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
         Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
@@ -51,6 +60,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::get('/invoices/{id}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+        Route::post('/invoices/{id}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
 
         Route::get('/payments/{id}', [PaymentController::class, 'show'])->name('payments.show');
 
@@ -100,6 +110,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
 
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::post('/invoices/{id}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
 
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
         Route::get('/subscriptions/{id}', [SubscriptionController::class, 'show'])->name('subscriptions.show');

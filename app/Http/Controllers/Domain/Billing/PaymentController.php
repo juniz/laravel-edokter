@@ -47,6 +47,12 @@ class PaymentController extends Controller
             }
         }
 
+        // Extract expiry time
+        $expiryTime = null;
+        if (isset($coreApiResponse['expiry_time'])) {
+            $expiryTime = $coreApiResponse['expiry_time'];
+        }
+
         return Inertia::render('payments/Show', [
             'payment' => [
                 'id' => $payment->id,
@@ -66,6 +72,7 @@ class PaymentController extends Controller
             'va_number' => $vaNumber,
             'payment_code' => $paymentCode,
             'qr_code_url' => $qrCodeUrl,
+            'expiry_time' => $expiryTime,
             'payment_method' => $rawPayload['payment_method'] ?? null,
         ]);
     }
