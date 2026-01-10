@@ -44,6 +44,15 @@ interface Plan {
     setup_fee_cents: number;
 }
 
+interface ProductFeature {
+    id: string;
+    key: string;
+    value: string;
+    label?: string;
+    unit?: string;
+    display_order?: number;
+}
+
 interface Product {
     id: string;
     name: string;
@@ -54,6 +63,7 @@ interface Product {
         description?: string;
         features?: string[];
     };
+    features?: ProductFeature[];
     plans?: Plan[];
 }
 
@@ -257,17 +267,54 @@ export default function CatalogShow({ product, plans }: CatalogShowProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Product Features */}
                     <div className="lg:col-span-2 space-y-6">
-                        <Card variant="premium">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <div className={`h-8 w-8 rounded-lg bg-gradient-to-br ${typeConfig.bgColor} flex items-center justify-center`}>
-                                        <CheckCircle2 className="h-4 w-4 text-white" />
+                        {/* Product Features (CPU, RAM, Bandwidth, etc) */}
+                        {product.features && product.features.length > 0 && (
+                            <Card variant="premium">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <div className={`h-8 w-8 rounded-lg bg-gradient-to-br ${typeConfig.bgColor} flex items-center justify-center`}>
+                                            <Server className="h-4 w-4 text-white" />
+                                        </div>
+                                        Spesifikasi Teknis
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                        {product.features.map((feature) => (
+                                            <div
+                                                key={feature.id}
+                                                className="p-3 rounded-lg border bg-muted/30"
+                                            >
+                                                <p className="text-xs text-muted-foreground mb-1">
+                                                    {feature.label || feature.key}
+                                                </p>
+                                                <p className="text-base font-semibold">
+                                                    {feature.value}
+                                                    {feature.unit && (
+                                                        <span className="text-sm text-muted-foreground font-normal ml-1">
+                                                            {feature.unit}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        ))}
                                     </div>
-                                    Fitur Yang Anda Dapatkan
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {product.metadata?.features && product.metadata.features.length > 0 ? (
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Metadata Features (descriptive features) */}
+                        {product.metadata?.features && product.metadata.features.length > 0 && (
+                            <Card variant="premium">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <div className={`h-8 w-8 rounded-lg bg-gradient-to-br ${typeConfig.bgColor} flex items-center justify-center`}>
+                                            <CheckCircle2 className="h-4 w-4 text-white" />
+                                        </div>
+                                        Fitur Yang Anda Dapatkan
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {product.metadata.features.map((feature, idx) => (
                                             <div
@@ -279,13 +326,9 @@ export default function CatalogShow({ product, plans }: CatalogShowProps) {
                                             </div>
                                         ))}
                                     </div>
-                                ) : (
-                                    <p className="text-muted-foreground">
-                                        Tidak ada fitur khusus yang tercantum untuk produk ini.
-                                    </p>
-                                )}
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
+                        )}
 
                         {/* Why Choose Us */}
                         <Card variant="premium">

@@ -9,17 +9,30 @@ use App\Models\Domain\Provisioning\Server;
 use App\Models\Domain\Subscription\Subscription;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
+/**
+ * aaPanel Adapter - Menggunakan API resmi sesuai dengan modul WHMCS
+ *
+ * API Endpoints yang digunakan:
+ * - /v2/virtual/get_service_info.json - Cek status multi-user service
+ * - /v2/virtual/get_package_list.json - Daftar resource package
+ * - /v2/virtual/get_disk_list.json - Daftar disk/mountpoint
+ * - /v2/virtual/get_account_list.json - Daftar akun virtual
+ * - /v2/virtual/create_account.json - Buat akun virtual
+ * - /v2/virtual/modify_account.json - Update akun virtual
+ * - /v2/virtual/remove_account.json - Hapus akun virtual
+ * - /v2/virtual/get_account_temp_login_token.json - SSO token untuk user
+ * - /v2/config?action=set_temp_login - Admin SSO
+ */
 class AaPanelAdapter implements ProvisioningAdapterInterface
 {
     private ?HttpClient $client = null;
 
-    private ?Server $defaultServer = null;
+    private ?Server $currentServer = null;
 
     public function __construct()
     {
-        // Lazy initialization - server akan di-set saat createAccount dipanggil
+        // Lazy initialization - server akan di-set saat method dipanggil
     }
 
     /**
@@ -29,13 +42,26 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
     {
         $endpoint = $server->endpoint;
         $apiKey = Crypt::decryptString($server->auth_secret_ref);
-        // Ambil verify_ssl dari meta, default true untuk security
-        $verifySsl = $server->meta['verify_ssl'] ?? true;
+        // Ambil verify_ssl dari meta, default false untuk kompatibilitas
+        $verifySsl = $server->meta['verify_ssl'] ?? false;
         $this->client = new HttpClient($endpoint, $apiKey, $verifySsl);
+        $this->currentServer = $server;
+    }
+
+    /**
+     * Ensure client sudah diinisialisasi untuk server tertentu
+     */
+    private function ensureClient(Server $server): void
+    {
+        if (! $this->client || $this->currentServer?->id !== $server->id) {
+            $this->initializeClient($server);
+        }
     }
 
     /**
      * Get server untuk provisioning
+     *
+     * @param  array<string, mixed>  $params
      */
     private function getServer(array $params): Server
     {
@@ -44,81 +70,211 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
             return $params['server'];
         }
 
-        // Fallback ke default server
-        if (! $this->defaultServer) {
-            $this->defaultServer = Server::where('type', 'aapanel')
-                ->where('status', 'active')
-                ->first();
+        // Fallback ke default server aktif
+        $server = Server::where('type', 'aapanel')
+            ->where('status', 'active')
+            ->first();
 
-            if (! $this->defaultServer) {
-                throw new \Exception('No active aaPanel server found');
+        if (! $server) {
+            throw new \Exception('No active aaPanel server found');
+        }
+
+        return $server;
+    }
+
+    /**
+     * Cek apakah multi-user service terinstall dan running
+     */
+    public function checkVirtualService(Server $server): bool
+    {
+        $this->ensureClient($server);
+
+        $status = $this->client->checkVirtualServiceStatus();
+
+        if (! $status['installed'] || ! $status['running']) {
+            Log::warning('aaPanel virtual service not ready', [
+                'server_id' => $server->id,
+                'status' => $status,
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get daftar resource package dari aaPanel
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getPackageList(Server $server): array
+    {
+        $this->ensureClient($server);
+
+        $response = $this->client->post('v2/virtual/get_package_list.json', [
+            'p' => 1,
+            'rows' => 10000,
+            'search_value' => '',
+        ]);
+
+        return $response['message']['list'] ?? [];
+    }
+
+    /**
+     * Get package info by name
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getPackageByName(Server $server, string $packageName): ?array
+    {
+        $packages = $this->getPackageList($server);
+
+        foreach ($packages as $package) {
+            if ($package['package_name'] === $packageName) {
+                return $package;
             }
         }
 
-        return $this->defaultServer;
+        return null;
     }
 
+    /**
+     * Get daftar disk/mountpoint dari aaPanel
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getDiskList(Server $server): array
+    {
+        $this->ensureClient($server);
+
+        $response = $this->client->post('v2/virtual/get_disk_list.json');
+
+        return $response['message']['list'] ?? [];
+    }
+
+    /**
+     * Get default mountpoint
+     */
+    public function getDefaultMountpoint(Server $server): string
+    {
+        $disks = $this->getDiskList($server);
+
+        $mountpoint = '/';
+
+        foreach ($disks as $disk) {
+            if ($mountpoint === '/') {
+                $mountpoint = $disk['mountpoint'];
+            }
+            // Prioritaskan root "/"
+            if ($disk['mountpoint'] === '/') {
+                $mountpoint = $disk['mountpoint'];
+                break;
+            }
+        }
+
+        return $mountpoint;
+    }
+
+    /**
+     * Get daftar akun virtual dari aaPanel
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getAccountList(Server $server, string $search = ''): array
+    {
+        $this->ensureClient($server);
+
+        $response = $this->client->post('v2/virtual/get_account_list.json', [
+            'p' => 1,
+            'rows' => 10000,
+            'type_id' => -1,
+            'search_value' => $search,
+        ]);
+
+        return $response['message']['list'] ?? [];
+    }
+
+    /**
+     * Get akun by username
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getAccountByUsername(Server $server, string $username): ?array
+    {
+        $accounts = $this->getAccountList($server, $username);
+
+        foreach ($accounts as $account) {
+            if ($account['username'] === $username) {
+                return $account;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Create account untuk subscription (shared hosting)
+     *
+     * @param  array<string, mixed>  $params
+     */
     public function createAccount(Subscription $sub, array $params): PanelAccount
     {
         $server = $this->getServer($params);
+        $this->ensureClient($server);
 
-        // Initialize client jika belum atau server berbeda
-        if (! $this->client || $this->defaultServer?->id !== $server->id) {
-            $this->initializeClient($server);
+        // Cek virtual service
+        if (! $this->checkVirtualService($server)) {
+            throw new \Exception('Multi-user service not installed or running on aaPanel server');
         }
 
-        // Get domain dari params atau subscription meta
+        // Get package dari plan atau params
+        $packageName = $params['package_name'] ?? $sub->plan->metadata['aapanel_package'] ?? 'Default';
+        $package = $this->getPackageByName($server, $packageName);
+
+        if (! $package) {
+            throw new \Exception("Cannot find '{$packageName}' resource package, please create it first in aaPanel");
+        }
+
+        // Get mountpoint
+        $mountpoint = $params['mountpoint'] ?? $this->getDefaultMountpoint($server);
+
+        // Generate username dan password
         $domain = $params['domain'] ?? $sub->meta['domain'] ?? null;
+        $username = $params['username'] ?? $this->generateUsername($domain ?? 'user');
+        $password = $params['password'] ?? $this->generateSecurePassword();
+        $email = $params['email'] ?? $sub->customer?->email ?? '';
 
-        if (! $domain) {
-            throw new \Exception('Domain is required for shared hosting');
+        // Handle expire date
+        $expireDate = '0000-00-00'; // Default: tidak expire
+        if (isset($params['expire_date']) && $params['expire_date']) {
+            $expireDate = $params['expire_date'];
         }
 
-        // Generate username dari domain (remove dots, max 16 chars untuk aaPanel)
-        $username = $this->generateUsername($domain);
-        $password = Str::random(16);
-        $ftpPassword = Str::random(16);
-        $dbPassword = Str::random(16);
-
-        // Prepare webname (JSON format)
-        $webname = json_encode([
-            'domain' => $domain,
-            'domainlist' => [],
-            'count' => 0,
+        // Create virtual account via API resmi
+        $response = $this->client->post('v2/virtual/create_account.json', [
+            'username' => $username,
+            'password' => $password,
+            'email' => $email,
+            'expire_date' => $expireDate,
+            'package_id' => $package['package_id'],
+            'mountpoint' => $mountpoint,
+            'disk_space_quota' => $package['disk_space_quota'],
+            'monthly_bandwidth_limit' => $package['monthly_bandwidth_limit'],
+            'max_site_limit' => $package['max_site_limit'],
+            'max_database' => $package['max_database'],
+            'php_start_children' => $package['php_start_children'],
+            'php_max_children' => $package['php_max_children'],
+            'remark' => $params['remark'] ?? 'Created via '.config('app.name'),
+            'automatic_dns' => $params['automatic_dns'] ?? 0,
         ]);
 
-        // Get PHP version dari plan metadata atau default
-        $phpVersion = $sub->plan->metadata['php_version'] ?? '82'; // Default PHP 8.2
-        $port = $sub->plan->metadata['port'] ?? 80;
-        $path = $sub->plan->metadata['path'] ?? '/www/wwwroot/' . $domain;
-        $typeId = $sub->plan->metadata['type_id'] ?? 0; // Default classification
-
-        // Prepare data untuk AddSite
-        $siteData = [
-            'webname' => $webname,
-            'path' => $path,
-            'type_id' => $typeId,
-            'type' => 'PHP',
-            'version' => $phpVersion,
-            'port' => $port,
-            'ps' => $sub->plan->name ?? 'Shared Hosting',
-            'ftp' => true,
-            'ftp_username' => $username,
-            'ftp_password' => $ftpPassword,
-            'sql' => true,
-            'codeing' => 'utf8mb4',
-            'datauser' => $username,
-            'datapassword' => $dbPassword,
-        ];
-
-        // Create website di aaPanel
-        $response = $this->client->post('site?action=AddSite', $siteData);
-
-        if (! isset($response['siteStatus']) || ! $response['siteStatus']) {
-            $errorMsg = $response['msg'] ?? 'Failed to create website in aaPanel';
-            Log::error('aaPanel create website failed', [
+        // Check response - status 0 = success di API aaPanel
+        if (! isset($response['status']) || (int) $response['status'] !== 0) {
+            $errorMsg = $response['msg'] ?? 'Failed to create virtual account in aaPanel';
+            Log::error('aaPanel create account failed', [
                 'subscription_id' => $sub->id,
-                'domain' => $domain,
+                'username' => $username,
                 'response' => $response,
             ]);
             throw new \Exception($errorMsg);
@@ -129,22 +285,26 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
             'server_id' => $server->id,
             'subscription_id' => $sub->id,
             'username' => $username,
-            'domain' => $domain,
+            'domain' => $domain ?? $username.'.local',
             'status' => 'active',
             'meta' => [
-                'ftp_username' => $response['ftpUser'] ?? $username,
-                'ftp_password' => Crypt::encryptString($response['ftpPass'] ?? $ftpPassword),
-                'database_user' => $response['databaseUser'] ?? $username,
-                'database_password' => Crypt::encryptString($response['databasePass'] ?? $dbPassword),
-                'website_path' => $path,
-                'php_version' => $phpVersion,
-                'port' => $port,
+                'email' => $email,
+                'password_encrypted' => Crypt::encryptString($password),
+                'package_id' => $package['package_id'],
+                'package_name' => $package['package_name'],
+                'mountpoint' => $mountpoint,
+                'disk_space_quota' => $package['disk_space_quota'],
+                'monthly_bandwidth_limit' => $package['monthly_bandwidth_limit'],
+                'max_site_limit' => $package['max_site_limit'],
+                'max_database' => $package['max_database'],
+                'php_start_children' => $package['php_start_children'],
+                'php_max_children' => $package['php_max_children'],
+                'expire_date' => $expireDate,
             ],
         ]);
 
-        Log::info('aaPanel website created successfully', [
+        Log::info('aaPanel virtual account created successfully', [
             'subscription_id' => $sub->id,
-            'domain' => $domain,
             'username' => $username,
             'panel_account_id' => $panelAccount->id,
         ]);
@@ -152,260 +312,347 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         return $panelAccount;
     }
 
+    /**
+     * Suspend account via modify_account
+     */
     public function suspendAccount(PanelAccount $acc): void
     {
-        $response = $this->client->post('site?action=SiteStop', [
-            'id' => $acc->meta['site_id'] ?? null,
-            'name' => $acc->domain,
+        $server = $acc->server;
+        $this->ensureClient($server);
+
+        // Get account info dari aaPanel
+        $accountInfo = $this->getAccountByUsername($server, $acc->username);
+
+        if (! $accountInfo) {
+            throw new \Exception('Account not found in aaPanel: '.$acc->username);
+        }
+
+        // Modify account dengan status = 0 (suspended)
+        $response = $this->client->post('v2/virtual/modify_account.json', [
+            'account_id' => $accountInfo['account_id'],
+            'username' => $accountInfo['username'],
+            'email' => $accountInfo['email'],
+            'expire_date' => $accountInfo['expire_date'],
+            'package_id' => $accountInfo['package_id'],
+            'disk_space_quota' => $accountInfo['disk_space_quota'],
+            'monthly_bandwidth_limit' => $accountInfo['monthly_bandwidth_limit'],
+            'max_site_limit' => $accountInfo['max_site_limit'],
+            'max_database' => $accountInfo['max_database'],
+            'php_start_children' => $accountInfo['php_start_children'],
+            'php_max_children' => $accountInfo['php_max_children'],
+            'remark' => $accountInfo['remark'] ?? '',
+            'domain' => $accountInfo['domain'] ?? '',
+            'automatic_dns' => 0,
+            'status' => 0, // 0 = suspended
         ]);
 
-        if (! isset($response['status']) || ! $response['status']) {
-            throw new \Exception('Failed to suspend website: ' . ($response['msg'] ?? 'Unknown error'));
+        if (! isset($response['status']) || (int) $response['status'] !== 0) {
+            throw new \Exception('Failed to suspend account: '.($response['msg'] ?? 'Unknown error'));
         }
 
         $acc->update(['status' => 'suspended']);
-        Log::info('aaPanel website suspended', ['panel_account_id' => $acc->id]);
+        Log::info('aaPanel account suspended', ['panel_account_id' => $acc->id]);
     }
 
+    /**
+     * Unsuspend account via modify_account
+     */
     public function unsuspendAccount(PanelAccount $acc): void
     {
-        $response = $this->client->post('site?action=SiteStart', [
-            'id' => $acc->meta['site_id'] ?? null,
-            'name' => $acc->domain,
+        $server = $acc->server;
+        $this->ensureClient($server);
+
+        // Get account info dari aaPanel
+        $accountInfo = $this->getAccountByUsername($server, $acc->username);
+
+        if (! $accountInfo) {
+            throw new \Exception('Account not found in aaPanel: '.$acc->username);
+        }
+
+        // Modify account dengan status = 1 (active)
+        $response = $this->client->post('v2/virtual/modify_account.json', [
+            'account_id' => $accountInfo['account_id'],
+            'username' => $accountInfo['username'],
+            'email' => $accountInfo['email'],
+            'expire_date' => $accountInfo['expire_date'],
+            'package_id' => $accountInfo['package_id'],
+            'disk_space_quota' => $accountInfo['disk_space_quota'],
+            'monthly_bandwidth_limit' => $accountInfo['monthly_bandwidth_limit'],
+            'max_site_limit' => $accountInfo['max_site_limit'],
+            'max_database' => $accountInfo['max_database'],
+            'php_start_children' => $accountInfo['php_start_children'],
+            'php_max_children' => $accountInfo['php_max_children'],
+            'remark' => $accountInfo['remark'] ?? '',
+            'domain' => $accountInfo['domain'] ?? '',
+            'automatic_dns' => 0,
+            'status' => 1, // 1 = active
         ]);
 
-        if (! isset($response['status']) || ! $response['status']) {
-            throw new \Exception('Failed to unsuspend website: ' . ($response['msg'] ?? 'Unknown error'));
+        if (! isset($response['status']) || (int) $response['status'] !== 0) {
+            throw new \Exception('Failed to unsuspend account: '.($response['msg'] ?? 'Unknown error'));
         }
 
         $acc->update(['status' => 'active']);
-        Log::info('aaPanel website unsuspended', ['panel_account_id' => $acc->id]);
+        Log::info('aaPanel account unsuspended', ['panel_account_id' => $acc->id]);
     }
 
+    /**
+     * Terminate/hapus account
+     */
     public function terminateAccount(PanelAccount $acc): void
     {
-        // Get site ID dari meta atau cari via API
-        $siteId = $acc->meta['site_id'] ?? null;
+        $server = $acc->server;
+        $this->ensureClient($server);
 
-        if (! $siteId) {
-            // Try to find site ID via API
-            $sites = $this->client->post('data?action=getData&table=sites', [
-                'search' => $acc->domain,
-                'limit' => 1,
+        // Get account info dari aaPanel
+        $accountInfo = $this->getAccountByUsername($server, $acc->username);
+
+        if (! $accountInfo) {
+            // Account sudah tidak ada di aaPanel, update status lokal saja
+            Log::warning('Account not found in aaPanel, marking as terminated locally', [
+                'panel_account_id' => $acc->id,
+                'username' => $acc->username,
             ]);
+            $acc->update(['status' => 'terminated']);
 
-            if (isset($sites['data'][0]['id'])) {
-                $siteId = $sites['data'][0]['id'];
-            }
+            return;
         }
 
-        if ($siteId) {
-            $response = $this->client->post('site?action=DeleteSite', [
-                'id' => $siteId,
-                'webname' => $acc->domain,
-                'ftp' => 1, // Delete FTP
-                'database' => 1, // Delete database
-                'path' => 1, // Delete website directory
-            ]);
+        // Remove account via API
+        $response = $this->client->post('v2/virtual/remove_account.json', [
+            'account_id' => $accountInfo['account_id'],
+            'is_del_resources' => true, // Hapus semua resources (sites, databases, etc)
+        ]);
 
-            if (! isset($response['status']) || ! $response['status']) {
-                Log::warning('aaPanel delete website failed', [
-                    'panel_account_id' => $acc->id,
-                    'response' => $response,
-                ]);
-            }
+        if (! isset($response['status']) || (int) $response['status'] !== 0) {
+            Log::warning('aaPanel terminate account response', [
+                'panel_account_id' => $acc->id,
+                'response' => $response,
+            ]);
         }
 
         $acc->update(['status' => 'terminated']);
-        Log::info('aaPanel website terminated', ['panel_account_id' => $acc->id]);
-    }
-
-    public function changePlan(PanelAccount $acc, string $planCode): void
-    {
-        // aaPanel tidak memiliki built-in change plan API
-        // Implementasi bisa dilakukan dengan update PHP version atau limits
-        // Untuk sekarang, hanya log perubahan
-        Log::info('aaPanel change plan requested', [
-            'panel_account_id' => $acc->id,
-            'new_plan_code' => $planCode,
-        ]);
-
-        // TODO: Implementasi change plan jika diperlukan
+        Log::info('aaPanel account terminated', ['panel_account_id' => $acc->id]);
     }
 
     /**
-     * Generate username dari domain
-     * Format: domain tanpa extension, max 16 chars, lowercase, alphanumeric + underscore
+     * Change password untuk account
      */
-    private function generateUsername(string $domain): string
+    public function changePassword(PanelAccount $acc, string $newPassword): void
     {
-        // Remove http://, https://, www.
-        $domain = preg_replace('/^https?:\/\//', '', $domain);
-        $domain = preg_replace('/^www\./', '', $domain);
+        $server = $acc->server;
+        $this->ensureClient($server);
 
-        // Extract domain name tanpa extension
-        $parts = explode('.', $domain);
-        $name = $parts[0];
+        // Get account info dari aaPanel
+        $accountInfo = $this->getAccountByUsername($server, $acc->username);
 
-        // Clean: hanya alphanumeric dan underscore
-        $username = preg_replace('/[^a-z0-9_]/', '', strtolower($name));
-
-        // Max 16 chars untuk aaPanel
-        $username = substr($username, 0, 16);
-
-        // Ensure tidak kosong
-        if (empty($username)) {
-            $username = 'user_' . substr(md5($domain), 0, 8);
+        if (! $accountInfo) {
+            throw new \Exception('Account not found in aaPanel: '.$acc->username);
         }
 
-        return $username;
+        // Modify account dengan password baru
+        $response = $this->client->post('v2/virtual/modify_account.json', [
+            'account_id' => $accountInfo['account_id'],
+            'username' => $accountInfo['username'],
+            'password' => $newPassword,
+            'email' => $accountInfo['email'],
+            'expire_date' => $accountInfo['expire_date'],
+            'package_id' => $accountInfo['package_id'],
+            'disk_space_quota' => $accountInfo['disk_space_quota'],
+            'monthly_bandwidth_limit' => $accountInfo['monthly_bandwidth_limit'],
+            'max_site_limit' => $accountInfo['max_site_limit'],
+            'max_database' => $accountInfo['max_database'],
+            'php_start_children' => $accountInfo['php_start_children'],
+            'php_max_children' => $accountInfo['php_max_children'],
+            'remark' => $accountInfo['remark'] ?? '',
+            'domain' => $accountInfo['domain'] ?? '',
+            'automatic_dns' => 1,
+        ]);
+
+        if (! isset($response['status']) || (int) $response['status'] !== 0) {
+            throw new \Exception('Failed to change password: '.($response['msg'] ?? 'Unknown error'));
+        }
+
+        // Update encrypted password di meta
+        $meta = $acc->meta ?? [];
+        $meta['password_encrypted'] = Crypt::encryptString($newPassword);
+        $acc->update(['meta' => $meta]);
+
+        Log::info('aaPanel password changed', ['panel_account_id' => $acc->id]);
     }
 
     /**
-     * Create account secara manual tanpa subscription
+     * Change plan/package untuk account
+     */
+    public function changePlan(PanelAccount $acc, string $planCode): void
+    {
+        $server = $acc->server;
+        $this->ensureClient($server);
+
+        // Get package baru
+        $newPackage = $this->getPackageByName($server, $planCode);
+
+        if (! $newPackage) {
+            throw new \Exception("Cannot find '{$planCode}' resource package in aaPanel");
+        }
+
+        // Get current account info
+        $accountInfo = $this->getAccountByUsername($server, $acc->username);
+
+        if (! $accountInfo) {
+            throw new \Exception('Account not found in aaPanel: '.$acc->username);
+        }
+
+        // Modify account dengan package baru
+        $response = $this->client->post('v2/virtual/modify_account.json', [
+            'account_id' => $accountInfo['account_id'],
+            'username' => $accountInfo['username'],
+            'email' => $accountInfo['email'],
+            'expire_date' => $accountInfo['expire_date'],
+            'package_id' => $newPackage['package_id'],
+            'disk_space_quota' => $newPackage['disk_space_quota'],
+            'monthly_bandwidth_limit' => $newPackage['monthly_bandwidth_limit'],
+            'max_site_limit' => $newPackage['max_site_limit'],
+            'max_database' => $newPackage['max_database'],
+            'php_start_children' => $newPackage['php_start_children'],
+            'php_max_children' => $newPackage['php_max_children'],
+            'remark' => $accountInfo['remark'] ?? '',
+            'domain' => $accountInfo['domain'] ?? '',
+            'automatic_dns' => 0,
+        ]);
+
+        if (! isset($response['status']) || (int) $response['status'] !== 0) {
+            throw new \Exception('Failed to change plan: '.($response['msg'] ?? 'Unknown error'));
+        }
+
+        // Update meta dengan package info baru
+        $meta = $acc->meta ?? [];
+        $meta['package_id'] = $newPackage['package_id'];
+        $meta['package_name'] = $newPackage['package_name'];
+        $meta['disk_space_quota'] = $newPackage['disk_space_quota'];
+        $meta['monthly_bandwidth_limit'] = $newPackage['monthly_bandwidth_limit'];
+        $meta['max_site_limit'] = $newPackage['max_site_limit'];
+        $meta['max_database'] = $newPackage['max_database'];
+        $meta['php_start_children'] = $newPackage['php_start_children'];
+        $meta['php_max_children'] = $newPackage['php_max_children'];
+        $acc->update(['meta' => $meta]);
+
+        Log::info('aaPanel plan changed', [
+            'panel_account_id' => $acc->id,
+            'new_plan' => $planCode,
+        ]);
+    }
+
+    /**
+     * Get SSO login URL untuk user (client area)
+     */
+    public function getLoginUrl(PanelAccount $acc): string
+    {
+        $server = $acc->server;
+        $this->ensureClient($server);
+
+        // Get account info
+        $accountInfo = $this->getAccountByUsername($server, $acc->username);
+
+        if (! $accountInfo) {
+            throw new \Exception('Account not found in aaPanel: '.$acc->username);
+        }
+
+        // Get temp login token
+        $response = $this->client->post('v2/virtual/get_account_temp_login_token.json', [
+            'account_id' => $accountInfo['account_id'],
+        ]);
+
+        $token = $response['message']['token'] ?? '';
+        $loginUrl = $response['message']['login_url'] ?? '';
+
+        if (empty($token) || empty($loginUrl)) {
+            throw new \Exception('Failed to get login token');
+        }
+
+        // Construct final URL
+        $separator = str_contains($loginUrl, '?') ? '&' : '?';
+
+        return $loginUrl.$separator.'token='.$token;
+    }
+
+    /**
+     * Get admin SSO URL untuk masuk ke panel aaPanel utama
+     */
+    public function getAdminLoginUrl(Server $server): string
+    {
+        $this->ensureClient($server);
+
+        // Get temp login token untuk admin
+        $response = $this->client->post('v2/config?action=set_temp_login', [
+            'expire_time' => time() + 3600, // 1 jam
+        ]);
+
+        $token = $response['message']['token'] ?? '';
+
+        if (empty($token)) {
+            throw new \Exception('Failed to get admin login token');
+        }
+
+        return $server->endpoint.'/login?tmp_token='.$token;
+    }
+
+    /**
+     * Create manual account tanpa subscription
      *
      * @param  array<string, mixed>  $data
      */
     public function createManualAccount(Server $server, array $data): PanelAccount
     {
-        // Initialize client dengan server
-        if (! $this->client || $this->defaultServer?->id !== $server->id) {
-            $this->initializeClient($server);
+        $this->ensureClient($server);
+
+        // Cek virtual service
+        if (! $this->checkVirtualService($server)) {
+            throw new \Exception('Multi-user service not installed or running on aaPanel server');
         }
 
-        $domain = $data['domain'];
-        $username = $data['username'] ?? $this->generateUsername($domain);
-        $password = $data['password'] ?? Str::random(16);
-        $ftpPassword = $data['ftp_password'] ?? Str::random(16);
-        $dbPassword = $data['db_password'] ?? Str::random(16);
+        // Get package
+        $packageName = $data['package_name'] ?? 'Default';
+        $package = $this->getPackageByName($server, $packageName);
 
-        // Prepare webname (JSON format)
-        $webname = json_encode([
-            'domain' => $domain,
-            'domainlist' => [],
-            'count' => 0,
-        ]);
-
-        // Get PHP version atau default
-        $phpVersion = $data['php_version'] ?? '82'; // Default PHP 8.2
-        $port = $data['port'] ?? 80;
-        $path = $data['path'] ?? '/www/wwwroot/' . $domain;
-        $typeId = $data['type_id'] ?? 0; // Default classification
-
-        // Prepare data untuk AddSite
-        $siteData = [
-            'webname' => $webname,
-            'path' => $path,
-            'type_id' => $typeId,
-            'type' => 'PHP',
-            'version' => $phpVersion,
-            'port' => $port,
-            'ps' => $data['description'] ?? 'Manual Account',
-            'ftp' => true,
-            'ftp_username' => $username,
-            'ftp_password' => $ftpPassword,
-            'sql' => true,
-            'codeing' => 'utf8mb4',
-            'datauser' => $username,
-            'datapassword' => $dbPassword,
-        ];
-
-        // Create website di aaPanel
-        $response = $this->client->post('site?action=AddSite', $siteData);
-
-        if (! isset($response['siteStatus']) || ! $response['siteStatus']) {
-            $errorMsg = $response['msg'] ?? 'Failed to create website in aaPanel';
-            Log::error('aaPanel create website failed (manual)', [
-                'server_id' => $server->id,
-                'domain' => $domain,
-                'response' => $response,
-            ]);
-            throw new \Exception($errorMsg);
+        if (! $package) {
+            throw new \Exception("Cannot find '{$packageName}' resource package, please create it first in aaPanel");
         }
 
-        // Create panel account record
-        $panelAccount = PanelAccount::create([
-            'server_id' => $server->id,
-            'subscription_id' => null, // Manual account tidak punya subscription
-            'username' => $username,
-            'domain' => $domain,
-            'status' => 'active',
-            'meta' => [
-                'site_id' => $response['siteId'] ?? null,
-                'ftp_username' => $response['ftpUser'] ?? $username,
-                'ftp_password' => Crypt::encryptString($response['ftpPass'] ?? $ftpPassword),
-                'database_user' => $response['databaseUser'] ?? $username,
-                'database_password' => Crypt::encryptString($response['databasePass'] ?? $dbPassword),
-                'website_path' => $path,
-                'php_version' => $phpVersion,
-                'port' => $port,
-                'type_id' => $typeId,
-                'created_manually' => true,
-            ],
-        ]);
-
-        Log::info('aaPanel website created successfully (manual)', [
-            'server_id' => $server->id,
-            'domain' => $domain,
-            'username' => $username,
-            'panel_account_id' => $panelAccount->id,
-        ]);
-
-        return $panelAccount;
-    }
-
-    /**
-     * Create virtual account/sub user di aaPanel
-     * Endpoint: /v2/virtual/create_account.json
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function createVirtualAccount(Server $server, array $data): PanelAccount
-    {
-        // Initialize client dengan server
-        if (! $this->client || $this->defaultServer?->id !== $server->id) {
-            $this->initializeClient($server);
-        }
+        // Get mountpoint
+        $mountpoint = $data['mountpoint'] ?? $data['storage_disk'] ?? $this->getDefaultMountpoint($server);
 
         $username = $data['username'];
-        $password = $data['password'] ?? Str::random(16);
+        $password = $data['password'] ?? $this->generateSecurePassword();
         $email = $data['email'] ?? '';
 
-        // Handle expire_date berdasarkan expire_type
+        // Handle expire date
         $expireDate = '0000-00-00';
         if (isset($data['expire_type']) && $data['expire_type'] === 'custom' && ! empty($data['expire_date'])) {
             $expireDate = $data['expire_date'];
         }
 
-        // Gunakan storage_disk sebagai mountpoint jika ada
-        $mountpoint = $data['storage_disk'] ?? $data['mountpoint'] ?? '/';
-
-        // Prepare data untuk create virtual account
-        $virtualAccountData = [
+        // Create virtual account
+        $response = $this->client->post('v2/virtual/create_account.json', [
             'username' => $username,
             'password' => $password,
             'email' => $email,
             'expire_date' => $expireDate,
-            'package_id' => $data['package_id'] ?? 1,
+            'package_id' => $package['package_id'],
             'mountpoint' => $mountpoint,
-            'disk_space_quota' => $data['disk_space_quota'] ?? 0,
-            'monthly_bandwidth_limit' => $data['monthly_bandwidth_limit'] ?? 0,
-            'max_site_limit' => $data['max_site_limit'] ?? 5,
-            'max_database' => $data['max_database'] ?? 5,
-            'php_start_children' => $data['php_start_children'] ?? 1,
-            'php_max_children' => $data['php_max_children'] ?? 5,
-            'remark' => $data['remark'] ?? '',
+            'disk_space_quota' => $package['disk_space_quota'],
+            'monthly_bandwidth_limit' => $package['monthly_bandwidth_limit'],
+            'max_site_limit' => $package['max_site_limit'],
+            'max_database' => $package['max_database'],
+            'php_start_children' => $package['php_start_children'],
+            'php_max_children' => $package['php_max_children'],
+            'remark' => $data['remark'] ?? 'Manual account',
             'automatic_dns' => $data['automatic_dns'] ?? 0,
-        ];
+        ]);
 
-        // Create virtual account di aaPanel
-        // Endpoint menggunakan /v2/virtual/create_account.json
-        $response = $this->client->post('v2/virtual/create_account.json', $virtualAccountData);
-
-        // Check response success
-        if (! isset($response['status']) || ! $response['status']) {
+        if (! isset($response['status']) || (int) $response['status'] !== 0) {
             $errorMsg = $response['msg'] ?? 'Failed to create virtual account in aaPanel';
-            Log::error('aaPanel create virtual account failed', [
+            Log::error('aaPanel create manual account failed', [
                 'server_id' => $server->id,
                 'username' => $username,
                 'response' => $response,
@@ -416,37 +663,140 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         // Create panel account record
         $panelAccount = PanelAccount::create([
             'server_id' => $server->id,
-            'subscription_id' => null, // Virtual account tidak punya subscription
+            'subscription_id' => null,
             'username' => $username,
-            'domain' => $data['domain'] ?? $username . '.local', // Default domain jika tidak ada
+            'domain' => $data['domain'] ?? $username.'.local',
             'status' => 'active',
             'meta' => [
-                'virtual_account' => true,
-                'create_website' => $data['create_website'] ?? '0',
                 'email' => $email,
-                'expire_type' => $data['expire_type'] ?? 'perpetual',
-                'expire_date' => $virtualAccountData['expire_date'],
-                'package_id' => $virtualAccountData['package_id'],
-                'storage_disk' => $mountpoint,
+                'password_encrypted' => Crypt::encryptString($password),
+                'package_id' => $package['package_id'],
+                'package_name' => $package['package_name'],
                 'mountpoint' => $mountpoint,
-                'disk_space_quota' => $virtualAccountData['disk_space_quota'],
-                'monthly_bandwidth_limit' => $virtualAccountData['monthly_bandwidth_limit'],
-                'max_site_limit' => $virtualAccountData['max_site_limit'],
-                'max_database' => $virtualAccountData['max_database'],
-                'php_start_children' => $virtualAccountData['php_start_children'],
-                'php_max_children' => $virtualAccountData['php_max_children'],
-                'remark' => $virtualAccountData['remark'],
-                'automatic_dns' => $virtualAccountData['automatic_dns'],
+                'disk_space_quota' => $package['disk_space_quota'],
+                'monthly_bandwidth_limit' => $package['monthly_bandwidth_limit'],
+                'max_site_limit' => $package['max_site_limit'],
+                'max_database' => $package['max_database'],
+                'php_start_children' => $package['php_start_children'],
+                'php_max_children' => $package['php_max_children'],
+                'expire_type' => $data['expire_type'] ?? 'perpetual',
+                'expire_date' => $expireDate,
                 'created_manually' => true,
             ],
         ]);
 
-        Log::info('aaPanel virtual account created successfully', [
+        Log::info('aaPanel manual account created successfully', [
             'server_id' => $server->id,
             'username' => $username,
             'panel_account_id' => $panelAccount->id,
         ]);
 
         return $panelAccount;
+    }
+
+    /**
+     * Alias untuk createManualAccount (backward compatibility)
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function createVirtualAccount(Server $server, array $data): PanelAccount
+    {
+        return $this->createManualAccount($server, $data);
+    }
+
+    /**
+     * Test connection ke aaPanel server
+     *
+     * @return array{success: bool, message: string, virtual_service?: bool}
+     */
+    public function testConnection(Server $server): array
+    {
+        $this->ensureClient($server);
+
+        // Test basic connection
+        $basicTest = $this->client->testConnection();
+
+        if (! $basicTest['success']) {
+            return $basicTest;
+        }
+
+        // Test virtual service
+        $virtualStatus = $this->client->checkVirtualServiceStatus();
+
+        return [
+            'success' => true,
+            'message' => 'Connection successful. '.$virtualStatus['message'],
+            'virtual_service_installed' => $virtualStatus['installed'],
+            'virtual_service_running' => $virtualStatus['running'],
+        ];
+    }
+
+    /**
+     * Get account usage/statistics
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getAccountUsage(PanelAccount $acc): ?array
+    {
+        $server = $acc->server;
+        $this->ensureClient($server);
+
+        return $this->getAccountByUsername($server, $acc->username);
+    }
+
+    /**
+     * Generate username dari domain atau string
+     */
+    private function generateUsername(string $input): string
+    {
+        // Remove http://, https://, www.
+        $input = preg_replace('/^https?:\/\//', '', $input);
+        $input = preg_replace('/^www\./', '', $input);
+
+        // Extract domain name tanpa extension
+        $parts = explode('.', $input);
+        $name = $parts[0];
+
+        // Clean: hanya alphanumeric dan underscore
+        $username = preg_replace('/[^a-z0-9_]/', '', strtolower($name));
+
+        // Tambahkan random suffix untuk uniqueness
+        $username = substr($username, 0, 10).'_'.substr(md5((string) time()), 0, 4);
+
+        // Ensure tidak kosong
+        if (empty($username) || strlen($username) < 3) {
+            $username = 'user_'.substr(md5((string) time()), 0, 8);
+        }
+
+        return $username;
+    }
+
+    /**
+     * Generate secure password
+     */
+    private function generateSecurePassword(int $length = 12): string
+    {
+        $lowercase = 'abcdefghjkmnpqrstuvwxyz';
+        $uppercase = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+        $numbers = '23456789';
+        $special = '!@#$%^&*()_+-=';
+
+        $charPool = $lowercase.$uppercase.$numbers.$special;
+
+        // Ensure at least one character from each category
+        $password = '';
+        $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
+        $password .= $uppercase[random_int(0, strlen($uppercase) - 1)];
+        $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+        $password .= $special[random_int(0, strlen($special) - 1)];
+
+        // Fill remaining length
+        $poolLength = strlen($charPool);
+        for ($i = 4; $i < $length; $i++) {
+            $password .= $charPool[random_int(0, $poolLength - 1)];
+        }
+
+        // Shuffle
+        return str_shuffle($password);
     }
 }

@@ -35,7 +35,11 @@ Route::get('/', function () {
 Route::get('/send_email', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'testSend'])
     ->name('test.send-email');
 
-// Public catalog routes
+// Public catalog routes (guest - tanpa login)
+Route::get('/layanan', [CatalogController::class, 'guest'])->name('catalog.guest');
+Route::get('/layanan/{slug}', [CatalogController::class, 'guestShow'])->name('catalog.guest.show');
+
+// Catalog routes (dengan layout app untuk user login)
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/catalog/{slug}', [CatalogController::class, 'show'])->name('catalog.show');
 Route::post('/catalog/checkout', [CatalogController::class, 'checkout'])->name('catalog.checkout')->middleware('auth');
@@ -106,7 +110,11 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::get('/panel-accounts', [PanelAccountController::class, 'index'])->name('panel-accounts.index');
         Route::post('/panel-accounts', [PanelAccountController::class, 'create'])->name('panel-accounts.create');
         Route::post('/panel-accounts/virtual', [PanelAccountController::class, 'createVirtualAccount'])->name('panel-accounts.create-virtual');
+        Route::get('/panel-accounts/server-packages', [PanelAccountController::class, 'getServerPackages'])->name('panel-accounts.server-packages');
+        Route::get('/panel-accounts/server-disks', [PanelAccountController::class, 'getServerDisks'])->name('panel-accounts.server-disks');
+        Route::get('/panel-accounts/test-connection', [PanelAccountController::class, 'testServerConnection'])->name('panel-accounts.test-connection');
         Route::get('/panel-accounts/{id}', [PanelAccountController::class, 'show'])->name('panel-accounts.show');
+        Route::get('/panel-accounts/{id}/login-url', [PanelAccountController::class, 'getLoginUrl'])->name('panel-accounts.login-url');
         Route::get('/provision-tasks', [ProvisionTaskController::class, 'index'])->name('provision-tasks.index');
         Route::get('/provision-tasks/{id}', [ProvisionTaskController::class, 'show'])->name('provision-tasks.show');
 
@@ -120,6 +128,9 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
 
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
         Route::get('/subscriptions/{id}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
+        Route::post('/subscriptions/{id}/suspend', [SubscriptionController::class, 'suspendPanelAccount'])->name('subscriptions.suspend');
+        Route::post('/subscriptions/{id}/unsuspend', [SubscriptionController::class, 'unsuspendPanelAccount'])->name('subscriptions.unsuspend');
+        Route::get('/subscriptions/{id}/panel-login', [SubscriptionController::class, 'getPanelLoginUrl'])->name('subscriptions.panel-login');
 
         // Admin tickets
         Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');

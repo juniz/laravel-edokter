@@ -2,13 +2,13 @@
 
 namespace App\Models\Domain\Catalog;
 
+use App\Models\Domain\Order\OrderItem;
+use App\Models\Domain\Subscription\Subscription;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Domain\Order\OrderItem;
-use App\Models\Domain\Subscription\Subscription;
 
 class Product extends Model
 {
@@ -44,5 +44,10 @@ class Product extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function features(): HasMany
+    {
+        return $this->hasMany(ProductFeature::class)->orderBy('display_order');
     }
 }

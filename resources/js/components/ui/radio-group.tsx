@@ -20,9 +20,9 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
   ({ className, value, onValueChange, name = `radio-group-${Math.random().toString(36).substr(2, 9)}`, children, ...props }, ref) => {
     return (
       <RadioGroupContext.Provider value={{ name, value, onValueChange }}>
-        <div ref={ref} className={className} role="radiogroup" {...props}>
+      <div ref={ref} className={className} role="radiogroup" {...props}>
           {children}
-        </div>
+      </div>
       </RadioGroupContext.Provider>
     );
   }

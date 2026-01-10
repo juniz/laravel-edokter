@@ -22,27 +22,46 @@ class HttpClient
 
     /**
      * Generate request token untuk signature algorithm
-     * request_token = md5(string(request_time) + md5(api_sk))
+     * Format resmi aaPanel: md5(timestamp_ms + md5(api_key))
      */
-    private function generateRequestToken(int $requestTime): string
+    private function generateRequestToken(int $requestTimeMs): string
     {
-        return md5((string) $requestTime.md5($this->apiKey));
+        return md5((string) $requestTimeMs.md5($this->apiKey));
     }
 
     /**
      * Make POST request ke aaPanel API
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
      */
     public function post(string $action, array $params = []): array
     {
-        $requestTime = time();
-        $requestToken = $this->generateRequestToken($requestTime);
+        // Gunakan timestamp millisecond seperti di modul WHMCS resmi
+        $requestTimeMs = (int) (microtime(true) * 1000);
+        $requestToken = $this->generateRequestToken($requestTimeMs);
 
         $url = $this->endpoint.'/'.$action;
 
+        // Konversi semua parameter ke string seperti modul resmi
+        $stringParams = [];
+        foreach ($params as $key => $value) {
+            if (is_bool($value)) {
+                $stringParams[$key] = $value ? '1' : '0';
+            } elseif (is_array($value)) {
+                // Handle nested array parameters
+                foreach ($value as $nestedKey => $nestedValue) {
+                    $stringParams[$key.'['.$nestedKey.']'] = (string) $nestedValue;
+                }
+            } else {
+                $stringParams[$key] = (string) $value;
+            }
+        }
+
         $data = array_merge([
-            'request_time' => $requestTime,
+            'request_time' => (string) $requestTimeMs,
             'request_token' => $requestToken,
-        ], $params);
+        ], $stringParams);
 
         Log::info('aaPanel API Request', [
             'url' => $url,
@@ -87,12 +106,14 @@ class HttpClient
     }
 
     /**
-     * Test connection ke aaPanel API
-     * Menggunakan endpoint GetSystemTotal untuk test koneksi
+     * Test connection ke aaPanel API dengan cek virtual service
+     *
+     * @return array<string, mixed>
      */
     public function testConnection(): array
     {
         try {
+            // Test koneksi basic dulu
             $response = $this->post('system?action=GetSystemTotal');
 
             return [
@@ -110,11 +131,57 @@ class HttpClient
     }
 
     /**
+     * Cek apakah virtual/multi-user service terinstall dan running
+     *
+     * @return array{installed: bool, running: bool, message: string}
+     */
+    public function checkVirtualServiceStatus(): array
+    {
+        try {
+            $response = $this->post('v2/virtual/get_service_info.json');
+
+            $installStatus = $response['message']['install_status'] ?? 0;
+            $runStatus = $response['message']['run_status'] ?? 0;
+
+            return [
+                'installed' => (int) $installStatus === 2,
+                'running' => (int) $runStatus === 1,
+                'message' => $this->getVirtualServiceStatusMessage($installStatus, $runStatus),
+            ];
+        } catch (\Exception $e) {
+            return [
+                'installed' => false,
+                'running' => false,
+                'message' => 'Failed to check virtual service: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get status message untuk virtual service
+     */
+    private function getVirtualServiceStatusMessage(int $installStatus, int $runStatus): string
+    {
+        if ($installStatus !== 2) {
+            return 'Multi-user service is not installed';
+        }
+
+        if ($runStatus !== 1) {
+            return 'Multi-user service is not running';
+        }
+
+        return 'Multi-user service is installed and running';
+    }
+
+    /**
      * Sanitize params untuk logging (hide sensitive data)
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
      */
     private function sanitizeParams(array $params): array
     {
-        $sensitiveKeys = ['request_token', 'api_sk', 'password', 'datapassword', 'ftp_password'];
+        $sensitiveKeys = ['request_token', 'api_sk', 'password', 'datapassword', 'ftp_password', 'db_password'];
         $sanitized = $params;
 
         foreach ($sensitiveKeys as $key) {

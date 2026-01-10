@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import InputError from '@/components/input-error';
-import { UserCircle, Eye, Plus, Users, RefreshCw } from 'lucide-react';
+import { UserCircle, Eye, Plus, Users, RefreshCw, ExternalLink, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import dayjs from 'dayjs';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -50,6 +50,24 @@ interface Server {
   endpoint: string;
 }
 
+interface Package {
+  package_id: number;
+  package_name: string;
+  disk_space_quota: number;
+  monthly_bandwidth_limit: number;
+  max_site_limit: number;
+  max_database: number;
+  php_start_children: number;
+  php_max_children: number;
+}
+
+interface Disk {
+  mountpoint: string;
+  filesystem?: string;
+  size?: number;
+  used?: number;
+}
+
 interface PanelAccountsProps {
   accounts: {
     data: PanelAccount[];
@@ -62,6 +80,12 @@ interface PanelAccountsProps {
 export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: PanelAccountsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVirtualModalOpen, setIsVirtualModalOpen] = useState(false);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [disks, setDisks] = useState<Disk[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  const [loadingDisks, setLoadingDisks] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
+  const [connectionMessage, setConnectionMessage] = useState('');
 
   const { data, setData, post, processing, errors, reset } = useForm({
     server_id: '',
@@ -84,32 +108,110 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
     reset: resetVirtual,
   } = useForm({
     server_id: '',
-    create_website: '0', // 0 = No, 1 = Yes
     username: '',
     password: '',
     email: '',
-    expire_type: 'perpetual', // 'perpetual' or 'custom'
+    expire_type: 'perpetual',
     expire_date: '0000-00-00',
-    package_id: '1',
-    storage_disk: '/',
-    disk_space_quota: '0',
-    monthly_bandwidth_limit: '0',
-    max_site_limit: '5',
-    max_database: '5',
-    php_start_children: '1',
-    php_max_children: '5',
+    package_name: 'Default',
+    mountpoint: '/',
     remark: '',
     automatic_dns: '0',
     domain: '',
   });
 
+  // Fetch packages dan disks ketika server dipilih
+  useEffect(() => {
+    if (virtualData.server_id) {
+      fetchPackages(virtualData.server_id);
+      fetchDisks(virtualData.server_id);
+      testConnection(virtualData.server_id);
+    } else {
+      setPackages([]);
+      setDisks([]);
+      setConnectionStatus('idle');
+    }
+  }, [virtualData.server_id]);
+
+  const fetchPackages = async (serverId: string) => {
+    setLoadingPackages(true);
+    try {
+      const response = await fetch(`/admin/panel-accounts/server-packages?server_id=${serverId}`);
+      const data = await response.json();
+      if (data.success) {
+        setPackages(data.packages);
+        // Set default package jika ada
+        if (data.packages.length > 0) {
+          setVirtualData('package_name', data.packages[0].package_name);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch packages:', error);
+    } finally {
+      setLoadingPackages(false);
+    }
+  };
+
+  const fetchDisks = async (serverId: string) => {
+    setLoadingDisks(true);
+    try {
+      const response = await fetch(`/admin/panel-accounts/server-disks?server_id=${serverId}`);
+      const data = await response.json();
+      if (data.success) {
+        setDisks(data.disks);
+        // Set default mountpoint
+        if (data.disks.length > 0) {
+          const defaultDisk = data.disks.find((d: Disk) => d.mountpoint === '/') || data.disks[0];
+          setVirtualData('mountpoint', defaultDisk.mountpoint);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch disks:', error);
+    } finally {
+      setLoadingDisks(false);
+    }
+  };
+
+  const testConnection = async (serverId: string) => {
+    setConnectionStatus('testing');
+    try {
+      const response = await fetch(`/admin/panel-accounts/test-connection?server_id=${serverId}`);
+      const data = await response.json();
+      if (data.success) {
+        setConnectionStatus('success');
+        setConnectionMessage(data.message || 'Connection successful');
+      } else {
+        setConnectionStatus('failed');
+        setConnectionMessage(data.message || 'Connection failed');
+      }
+    } catch (error) {
+      setConnectionStatus('failed');
+      setConnectionMessage('Failed to test connection');
+    }
+  };
+
   // Generate random password
   const generatePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const lowercase = 'abcdefghjkmnpqrstuvwxyz';
+    const uppercase = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+    const numbers = '23456789';
+    const special = '!@#$%^&*_+-=';
+    const allChars = lowercase + uppercase + numbers + special;
+    
     let password = '';
-    for (let i = 0; i < 16; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    // Ensure at least one of each type
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += special[Math.floor(Math.random() * special.length)];
+    
+    // Fill rest
+    for (let i = 4; i < 12; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)];
     }
+    
+    // Shuffle
+    password = password.split('').sort(() => Math.random() - 0.5).join('');
     setVirtualData('password', password);
   };
 
@@ -156,8 +258,11 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
 
   const handleOpenVirtualModal = () => {
     resetVirtual();
+    setPackages([]);
+    setDisks([]);
+    setConnectionStatus('idle');
     setIsVirtualModalOpen(true);
-    // Generate password otomatis setelah reset
+    // Generate password otomatis
     setTimeout(() => {
       generatePassword();
     }, 100);
@@ -166,6 +271,28 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
   const handleCloseVirtualModal = () => {
     setIsVirtualModalOpen(false);
     resetVirtual();
+  };
+
+  const handleLoginToPanel = async (accountId: string) => {
+    try {
+      const response = await fetch(`/admin/panel-accounts/${accountId}/login-url`);
+      const data = await response.json();
+      if (data.success && data.login_url) {
+        window.open(data.login_url, '_blank');
+      } else {
+        alert(data.message || 'Failed to get login URL');
+      }
+    } catch (error) {
+      alert('Failed to get login URL');
+    }
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return 'Unlimited';
+    const gb = bytes / (1024 * 1024 * 1024);
+    if (gb >= 1) return `${gb.toFixed(1)} GB`;
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(0)} MB`;
   };
 
   return (
@@ -224,11 +351,15 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                         )}
                       </div>
                     </div>
-                    <div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleLoginToPanel(account.id)}>
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Login
+                      </Button>
                       <Link href={route('admin.panel-accounts.show', account.id)}>
-                        <Button variant="outline">
+                        <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4 mr-2" />
-                          View Details
+                          Details
                         </Button>
                       </Link>
                     </div>
@@ -258,13 +389,13 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
           </div>
         )}
 
-        {/* Create Account Modal */}
+        {/* Create Website Account Modal */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Tambah Panel Account (aaPanel)</DialogTitle>
+              <DialogTitle>Tambah Website Account (aaPanel)</DialogTitle>
               <DialogDescription>
-                Buat account baru di server aaPanel melalui API
+                Buat website account baru di server aaPanel
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -312,9 +443,6 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                   maxLength={16}
                 />
                 <InputError message={errors.username} className="mt-2" />
-                <p className="text-xs text-gray-500 mt-1">
-                  Maksimal 16 karakter, hanya huruf kecil, angka, dan underscore
-                </p>
               </div>
 
               <div>
@@ -328,22 +456,6 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                   placeholder="Akan di-generate otomatis jika kosong"
                 />
                 <InputError message={errors.password} className="mt-2" />
-                <p className="text-xs text-gray-500 mt-1">Minimal 8 karakter</p>
-              </div>
-
-              <div>
-                <Label htmlFor="path">Path Website (Opsional)</Label>
-                <Input
-                  id="path"
-                  value={data.path}
-                  onChange={(e) => setData('path', e.target.value)}
-                  className="mt-1"
-                  placeholder="/www/wwwroot/example.com"
-                />
-                <InputError message={errors.path} className="mt-2" />
-                <p className="text-xs text-gray-500 mt-1">
-                  Default: /www/wwwroot/[domain]
-                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -358,15 +470,6 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="00">Static</SelectItem>
-                      <SelectItem value="52">PHP 5.2</SelectItem>
-                      <SelectItem value="53">PHP 5.3</SelectItem>
-                      <SelectItem value="54">PHP 5.4</SelectItem>
-                      <SelectItem value="55">PHP 5.5</SelectItem>
-                      <SelectItem value="56">PHP 5.6</SelectItem>
-                      <SelectItem value="70">PHP 7.0</SelectItem>
-                      <SelectItem value="71">PHP 7.1</SelectItem>
-                      <SelectItem value="72">PHP 7.2</SelectItem>
-                      <SelectItem value="73">PHP 7.3</SelectItem>
                       <SelectItem value="74">PHP 7.4</SelectItem>
                       <SelectItem value="80">PHP 8.0</SelectItem>
                       <SelectItem value="81">PHP 8.1</SelectItem>
@@ -427,9 +530,13 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
         <Dialog open={isVirtualModalOpen} onOpenChange={setIsVirtualModalOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add New account</DialogTitle>
+              <DialogTitle>Add New Virtual Account</DialogTitle>
+              <DialogDescription>
+                Buat virtual account/sub user baru di aaPanel
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmitVirtual} className="space-y-4">
+              {/* Server Selection */}
               <div>
                 <Label htmlFor="virtual_server_id">Server *</Label>
                 <Select
@@ -450,34 +557,27 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                 <InputError message={errorsVirtual.server_id} className="mt-2" />
               </div>
 
-              {/* Create a website and email */}
-              <div>
-                <Label className="mb-2 block">Create a website and email</Label>
-                <div className="flex gap-6 mt-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="create_website"
-                      value="1"
-                      checked={virtualData.create_website === '1'}
-                      onChange={(e) => setVirtualData('create_website', e.target.value)}
-                      className="w-4 h-4 text-blue-600"
-                    />
-                    <span>Yes</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="create_website"
-                      value="0"
-                      checked={virtualData.create_website === '0'}
-                      onChange={(e) => setVirtualData('create_website', e.target.value)}
-                      className="w-4 h-4 text-blue-600"
-                    />
-                    <span>No</span>
-                  </label>
+              {/* Connection Status */}
+              {virtualData.server_id && (
+                <div className={`p-3 rounded-md flex items-center gap-2 ${
+                  connectionStatus === 'testing' ? 'bg-blue-50 dark:bg-blue-900/20' :
+                  connectionStatus === 'success' ? 'bg-green-50 dark:bg-green-900/20' :
+                  connectionStatus === 'failed' ? 'bg-red-50 dark:bg-red-900/20' :
+                  'bg-gray-50 dark:bg-gray-900/20'
+                }`}>
+                  {connectionStatus === 'testing' && <Loader2 className="w-4 h-4 animate-spin text-blue-600" />}
+                  {connectionStatus === 'success' && <CheckCircle2 className="w-4 h-4 text-green-600" />}
+                  {connectionStatus === 'failed' && <XCircle className="w-4 h-4 text-red-600" />}
+                  <span className={`text-sm ${
+                    connectionStatus === 'testing' ? 'text-blue-600' :
+                    connectionStatus === 'success' ? 'text-green-600' :
+                    connectionStatus === 'failed' ? 'text-red-600' :
+                    'text-gray-600'
+                  }`}>
+                    {connectionStatus === 'testing' ? 'Testing connection...' : connectionMessage}
+                  </span>
                 </div>
-              </div>
+              )}
 
               {/* Username */}
               <div>
@@ -487,9 +587,9 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                 <Input
                   id="virtual_username"
                   value={virtualData.username}
-                  onChange={(e) => setVirtualData('username', e.target.value)}
+                  onChange={(e) => setVirtualData('username', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                   className="mt-1"
-                  placeholder="Please Input"
+                  placeholder="username"
                   maxLength={16}
                   required
                 />
@@ -510,7 +610,7 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                     type="text"
                     value={virtualData.password}
                     onChange={(e) => setVirtualData('password', e.target.value)}
-                    placeholder="Please Input"
+                    placeholder="Password"
                     required
                     className="flex-1"
                   />
@@ -520,6 +620,7 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                     size="icon"
                     onClick={generatePassword}
                     className="shrink-0"
+                    title="Generate Password"
                   >
                     <RefreshCw className="w-4 h-4" />
                   </Button>
@@ -538,10 +639,101 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                   value={virtualData.email}
                   onChange={(e) => setVirtualData('email', e.target.value)}
                   className="mt-1"
-                  placeholder="Please Input"
+                  placeholder="user@example.com"
                   required
                 />
                 <InputError message={errorsVirtual.email} className="mt-2" />
+              </div>
+
+              {/* Domain (Optional) */}
+              <div>
+                <Label htmlFor="virtual_domain">Domain (Opsional)</Label>
+                <Input
+                  id="virtual_domain"
+                  value={virtualData.domain}
+                  onChange={(e) => setVirtualData('domain', e.target.value)}
+                  className="mt-1"
+                  placeholder="example.com"
+                />
+                <InputError message={errorsVirtual.domain} className="mt-2" />
+              </div>
+
+              {/* Resource Package */}
+              <div>
+                <Label htmlFor="virtual_package_name">Resource Package</Label>
+                <div className="flex gap-2 items-center mt-1">
+                  <Select
+                    value={virtualData.package_name}
+                    onValueChange={(value) => setVirtualData('package_name', value)}
+                    disabled={loadingPackages || packages.length === 0}
+                  >
+                    <SelectTrigger className="flex-1">
+                      {loadingPackages ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading...
+                        </span>
+                      ) : (
+                        <SelectValue placeholder="Select package" />
+                      )}
+                    </SelectTrigger>
+                    <SelectContent>
+                      {packages.map((pkg) => (
+                        <SelectItem key={pkg.package_id} value={pkg.package_name}>
+                          {pkg.package_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <InputError message={errorsVirtual.package_name} className="mt-2" />
+                {/* Package Info */}
+                {virtualData.package_name && packages.length > 0 && (
+                  <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-md text-sm">
+                    {(() => {
+                      const pkg = packages.find(p => p.package_name === virtualData.package_name);
+                      if (!pkg) return null;
+                      return (
+                        <div className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-400">
+                          <span>Disk: {pkg.disk_space_quota === 0 ? 'Unlimited' : formatBytes(pkg.disk_space_quota)}</span>
+                          <span>Bandwidth: {pkg.monthly_bandwidth_limit === 0 ? 'Unlimited' : formatBytes(pkg.monthly_bandwidth_limit)}</span>
+                          <span>Max Sites: {pkg.max_site_limit}</span>
+                          <span>Max Database: {pkg.max_database}</span>
+                          <span>PHP Workers: {pkg.php_start_children}-{pkg.php_max_children}</span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+
+              {/* Storage Disk */}
+              <div>
+                <Label htmlFor="virtual_mountpoint">Storage Disk</Label>
+                <Select
+                  value={virtualData.mountpoint}
+                  onValueChange={(value) => setVirtualData('mountpoint', value)}
+                  disabled={loadingDisks || disks.length === 0}
+                >
+                  <SelectTrigger className="mt-1">
+                    {loadingDisks ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading...
+                      </span>
+                    ) : (
+                      <SelectValue placeholder="Select disk" />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {disks.map((disk) => (
+                      <SelectItem key={disk.mountpoint} value={disk.mountpoint}>
+                        {disk.mountpoint} {disk.filesystem && `(${disk.filesystem})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <InputError message={errorsVirtual.mountpoint} className="mt-2" />
               </div>
 
               {/* Expiration Date */}
@@ -560,7 +752,7 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                       }}
                       className="w-4 h-4 text-blue-600"
                     />
-                    <span>Perpetual</span>
+                    <span>Perpetual (No Expiration)</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -580,6 +772,7 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                     value={virtualData.expire_date === '0000-00-00' ? '' : virtualData.expire_date}
                     onChange={(e) => setVirtualData('expire_date', e.target.value || '0000-00-00')}
                     className="mt-2"
+                    min={new Date().toISOString().split('T')[0]}
                   />
                 )}
                 <InputError message={errorsVirtual.expire_date} className="mt-2" />
@@ -593,58 +786,38 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                   value={virtualData.remark}
                   onChange={(e) => setVirtualData('remark', e.target.value)}
                   className="mt-1"
-                  placeholder="Please Input"
+                  placeholder="Optional notes"
                 />
                 <InputError message={errorsVirtual.remark} className="mt-2" />
               </div>
 
-              {/* Select Resource Package */}
+              {/* Automatic DNS */}
               <div>
-                <Label htmlFor="virtual_package_id">Select Resource Package</Label>
-                <div className="flex gap-2 items-center mt-1">
-                  <Select
-                    value={virtualData.package_id}
-                    onValueChange={(value) => setVirtualData('package_id', value)}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Default" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Default</SelectItem>
-                      <SelectItem value="2">Package 2</SelectItem>
-                      <SelectItem value="3">Package 3</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button type="button" variant="link" className="text-sm">
-                    View Options
-                  </Button>
+                <Label className="mb-2 block">Automatic DNS</Label>
+                <div className="flex gap-6 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="automatic_dns"
+                      value="0"
+                      checked={virtualData.automatic_dns === '0'}
+                      onChange={(e) => setVirtualData('automatic_dns', e.target.value)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span>Disabled</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="automatic_dns"
+                      value="1"
+                      checked={virtualData.automatic_dns === '1'}
+                      onChange={(e) => setVirtualData('automatic_dns', e.target.value)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span>Enabled</span>
+                  </label>
                 </div>
-                <InputError message={errorsVirtual.package_id} className="mt-2" />
-              </div>
-
-              {/* Storage Disk */}
-              <div>
-                <Label htmlFor="virtual_storage_disk">Storage Disk</Label>
-                <Select
-                  value={virtualData.storage_disk}
-                  onValueChange={(value) => setVirtualData('storage_disk', value)}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="/">/ (Quota: Disable)</SelectItem>
-                    <SelectItem value="/home">/home (Quota: Enable)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <InputError message={errorsVirtual.storage_disk} className="mt-2" />
-              </div>
-
-              {/* Info message */}
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
-                <p className="text-sm text-blue-600 dark:text-blue-400">
-                  Automatic: If the API is not open or 127.0.0.1 is not added to the API whitelist, it will not be possible to deploy web certificates and add post office domain names and deploy post office domain name certificates
-                </p>
               </div>
 
               {errorsVirtual.error && (
@@ -657,8 +830,19 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                 <Button type="button" variant="outline" onClick={handleCloseVirtualModal}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={processingVirtual} className="bg-green-600 hover:bg-green-700">
-                  {processingVirtual ? 'Creating...' : 'Confirm'}
+                <Button 
+                  type="submit" 
+                  disabled={processingVirtual || connectionStatus !== 'success'} 
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {processingVirtual ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create Account'
+                  )}
                 </Button>
               </div>
             </form>
@@ -668,4 +852,3 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
     </AppLayout>
   );
 }
-
