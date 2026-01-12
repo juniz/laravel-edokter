@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -57,22 +57,50 @@ interface Package {
   monthly_bandwidth_limit: number;
   max_site_limit: number;
   max_database: number;
+  max_email_account?: number;
   php_start_children: number;
   php_max_children: number;
+  remark?: string;
+  status?: number;
+  use_count?: number;
+  create_time?: number;
+  updated_time?: number;
 }
 
 interface Disk {
   mountpoint: string;
-  filesystem?: string;
-  size?: number;
+  device?: string;
+  fstype?: string;
+  total?: number;
   used?: number;
+  free?: number;
+  used_percent?: number;
+  inodes_total?: number;
+  inodes_used?: number;
+  inodes_free?: number;
+  inodes_used_percent?: number;
+  is_default?: boolean;
+  is_group_quota?: boolean;
+  is_user_quota?: boolean;
+  account_allocate?: number;
+}
+
+interface PaginationLink {
+  url: string | null;
+  label: string;
+  active: boolean;
 }
 
 interface PanelAccountsProps {
   accounts: {
     data: PanelAccount[];
-    links: any;
-    meta: any;
+    links: PaginationLink[];
+    meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
   };
   aapanelServers?: Server[];
 }
@@ -113,27 +141,39 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
     email: '',
     expire_type: 'perpetual',
     expire_date: '0000-00-00',
+    package_id: 0,
     package_name: 'Default',
     mountpoint: '/',
+    disk_space_quota: 0,
+    monthly_bandwidth_limit: 0,
+    max_site_limit: 5,
+    max_database: 5,
+    php_start_children: 1,
+    php_max_children: 5,
     remark: '',
     automatic_dns: '0',
     domain: '',
   });
 
-  // Fetch packages dan disks ketika server dipilih
-  useEffect(() => {
-    if (virtualData.server_id) {
-      fetchPackages(virtualData.server_id);
-      fetchDisks(virtualData.server_id);
-      testConnection(virtualData.server_id);
-    } else {
-      setPackages([]);
-      setDisks([]);
-      setConnectionStatus('idle');
-    }
-  }, [virtualData.server_id]);
+  // State untuk selected package
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
 
-  const fetchPackages = async (serverId: string) => {
+  // Update form data ketika package dipilih
+  const updatePackageData = useCallback((pkg: Package) => {
+    setVirtualData(prev => ({
+      ...prev,
+      package_id: pkg.package_id,
+      package_name: pkg.package_name,
+      disk_space_quota: pkg.disk_space_quota,
+      monthly_bandwidth_limit: pkg.monthly_bandwidth_limit,
+      max_site_limit: pkg.max_site_limit,
+      max_database: pkg.max_database,
+      php_start_children: pkg.php_start_children,
+      php_max_children: pkg.php_max_children,
+    }));
+  }, [setVirtualData]);
+
+  const fetchPackages = useCallback(async (serverId: string) => {
     setLoadingPackages(true);
     try {
       const response = await fetch(`/admin/panel-accounts/server-packages?server_id=${serverId}`);
@@ -142,35 +182,39 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
         setPackages(data.packages);
         // Set default package jika ada
         if (data.packages.length > 0) {
-          setVirtualData('package_name', data.packages[0].package_name);
+          const defaultPkg = data.packages[0];
+          setSelectedPackage(defaultPkg);
+          updatePackageData(defaultPkg);
         }
       }
-    } catch (error) {
-      console.error('Failed to fetch packages:', error);
+    } catch (err) {
+      console.error('Failed to fetch packages:', err);
     } finally {
       setLoadingPackages(false);
     }
-  };
+  }, [updatePackageData]);
 
-  const fetchDisks = async (serverId: string) => {
+  const fetchDisks = useCallback(async (serverId: string) => {
     setLoadingDisks(true);
     try {
       const response = await fetch(`/admin/panel-accounts/server-disks?server_id=${serverId}`);
       const data = await response.json();
       if (data.success) {
         setDisks(data.disks);
-        // Set default mountpoint
+        // Set default mountpoint (prioritas ke disk dengan is_default: true atau "/" )
         if (data.disks.length > 0) {
-          const defaultDisk = data.disks.find((d: Disk) => d.mountpoint === '/') || data.disks[0];
+          const defaultDisk = data.disks.find((d: Disk) => d.is_default) 
+            || data.disks.find((d: Disk) => d.mountpoint === '/') 
+            || data.disks[0];
           setVirtualData('mountpoint', defaultDisk.mountpoint);
         }
       }
-    } catch (error) {
-      console.error('Failed to fetch disks:', error);
+    } catch (err) {
+      console.error('Failed to fetch disks:', err);
     } finally {
       setLoadingDisks(false);
     }
-  };
+  }, [setVirtualData]);
 
   const testConnection = async (serverId: string) => {
     setConnectionStatus('testing');
@@ -184,11 +228,34 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
         setConnectionStatus('failed');
         setConnectionMessage(data.message || 'Connection failed');
       }
-    } catch (error) {
+    } catch {
       setConnectionStatus('failed');
       setConnectionMessage('Failed to test connection');
     }
   };
+
+  // Handle package selection
+  const handlePackageSelect = (packageId: string) => {
+    const pkg = packages.find(p => p.package_id.toString() === packageId);
+    if (pkg) {
+      setSelectedPackage(pkg);
+      updatePackageData(pkg);
+    }
+  };
+
+  // Fetch packages dan disks ketika server dipilih
+  useEffect(() => {
+    if (virtualData.server_id) {
+      fetchPackages(virtualData.server_id);
+      fetchDisks(virtualData.server_id);
+      testConnection(virtualData.server_id);
+    } else {
+      setPackages([]);
+      setDisks([]);
+      setConnectionStatus('idle');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [virtualData.server_id]);
 
   // Generate random password
   const generatePassword = () => {
@@ -260,6 +327,7 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
     resetVirtual();
     setPackages([]);
     setDisks([]);
+    setSelectedPackage(null);
     setConnectionStatus('idle');
     setIsVirtualModalOpen(true);
     // Generate password otomatis
@@ -282,7 +350,7 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
       } else {
         alert(data.message || 'Failed to get login URL');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to get login URL');
     }
   };
@@ -373,7 +441,7 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
         {/* Pagination */}
         {accounts.links && accounts.links.length > 3 && (
           <div className="flex justify-center gap-2">
-            {accounts.links.map((link: any, index: number) => (
+            {accounts.links.map((link: PaginationLink, index: number) => (
               <Link
                 key={index}
                 href={link.url || '#'}
@@ -508,9 +576,9 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                 <InputError message={errors.description} className="mt-2" />
               </div>
 
-              {errors.error && (
+              {(errors as Record<string, string>).error && (
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                  <p className="text-sm text-red-600 dark:text-red-400">{errors.error}</p>
+                  <p className="text-sm text-red-600 dark:text-red-400">{(errors as Record<string, string>).error}</p>
                 </div>
               )}
 
@@ -658,13 +726,13 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                 <InputError message={errorsVirtual.domain} className="mt-2" />
               </div>
 
-              {/* Resource Package */}
+              {/* Select Resource Package */}
               <div>
-                <Label htmlFor="virtual_package_name">Resource Package</Label>
+                <Label htmlFor="virtual_package">Select Resource Package</Label>
                 <div className="flex gap-2 items-center mt-1">
                   <Select
-                    value={virtualData.package_name}
-                    onValueChange={(value) => setVirtualData('package_name', value)}
+                    value={virtualData.package_id ? virtualData.package_id.toString() : ''}
+                    onValueChange={handlePackageSelect}
                     disabled={loadingPackages || packages.length === 0}
                   >
                     <SelectTrigger className="flex-1">
@@ -679,30 +747,58 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                     </SelectTrigger>
                     <SelectContent>
                       {packages.map((pkg) => (
-                        <SelectItem key={pkg.package_id} value={pkg.package_name}>
+                        <SelectItem key={pkg.package_id} value={pkg.package_id.toString()}>
                           {pkg.package_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {selectedPackage && (
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="text-green-600 hover:text-green-700 px-2"
+                      onClick={() => {
+                        // Show package details (bisa di-expand)
+                      }}
+                    >
+                      View Options
+                    </Button>
+                  )}
                 </div>
                 <InputError message={errorsVirtual.package_name} className="mt-2" />
                 {/* Package Info */}
-                {virtualData.package_name && packages.length > 0 && (
-                  <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-md text-sm">
-                    {(() => {
-                      const pkg = packages.find(p => p.package_name === virtualData.package_name);
-                      if (!pkg) return null;
-                      return (
-                        <div className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-400">
-                          <span>Disk: {pkg.disk_space_quota === 0 ? 'Unlimited' : formatBytes(pkg.disk_space_quota)}</span>
-                          <span>Bandwidth: {pkg.monthly_bandwidth_limit === 0 ? 'Unlimited' : formatBytes(pkg.monthly_bandwidth_limit)}</span>
-                          <span>Max Sites: {pkg.max_site_limit}</span>
-                          <span>Max Database: {pkg.max_database}</span>
-                          <span>PHP Workers: {pkg.php_start_children}-{pkg.php_max_children}</span>
+                {selectedPackage && (
+                  <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-md text-sm border border-gray-200 dark:border-gray-700">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-gray-600 dark:text-gray-400">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500">Disk Space</span>
+                        <span className="font-medium">{selectedPackage.disk_space_quota === 0 ? 'Unlimited' : formatBytes(selectedPackage.disk_space_quota)}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500">Bandwidth</span>
+                        <span className="font-medium">{selectedPackage.monthly_bandwidth_limit === 0 ? 'Unlimited' : formatBytes(selectedPackage.monthly_bandwidth_limit)}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500">Max Sites</span>
+                        <span className="font-medium">{selectedPackage.max_site_limit}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500">Max Database</span>
+                        <span className="font-medium">{selectedPackage.max_database}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-500">PHP Workers</span>
+                        <span className="font-medium">{selectedPackage.php_start_children}-{selectedPackage.php_max_children}</span>
+                      </div>
+                      {selectedPackage.use_count !== undefined && (
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500">In Use</span>
+                          <span className="font-medium">{selectedPackage.use_count} accounts</span>
                         </div>
-                      );
-                    })()}
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -726,11 +822,16 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                     )}
                   </SelectTrigger>
                   <SelectContent>
-                    {disks.map((disk) => (
-                      <SelectItem key={disk.mountpoint} value={disk.mountpoint}>
-                        {disk.mountpoint} {disk.filesystem && `(${disk.filesystem})`}
-                      </SelectItem>
-                    ))}
+                    {disks.map((disk) => {
+                      const freeGB = disk.free ? (disk.free / (1024 * 1024 * 1024)).toFixed(2) : '0';
+                      const totalGB = disk.total ? (disk.total / (1024 * 1024 * 1024)).toFixed(2) : '0';
+                      const quotaStatus = disk.is_user_quota ? 'Quota:Enable' : 'Quota:Disable';
+                      return (
+                        <SelectItem key={disk.mountpoint} value={disk.mountpoint}>
+                          {disk.mountpoint} ({freeGB} GB/{totalGB} GB) {quotaStatus}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 <InputError message={errorsVirtual.mountpoint} className="mt-2" />
@@ -820,11 +921,19 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                 </div>
               </div>
 
-              {errorsVirtual.error && (
+              {(errorsVirtual as Record<string, string>).error && (
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                  <p className="text-sm text-red-600 dark:text-red-400">{errorsVirtual.error}</p>
+                  <p className="text-sm text-red-600 dark:text-red-400">{(errorsVirtual as Record<string, string>).error}</p>
                 </div>
               )}
+
+              {/* API Whitelist Note */}
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <span className="font-semibold">Automatic:</span> If the API is not open or 127.0.0.1 is not added to the API whitelist, 
+                  it will not be possible to deploy web certificates and add post office domain names and deploy post office domain name certificates
+                </p>
+              </div>
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={handleCloseVirtualModal}>

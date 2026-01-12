@@ -33,7 +33,7 @@ class InvoiceController extends Controller
 
         // Customer route
         $customer = $request->user()->customer;
-
+        
         if (! $customer) {
             return Inertia::render('invoices/Index', [
                 'invoices' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15),

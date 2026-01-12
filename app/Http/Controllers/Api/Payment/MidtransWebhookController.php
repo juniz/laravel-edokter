@@ -103,7 +103,7 @@ class MidtransWebhookController extends Controller
                 // Update payment_id jika sebelumnya null
                 if (! $webhookLog->payment_id) {
                     $webhookLog->update(['payment_id' => $payment->id]);
-                }
+            }
 
                 // Success
                 $webhookLog->update([
@@ -112,8 +112,8 @@ class MidtransWebhookController extends Controller
                 ]);
 
                 $response = response()->json([
-                    'success' => true,
-                    'message' => 'Webhook processed successfully',
+                'success' => true,
+                'message' => 'Webhook processed successfully',
                     'order_id' => $payment->provider_ref,
                 ], 200);
             }

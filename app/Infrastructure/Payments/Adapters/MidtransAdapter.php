@@ -28,7 +28,7 @@ class MidtransAdapter implements PaymentAdapterInterface
         $customer = $invoice->customer;
 
         // Generate order ID
-        $orderId = 'INV-'.$invoice->number.'-'.time();
+        $orderId = 'INV-' . $invoice->number . '-' . time();
 
         // Prepare transaction details
         // Midtrans expects gross_amount in rupiah (not cents)
@@ -85,7 +85,7 @@ class MidtransAdapter implements PaymentAdapterInterface
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Basic '.base64_encode($serverKey.':'),
+                'Authorization' => 'Basic ' . base64_encode($serverKey . ':'),
             ])->post("{$baseUrl}/charge", $payload);
 
             if (! $response->successful()) {
@@ -94,7 +94,7 @@ class MidtransAdapter implements PaymentAdapterInterface
                     'body' => $response->body(),
                     'payment_method' => $paymentMethod,
                 ]);
-                throw new \RuntimeException('Failed to create Midtrans payment: '.$response->body());
+                throw new \RuntimeException('Failed to create Midtrans payment: ' . $response->body());
             }
 
             $responseData = $response->json();
@@ -121,7 +121,7 @@ class MidtransAdapter implements PaymentAdapterInterface
                     'status_message' => $responseData['status_message'] ?? null,
                     'response' => $responseData,
                 ]);
-                throw new \RuntimeException('Midtrans payment failed: '.($responseData['status_message'] ?? 'Unknown error'));
+                throw new \RuntimeException('Midtrans payment failed: ' . ($responseData['status_message'] ?? 'Unknown error'));
             }
 
             // Extract payment information berdasarkan payment method
@@ -500,7 +500,7 @@ class MidtransAdapter implements PaymentAdapterInterface
         $grossAmount = $payload['gross_amount'] ?? '';
 
         // Hitung expected signature sesuai dokumentasi Midtrans
-        $signatureString = $orderId.$statusCode.$grossAmount.$serverKey;
+        $signatureString = $orderId . $statusCode . $grossAmount . $serverKey;
         $expectedSignature = hash('sha512', $signatureString);
 
         $isValid = hash_equals($expectedSignature, $signature);
@@ -508,8 +508,8 @@ class MidtransAdapter implements PaymentAdapterInterface
         if (! $isValid) {
             Log::warning('Midtrans webhook signature mismatch', [
                 'order_id' => $orderId,
-                'expected' => substr($expectedSignature, 0, 16).'...',
-                'received' => substr($signature, 0, 16).'...',
+                'expected' => substr($expectedSignature, 0, 16) . '...',
+                'received' => substr($signature, 0, 16) . '...',
             ]);
         }
 
