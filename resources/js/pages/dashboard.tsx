@@ -5,6 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatCard } from '@/components/ui/stat-card';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
     BarChart,
     Bar,
@@ -34,12 +43,51 @@ import {
     HardDrive,
     Shield,
     RefreshCw,
+    Tag,
+    Percent,
+    ChevronUp,
+    Search,
+    Check,
+    Loader2,
+    AlertCircle,
+    CheckCircle2,
+    XCircle,
 } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
+interface FeaturedProduct {
+    id: string;
+    name: string;
+    slug: string;
+    type: string;
+    description: string;
+    best_plan: {
+        id: string;
+        code: string;
+        price_cents: number;
+        monthly_price_cents: number;
+        duration_1_month_enabled: boolean;
+        duration_12_months_enabled: boolean;
+    } | null;
+    original_price_cents: number | null;
+    discount_percent: number;
+    features?: string[];
+    is_popular?: boolean;
+}
+
+interface ActivePromo {
+    code: string;
+    type: 'percent' | 'fixed';
+    value: number;
+    message: string;
+}
+
 interface DashboardProps {
     role: 'admin' | 'customer';
+    userName?: string;
     stats?: {
         totalUsers?: number;
         totalOrders?: number;
@@ -108,6 +156,8 @@ interface DashboardProps {
         status: string;
         created_at?: string;
     }>;
+    featuredProducts?: FeaturedProduct[];
+    activePromo?: ActivePromo | null;
 }
 
 // Modern chart colors
@@ -403,11 +453,99 @@ function AdminDashboard({
 }
 
 function CustomerDashboard({
+    userName,
     stats,
     subscriptions,
     recentInvoices,
     recentTickets,
+    featuredProducts = [],
+    activePromo,
 }: DashboardProps) {
+    // Domain search state
+    const [domainQuery, setDomainQuery] = useState('');
+    const [selectedTld, setSelectedTld] = useState('.com');
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchResults, setSearchResults] = useState<{
+        domain: string;
+        available: boolean;
+        price?: number;
+        originalPrice?: number;
+        discountPercent?: number;
+        isLoading?: boolean;
+        error?: string;
+    }[] | null>(null);
+
+    const tldOptions = [
+        { value: '.com', label: '.com' },
+        { value: '.co.id', label: '.co.id' },
+        { value: '.or.id', label: '.or.id' },
+        { value: '.id', label: '.id' },
+        { value: '.web.id', label: '.web.id' },
+        { value: '.sch.id', label: '.sch.id' },
+        { value: '.ac.id', label: '.ac.id' },
+        { value: '.ponpes.id', label: '.ponpes.id' },
+        { value: '.biz.id', label: '.biz.id' },
+        { value: '.my.id', label: '.my.id' },
+    ];
+
+    // Get popular TLDs to check alongside selected TLD
+    const getPopularTlds = (selected: string): string[] => {
+        const popularTlds = [
+            '.co.id',
+            '.or.id',
+            '.id',
+            '.web.id',
+            '.sch.id',
+            '.ac.id',
+            '.ponpes.id',
+            '.biz.id',
+            '.my.id',
+            '.com',
+        ];
+        
+        // Remove selected TLD from popular list to avoid duplicate
+        return popularTlds.filter(tld => tld !== selected);
+    };
+
+    interface DomainPriceData {
+        registration: Record<string, number | string>;
+        promo_registration?: {
+            registration: Record<string, string>;
+        } | null;
+        currency: string;
+    }
+
+    // Fetch domain price by extension
+    const fetchDomainPrice = async (
+        extension: string
+    ): Promise<DomainPriceData | null> => {
+        if (!extension) {
+            return null;
+        }
+
+        try {
+            const url = '/customer/domain-prices/by-extension';
+            const response = await axios.get(url, {
+                params: { extension },
+            });
+
+            if (response.data.success && response.data.data) {
+                return {
+                    registration: response.data.data.registration || {},
+                    promo_registration: response.data.data.promo_registration || null,
+                    currency: response.data.data.currency || 'IDR',
+                };
+            }
+
+            return null;
+        } catch (error) {
+            console.error(`Error fetching price for ${extension}:`, error);
+            return null;
+        }
+    };
+
+
+
     const formatCurrency = (amount: number, currency: string = 'IDR') => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -427,7 +565,7 @@ function CustomerDashboard({
             closed: { variant: 'default', label: 'Closed' },
         };
         const config = statusMap[status] || { variant: 'default', label: status };
-        return <Badge variant={`${config.variant}-soft`}>{config.label.toUpperCase()}</Badge>;
+        return <Badge variant={`${config.variant}-soft` as any}>{config.label.toUpperCase()}</Badge>;
     };
 
     const getPriorityBadge = (priority: string) => {
@@ -441,275 +579,466 @@ function CustomerDashboard({
         return <Badge variant={config.variant}>{priority.toUpperCase()}</Badge>;
     };
 
-    return (
-        <div className="flex flex-col gap-6 p-4 lg:p-6">
-            {/* Welcome Section */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] p-6 lg:p-8 text-white">
-                {/* Background pattern */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-                
-                {/* Floating orbs */}
-                <div className="absolute top-4 right-4 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-                <div className="absolute bottom-4 left-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
+    const handleDomainSearch = useCallback(async () => {
+        if (!domainQuery.trim()) return;
+        
+        setIsSearching(true);
+        
+        try {
+            // Split domain into name and extension
+            let name = domainQuery.toLowerCase().replace(/\s+/g, '');
+            let ext = selectedTld;
+            
+            // If user already includes extension, extract it
+            if (domainQuery.includes('.')) {
+                const parts = domainQuery.split('.');
+                name = parts[0];
+                ext = '.' + parts.slice(1).join('.');
+            }
 
-                <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl lg:text-3xl font-bold mb-2">Selamat Datang! 👋</h2>
-                        <p className="text-white/80 max-w-lg">
-                            Kelola langganan hosting, domain, dan dukungan Anda dari satu tempat.
+            // Check TLDs: selected TLD first, then popular alternatives
+            // Similar to Checkout.tsx logic
+            const popularTlds = getPopularTlds(ext);
+            const tldsToCheck = [
+                ext, // Selected TLD first
+                ...popularTlds, // Then popular alternatives
+            ];
+            
+            // Remove duplicates (keep selected TLD first)
+            const uniqueTlds = Array.from(new Set(tldsToCheck));
+            
+            // Initial results with loading state
+            const initialResults = uniqueTlds.map((tld) => ({
+                domain: name + tld,
+                available: false,
+                isLoading: true,
+            }));
+            
+            setSearchResults(initialResults);
+
+            // Check availability for all domains in parallel
+            const availabilityPromises = uniqueTlds.map((tld) => {
+                const domain = name + tld;
+                return fetch(
+                    `/api/rdash/domains/availability/check?domain=${encodeURIComponent(domain)}`
+                )
+                    .then((res) => res.json())
+                    .catch((error) => {
+                        console.error(`Error checking ${domain}:`, error);
+                        return { success: false, domain, error };
+                    });
+            });
+
+            const availabilityResults = await Promise.all(availabilityPromises);
+
+            // Get unique extensions to fetch prices
+            const uniqueExtensions = Array.from(new Set(uniqueTlds));
+
+            // Fetch prices for all extensions in parallel
+            const pricePromises = uniqueExtensions.map(
+                async (
+                    extension
+                ): Promise<{ extension: string; price: DomainPriceData | null }> => {
+                    const price = await fetchDomainPrice(extension);
+                    return { extension, price };
+                }
+            );
+
+            const priceResults = await Promise.all(pricePromises);
+
+            // Create a map of extension to price data
+            const priceMap = new Map<string, DomainPriceData>();
+            priceResults.forEach((result) => {
+                if (result.price) {
+                    priceMap.set(result.extension, result.price);
+                }
+            });
+
+            // Combine availability and price data
+            const updatedResults = initialResults.map((res, index) => {
+                const availabilityResult = availabilityResults[index];
+                const tld = res.domain.substring(name.length);
+                const priceData = priceMap.get(tld);
+
+                if (!availabilityResult || !availabilityResult.success) {
+                    return {
+                        ...res,
+                        available: false,
+                        isLoading: false,
+                        error: 'Gagal cek',
+                    };
+                }
+
+                const isAvailable =
+                    availabilityResult.data?.available === 1 ||
+                    availabilityResult.data?.available === true;
+
+                // Extract price information from price data
+                let price = 0;
+                let originalPrice: number | undefined;
+                let discountPercent: number | undefined;
+
+                if (priceData) {
+                    // Get registration price for 1 year (default period)
+                    const yearKey = '1';
+                    const normalPrice =
+                        priceData.registration?.[yearKey] || priceData.registration?.[1];
+                    const promoPrice =
+                        priceData.promo_registration?.registration?.[yearKey] ||
+                        priceData.promo_registration?.registration?.[1];
+
+                    // Convert to number if string
+                    const normalPriceNum =
+                        typeof normalPrice === 'string'
+                            ? parseFloat(normalPrice) || 0
+                            : normalPrice || 0;
+
+                    const promoPriceNum =
+                        typeof promoPrice === 'string'
+                            ? parseFloat(promoPrice) || 0
+                            : promoPrice || 0;
+
+                    const hasPromo =
+                        promoPriceNum &&
+                        promoPriceNum !== 0 &&
+                        promoPriceNum !== null &&
+                        promoPriceNum !== undefined;
+
+                    if (hasPromo) {
+                        price = promoPriceNum;
+                        originalPrice = normalPriceNum;
+                        if (originalPrice > 0) {
+                            discountPercent = Math.round(
+                                ((originalPrice - price) / originalPrice) * 100
+                            );
+                        }
+                    } else {
+                        price = normalPriceNum;
+                    }
+                }
+
+                return {
+                    ...res,
+                    available: isAvailable,
+                    price: isAvailable ? price : undefined,
+                    originalPrice: isAvailable ? originalPrice : undefined,
+                    discountPercent: isAvailable ? discountPercent : undefined,
+                    isLoading: false,
+                };
+            });
+
+            setSearchResults(updatedResults);
+        } catch (error) {
+            console.error('Domain check error:', error);
+            setSearchResults([
+                {
+                    domain: domainQuery.toLowerCase().replace(/\s+/g, '') + selectedTld,
+                    available: false,
+                    isLoading: false,
+                    error: 'Gagal cek',
+                },
+            ]);
+        } finally {
+            setIsSearching(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [domainQuery, selectedTld]);
+
+    return (
+        <div className="flex flex-col gap-6 p-4 lg:p-6 bg-muted/40 min-h-screen">
+            {/* Subtle dot grid background pattern */}
+            <div className="fixed inset-0 bg-[radial-gradient(circle,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-50" />
+            
+            {/* Welcome Message with Gradient Text */}
+            <div className="relative">
+                <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    Selamat datang,{' '}
+                    <span className="bg-gradient-to-r from-primary to-[hsl(193,74%,43%)] text-transparent bg-clip-text">
+                        {userName || 'Pengguna'}
+                    </span>!
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                    Kelola layanan hosting dan domain Anda dengan mudah
+                </p>
+            </div>
+
+            {/* ========================================
+                HOSTING PACKAGES GRID
+                ======================================== */}
+            <div className="space-y-6">
+                <div className="text-center">
+                    <h2 className="font-bold text-2xl lg:text-3xl tracking-tight text-gray-900 dark:text-white">
+                        Paket Hosting Terbaik
+                    </h2>
+                    <p className="text-muted-foreground mt-2">
+                        Pilih paket yang sesuai dengan kebutuhan website Anda
+                    </p>
+                </div>
+
+                {featuredProducts && featuredProducts.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {featuredProducts.map((pkg) => (
+                            <Card
+                                key={pkg.id}
+                                className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
+                                    pkg.is_popular 
+                                        ? 'border-2 border-primary shadow-xl scale-[1.02] z-10' 
+                                        : 'border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                }`}
+                            >
+                                {/* Popular Badge - Diagonal */}
+                                {pkg.is_popular && (
+                                    <div className="absolute top-0 left-0 z-20">
+                                        <div className="relative">
+                                            <div className="absolute -left-12 top-6 w-40 bg-primary text-primary-foreground text-xs font-bold py-1.5 text-center transform -rotate-45 shadow-md">
+                                                POPULER
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <CardContent className="p-6 pt-10">
+                                    {/* Package Header */}
+                                    <div className="text-center mb-6">
+                                        <h3 className="font-bold text-xl text-gray-900 dark:text-white mb-1">
+                                            {pkg.name}
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
+                                            {pkg.description}
+                                        </p>
+                                    </div>
+
+                                    {/* Pricing */}
+                                    <div className="text-center mb-6">
+                                        <div className="flex items-baseline justify-center gap-1">
+                                            <span className="font-mono text-4xl font-bold text-gray-900 dark:text-white">
+                                                {formatCurrency(pkg.best_plan?.monthly_price_cents || 0)}
+                                            </span>
+                                            <span className="text-muted-foreground">/bln</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Features List */}
+                                    <ul className="space-y-3 mb-6">
+                                        {pkg.features?.slice(0, 8).map((feature, idx) => (
+                                            <li key={idx} className="flex items-start gap-3">
+                                                <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                    {feature}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    {/* CTA Button */}
+                                    <Link href={route('catalog.index')}>
+                                        <Button 
+                                            className={`w-full h-12 font-semibold transition-all duration-200 ${
+                                                pkg.is_popular 
+                                                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl hover:scale-[1.02]' 
+                                                    : 'bg-transparent border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:border-primary hover:text-primary'
+                                            }`}
+                                            variant={pkg.is_popular ? 'default' : 'outline'}
+                                        >
+                                            Pilih Paket
+                                        </Button>
+                                    </Link>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-12">
+                        <p className="text-muted-foreground">Belum ada paket hosting yang tersedia saat ini.</p>
+                    </div>
+                )}
+            </div>
+
+            {/* ========================================
+                DOMAIN SEARCH HERO SECTION
+                ======================================== */}
+            <Card className="relative overflow-hidden border-0 shadow-xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl">
+                {/* Glassmorphism overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-[hsl(193,74%,43%)]/5" />
+                
+                {/* Decorative elements */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[hsl(193,74%,43%)]/10 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+                <CardContent className="relative p-6 lg:p-8">
+                    <div className="text-center mb-6">
+                        <h2 className="font-bold text-2xl lg:text-3xl tracking-tight text-gray-900 dark:text-white mb-2">
+                            Temukan Domain Impian Anda
+                        </h2>
+                        <p className="text-muted-foreground max-w-xl mx-auto">
+                            Cek ketersediaan domain dan daftarkan sekarang sebelum diambil orang lain
                         </p>
                     </div>
-                    <div className="flex gap-3">
-                        <Button
-                            variant="secondary"
-                            className="bg-white/20 text-white border-white/20 hover:bg-white/30"
-                            asChild
-                        >
-                            <Link href={route('customer.domains.create')}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Domain Baru
-                            </Link>
-                        </Button>
-                        <Button
-                            variant="secondary"
-                            className="bg-white text-primary hover:bg-white/90"
-                            asChild
-                        >
-                            <Link href={route('catalog.index')}>
-                                Lihat Paket
-                            </Link>
-                        </Button>
+
+                    {/* Search Input Group - Responsive */}
+                    <div className="max-w-2xl mx-auto">
+                        <div className="flex flex-col md:flex-row gap-2 md:gap-0">
+                            {/* Domain Input */}
+                            <div className="relative flex-1">
+                                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                <Input
+                                    type="text"
+                                    placeholder="Masukkan nama domain..."
+                                    value={domainQuery}
+                                    onChange={(e) => setDomainQuery(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleDomainSearch()}
+                                    className="h-14 pl-12 pr-4 text-lg rounded-lg md:rounded-r-none md:border-r-0 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                                />
+                            </div>
+                            
+                            {/* TLD Selector */}
+                            {/* <Select value={selectedTld} onValueChange={setSelectedTld}>
+                                <SelectTrigger className="h-14 w-full md:w-32 rounded-lg md:rounded-none md:border-x-0 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-lg font-medium">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {tldOptions.map((tld) => (
+                                        <SelectItem key={tld.value} value={tld.value}>
+                                            {tld.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select> */}
+
+                            {/* Search Button */}
+                            <Button 
+                                onClick={handleDomainSearch}
+                                disabled={isSearching || !domainQuery.trim()}
+                                className="h-14 px-8 rounded-lg md:rounded-l-none text-lg font-semibold bg-primary hover:bg-primary/90 hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl"
+                            >
+                                {isSearching ? (
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                ) : (
+                                    <>
+                                        <Search className="h-5 w-5 mr-2" />
+                                        Cari
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+
+                        {/* Search Results with slide-down animation */}
+                        <div className={`mt-4 overflow-hidden transition-all duration-300 ease-out ${searchResults ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                            {searchResults && searchResults.length > 0 && (
+                                <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                                    {searchResults.map((result) => (
+                                        <div 
+                                            key={result.domain}
+                                            className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                                                result.isLoading
+                                                    ? 'bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800 animate-pulse'
+                                                    : result.available 
+                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+                                                    : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3 mb-2 sm:mb-0 flex-1 min-w-0">
+                                                {result.isLoading ? (
+                                                    <Loader2 className="h-6 w-6 text-gray-400 animate-spin flex-shrink-0" />
+                                                ) : result.available ? (
+                                                    <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                                ) : (
+                                                    <XCircle className="h-6 w-6 text-red-600 dark:text-red-400 flex-shrink-0" />
+                                                )}
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-bold text-lg truncate">{result.domain}</p>
+                                                    <p className={`text-sm ${result.isLoading ? 'text-gray-500' : result.available ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                                        {result.isLoading 
+                                                            ? 'Memeriksa...' 
+                                                            : result.available 
+                                                            ? 'Domain tersedia!' 
+                                                            : result.error || 'Domain tidak tersedia'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {result.available && result.price !== undefined && (
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+                                                    <div className="flex flex-col items-end">
+                                                        <div className="flex items-center gap-2">
+                                                            {result.discountPercent !== undefined && result.discountPercent > 0 && (
+                                                                <Badge className="bg-[#e8ebff] text-primary border-0 text-[10px] py-0 px-1.5">
+                                                                    HEMAT {result.discountPercent}%
+                                                                </Badge>
+                                                            )}
+                                                            <span className="font-mono font-bold text-xl text-gray-900 dark:text-white">
+                                                                {formatCurrency(result.price)}
+                                                                <span className="text-sm text-muted-foreground font-normal">/thn</span>
+                                                            </span>
+                                                        </div>
+                                                        {result.originalPrice !== undefined && (
+                                                            <span className="text-xs text-muted-foreground line-through">
+                                                                {formatCurrency(result.originalPrice)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <Link href={route('customer.domains.create')}>
+                                                        <Button size="sm" className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
+                                                            Daftar Sekarang
+                                                        </Button>
+                                                    </Link>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Quick links */}
+                    <p className="text-sm text-muted-foreground text-center mt-4">
+                        Sudah punya domain?{' '}
+                        <Link href={route('customer.domains.create')} className="text-primary hover:underline font-medium">
+                            Transfer ke AbaHost
+                        </Link>
+                        {' '}atau{' '}
+                        <Link href={route('catalog.index')} className="text-primary hover:underline font-medium">
+                            pilih paket hosting
+                        </Link>
+                    </p>
+                </CardContent>
+            </Card>
+
+            {/* Promo Banner */}
+            {activePromo && (
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-100 to-purple-50 dark:from-purple-900/30 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800">
+                    {/* Background pattern */}
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
+                    
+                    {/* Percent icon */}
+                    <div className="absolute top-0 right-0 p-4">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-purple-200 dark:bg-purple-800/50 rounded-lg blur-sm" />
+                            <div className="relative bg-purple-300 dark:bg-purple-700/50 rounded-lg p-3">
+                                <Percent className="h-8 w-8 text-purple-700 dark:text-purple-300" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="relative p-6 pr-32">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                            {activePromo.message}
+                        </h3>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                            Dapatkan penawaran terbaik yang kami pilihkan khusus untuk Anda.
+                        </p>
                     </div>
                 </div>
-            </div>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard
-                    title="Langganan Aktif"
-                    value={stats?.activeSubscriptions || 0}
-                    description={`${stats?.expiringSoon || 0} akan berakhir dalam 30 hari`}
-                    icon={Server}
-                    variant="gradient"
-                />
-                <StatCard
-                    title="Invoice Belum Dibayar"
-                    value={stats?.unpaidInvoices || 0}
-                    description="Menunggu pembayaran"
-                    icon={CreditCard}
-                    variant="gradient-orange"
-                />
-                <StatCard
-                    title="Tiket Terbuka"
-                    value={stats?.openTickets || 0}
-                    description="Butuh perhatian"
-                    icon={Ticket}
-                    variant="gradient-purple"
-                />
-                <StatCard
-                    title="Domain"
-                    value={stats?.domains || 0}
-                    description="Domain terdaftar"
-                    icon={Globe}
-                    variant="gradient-teal"
-                />
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Link href={route('customer.domains.create')}>
-                    <Card variant="interactive" className="h-full">
-                        <CardHeader>
-                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center mb-2">
-                                <Globe className="h-5 w-5 text-white" />
-                            </div>
-                            <CardTitle className="text-lg">Daftarkan Domain Baru</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                                Daftarkan domain baru untuk website Anda
-                            </p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href={route('catalog.index')}>
-                    <Card variant="interactive" className="h-full">
-                        <CardHeader>
-                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[var(--accent-purple)] to-[var(--accent-pink)] flex items-center justify-center mb-2">
-                                <HardDrive className="h-5 w-5 text-white" />
-                            </div>
-                            <CardTitle className="text-lg">Lihat Paket Hosting</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                                Jelajahi paket hosting yang tersedia
-                            </p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href={route('customer.tickets.create')}>
-                    <Card variant="interactive" className="h-full">
-                        <CardHeader>
-                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[var(--accent-teal)] to-[var(--accent-cyan)] flex items-center justify-center mb-2">
-                                <Ticket className="h-5 w-5 text-white" />
-                            </div>
-                            <CardTitle className="text-lg">Buat Tiket Dukungan</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                                Butuh bantuan? Buat tiket dukungan baru
-                            </p>
-                        </CardContent>
-                    </Card>
-                </Link>
-            </div>
-
-            {/* Active Subscriptions */}
-            {subscriptions && subscriptions.length > 0 && (
-                <Card variant="premium">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Langganan Aktif</CardTitle>
-                        <Button variant="ghost" size="sm" asChild>
-                            <Link href={route('customer.subscriptions.index')}>
-                                Lihat Semua
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {subscriptions.map((subscription) => (
-                                <div
-                                    key={subscription.id}
-                                    className="flex items-center justify-between p-4 rounded-xl border bg-muted/30 hover:bg-muted/50 transition-colors"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center">
-                                            <Server className="h-6 w-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold">{subscription.product}</p>
-                                            <p className="text-sm text-muted-foreground">{subscription.plan}</p>
-                                            <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
-                                                {subscription.start_at && (
-                                                    <span>Mulai: {subscription.start_at}</span>
-                                                )}
-                                                {subscription.next_renewal_at && (
-                                                    <span>Renewal: {subscription.next_renewal_at}</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        {getStatusBadge(subscription.status)}
-                                        {subscription.auto_renew && (
-                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                <RefreshCw className="h-3 w-3" />
-                                                Auto
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
             )}
 
-            {/* Recent Invoices & Tickets */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Recent Invoices */}
-                <Card variant="premium">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Invoice Terbaru</CardTitle>
-                        <Button variant="ghost" size="sm" asChild>
-                            <Link href={route('customer.invoices.index')}>
-                                Lihat Semua
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        {recentInvoices && recentInvoices.length > 0 ? (
-                            <div className="space-y-3">
-                                {recentInvoices.map((invoice) => (
-                                    <div
-                                        key={invoice.id}
-                                        className="flex items-center justify-between p-4 rounded-xl border bg-muted/30 hover:bg-muted/50 transition-colors"
-                                    >
-                                        <div className="flex-1">
-                                            <p className="font-semibold">{invoice.number}</p>
-                                            <p className="text-sm font-bold mt-1">
-                                                {formatCurrency(invoice.total, invoice.currency)}
-                                            </p>
-                                            {invoice.due_at && (
-                                                <p className="text-xs text-muted-foreground mt-1">
-                                                    Jatuh tempo: {invoice.due_at}
-                                                </p>
-                                            )}
-                                        </div>
-                                        {getStatusBadge(invoice.status)}
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-muted-foreground text-center py-8">
-                                Tidak ada invoice
-                            </p>
-                        )}
-                    </CardContent>
-                </Card>
 
-                {/* Recent Tickets */}
-                <Card variant="premium">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Tiket Terbaru</CardTitle>
-                        <Button variant="ghost" size="sm" asChild>
-                            <Link href={route('customer.tickets.index')}>
-                                Lihat Semua
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        {recentTickets && recentTickets.length > 0 ? (
-                            <div className="space-y-3">
-                                {recentTickets.map((ticket) => (
-                                    <div
-                                        key={ticket.id}
-                                        className="flex items-center justify-between p-4 rounded-xl border bg-muted/30 hover:bg-muted/50 transition-colors"
-                                    >
-                                        <div className="flex-1">
-                                            <p className="font-semibold">{ticket.subject}</p>
-                                            <div className="flex gap-2 mt-2">
-                                                {getStatusBadge(ticket.status)}
-                                                {getPriorityBadge(ticket.priority)}
-                                            </div>
-                                            {ticket.created_at && (
-                                                <p className="text-xs text-muted-foreground mt-2">
-                                                    {ticket.created_at}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-muted-foreground text-center py-8">
-                                Tidak ada tiket
-                            </p>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
         </div>
     );
 }
 
 export default function Dashboard({
     role,
+    userName,
     stats,
     charts,
     recentOrders,
@@ -717,6 +1046,8 @@ export default function Dashboard({
     subscriptions,
     recentInvoices,
     recentTickets,
+    featuredProducts,
+    activePromo,
 }: DashboardProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -732,10 +1063,13 @@ export default function Dashboard({
             ) : (
                 <CustomerDashboard
                     role={role}
+                    userName={userName}
                     stats={stats}
                     subscriptions={subscriptions}
                     recentInvoices={recentInvoices}
                     recentTickets={recentTickets}
+                    featuredProducts={featuredProducts}
+                    activePromo={activePromo}
                 />
             )}
         </AppLayout>

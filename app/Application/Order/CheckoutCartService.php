@@ -25,7 +25,7 @@ class CheckoutCartService
     {
         return DB::transaction(function () use ($cart, $data) {
             // Load cart items with relationships
-            $cart->load(['items.product', 'items.plan']);
+            $cart->load('items.product');
 
             if ($cart->items->isEmpty()) {
                 throw new \Exception('Cart kosong. Silakan tambahkan item terlebih dahulu.');
@@ -43,11 +43,10 @@ class CheckoutCartService
             $orderItems = [];
             foreach ($cart->items as $cartItem) {
                 $itemTotal = $cartItem->unit_price_cents * $cartItem->qty;
-                $setupFeeCents = $cartItem->plan?->setup_fee_cents ?? 0;
+                $setupFeeCents = $cartItem->product?->setup_fee_cents ?? 0;
 
                 $orderItems[] = [
                     'product_id' => $cartItem->product_id,
-                    'plan_id' => $cartItem->plan_id,
                     'qty' => $cartItem->qty,
                     'unit_price_cents' => $cartItem->unit_price_cents,
                     'total_cents' => $itemTotal,
@@ -88,11 +87,8 @@ class CheckoutCartService
             // Add invoice items
             foreach ($cart->items as $cartItem) {
                 $itemTotal = $cartItem->unit_price_cents * $cartItem->qty;
-                $setupFeeCents = $cartItem->plan?->setup_fee_cents ?? 0;
+                $setupFeeCents = $cartItem->product?->setup_fee_cents ?? 0;
                 $description = $cartItem->product->name;
-                if ($cartItem->plan) {
-                    $description .= ' - '.$cartItem->plan->code;
-                }
 
                 // Add product item
                 $invoice->items()->create([
@@ -102,7 +98,6 @@ class CheckoutCartService
                     'total_cents' => $itemTotal,
                     'meta' => array_merge($cartItem->meta ?? [], [
                         'product_id' => $cartItem->product_id,
-                        'plan_id' => $cartItem->plan_id,
                         'type' => 'cart',
                     ]),
                 ]);
@@ -116,7 +111,6 @@ class CheckoutCartService
                         'total_cents' => $setupFeeCents,
                         'meta' => [
                             'product_id' => $cartItem->product_id,
-                            'plan_id' => $cartItem->plan_id,
                             'type' => 'setup_fee',
                         ],
                     ]);

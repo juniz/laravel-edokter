@@ -244,8 +244,8 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
             throw new \Exception('Multi-user service not installed or running on aaPanel server');
         }
 
-        // Get package dari plan atau params
-        $packageName = $params['package_name'] ?? $sub->plan->metadata['aapanel_package'] ?? 'Default';
+        // Get package dari product metadata atau params
+        $packageName = $params['package_name'] ?? $sub->product->metadata['aapanel_package'] ?? 'Default';
         $package = $this->getPackageByName($server, $packageName);
 
         if (! $package) {
@@ -281,7 +281,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
             'max_database' => $package['max_database'],
             'php_start_children' => $package['php_start_children'],
             'php_max_children' => $package['php_max_children'],
-            'remark' => $params['remark'] ?? 'Created via ' . config('app.name'),
+            'remark' => $params['remark'] ?? 'Created via '.config('app.name'),
             'automatic_dns' => $params['automatic_dns'] ?? 0,
         ]);
 
@@ -301,7 +301,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
             'server_id' => $server->id,
             'subscription_id' => $sub->id,
             'username' => $username,
-            'domain' => $domain ?? $username . '.local',
+            'domain' => $domain ?? $username.'.local',
             'status' => 'active',
             'meta' => [
                 'email' => $email,
@@ -340,7 +340,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         $accountInfo = $this->getAccountByUsername($server, $acc->username);
 
         if (! $accountInfo) {
-            throw new \Exception('Account not found in aaPanel: ' . $acc->username);
+            throw new \Exception('Account not found in aaPanel: '.$acc->username);
         }
 
         // Modify account dengan status = 0 (suspended)
@@ -363,7 +363,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         ]);
 
         if (! isset($response['status']) || (int) $response['status'] !== 0) {
-            throw new \Exception('Failed to suspend account: ' . ($response['msg'] ?? 'Unknown error'));
+            throw new \Exception('Failed to suspend account: '.($response['msg'] ?? 'Unknown error'));
         }
 
         $acc->update(['status' => 'suspended']);
@@ -382,7 +382,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         $accountInfo = $this->getAccountByUsername($server, $acc->username);
 
         if (! $accountInfo) {
-            throw new \Exception('Account not found in aaPanel: ' . $acc->username);
+            throw new \Exception('Account not found in aaPanel: '.$acc->username);
         }
 
         // Modify account dengan status = 1 (active)
@@ -405,7 +405,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         ]);
 
         if (! isset($response['status']) || (int) $response['status'] !== 0) {
-            throw new \Exception('Failed to unsuspend account: ' . ($response['msg'] ?? 'Unknown error'));
+            throw new \Exception('Failed to unsuspend account: '.($response['msg'] ?? 'Unknown error'));
         }
 
         $acc->update(['status' => 'active']);
@@ -463,7 +463,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         $accountInfo = $this->getAccountByUsername($server, $acc->username);
 
         if (! $accountInfo) {
-            throw new \Exception('Account not found in aaPanel: ' . $acc->username);
+            throw new \Exception('Account not found in aaPanel: '.$acc->username);
         }
 
         // Modify account dengan password baru
@@ -486,7 +486,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         ]);
 
         if (! isset($response['status']) || (int) $response['status'] !== 0) {
-            throw new \Exception('Failed to change password: ' . ($response['msg'] ?? 'Unknown error'));
+            throw new \Exception('Failed to change password: '.($response['msg'] ?? 'Unknown error'));
         }
 
         // Update encrypted password di meta
@@ -516,7 +516,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         $accountInfo = $this->getAccountByUsername($server, $acc->username);
 
         if (! $accountInfo) {
-            throw new \Exception('Account not found in aaPanel: ' . $acc->username);
+            throw new \Exception('Account not found in aaPanel: '.$acc->username);
         }
 
         // Modify account dengan package baru
@@ -538,7 +538,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         ]);
 
         if (! isset($response['status']) || (int) $response['status'] !== 0) {
-            throw new \Exception('Failed to change plan: ' . ($response['msg'] ?? 'Unknown error'));
+            throw new \Exception('Failed to change plan: '.($response['msg'] ?? 'Unknown error'));
         }
 
         // Update meta dengan package info baru
@@ -571,7 +571,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         $accountInfo = $this->getAccountByUsername($server, $acc->username);
 
         if (! $accountInfo) {
-            throw new \Exception('Account not found in aaPanel: ' . $acc->username);
+            throw new \Exception('Account not found in aaPanel: '.$acc->username);
         }
 
         // Get temp login token
@@ -589,7 +589,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         // Construct final URL
         $separator = str_contains($loginUrl, '?') ? '&' : '?';
 
-        return $loginUrl . $separator . 'token=' . $token;
+        return $loginUrl.$separator.'token='.$token;
     }
 
     /**
@@ -610,7 +610,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
             throw new \Exception('Failed to get admin login token');
         }
 
-        return $server->endpoint . '/login?tmp_token=' . $token;
+        return $server->endpoint.'/login?tmp_token='.$token;
     }
 
     /**
@@ -706,7 +706,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
             'server_id' => $server->id,
             'subscription_id' => null,
             'username' => $username,
-            'domain' => $data['domain'] ?? $username . '.local',
+            'domain' => $data['domain'] ?? $username.'.local',
             'status' => 'active',
             'meta' => [
                 'email' => $email,
@@ -766,7 +766,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
 
         return [
             'success' => true,
-            'message' => 'Connection successful. ' . $virtualStatus['message'],
+            'message' => 'Connection successful. '.$virtualStatus['message'],
             'virtual_service_installed' => $virtualStatus['installed'],
             'virtual_service_running' => $virtualStatus['running'],
         ];
@@ -802,11 +802,11 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         $username = preg_replace('/[^a-z0-9_]/', '', strtolower($name));
 
         // Tambahkan random suffix untuk uniqueness
-        $username = substr($username, 0, 10) . '_' . substr(md5((string) time()), 0, 4);
+        $username = substr($username, 0, 10).'_'.substr(md5((string) time()), 0, 4);
 
         // Ensure tidak kosong
         if (empty($username) || strlen($username) < 3) {
-            $username = 'user_' . substr(md5((string) time()), 0, 8);
+            $username = 'user_'.substr(md5((string) time()), 0, 8);
         }
 
         return $username;
@@ -822,7 +822,7 @@ class AaPanelAdapter implements ProvisioningAdapterInterface
         $numbers = '23456789';
         $special = '!@#$%^&*()_+-=';
 
-        $charPool = $lowercase . $uppercase . $numbers . $special;
+        $charPool = $lowercase.$uppercase.$numbers.$special;
 
         // Ensure at least one character from each category
         $password = '';

@@ -52,7 +52,7 @@ class ProvisionAccountJob implements ShouldQueue
             $adapter = $adapterResolver->resolveByType($serverType);
 
             $panelAccount = $adapter->createAccount($subscription, [
-                'plan' => $subscription->plan->code,
+                'plan' => $subscription->product->name,
                 'domain' => $subscription->meta['domain'] ?? null,
                 'server' => $server,
             ]);

@@ -3,89 +3,99 @@
 namespace Database\Seeders;
 
 use App\Models\Domain\Catalog\Product;
-use App\Models\Domain\Catalog\Plan;
-use App\Models\Domain\Catalog\PlanFeature;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class CatalogSeeder extends Seeder
 {
     public function run(): void
     {
-        // Shared Hosting Product
-        $sharedHosting = Product::create([
+        // Disable foreign key checks to allow truncation
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Product::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        // Starter Package
+        Product::create([
             'type' => 'hosting_shared',
-            'name' => 'Shared Hosting',
-            'slug' => 'shared-hosting',
+            'name' => 'Starter',
+            'slug' => 'starter',
             'status' => 'active',
+            'price_cents' => 29900, 
+            'currency' => 'IDR',
+            'setup_fee_cents' => 0,
+            'trial_days' => 0,
+            'duration_1_month_enabled' => true,
+            'duration_12_months_enabled' => true,
             'metadata' => [
-                'description' => 'Perfect untuk website pribadi dan bisnis kecil',
-                'features' => ['Unlimited Bandwidth', 'Free SSL', 'cPanel', 'Email Accounts'],
+                'description' => 'Cocok untuk blog dan website pribadi',
+                'popular' => false,
+                'features' => [
+                    '1 Website',
+                    '10 GB SSD Storage',
+                    'Free SSL Certificate',
+                    '1 Email Account',
+                    'Weekly Backups',
+                ],
             ],
         ]);
 
-        // Plans untuk Shared Hosting
-        $planBasic = Plan::create([
-            'product_id' => $sharedHosting->id,
-            'code' => 'SHARED-BASIC-1Y',
-            'billing_cycle' => 'annually',
-            'price_cents' => 500000, // Rp 5.000.000
-            'currency' => 'IDR',
-            'trial_days' => 7,
-            'setup_fee_cents' => 0,
-        ]);
-
-        PlanFeature::create(['plan_id' => $planBasic->id, 'key' => 'disk_space', 'value' => '10 GB']);
-        PlanFeature::create(['plan_id' => $planBasic->id, 'key' => 'bandwidth', 'value' => 'Unlimited']);
-        PlanFeature::create(['plan_id' => $planBasic->id, 'key' => 'domains', 'value' => '1']);
-        PlanFeature::create(['plan_id' => $planBasic->id, 'key' => 'email_accounts', 'value' => '5']);
-
-        $planPremium = Plan::create([
-            'product_id' => $sharedHosting->id,
-            'code' => 'SHARED-PREMIUM-1Y',
-            'billing_cycle' => 'annually',
-            'price_cents' => 1000000, // Rp 10.000.000
-            'currency' => 'IDR',
-            'trial_days' => 7,
-            'setup_fee_cents' => 0,
-        ]);
-
-        PlanFeature::create(['plan_id' => $planPremium->id, 'key' => 'disk_space', 'value' => '50 GB']);
-        PlanFeature::create(['plan_id' => $planPremium->id, 'key' => 'bandwidth', 'value' => 'Unlimited']);
-        PlanFeature::create(['plan_id' => $planPremium->id, 'key' => 'domains', 'value' => '5']);
-        PlanFeature::create(['plan_id' => $planPremium->id, 'key' => 'email_accounts', 'value' => 'Unlimited']);
-
-        // VPS Product
-        $vpsHosting = Product::create([
-            'type' => 'vps',
-            'name' => 'VPS Hosting',
-            'slug' => 'vps-hosting',
+        // Professional Package (Popular)
+        Product::create([
+            'type' => 'hosting_shared',
+            'name' => 'Professional',
+            'slug' => 'professional',
             'status' => 'active',
+            'price_cents' => 59900, 
+            'currency' => 'IDR',
+            'setup_fee_cents' => 0,
+            'trial_days' => 0,
+            'duration_1_month_enabled' => true,
+            'duration_12_months_enabled' => true,
             'metadata' => [
-                'description' => 'Virtual Private Server untuk kebutuhan lebih besar',
-                'features' => ['Full Root Access', 'SSD Storage', '24/7 Support'],
+                'description' => 'Ideal untuk bisnis dan toko online',
+                'popular' => true,
+                'features' => [
+                    '100 Website',
+                    '100 GB NVMe Storage',
+                    'Free SSL Certificate',
+                    'Unlimited Email',
+                    'Daily Backups',
+                    'Free Domain 1 Tahun',
+                    'Priority Support',
+                ],
             ],
         ]);
 
-        Plan::create([
-            'product_id' => $vpsHosting->id,
-            'code' => 'VPS-STARTER-1M',
-            'billing_cycle' => 'monthly',
-            'price_cents' => 250000, // Rp 2.500.000
+
+        // Enterprise Package
+        Product::create([
+            'type' => 'hosting_shared',
+            'name' => 'Enterprise',
+            'slug' => 'enterprise',
+            'status' => 'active',
+            'price_cents' => 149900, 
             'currency' => 'IDR',
-            'trial_days' => null,
             'setup_fee_cents' => 0,
+            'trial_days' => 0,
+            'duration_1_month_enabled' => true,
+            'duration_12_months_enabled' => true,
+            'metadata' => [
+                'description' => 'Untuk website dengan traffic tinggi',
+                'popular' => false,
+                'features' => [
+                    'Unlimited Website',
+                    '200 GB NVMe Storage',
+                    'Free SSL Certificate',
+                    'Unlimited Email',
+                    'Real-time Backups',
+                    'Free Domain Selamanya',
+                    'Dedicated Support',
+                    'CDN Premium',
+                ],
+            ],
         ]);
 
-        Plan::create([
-            'product_id' => $vpsHosting->id,
-            'code' => 'VPS-STARTER-1Y',
-            'billing_cycle' => 'annually',
-            'price_cents' => 2500000, // Rp 25.000.000 (discount)
-            'currency' => 'IDR',
-            'trial_days' => null,
-            'setup_fee_cents' => 0,
-        ]);
-
-        $this->command->info('Catalog seeded successfully!');
+        $this->command->info('Dashboard products populated successfully (Schema: Products has Price)!');
     }
 }

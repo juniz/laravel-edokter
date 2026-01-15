@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Catalog\Contracts\ProductRepository;
 use App\Models\Domain\Billing\Invoice;
+use App\Models\Domain\Catalog\Coupon;
 use App\Models\Domain\Order\Order;
 use App\Models\Domain\Subscription\Subscription;
 use App\Models\Domain\Support\Ticket;
@@ -14,6 +16,10 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private ProductRepository $productRepository
+    ) {}
+
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -220,14 +226,18 @@ class DashboardController extends Controller
         // Active subscriptions
         $activeSubscriptions = Subscription::where('customer_id', $customer->id)
             ->where('status', 'active')
-            ->with(['product', 'plan'])
+            ->with('product')
             ->latest('created_at')
             ->get()
             ->map(function ($subscription) {
+                // Get duration from meta or default to 1 month
+                $durationMonths = $subscription->meta['duration_months'] ?? 1;
+                $durationLabel = $durationMonths === 12 ? 'Tahunan' : 'Bulanan';
+
                 return [
                     'id' => $subscription->id,
                     'product' => $subscription->product->name ?? 'N/A',
-                    'plan' => $subscription->plan->name ?? 'N/A',
+                    'plan' => $durationLabel,
                     'status' => $subscription->status,
                     'start_at' => $subscription->start_at?->format('Y-m-d'),
                     'end_at' => $subscription->end_at?->format('Y-m-d'),
@@ -301,7 +311,7 @@ class DashboardController extends Controller
 
         // Recent orders
         $recentOrders = Order::where('customer_id', $customer->id)
-            ->with(['items.product', 'items.plan'])
+            ->with(['items.product'])
             ->latest('created_at')
             ->limit(5)
             ->get()
@@ -318,8 +328,59 @@ class DashboardController extends Controller
             ->values()
             ->toArray();
 
+        // Get featured products
+        $featuredProducts = collect($this->productRepository->findAllActive())
+            ->take(3)
+            ->map(function ($product) {
+                // Skip if no price
+                if (! $product->price_cents) {
+                    return null;
+                }
+
+                $monthlyPrice = $product->price_cents;
+
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'slug' => $product->slug,
+                    'type' => $product->type,
+                    'description' => $product->metadata['description'] ?? '',
+                    'features' => $product->metadata['features'] ?? [],
+                    'is_popular' => $product->metadata['popular'] ?? false,
+                    'best_plan' => [
+                        'id' => $product->id, // Using product ID as plan ID equivalent for now
+                        'price_cents' => $monthlyPrice,
+                        'monthly_price_cents' => $monthlyPrice,
+                        'duration_1_month_enabled' => $product->duration_1_month_enabled ?? true,
+                        'duration_12_months_enabled' => $product->duration_12_months_enabled ?? true,
+                    ],
+                    'original_price_cents' => $monthlyPrice,
+                    'discount_percent' => 0,
+                ];
+            })
+            ->filter(fn ($product) => $product !== null)
+            ->values()
+            ->toArray();
+
+        // Get active promo/coupon
+        $activePromo = Coupon::where(function ($query) {
+            $query->whereNull('valid_from')
+                ->orWhere('valid_from', '<=', now());
+        })
+            ->where(function ($query) {
+                $query->whereNull('valid_until')
+                    ->orWhere('valid_until', '>=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('max_uses')
+                    ->orWhereRaw('used_count < max_uses');
+            })
+            ->latest('created_at')
+            ->first();
+
         return Inertia::render('dashboard', [
             'role' => 'customer',
+            'userName' => $user->name,
             'stats' => [
                 'totalSubscriptions' => $totalSubscriptions,
                 'activeSubscriptions' => $activeSubscriptionsCount,
@@ -332,6 +393,21 @@ class DashboardController extends Controller
             'recentInvoices' => $recentInvoices,
             'recentTickets' => $recentTickets,
             'recentOrders' => $recentOrders,
+            'featuredProducts' => $featuredProducts,
+            'activePromo' => $activePromo ? [
+                'code' => $activePromo->code,
+                'type' => $activePromo->type,
+                'value' => $activePromo->value,
+                'message' => $this->getPromoMessage($activePromo),
+            ] : null,
         ]);
+    }
+
+    /**
+     * Get promo message untuk banner
+     */
+    private function getPromoMessage(Coupon $coupon): string
+    {
+        return 'Promo Spesial sudah dimulai! Saatnya berani melangkah';
     }
 }

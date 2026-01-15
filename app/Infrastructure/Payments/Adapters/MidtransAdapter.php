@@ -58,13 +58,49 @@ class MidtransAdapter implements PaymentAdapterInterface
         // Prepare item details
         // Data sudah dalam format rupiah, tidak perlu dibagi 100
         $itemDetails = [];
+        $itemsTotal = 0;
         foreach ($invoice->items as $item) {
+            $itemPrice = $item->unit_price_cents ?? 0;
+            $itemQuantity = $item->qty ?? 1;
+            $itemTotal = $itemPrice * $itemQuantity;
+            $itemsTotal += $itemTotal;
+
             $itemDetails[] = [
                 'id' => $item->id,
-                'price' => $item->unit_price_cents ?? 0,
-                'quantity' => $item->qty ?? 1,
+                'price' => $itemPrice,
+                'quantity' => $itemQuantity,
                 'name' => $item->description ?? 'Item',
             ];
+        }
+
+        // Validate that sum of item_details equals gross_amount
+        // If not, adjust the last item to match (for rounding differences)
+        if (abs($itemsTotal - $grossAmount) > 0) {
+            Log::warning('Midtrans item_details sum mismatch', [
+                'invoice_id' => $invoice->id,
+                'gross_amount' => $grossAmount,
+                'items_total' => $itemsTotal,
+                'difference' => $grossAmount - $itemsTotal,
+            ]);
+
+            // Adjust the last item to match gross_amount exactly
+            // Adjustment must be divided by quantity since Midtrans calculates total as price * quantity
+            if (! empty($itemDetails)) {
+                $lastItemIndex = count($itemDetails) - 1;
+                $adjustment = $grossAmount - $itemsTotal;
+                $lastItemQuantity = $itemDetails[$lastItemIndex]['quantity'] ?? 1;
+                // Divide adjustment by quantity to get per-unit adjustment
+                $perUnitAdjustment = (int) round($adjustment / $lastItemQuantity);
+                $itemDetails[$lastItemIndex]['price'] += $perUnitAdjustment;
+
+                Log::info('Midtrans item_details adjusted', [
+                    'invoice_id' => $invoice->id,
+                    'adjusted_item' => $lastItemIndex,
+                    'adjustment' => $adjustment,
+                    'per_unit_adjustment' => $perUnitAdjustment,
+                    'quantity' => $lastItemQuantity,
+                ]);
+            }
         }
 
         // Get payment method from options

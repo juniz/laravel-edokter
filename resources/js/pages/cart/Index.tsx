@@ -28,7 +28,6 @@ interface CartItem {
   plan: {
     id: string;
     code: string;
-    billing_cycle: string;
   } | null;
   qty: number;
   unit_price_cents: number;
@@ -214,9 +213,6 @@ export default function CartIndex({ cart }: CartIndexProps) {
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                               Paket: {item.plan.code}
                             </p>
-                            <Badge variant="outline" className="mt-2">
-                              {item.plan.billing_cycle}
-                            </Badge>
                           </>
                         )}
                         <div className="mt-3 flex items-center gap-4">

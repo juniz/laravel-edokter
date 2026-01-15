@@ -16,7 +16,7 @@ class ProductController extends Controller
 
     public function index(): Response
     {
-        $products = \App\Models\Domain\Catalog\Product::with('plans')
+        $products = \App\Models\Domain\Catalog\Product::with('features')
             ->latest()
             ->paginate(15);
 
@@ -37,6 +37,13 @@ class ProductController extends Controller
             'slug' => ['required', 'string', 'max:255', 'unique:products,slug'],
             'type' => ['required', 'in:hosting_shared,vps,addon,domain'],
             'status' => ['required', 'in:active,draft,archived'],
+            'price_cents' => ['required', 'integer', 'min:0'],
+            'currency' => ['required', 'string', 'size:3'],
+            'setup_fee_cents' => ['nullable', 'integer', 'min:0'],
+            'trial_days' => ['nullable', 'integer', 'min:0'],
+            'annual_discount_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'duration_1_month_enabled' => ['required', 'boolean'],
+            'duration_12_months_enabled' => ['required', 'boolean'],
             'metadata' => ['nullable', 'array'],
             'features' => ['nullable', 'array'],
             'features.*.key' => ['required', 'string'],
@@ -75,7 +82,7 @@ class ProductController extends Controller
         }
 
         return Inertia::render('admin/products/Show', [
-            'product' => $product->load('plans'),
+            'product' => $product->load('features'),
         ]);
     }
 
@@ -105,6 +112,13 @@ class ProductController extends Controller
             'slug' => ['required', 'string', 'max:255', 'unique:products,slug,'.$id],
             'type' => ['required', 'in:hosting_shared,vps,addon,domain'],
             'status' => ['required', 'in:active,draft,archived'],
+            'price_cents' => ['required', 'integer', 'min:0'],
+            'currency' => ['required', 'string', 'size:3'],
+            'setup_fee_cents' => ['nullable', 'integer', 'min:0'],
+            'trial_days' => ['nullable', 'integer', 'min:0'],
+            'annual_discount_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'duration_1_month_enabled' => ['required', 'boolean'],
+            'duration_12_months_enabled' => ['required', 'boolean'],
             'metadata' => ['nullable', 'array'],
             'features' => ['nullable', 'array'],
             'features.*.key' => ['required', 'string'],

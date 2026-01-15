@@ -18,11 +18,12 @@ interface Plan {
   id?: string;
   product_id: string;
   code: string;
-  billing_cycle: string;
   price_cents: number;
   currency: string;
   trial_days?: number;
   setup_fee_cents: number;
+  duration_1_month_enabled: boolean;
+  duration_12_months_enabled: boolean;
 }
 
 interface PlanFormProps {
@@ -41,11 +42,12 @@ export default function PlanForm({ plan, products }: PlanFormProps) {
   const { data, setData, post, put, processing, errors } = useForm({
     product_id: plan?.product_id || '',
     code: plan?.code || '',
-    billing_cycle: plan?.billing_cycle || 'monthly',
     price_cents: plan?.price_cents || 0,
     currency: plan?.currency || 'IDR',
     trial_days: plan?.trial_days || null,
     setup_fee_cents: plan?.setup_fee_cents || 0,
+    duration_1_month_enabled: plan?.duration_1_month_enabled ?? true,
+    duration_12_months_enabled: plan?.duration_12_months_enabled ?? true,
   });
 
   const submit: FormEventHandler = (e) => {
@@ -106,25 +108,7 @@ export default function PlanForm({ plan, products }: PlanFormProps) {
               </div>
 
               <div>
-                <Label htmlFor="billing_cycle">Billing Cycle</Label>
-                <Select value={data.billing_cycle} onValueChange={(value) => setData('billing_cycle', value)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="semiannually">Semiannually</SelectItem>
-                    <SelectItem value="annually">Annually</SelectItem>
-                    <SelectItem value="biennially">Biennially</SelectItem>
-                    <SelectItem value="triennially">Triennially</SelectItem>
-                  </SelectContent>
-                </Select>
-                <InputError message={errors.billing_cycle} className="mt-2" />
-              </div>
-
-              <div>
-                <Label htmlFor="price_cents">Price (in cents)</Label>
+                <Label htmlFor="price_cents">Harga per Bulan (in cents)</Label>
                 <Input
                   id="price_cents"
                   type="number"
@@ -135,7 +119,42 @@ export default function PlanForm({ plan, products }: PlanFormProps) {
                 />
                 <InputError message={errors.price_cents} className="mt-2" />
                 <p className="text-sm text-gray-500 mt-1">
-                  Example: 500000 = Rp 5.000.000
+                  Example: 500000 = Rp 5.000.000 per bulan
+                </p>
+              </div>
+
+              <div>
+                <Label>Durasi yang Tersedia</Label>
+                <div className="mt-2 space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="duration_1_month_enabled"
+                      checked={data.duration_1_month_enabled}
+                      onChange={(e) => setData('duration_1_month_enabled', e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="duration_1_month_enabled" className="cursor-pointer">
+                      1 Bulan
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="duration_12_months_enabled"
+                      checked={data.duration_12_months_enabled}
+                      onChange={(e) => setData('duration_12_months_enabled', e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="duration_12_months_enabled" className="cursor-pointer">
+                      12 Bulan
+                    </Label>
+                  </div>
+                </div>
+                <InputError message={errors.duration_1_month_enabled} className="mt-2" />
+                <InputError message={errors.duration_12_months_enabled} className="mt-2" />
+                <p className="text-sm text-gray-500 mt-1">
+                  Pilih durasi yang tersedia untuk plan ini. Minimal harus ada satu durasi yang diaktifkan.
                 </p>
               </div>
 

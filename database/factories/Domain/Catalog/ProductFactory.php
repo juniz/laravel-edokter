@@ -22,6 +22,12 @@ class ProductFactory extends Factory
             'name' => $this->faker->words(3, true),
             'slug' => $this->faker->unique()->slug(),
             'status' => $this->faker->randomElement(['active', 'draft', 'archived']),
+            'price_cents' => $this->faker->numberBetween(50000, 500000),
+            'currency' => 'IDR',
+            'setup_fee_cents' => $this->faker->numberBetween(0, 100000),
+            'trial_days' => $this->faker->randomElement([null, 7, 14, 30]),
+            'duration_1_month_enabled' => true,
+            'duration_12_months_enabled' => true,
             'metadata' => [
                 'description' => $this->faker->paragraph(),
                 'features' => $this->faker->words(5),

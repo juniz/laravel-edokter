@@ -2,7 +2,6 @@
 
 namespace App\Application\Order;
 
-use App\Domain\Catalog\Contracts\PlanRepository;
 use App\Domain\Catalog\Contracts\ProductRepository;
 use App\Models\Domain\Customer\Customer;
 use App\Models\Domain\Order\Cart;
@@ -13,7 +12,7 @@ class CartService
 {
     public function __construct(
         private ProductRepository $productRepository,
-        private PlanRepository $planRepository
+        private ValidateCouponService $validateCouponService
     ) {}
 
     /**
@@ -37,24 +36,15 @@ class CartService
         return DB::transaction(function () use ($customer, $data) {
             $cart = $this->getOrCreateCart($customer);
 
-            // Validate product and plan
+            // Validate product
             $product = $this->productRepository->findByUlid($data['product_id']);
             if (! $product) {
                 throw new \Exception('Product tidak ditemukan');
             }
 
-            $plan = null;
-            if (isset($data['plan_id'])) {
-                $plan = $this->planRepository->findByUlid($data['plan_id']);
-                if (! $plan) {
-                    throw new \Exception('Plan tidak ditemukan');
-                }
-            }
-
             // Check if item already exists in cart
             $existingItem = CartItem::where('cart_id', $cart->id)
                 ->where('product_id', $data['product_id'])
-                ->where('plan_id', $data['plan_id'] ?? null)
                 ->first();
 
             if ($existingItem) {
@@ -68,8 +58,8 @@ class CartService
                 return $existingItem->fresh();
             }
 
-            // Calculate price
-            $unitPriceCents = $plan?->price_cents ?? $product->metadata['price_cents'] ?? 0;
+            // Calculate price - gunakan harga dari product
+            $unitPriceCents = $product->price_cents ?? 0;
             if ($unitPriceCents === 0) {
                 throw new \Exception('Harga tidak tersedia untuk produk ini');
             }
@@ -78,7 +68,6 @@ class CartService
             $cartItem = CartItem::create([
                 'cart_id' => $cart->id,
                 'product_id' => $data['product_id'],
-                'plan_id' => $data['plan_id'] ?? null,
                 'qty' => $data['qty'] ?? 1,
                 'unit_price_cents' => $unitPriceCents,
                 'meta' => $data['meta'] ?? [],
@@ -136,6 +125,7 @@ class CartService
         DB::transaction(function () use ($cart) {
             $cart->items()->delete();
             $cart->update([
+                'coupon_id' => null,
                 'totals_json' => [
                     'subtotal' => 0,
                     'discount' => 0,
@@ -147,11 +137,54 @@ class CartService
     }
 
     /**
-     * Recalculate cart totals
+     * Apply coupon to cart
+     *
+     * @return array{success: bool, message: string, discount?: int}
+     */
+    public function applyCoupon(Cart $cart, string $code): array
+    {
+        $items = $cart->items()->with('product')->get();
+        $productIds = $items->pluck('product_id')->toArray();
+
+        $validation = $this->validateCouponService->validate($code, $productIds);
+
+        if (! $validation['valid']) {
+            return [
+                'success' => false,
+                'message' => $validation['message'] ?? 'Kode promo tidak valid',
+            ];
+        }
+
+        $cart->update(['coupon_id' => $validation['coupon']->id]);
+        $this->recalculateCart($cart);
+
+        $cart->refresh();
+        $discount = $cart->totals_json['discount'] ?? 0;
+
+        return [
+            'success' => true,
+            'message' => 'Kode promo berhasil diterapkan',
+            'discount' => $discount,
+        ];
+    }
+
+    /**
+     * Remove coupon from cart
+     */
+    public function removeCoupon(Cart $cart): void
+    {
+        DB::transaction(function () use ($cart) {
+            $cart->update(['coupon_id' => null]);
+            $this->recalculateCart($cart);
+        });
+    }
+
+    /**
+     * Recalculate cart totals dengan diskon dan PPH
      */
     public function recalculateCart(Cart $cart): void
     {
-        $items = $cart->items()->with(['product', 'plan'])->get();
+        $items = $cart->items()->with('product')->get();
 
         $subtotal = 0;
         $setupFee = 0;
@@ -160,17 +193,34 @@ class CartService
             $itemSubtotal = $item->unit_price_cents * $item->qty;
             $subtotal += $itemSubtotal;
 
-            // Add setup fee if plan has setup fee
-            if ($item->plan && $item->plan->setup_fee_cents > 0) {
-                $setupFee += $item->plan->setup_fee_cents;
+            // Add setup fee if product has setup fee
+            if ($item->product && ($item->product->setup_fee_cents ?? 0) > 0) {
+                $setupFee += $item->product->setup_fee_cents;
             }
         }
 
-        // TODO: Apply coupon discount if exists
+        // Apply coupon discount if exists
         $discount = 0;
+        if ($cart->coupon_id) {
+            $coupon = $cart->coupon;
+            if ($coupon) {
+                $productIds = $items->pluck('product_id')->toArray();
+                $validation = $this->validateCouponService->validate($coupon->code, $productIds);
 
-        // TODO: Calculate tax if needed
-        $tax = 0;
+                if ($validation['valid'] && $validation['coupon']) {
+                    $discount = $this->validateCouponService->calculateDiscount(
+                        $validation['coupon'],
+                        $subtotal + $setupFee
+                    );
+                }
+            }
+        }
+
+        // Calculate PPH (Pajak Penghasilan) - get from database settings or config
+        $setting = \App\Models\Domain\Shared\Setting::where('key', 'billing_settings')->first();
+        $pphRate = $setting?->value['pph_rate'] ?? config('billing.pph_rate', 0.11);
+        $taxableAmount = $subtotal + $setupFee - $discount;
+        $tax = (int) round($taxableAmount * $pphRate);
 
         $total = $subtotal + $setupFee - $discount + $tax;
 

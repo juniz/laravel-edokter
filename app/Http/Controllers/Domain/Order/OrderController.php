@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Domain\Order;
 
-use App\Http\Controllers\Controller;
-use App\Domain\Order\Contracts\OrderRepository;
-use App\Application\Order\PlaceOrderService;
 use App\Application\Billing\GenerateInvoiceService;
+use App\Application\Order\PlaceOrderService;
+use App\Domain\Order\Contracts\OrderRepository;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,8 +33,8 @@ class OrderController extends Controller
 
         // Customer route
         $customer = $request->user()->customer;
-        
-        if (!$customer) {
+
+        if (! $customer) {
             return Inertia::render('orders/Index', [
                 'orders' => [],
             ]);
@@ -51,19 +51,19 @@ class OrderController extends Controller
     {
         $order = $this->orderRepository->findByUlid($id);
 
-        if (!$order) {
+        if (! $order) {
             abort(404);
         }
 
         // Check if this is admin route
         if ($request->routeIs('admin.orders.show')) {
             return Inertia::render('admin/orders/Show', [
-                'order' => $order->load(['items.product', 'items.plan', 'invoices', 'customer']),
+                'order' => $order->load(['items.product', 'invoices', 'customer']),
             ]);
         }
 
         return Inertia::render('orders/Show', [
-            'order' => $order->load(['items.product', 'items.plan', 'invoices']),
+            'order' => $order->load(['items.product', 'invoices']),
         ]);
     }
 
@@ -73,7 +73,6 @@ class OrderController extends Controller
             'customer_id' => ['required', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'string'],
-            'items.*.plan_id' => ['nullable', 'string'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
             'items.*.unit_price_cents' => ['required', 'integer'],
             'items.*.total_cents' => ['required', 'integer'],

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Domain\Catalog;
 
-use App\Http\Controllers\Controller;
 use App\Domain\Catalog\Contracts\PlanRepository;
+use App\Http\Controllers\Controller;
 use App\Models\Domain\Catalog\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -47,11 +47,12 @@ class PlanController extends Controller
         $validated = $request->validate([
             'product_id' => ['required', 'string'],
             'code' => ['required', 'string', 'max:255', 'unique:plans,code'],
-            'billing_cycle' => ['required', 'in:monthly,quarterly,semiannually,annually,biennially,triennially'],
             'price_cents' => ['required', 'integer', 'min:0'],
             'currency' => ['required', 'string', 'size:3'],
             'trial_days' => ['nullable', 'integer', 'min:0'],
             'setup_fee_cents' => ['nullable', 'integer', 'min:0'],
+            'duration_1_month_enabled' => ['required', 'boolean'],
+            'duration_12_months_enabled' => ['required', 'boolean'],
         ]);
 
         $plan = $this->planRepository->create($validated);
@@ -64,7 +65,7 @@ class PlanController extends Controller
     {
         $plan = $this->planRepository->findByUlid($id);
 
-        if (!$plan) {
+        if (! $plan) {
             abort(404);
         }
 
@@ -77,7 +78,7 @@ class PlanController extends Controller
     {
         $plan = $this->planRepository->findByUlid($id);
 
-        if (!$plan) {
+        if (! $plan) {
             abort(404);
         }
 
@@ -93,18 +94,19 @@ class PlanController extends Controller
     {
         $plan = $this->planRepository->findByUlid($id);
 
-        if (!$plan) {
+        if (! $plan) {
             abort(404);
         }
 
         $validated = $request->validate([
             'product_id' => ['required', 'string'],
-            'code' => ['required', 'string', 'max:255', 'unique:plans,code,' . $id],
-            'billing_cycle' => ['required', 'in:monthly,quarterly,semiannually,annually,biennially,triennially'],
+            'code' => ['required', 'string', 'max:255', 'unique:plans,code,'.$id],
             'price_cents' => ['required', 'integer', 'min:0'],
             'currency' => ['required', 'string', 'size:3'],
             'trial_days' => ['nullable', 'integer', 'min:0'],
             'setup_fee_cents' => ['nullable', 'integer', 'min:0'],
+            'duration_1_month_enabled' => ['required', 'boolean'],
+            'duration_12_months_enabled' => ['required', 'boolean'],
         ]);
 
         $plan->update($validated);
@@ -117,7 +119,7 @@ class PlanController extends Controller
     {
         $plan = $this->planRepository->findByUlid($id);
 
-        if (!$plan) {
+        if (! $plan) {
             abort(404);
         }
 

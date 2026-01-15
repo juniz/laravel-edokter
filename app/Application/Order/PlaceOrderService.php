@@ -2,9 +2,8 @@
 
 namespace App\Application\Order;
 
-use App\Domain\Order\Contracts\OrderRepository;
 use App\Domain\Catalog\Contracts\ProductRepository;
-use App\Domain\Catalog\Contracts\PlanRepository;
+use App\Domain\Order\Contracts\OrderRepository;
 use App\Models\Domain\Order\Order;
 use Illuminate\Support\Facades\DB;
 
@@ -12,8 +11,7 @@ class PlaceOrderService
 {
     public function __construct(
         private OrderRepository $orderRepository,
-        private ProductRepository $productRepository,
-        private PlanRepository $planRepository
+        private ProductRepository $productRepository
     ) {}
 
     public function execute(array $data): Order
@@ -39,4 +37,3 @@ class PlaceOrderService
         });
     }
 }
-
