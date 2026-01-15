@@ -48,6 +48,10 @@ class RolePermissionSeeder extends Seeder
                 'admin-plans-create',
                 'admin-plans-edit',
                 'admin-plans-delete',
+                'admin-coupons-view',
+                'admin-coupons-create',
+                'admin-coupons-edit',
+                'admin-coupons-delete',
             ],
             'Admin Orders' => [
                 'admin-orders-view',
@@ -119,6 +123,10 @@ class RolePermissionSeeder extends Seeder
                 'backup-run',
                 'backup-download',
                 'backup-delete',
+                'margin-settings-view',
+                'margin-settings-update',
+                'billing-settings-view',
+                'billing-settings-update',
             ],
             'Utilities' => [
                 'utilities-view',
@@ -187,6 +195,12 @@ class RolePermissionSeeder extends Seeder
             'customer-orders-view',
             'customer-invoices-view',
             'customer-subscriptions-view',
+            'admin-coupons-view',
+            'admin-coupons-create',
+            'admin-coupons-edit',
+            'admin-coupons-delete',
+            'billing-settings-view',
+            'billing-settings-update',
         ]);
 
         // Assign basic permissions to user role (default)

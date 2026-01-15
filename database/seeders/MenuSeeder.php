@@ -147,6 +147,16 @@ class MenuSeeder extends Seeder
             ]
         );
 
+        Menu::updateOrCreate(
+            ['route' => '/admin/coupons', 'parent_id' => $adminCatalog->id],
+            [
+                'title' => 'Coupons',
+                'icon' => 'Tag',
+                'order' => 3,
+                'permission_name' => 'admin-coupons-view',
+            ]
+        );
+
         // GROUP: Admin - Order Management
         $adminOrders = Menu::updateOrCreate(
             ['route' => '#', 'title' => 'Order Management'],
@@ -380,6 +390,16 @@ class MenuSeeder extends Seeder
                 'icon' => 'TrendingUp',
                 'order' => 4,
                 'permission_name' => 'margin-settings-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
+            ['route' => '/settings/billing', 'parent_id' => $settings->id],
+            [
+                'title' => 'Billing Settings',
+                'icon' => 'Receipt',
+                'order' => 5,
+                'permission_name' => 'billing-settings-view',
             ]
         );
 

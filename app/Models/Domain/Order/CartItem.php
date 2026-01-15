@@ -2,12 +2,11 @@
 
 namespace App\Models\Domain\Order;
 
+use App\Models\Domain\Catalog\Product;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Domain\Catalog\Product;
-use App\Models\Domain\Catalog\Plan;
 
 class CartItem extends Model
 {
@@ -18,7 +17,6 @@ class CartItem extends Model
     protected $fillable = [
         'cart_id',
         'product_id',
-        'plan_id',
         'qty',
         'unit_price_cents',
         'meta',
@@ -40,10 +38,5 @@ class CartItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function plan(): BelongsTo
-    {
-        return $this->belongsTo(Plan::class);
     }
 }

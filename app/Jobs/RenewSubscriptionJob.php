@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Domain\Subscription\Contracts\SubscriptionRepository;
-use App\Domain\Billing\Contracts\InvoiceRepository;
 use App\Application\Billing\GenerateInvoiceService;
+use App\Domain\Billing\Contracts\InvoiceRepository;
+use App\Domain\Subscription\Contracts\SubscriptionRepository;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -26,16 +26,20 @@ class RenewSubscriptionJob implements ShouldQueue
         foreach ($subscriptions as $subscription) {
             try {
                 // Generate invoice untuk renewal
+                // Hitung harga berdasarkan durasi dari meta atau default 1 bulan
+                $durationMonths = $subscription->meta['duration_months'] ?? 1;
+                $subtotalCents = $subscription->product->price_cents * $durationMonths;
+
                 $invoice = $generateInvoiceService->execute([
                     'customer_id' => $subscription->customer_id,
-                    'currency' => $subscription->plan->currency,
-                    'subtotal_cents' => $subscription->plan->price_cents,
-                    'total_cents' => $subscription->plan->price_cents,
+                    'currency' => $subscription->product->currency ?? 'IDR',
+                    'subtotal_cents' => $subtotalCents,
+                    'total_cents' => $subtotalCents,
                     'due_at' => $subscription->next_renewal_at,
                 ]);
 
                 Log::info("Invoice generated for subscription renewal: {$subscription->id}");
-                
+
                 // TODO: Charge payment gateway jika auto-renew aktif
                 // TODO: Update subscription dates setelah payment berhasil
             } catch (\Exception $e) {
@@ -44,4 +48,3 @@ class RenewSubscriptionJob implements ShouldQueue
         }
     }
 }
-

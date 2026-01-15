@@ -19,6 +19,8 @@ import {
 	Database,
 	Lock,
 	MousePointerClick,
+	Tag,
+	Sparkles,
 } from "lucide-react";
 
 interface Plan {
@@ -26,6 +28,9 @@ interface Plan {
 	code: string;
 	billing_cycle: string;
 	price_cents: number;
+	original_price_cents?: number;
+	discount_percent?: number;
+	discount_amount_cents?: number;
 	currency: string;
 	trial_days?: number;
 	setup_fee_cents: number;
@@ -124,9 +129,9 @@ export default function GuestShow({
 			<section className="relative">
 				<div className="absolute inset-0 bg-gradient-to-b from-muted/40 to-background pointer-events-none" />
 
-				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 relative">
+				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 relative">
 					{/* Breadcrumb */}
-					<nav className="flex items-center gap-2 text-sm mb-12">
+					<nav className="flex items-center gap-2 text-sm mb-6">
 						<Link
 							href={route("catalog.guest")}
 							className="text-muted-foreground hover:text-foreground transition-colors"
@@ -139,13 +144,13 @@ export default function GuestShow({
 						<span className="font-medium">{product.name}</span>
 					</nav>
 
-					<div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
+					<div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
 						{/* Left: Product Info - 3 columns */}
-						<div className="lg:col-span-3 space-y-10">
+						<div className="lg:col-span-3 space-y-6">
 							{/* Product Header */}
 							<div>
-								<div className="flex items-center gap-3 mb-4">
-									<div className="h-11 w-11 rounded-xl bg-foreground/5 border flex items-center justify-center">
+								<div className="flex items-center gap-3 mb-3">
+									<div className="h-10 w-10 rounded-xl bg-foreground/5 border flex items-center justify-center">
 										<TypeIcon className="h-5 w-5 text-foreground/70" />
 									</div>
 									<Badge
@@ -156,12 +161,12 @@ export default function GuestShow({
 									</Badge>
 								</div>
 
-								<h1 className="text-4xl sm:text-5xl font-semibold tracking-tight mb-4">
+								<h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3">
 									{product.name}
 								</h1>
 
 								{product.metadata?.description && (
-									<p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
+									<p className="text-base text-muted-foreground leading-relaxed max-w-xl">
 										{product.metadata.description}
 									</p>
 								)}
@@ -169,8 +174,8 @@ export default function GuestShow({
 
 							{/* Product Features (CPU, RAM, Bandwidth, etc) */}
 							{product.features && product.features.length > 0 && (
-								<div className="mb-8">
-									<h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+								<div className="mb-6">
+									<h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
 										Spesifikasi
 									</h2>
 									<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -197,7 +202,7 @@ export default function GuestShow({
 							)}
 
 							{/* Highlights - Horizontal */}
-							<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+							<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
 								{highlights.map((item, i) => {
 									const Icon = item.icon;
 									return (
@@ -219,10 +224,10 @@ export default function GuestShow({
 							{product.metadata?.features &&
 								product.metadata.features.length > 0 && (
 									<div>
-										<h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-6">
+										<h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
 											Termasuk dalam paket
 										</h2>
-										<div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
+										<div className="grid sm:grid-cols-2 gap-x-8 gap-y-3">
 											{product.metadata.features.map((feature, idx) => (
 												<div key={idx} className="flex items-start gap-3 group">
 													<div className="h-5 w-5 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -238,7 +243,7 @@ export default function GuestShow({
 								)}
 
 							{/* Trust Section */}
-							<div className="pt-8 border-t">
+							<div className="pt-6 border-t">
 								<div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
 									<div className="flex items-center gap-2">
 										<Lock className="h-4 w-4" />
@@ -258,7 +263,7 @@ export default function GuestShow({
 
 						{/* Right: Pricing Card - 2 columns */}
 						<div className="lg:col-span-2">
-							<div className="lg:sticky lg:top-24">
+							<div className="lg:sticky lg:top-6">
 								<div className="rounded-2xl border bg-background shadow-sm overflow-hidden">
 									{/* Card Header */}
 									<div className="p-6 border-b bg-muted/30">
@@ -272,16 +277,55 @@ export default function GuestShow({
 												</span>
 											)}
 										</div>
-										<div className="flex items-baseline gap-1">
-											<span className="text-3xl font-bold">
-												{selectedPlan
-													? formatPrice(selectedPlan.price_cents)
-													: "—"}
-											</span>
-											<span className="text-muted-foreground text-sm">
-												/{selectedPlan?.billing_cycle || "bulan"}
-											</span>
-										</div>
+										{selectedPlan && (
+											<>
+												{selectedPlan.discount_percent &&
+													selectedPlan.discount_percent > 0 && (
+														<div className="mb-2">
+															<div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-500/20">
+																<Sparkles className="h-3 w-3 text-emerald-600" />
+																<span className="text-xs font-semibold text-emerald-600">
+																	Diskon {selectedPlan.discount_percent}% untuk
+																	langganan tahunan!
+																</span>
+															</div>
+														</div>
+													)}
+												<div className="flex items-baseline gap-1">
+													{selectedPlan.original_price_cents &&
+													selectedPlan.original_price_cents >
+														selectedPlan.price_cents ? (
+														<>
+															<span className="text-lg text-muted-foreground line-through mr-2">
+																{formatPrice(selectedPlan.original_price_cents)}
+															</span>
+															<span className="text-3xl font-bold text-emerald-600">
+																{formatPrice(selectedPlan.price_cents)}
+															</span>
+														</>
+													) : (
+														<span className="text-3xl font-bold">
+															{formatPrice(selectedPlan.price_cents)}
+														</span>
+													)}
+													<span className="text-muted-foreground text-sm">
+														/{selectedPlan.billing_cycle}
+													</span>
+												</div>
+												{selectedPlan.discount_amount_cents &&
+													selectedPlan.discount_amount_cents > 0 && (
+														<div className="mt-2 flex items-center gap-1 text-sm">
+															<Tag className="h-3.5 w-3.5 text-emerald-600" />
+															<span className="text-emerald-600 font-medium">
+																Hemat{" "}
+																{formatPrice(
+																	selectedPlan.discount_amount_cents
+																)}
+															</span>
+														</div>
+													)}
+											</>
+										)}
 									</div>
 
 									{/* Plan Selector */}
@@ -291,6 +335,9 @@ export default function GuestShow({
 												{plans.map((plan) => {
 													const isSelected = selectedPlan?.id === plan.id;
 													const isHovered = hoveredPlan === plan.id;
+
+													const hasDiscount =
+														plan.discount_percent && plan.discount_percent > 0;
 
 													return (
 														<button
@@ -304,21 +351,46 @@ export default function GuestShow({
 																	: isHovered
 																	? "border-muted-foreground/30"
 																	: "border-transparent bg-muted/50"
+															} ${
+																hasDiscount ? "ring-1 ring-emerald-500/30" : ""
 															}`}
 														>
 															{plan.trial_days && plan.trial_days > 0 && (
-																<div className="absolute -top-2 -right-2">
+																<div className="absolute -top-2 -right-2 z-10">
 																	<span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500 text-white">
 																		Trial
+																	</span>
+																</div>
+															)}
+															{hasDiscount && (
+																<div className="absolute -top-2 -left-2 z-10">
+																	<span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-sm">
+																		{plan.discount_percent}% OFF
 																	</span>
 																</div>
 															)}
 															<p className="font-medium text-sm truncate">
 																{plan.code}
 															</p>
-															<p className="text-xs text-muted-foreground truncate">
-																{formatPriceCompact(plan.price_cents)}
-															</p>
+															<div className="flex items-baseline gap-1">
+																{plan.original_price_cents &&
+																plan.original_price_cents > plan.price_cents ? (
+																	<>
+																		<span className="text-[10px] text-muted-foreground line-through">
+																			{formatPriceCompact(
+																				plan.original_price_cents
+																			)}
+																		</span>
+																		<span className="text-xs font-semibold text-emerald-600">
+																			{formatPriceCompact(plan.price_cents)}
+																		</span>
+																	</>
+																) : (
+																	<p className="text-xs text-muted-foreground truncate">
+																		{formatPriceCompact(plan.price_cents)}
+																	</p>
+																)}
+															</div>
 														</button>
 													);
 												})}
@@ -340,6 +412,22 @@ export default function GuestShow({
 													<span className="text-muted-foreground">Periode</span>
 													<span>{selectedPlan.billing_cycle}</span>
 												</div>
+												{selectedPlan.original_price_cents &&
+													selectedPlan.original_price_cents >
+														selectedPlan.price_cents && (
+														<div className="flex justify-between items-center py-1 px-2 rounded bg-emerald-50 dark:bg-emerald-950/20">
+															<span className="text-muted-foreground flex items-center gap-1">
+																<Tag className="h-3 w-3 text-emerald-600" />
+																Diskon Tahunan
+															</span>
+															<span className="font-semibold text-emerald-600">
+																-
+																{formatPrice(
+																	selectedPlan.discount_amount_cents || 0
+																)}
+															</span>
+														</div>
+													)}
 												{selectedPlan.setup_fee_cents > 0 && (
 													<div className="flex justify-between">
 														<span className="text-muted-foreground">
@@ -408,7 +496,7 @@ export default function GuestShow({
 
 			{/* Bottom CTA */}
 			<section className="border-t bg-muted/20">
-				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 					<div className="flex flex-col sm:flex-row items-center justify-between gap-6">
 						<div>
 							<h2 className="text-xl font-semibold mb-1">

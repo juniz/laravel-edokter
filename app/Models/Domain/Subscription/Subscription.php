@@ -2,16 +2,15 @@
 
 namespace App\Models\Domain\Subscription;
 
+use App\Models\Domain\Catalog\Product;
+use App\Models\Domain\Customer\Customer;
+use App\Models\Domain\Provisioning\PanelAccount;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Domain\Customer\Customer;
-use App\Models\Domain\Catalog\Product;
-use App\Models\Domain\Catalog\Plan;
-use App\Models\Domain\Provisioning\PanelAccount;
 
 class Subscription extends Model
 {
@@ -22,7 +21,6 @@ class Subscription extends Model
     protected $fillable = [
         'customer_id',
         'product_id',
-        'plan_id',
         'status',
         'start_at',
         'end_at',
@@ -51,11 +49,6 @@ class Subscription extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function plan(): BelongsTo
-    {
-        return $this->belongsTo(Plan::class);
     }
 
     public function cycles(): HasMany

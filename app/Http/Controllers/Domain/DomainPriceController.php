@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Domain;
 use App\Domain\Rdash\Account\Contracts\AccountRepository;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,7 +52,7 @@ class DomainPriceController extends Controller
 
         return Inertia::render($viewPath, [
             'prices' => [
-                'data' => array_map(static fn ($price) => $price->toArray(), $result['data']),
+                'data' => array_map(static fn($price) => $price->toArray(), $result['data']),
                 'links' => $result['links'] ?? [],
                 'meta' => $result['meta'] ?? [],
             ],
@@ -81,7 +82,7 @@ class DomainPriceController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch price: '.$e->getMessage(),
+                'message' => 'Failed to fetch price: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -111,7 +112,7 @@ class DomainPriceController extends Controller
             if (empty($result['data'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Price not found for extension: '.$extension,
+                    'message' => 'Price not found for extension: ' . $extension,
                 ], 404);
             }
 
@@ -120,14 +121,60 @@ class DomainPriceController extends Controller
                 'data' => $result['data'][0]->toArray(),
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to get domain price by extension', [
+            Log::error('Failed to get domain price by extension', [
                 'extension' => $request->input('extension'),
                 'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch price: '.$e->getMessage(),
+                'message' => 'Failed to fetch price: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get domain price by extension for guest checkout (public access)
+     */
+    public function getByExtensionGuest(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $extension = $request->input('extension');
+
+            if (empty($extension)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Extension is required',
+                ], 400);
+            }
+
+            $rdashFilters = [
+                'domainExtension[extension]' => $extension,
+                'limit' => 1,
+            ];
+
+            $result = $this->accountRepository->getPrices($rdashFilters);
+
+            if (empty($result['data'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Price not found for extension: ' . $extension,
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $result['data'][0]->toArray(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get domain price by extension (guest)', [
+                'extension' => $request->input('extension'),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch price: ' . $e->getMessage(),
             ], 500);
         }
     }

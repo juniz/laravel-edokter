@@ -25,11 +25,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface Plan {
   id: string;
   code: string;
-  billing_cycle: string;
   price_cents: number;
   currency: string;
   setup_fee_cents: number;
   trial_days?: number;
+  duration_1_month_enabled: boolean;
+  duration_12_months_enabled: boolean;
   product?: {
     name: string;
   };
@@ -122,12 +123,19 @@ export default function PlansIndex({ plans, products, filters }: PlansProps) {
                   
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Price:</span>
+                      <span className="text-gray-600 dark:text-gray-400">Harga per Bulan:</span>
                       <span className="font-semibold text-lg">{formatPrice(plan.price_cents, plan.currency)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Cycle:</span>
-                      <span className="font-medium">{plan.billing_cycle}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Durasi:</span>
+                      <div className="flex gap-1">
+                        {plan.duration_1_month_enabled && (
+                          <Badge variant="outline" className="text-xs">1 Bulan</Badge>
+                        )}
+                        {plan.duration_12_months_enabled && (
+                          <Badge variant="outline" className="text-xs">12 Bulan</Badge>
+                        )}
+                      </div>
                     </div>
                     {plan.setup_fee_cents > 0 && (
                       <div className="flex items-center justify-between text-sm">

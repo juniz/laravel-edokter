@@ -18,6 +18,8 @@ class Coupon extends Model
         'type',
         'value',
         'max_uses',
+        'is_auto_apply',
+        'promo_label',
         'used_count',
         'valid_from',
         'valid_until',
@@ -28,6 +30,7 @@ class Coupon extends Model
     {
         return [
             'value' => 'decimal:2',
+            'is_auto_apply' => 'boolean',
             'applicable_product_ids' => 'array',
             'valid_from' => 'datetime',
             'valid_until' => 'datetime',

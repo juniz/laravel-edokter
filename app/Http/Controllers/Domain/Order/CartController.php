@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Domain\Order;
 
 use App\Application\Order\CartService;
 use App\Application\Order\CheckoutCartService;
+use App\Application\Order\ValidateCouponService;
 use App\Http\Controllers\Controller;
 use App\Models\Domain\Order\Cart;
 use App\Models\Domain\Order\CartItem;
@@ -15,7 +16,8 @@ class CartController extends Controller
 {
     public function __construct(
         private CartService $cartService,
-        private CheckoutCartService $checkoutCartService
+        private CheckoutCartService $checkoutCartService,
+        private ValidateCouponService $validateCouponService
     ) {}
 
     /**
@@ -30,7 +32,7 @@ class CartController extends Controller
         }
 
         $cart = $this->cartService->getOrCreateCart($customer);
-        $cart->load(['items.product', 'items.plan']);
+        $cart->load('items.product');
 
         return Inertia::render('cart/Index', [
             'cart' => [
@@ -51,11 +53,6 @@ class CartController extends Controller
                             'name' => $item->product->name,
                             'slug' => $item->product->slug,
                         ],
-                        'plan' => $item->plan ? [
-                            'id' => $item->plan->id,
-                            'code' => $item->plan->code,
-                            'billing_cycle' => $item->plan->billing_cycle,
-                        ] : null,
                         'qty' => $item->qty,
                         'unit_price_cents' => $item->unit_price_cents,
                         'total_cents' => $item->unit_price_cents * $item->qty,
@@ -73,7 +70,6 @@ class CartController extends Controller
     {
         $request->validate([
             'product_id' => ['required', 'string'],
-            'plan_id' => ['nullable', 'string'],
             'qty' => ['nullable', 'integer', 'min:1'],
             'meta' => ['nullable', 'array'],
         ]);
@@ -88,7 +84,6 @@ class CartController extends Controller
         try {
             $cartItem = $this->cartService->addItem($customer, $request->only([
                 'product_id',
-                'plan_id',
                 'qty',
                 'meta',
             ]));
@@ -182,6 +177,86 @@ class CartController extends Controller
             return redirect()->back()
                 ->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Validate promo code
+     */
+    public function validatePromo(Request $request)
+    {
+        $request->validate([
+            'code' => ['required', 'string', 'max:255'],
+        ]);
+
+        $customer = $request->user()->customer;
+
+        if (! $customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer profile tidak ditemukan',
+            ], 403);
+        }
+
+        $cart = $this->cartService->getOrCreateCart($customer);
+        $cart->load('items.product');
+        $productIds = $cart->items->pluck('product_id')->toArray();
+
+        $validation = $this->validateCouponService->validate($request->code, $productIds);
+
+        if (! $validation['valid']) {
+            return response()->json([
+                'success' => false,
+                'message' => $validation['message'] ?? 'Kode promo tidak valid',
+            ]);
+        }
+
+        // Apply coupon to cart
+        $result = $this->cartService->applyCoupon($cart, $request->code);
+
+        if ($result['success']) {
+            $cart->refresh();
+            $cart->load('coupon');
+
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'discount' => $result['discount'],
+                'coupon' => [
+                    'code' => $cart->coupon->code,
+                    'type' => $cart->coupon->type,
+                    'value' => $cart->coupon->value,
+                ],
+                'totals' => $cart->totals_json,
+            ]);
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * Remove promo code from cart
+     */
+    public function removePromo(Request $request)
+    {
+        $customer = $request->user()->customer;
+
+        if (! $customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer profile tidak ditemukan',
+            ], 403);
+        }
+
+        $cart = $this->cartService->getOrCreateCart($customer);
+        $this->cartService->removeCoupon($cart);
+
+        $cart->refresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kode promo berhasil dihapus',
+            'totals' => $cart->totals_json,
+        ]);
     }
 
     /**

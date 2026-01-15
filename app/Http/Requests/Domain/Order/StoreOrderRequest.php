@@ -17,7 +17,6 @@ class StoreOrderRequest extends FormRequest
             'customer_id' => ['required', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'string'],
-            'items.*.plan_id' => ['nullable', 'string'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
             'items.*.unit_price_cents' => ['required', 'integer', 'min:0'],
             'items.*.total_cents' => ['required', 'integer', 'min:0'],

@@ -5,6 +5,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\Domain\Billing\InvoiceController;
 use App\Http\Controllers\Domain\Billing\PaymentController;
 use App\Http\Controllers\Domain\Catalog\CatalogController;
+use App\Http\Controllers\Domain\Catalog\CouponController;
 use App\Http\Controllers\Domain\Catalog\PlanController;
 use App\Http\Controllers\Domain\Catalog\ProductController;
 use App\Http\Controllers\Domain\DomainController;
@@ -38,6 +39,10 @@ Route::get('/send_email', [\App\Http\Controllers\Auth\EmailVerificationControlle
 // Public catalog routes (guest - tanpa login)
 Route::get('/layanan', [CatalogController::class, 'guest'])->name('catalog.guest');
 Route::get('/layanan/{slug}', [CatalogController::class, 'guestShow'])->name('catalog.guest.show');
+Route::get('/checkout/{slug}', [CatalogController::class, 'guestCheckout'])->name('catalog.guest.checkout');
+
+// Public domain prices endpoint for guest checkout
+Route::get('/domain-prices/by-extension', [\App\Http\Controllers\Domain\DomainPriceController::class, 'getByExtensionGuest'])->name('domain-prices.guest.by-extension');
 
 // Catalog routes (dengan layout app untuk user login)
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index');
@@ -61,6 +66,8 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::put('/cart/items/{id}', [CartController::class, 'update'])->name('cart.update');
         Route::delete('/cart/items/{id}', [CartController::class, 'remove'])->name('cart.remove');
         Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+        Route::post('/cart/validate-promo', [CartController::class, 'validatePromo'])->name('cart.validate-promo');
+        Route::post('/cart/remove-promo', [CartController::class, 'removePromo'])->name('cart.remove-promo');
         Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
@@ -105,6 +112,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::resource('products', ProductController::class);
         Route::resource('plans', PlanController::class);
+        Route::resource('coupons', CouponController::class);
         Route::post('servers/{id}/test-connection', [ServerController::class, 'testConnection'])->name('servers.test-connection');
         Route::resource('servers', ServerController::class);
         Route::get('/panel-accounts', [PanelAccountController::class, 'index'])->name('panel-accounts.index');
@@ -172,6 +180,8 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::post('/settingsapp', [SettingAppController::class, 'update'])->name('setting.update');
     Route::get('/settings/margin', [\App\Http\Controllers\Settings\MarginController::class, 'edit'])->name('margin.edit')->middleware('admin');
     Route::put('/settings/margin', [\App\Http\Controllers\Settings\MarginController::class, 'update'])->name('margin.update')->middleware('admin');
+    Route::get('/settings/billing', [\App\Http\Controllers\Settings\BillingController::class, 'edit'])->name('settings.billing.edit')->middleware('admin');
+    Route::put('/settings/billing', [\App\Http\Controllers\Settings\BillingController::class, 'update'])->name('settings.billing.update')->middleware('admin');
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('/utilities/log-viewer', [LogViewerController::class, 'index'])->name('log-viewer.index');
     Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');

@@ -27,6 +27,13 @@ interface Product {
   slug: string;
   type: string;
   status: string;
+  price_cents: number;
+  currency: string;
+  setup_fee_cents: number;
+  trial_days: number;
+  annual_discount_percent?: number;
+  duration_1_month_enabled: boolean;
+  duration_12_months_enabled: boolean;
   metadata?: any;
   features?: ProductFeature[];
 }
@@ -34,6 +41,8 @@ interface Product {
 interface ProductFormProps {
   product?: Product;
 }
+
+
 
 export default function ProductForm({ product }: ProductFormProps) {
   const isEdit = !!product;
@@ -61,23 +70,29 @@ export default function ProductForm({ product }: ProductFormProps) {
       : []
   );
 
-  const { data, setData, post, put, processing, errors } = useForm({
+  const { data, setData, post, put, processing, errors, transform } = useForm<any>({
     name: product?.name || '',
     slug: product?.slug || '',
     type: product?.type || 'hosting_shared',
     status: product?.status || 'draft',
+    price_cents: product?.price_cents || 0,
+    currency: product?.currency || 'IDR',
+    setup_fee_cents: product?.setup_fee_cents || 0,
+    trial_days: product?.trial_days || 0,
+    annual_discount_percent: product?.annual_discount_percent || 0,
+    duration_1_month_enabled: product ? Boolean(product.duration_1_month_enabled) : true,
+    duration_12_months_enabled: product ? Boolean(product.duration_12_months_enabled) : true,
     metadata: {
       description: product?.metadata?.description || '',
       features: metadataFeatures,
       popular: product?.metadata?.popular || false,
-      starting_price: product?.metadata?.starting_price || null,
     },
     features: features,
   });
 
   const updateMetadata = (field: string, value: any) => {
     setData('metadata', {
-      ...data.metadata,
+      ...data.metadata!, // We initialize it as non-null
       [field]: value,
     });
   };
@@ -145,28 +160,17 @@ export default function ProductForm({ product }: ProductFormProps) {
     if (data.metadata?.popular) {
       cleanedMetadata.popular = true;
     }
-    if (data.metadata?.starting_price && data.metadata.starting_price > 0) {
-      cleanedMetadata.starting_price = parseInt(String(data.metadata.starting_price));
-    }
 
-    // Update metadata in form data
-    setData('metadata', Object.keys(cleanedMetadata).length > 0 ? cleanedMetadata : null);
+    // Apply transformation before submit
+    transform((data) => ({
+      ...data,
+      metadata: Object.keys(cleanedMetadata).length > 0 ? cleanedMetadata : null,
+    }));
 
-    // Submit using transform to ensure cleaned metadata is sent
     if (isEdit && product?.id) {
-      put(route('admin.products.update', product.id), {
-        transform: (data) => ({
-          ...data,
-          metadata: Object.keys(cleanedMetadata).length > 0 ? cleanedMetadata : null,
-        }),
-      });
+      put(route('admin.products.update', product.id));
     } else {
-      post(route('admin.products.store'), {
-        transform: (data) => ({
-          ...data,
-          metadata: Object.keys(cleanedMetadata).length > 0 ? cleanedMetadata : null,
-        }),
-      });
+      post(route('admin.products.store'));
     }
   };
 
@@ -189,59 +193,169 @@ export default function ProductForm({ product }: ProductFormProps) {
           </CardHeader>
           <CardContent>
             <form onSubmit={submit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Product Name</Label>
-                <Input
-                  id="name"
-                  value={data.name}
-                  onChange={(e) => setData('name', e.target.value)}
-                  className="mt-1"
-                  placeholder="e.g., Shared Hosting"
-                />
-                <InputError message={errors.name} className="mt-2" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Product Name</Label>
+                    <Input
+                      id="name"
+                      value={data.name}
+                      onChange={(e) => setData('name', e.target.value)}
+                      className="mt-1"
+                      placeholder="e.g., Shared Hosting"
+                    />
+                    <InputError message={errors.name} className="mt-2" />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="slug">Slug</Label>
+                    <Input
+                      id="slug"
+                      value={data.slug}
+                      onChange={(e) => setData('slug', e.target.value)}
+                      className="mt-1"
+                      placeholder="e.g., shared-hosting"
+                    />
+                    <InputError message={errors.slug} className="mt-2" />
+                  </div>
               </div>
 
-              <div>
-                <Label htmlFor="slug">Slug</Label>
-                <Input
-                  id="slug"
-                  value={data.slug}
-                  onChange={(e) => setData('slug', e.target.value)}
-                  className="mt-1"
-                  placeholder="e.g., shared-hosting"
-                />
-                <InputError message={errors.slug} className="mt-2" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="type">Type</Label>
+                    <Select value={data.type} onValueChange={(value) => setData('type', value)}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hosting_shared">Shared Hosting</SelectItem>
+                        <SelectItem value="vps">VPS</SelectItem>
+                        <SelectItem value="addon">Addon</SelectItem>
+                        <SelectItem value="domain">Domain</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <InputError message={errors.type} className="mt-2" />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={data.status} onValueChange={(value) => setData('status', value)}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <InputError message={errors.status} className="mt-2" />
+                  </div>
               </div>
 
-              <div>
-                <Label htmlFor="type">Type</Label>
-                <Select value={data.type} onValueChange={(value) => setData('type', value)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hosting_shared">Shared Hosting</SelectItem>
-                    <SelectItem value="vps">VPS</SelectItem>
-                    <SelectItem value="addon">Addon</SelectItem>
-                    <SelectItem value="domain">Domain</SelectItem>
-                  </SelectContent>
-                </Select>
-                <InputError message={errors.type} className="mt-2" />
-              </div>
+              {/* Pricing Section */}
+              <div className="pt-4 border-t">
+                <div className="mb-4">
+                   <Label className="text-base font-semibold">Pricing & Billing</Label>
+                   <p className="text-sm text-muted-foreground mt-1">
+                     Konfigurasi harga dan siklus penagihan
+                   </p>
+                </div>
 
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select value={data.status} onValueChange={(value) => setData('status', value)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-                <InputError message={errors.status} className="mt-2" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <Label htmlFor="price_cents">Price (Cents)</Label>
+                        <Input
+                            id="price_cents"
+                            type="number"
+                            value={data.price_cents}
+                            onChange={(e) => setData('price_cents', parseInt(e.target.value) || 0)}
+                            className="mt-1"
+                        />
+                         <p className="text-xs text-muted-foreground mt-1">Example: 50000 = Rp 50.000</p>
+                        <InputError message={errors.price_cents} className="mt-2" />
+                    </div>
+                     <div>
+                        <Label htmlFor="currency">Currency</Label>
+                         <Input
+                            id="currency"
+                            value={data.currency}
+                            onChange={(e) => setData('currency', e.target.value)}
+                            className="mt-1"
+                        />
+                        <InputError message={errors.currency} className="mt-2" />
+                    </div>
+                </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                     <div>
+                        <Label htmlFor="setup_fee_cents">Setup Fee (Cents)</Label>
+                        <Input
+                            id="setup_fee_cents"
+                            type="number"
+                            value={data.setup_fee_cents}
+                            onChange={(e) => setData('setup_fee_cents', parseInt(e.target.value) || 0)}
+                            className="mt-1"
+                        />
+                        <InputError message={errors.setup_fee_cents} className="mt-2" />
+                    </div>
+                     <div>
+                        <Label htmlFor="trial_days">Trial (Days)</Label>
+                         <Input
+                            id="trial_days"
+                            type="number"
+                            value={data.trial_days}
+                            onChange={(e) => setData('trial_days', parseInt(e.target.value) || 0)}
+                            className="mt-1"
+                        />
+                        <InputError message={errors.trial_days} className="mt-2" />
+                    </div>
+                </div>
+
+                <div className="mb-4">
+                    <Label htmlFor="annual_discount_percent">Annual Discount (%)</Label>
+                    <Input
+                        id="annual_discount_percent"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={data.annual_discount_percent}
+                        onChange={(e) => setData('annual_discount_percent', parseInt(e.target.value) || 0)}
+                        className="mt-1"
+                        placeholder="0"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Diskon persentase yang akan diterapkan untuk langganan tahunan (12 bulan). 
+                        Contoh: 20 = 20% diskon. Hanya berlaku jika durasi 12 bulan diaktifkan.
+                    </p>
+                    <InputError message={errors.annual_discount_percent} className="mt-2" />
+                </div>
+
+                 <div className="flex flex-col gap-2">
+                    <Label className="mb-2">Enabled Durations</Label>
+                     <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="duration_1_month"
+                              checked={data.duration_1_month_enabled}
+                              onCheckedChange={(checked) => setData('duration_1_month_enabled', !!checked)}
+                            />
+                            <Label htmlFor="duration_1_month" className="cursor-pointer font-normal">
+                              Monthly (1 Month)
+                            </Label>
+                          </div>
+                            <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="duration_12_months"
+                              checked={data.duration_12_months_enabled}
+                              onCheckedChange={(checked) => setData('duration_12_months_enabled', !!checked)}
+                            />
+                            <Label htmlFor="duration_12_months" className="cursor-pointer font-normal">
+                              Annually (12 Months)
+                            </Label>
+                          </div>
+                     </div>
+                      <InputError message={errors.duration_1_month_enabled} className="mt-1" />
+                      <InputError message={errors.duration_12_months_enabled} className="mt-1" />
+                 </div>
               </div>
 
               {/* Metadata Section */}
@@ -278,24 +392,6 @@ export default function ProductForm({ product }: ProductFormProps) {
                     <Label htmlFor="metadata_popular" className="cursor-pointer">
                       Tandai sebagai produk populer
                     </Label>
-                  </div>
-
-                  {/* Starting Price */}
-                  <div>
-                    <Label htmlFor="metadata_starting_price">Starting Price (Cents)</Label>
-                    <Input
-                      id="metadata_starting_price"
-                      type="number"
-                      value={data.metadata?.starting_price || ''}
-                      onChange={(e) => updateMetadata('starting_price', e.target.value ? parseInt(e.target.value) : null)}
-                      className="mt-1"
-                      placeholder="e.g., 50000 (untuk Rp 50.000)"
-                      min="0"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Harga mulai yang ditampilkan di catalog (dalam cents)
-                    </p>
-                    <InputError message={errors['metadata.starting_price']} className="mt-2" />
                   </div>
 
                   {/* Metadata Features (descriptive features) */}

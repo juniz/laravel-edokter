@@ -18,11 +18,12 @@ interface PlanFeature {
 interface Plan {
   id: string;
   code: string;
-  billing_cycle: string;
   price_cents: number;
   currency: string;
   setup_fee_cents: number;
   trial_days?: number;
+  duration_1_month_enabled: boolean;
+  duration_12_months_enabled: boolean;
   created_at: string;
   updated_at: string;
   product?: {
@@ -81,13 +82,20 @@ export default function PlanShow({ plan }: PlanShowProps) {
                 </div>
                 <Separator />
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Billing Cycle</span>
-                  <span className="font-semibold">{plan.billing_cycle}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Harga per Bulan</span>
+                  <span className="font-semibold text-lg">{formatPrice(plan.price_cents, plan.currency)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Price</span>
-                  <span className="font-semibold text-lg">{formatPrice(plan.price_cents, plan.currency)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Durasi Tersedia</span>
+                  <div className="flex gap-2">
+                    {plan.duration_1_month_enabled && (
+                      <Badge variant="outline">1 Bulan</Badge>
+                    )}
+                    {plan.duration_12_months_enabled && (
+                      <Badge variant="outline">12 Bulan</Badge>
+                    )}
+                  </div>
                 </div>
                 <Separator />
                 {plan.setup_fee_cents > 0 && (

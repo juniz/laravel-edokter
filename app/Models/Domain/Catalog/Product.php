@@ -22,18 +22,27 @@ class Product extends Model
         'slug',
         'status',
         'metadata',
+        'price_cents',
+        'currency',
+        'setup_fee_cents',
+        'trial_days',
+        'duration_1_month_enabled',
+        'duration_12_months_enabled',
+        'annual_discount_percent',
+        'display_order',
     ];
 
     protected function casts(): array
     {
         return [
             'metadata' => 'array',
+            'price_cents' => 'integer',
+            'setup_fee_cents' => 'integer',
+            'duration_1_month_enabled' => 'boolean',
+            'duration_12_months_enabled' => 'boolean',
+            'annual_discount_percent' => 'integer',
+            'display_order' => 'integer',
         ];
-    }
-
-    public function plans(): HasMany
-    {
-        return $this->hasMany(Plan::class);
     }
 
     public function orderItems(): HasMany

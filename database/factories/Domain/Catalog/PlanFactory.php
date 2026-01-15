@@ -15,33 +15,33 @@ class PlanFactory extends Factory
 
     public function definition(): array
     {
-        $cycles = ['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'];
-        
         return [
             'product_id' => Product::factory(),
             'code' => strtoupper($this->faker->unique()->bothify('###-???')),
-            'billing_cycle' => $this->faker->randomElement($cycles),
             'price_cents' => $this->faker->numberBetween(50000, 500000),
             'currency' => 'IDR',
             'trial_days' => $this->faker->randomElement([null, 7, 14, 30]),
             'setup_fee_cents' => $this->faker->numberBetween(0, 100000),
+            'duration_1_month_enabled' => true,
+            'duration_12_months_enabled' => true,
         ];
     }
 
-    public function monthly(): static
+    public function monthlyOnly(): static
     {
         return $this->state(fn (array $attributes) => [
-            'billing_cycle' => 'monthly',
-            'code' => 'MONTHLY-' . strtoupper($this->faker->bothify('???')),
+            'duration_1_month_enabled' => true,
+            'duration_12_months_enabled' => false,
+            'code' => 'MONTHLY-'.strtoupper($this->faker->bothify('???')),
         ]);
     }
 
-    public function annually(): static
+    public function annualOnly(): static
     {
         return $this->state(fn (array $attributes) => [
-            'billing_cycle' => 'annually',
-            'code' => 'ANNUAL-' . strtoupper($this->faker->bothify('???')),
-            'price_cents' => $this->faker->numberBetween(500000, 5000000),
+            'duration_1_month_enabled' => false,
+            'duration_12_months_enabled' => true,
+            'code' => 'ANNUAL-'.strtoupper($this->faker->bothify('???')),
         ]);
     }
 }
