@@ -25,8 +25,8 @@ return [
     'midtrans' => [
         'server_key' => env('MIDTRANS_SERVER_KEY'),
         'client_key' => env('MIDTRANS_CLIENT_KEY'),
-        'is_production' => env('MIDTRANS_IS_PRODUCTION', 'false') === 'true',
-        'verify_webhook_signature' => filter_var(env('MIDTRANS_VERIFY_WEBHOOK_SIGNATURE', true), FILTER_VALIDATE_BOOLEAN),
+        'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+        'verify_webhook_signature' => env('MIDTRANS_VERIFY_WEBHOOK_SIGNATURE', true),
     ],
 
     /*
