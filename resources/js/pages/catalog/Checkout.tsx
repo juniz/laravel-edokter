@@ -20,13 +20,10 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
-	Check,
 	Search,
 	Timer,
-	ShieldCheck,
 	ArrowLeft,
 	Loader2,
-	CheckCircle2,
 	XCircle,
 	Globe,
 } from "lucide-react";
@@ -141,6 +138,18 @@ export default function Checkout({
 		checkoutForm.setData("duration_months", parseInt(duration));
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [duration]);
+
+	// Update form when selectedDomains changes
+	useEffect(() => {
+		const domains = selectedDomains.map((domain) => ({
+			domain: domain.domain,
+			price_cents: domain.price || 0,
+			original_price_cents: domain.originalPrice || domain.price || 0,
+			discount_percent: domain.discountPercent || 0,
+		}));
+		checkoutForm.setData("domains", domains);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [selectedDomains]);
 
 	const formatPrice = (amount: number) => {
 		return new Intl.NumberFormat("id-ID", {
@@ -419,7 +428,8 @@ export default function Checkout({
 			discount_percent: domain.discountPercent || 0,
 		}));
 
-		// Update form data
+		// Update form data with all fields including domains
+		// Use setData to ensure all fields are updated before submit
 		checkoutForm.setData({
 			product_id: product.id,
 			payment_method: paymentMethod,
@@ -447,14 +457,16 @@ export default function Checkout({
 	// Calculate totals
 	const monthlyPrice = product.price_cents;
 	const annualDiscountPercent = product.annual_discount_percent ?? 0;
-	
+
 	// Calculate product subtotal with annual discount
 	let productSubtotal = duration === "1" ? monthlyPrice : monthlyPrice * 12;
 	let annualDiscount = 0;
-	
+
 	if (duration === "12" && annualDiscountPercent > 0) {
 		const annualPriceWithoutDiscount = monthlyPrice * 12;
-		annualDiscount = Math.round(annualPriceWithoutDiscount * (annualDiscountPercent / 100));
+		annualDiscount = Math.round(
+			annualPriceWithoutDiscount * (annualDiscountPercent / 100)
+		);
 		productSubtotal = annualPriceWithoutDiscount - annualDiscount;
 	}
 
