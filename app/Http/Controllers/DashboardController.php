@@ -330,6 +330,7 @@ class DashboardController extends Controller
 
         // Get featured products
         $featuredProducts = collect($this->productRepository->findAllActive())
+            ->sortBy('price_cents')
             ->take(3)
             ->map(function ($product) {
                 // Skip if no price
@@ -358,7 +359,7 @@ class DashboardController extends Controller
                     'discount_percent' => 0,
                 ];
             })
-            ->filter(fn ($product) => $product !== null)
+            ->filter(fn($product) => $product !== null)
             ->values()
             ->toArray();
 
