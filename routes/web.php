@@ -28,9 +28,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserFileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('login');
-})->name('home');
+Route::get('/', [CatalogController::class, 'guest'])->name('home');
 
 // Test email route (without queue)
 Route::get('/send_email', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'testSend'])

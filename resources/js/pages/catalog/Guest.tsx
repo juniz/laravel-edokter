@@ -12,6 +12,18 @@ import {
 	ArrowRight,
 	Check,
 	Tag,
+	Lock,
+	Mail,
+	HardDriveIcon,
+	Cpu,
+	MemoryStick,
+	Wifi,
+	Folder,
+	Database,
+	Cloud,
+	Activity,
+	CheckCircle2,
+	Star,
 } from "lucide-react";
 
 interface ProductFeature {
@@ -103,6 +115,74 @@ function formatPrice(amount: number) {
 		currency: "IDR",
 		minimumFractionDigits: 0,
 	}).format(amount); // Amount is in raw IDR
+}
+
+// Map feature key/label to appropriate icon
+function getFeatureIcon(key: string, label?: string): React.ComponentType<{ className?: string }> {
+	const searchText = (label || key).toLowerCase();
+	
+	// Website/Domain related
+	if (searchText.includes('website') || searchText.includes('domain') || searchText.includes('site')) {
+		return Globe;
+	}
+	
+	// SSL/Security
+	if (searchText.includes('ssl') || searchText.includes('certificate') || searchText.includes('security')) {
+		return Lock;
+	}
+	
+	// Email
+	if (searchText.includes('email') || searchText.includes('mail')) {
+		return Mail;
+	}
+	
+	// Storage/Disk
+	if (searchText.includes('storage') || searchText.includes('disk') || searchText.includes('space') || searchText.includes('gb')) {
+		return HardDriveIcon;
+	}
+	
+	// CPU
+	if (searchText.includes('cpu') || searchText.includes('core') || searchText.includes('processor')) {
+		return Cpu;
+	}
+	
+	// RAM/Memory
+	if (searchText.includes('ram') || searchText.includes('memory')) {
+		return MemoryStick;
+	}
+	
+	// Bandwidth/Network
+	if (searchText.includes('bandwidth') || searchText.includes('transfer') || searchText.includes('network') || searchText.includes('mbps')) {
+		return Wifi;
+	}
+	
+	// Backup
+	if (searchText.includes('backup')) {
+		return Folder;
+	}
+	
+	// Database
+	if (searchText.includes('database') || searchText.includes('db') || searchText.includes('mysql')) {
+		return Database;
+	}
+	
+	// Cloud/CDN
+	if (searchText.includes('cloud') || searchText.includes('cdn')) {
+		return Cloud;
+	}
+	
+	// Performance/Monitoring
+	if (searchText.includes('uptime') || searchText.includes('monitoring') || searchText.includes('performance')) {
+		return Activity;
+	}
+	
+	// Default icons based on common patterns
+	if (searchText.includes('free') || searchText.includes('gratis')) {
+		return Star;
+	}
+	
+	// Default fallback
+	return CheckCircle2;
 }
 
 export default function CatalogGuest({
@@ -252,19 +332,74 @@ export default function CatalogGuest({
 
 											{/* Features */}
 											<div className="flex-1 mb-8">
-												<ul className="space-y-4">
-													{product.metadata?.features &&
-														product.metadata.features.map((feature, idx) => (
-															<li key={idx} className="flex items-start gap-3">
-																<div className="mt-1 h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-																	<Check className="h-3 w-3 text-primary" />
+												{(() => {
+													const hasProductFeatures = product.features && product.features.length > 0;
+													const hasMetadataFeatures = product.metadata?.features && product.metadata.features.length > 0;
+													
+													if (!hasProductFeatures && !hasMetadataFeatures) {
+														return null;
+													}
+													
+													return (
+														<div className="space-y-4">
+															{/* Product Features from Database */}
+															{hasProductFeatures && (
+																<ul className="space-y-3">
+																	{product.features!.map((feature) => {
+																		const displayLabel = feature.label || feature.key;
+																		const displayValue = feature.value + (feature.unit ? ` ${feature.unit}` : '');
+																		const IconComponent = getFeatureIcon(feature.key, feature.label);
+																		return (
+																			<li key={feature.id} className="flex items-start gap-3">
+																				<div className="mt-0.5 h-5 w-5 flex items-center justify-center flex-shrink-0">
+																					<IconComponent className="h-4 w-4 text-primary" />
+																				</div>
+																				<div className="flex-1 min-w-0">
+																					<p className="text-sm font-semibold text-foreground">
+																						{displayValue ? `${displayLabel}: ${displayValue}` : displayLabel}
+																					</p>
+																				</div>
+																			</li>
+																		);
+																	})}
+																</ul>
+															)}
+															
+															{/* Separator between sections */}
+															{hasProductFeatures && hasMetadataFeatures && (
+																<div className="pt-2 pb-2 border-t border-muted/50">
+																	<p className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">
+																		Fitur Tambahan
+																	</p>
 																</div>
-																<span className="text-sm text-muted-foreground">
-																	{feature}
-																</span>
-															</li>
-														))}
-												</ul>
+															)}
+															
+															{/* Metadata Features */}
+															{hasMetadataFeatures && (
+																<ul className="space-y-3">
+																	{product.metadata!.features!.map((feature, idx) => {
+																		const parts = feature.split(':');
+																		const label = parts[0] || feature;
+																		const value = parts.slice(1).join(':').trim() || '';
+																		const IconComponent = getFeatureIcon(label, label);
+																		return (
+																			<li key={`metadata-${idx}`} className="flex items-start gap-3">
+																				<div className="mt-0.5 h-5 w-5 flex items-center justify-center flex-shrink-0">
+																					<IconComponent className="h-4 w-4 text-primary" />
+																				</div>
+																				<div className="flex-1 min-w-0">
+																					<p className="text-sm text-muted-foreground">
+																						{value ? `${label}: ${value}` : label}
+																					</p>
+																				</div>
+																			</li>
+																		);
+																	})}
+																</ul>
+															)}
+														</div>
+													);
+												})()}
 											</div>
 
 											{/* CTA */}
