@@ -24,7 +24,10 @@ class CatalogController extends Controller
      */
     public function guest(): Response
     {
-        $products = $this->productRepository->findAllActive();
+        $products = collect($this->productRepository->findAllActive())
+            ->sortBy('price_cents')
+            ->values()
+            ->all();
 
         // Load features untuk setiap product
         foreach ($products as $product) {
