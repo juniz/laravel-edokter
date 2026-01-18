@@ -115,6 +115,12 @@ export default function Checkout({
 		product_id: product.id,
 		payment_method: paymentMethod,
 		duration_months: parseInt(duration),
+		domains: [] as Array<{
+			domain: string;
+			price_cents: number;
+			original_price_cents: number;
+			discount_percent: number;
+		}>,
 	});
 
 	// Initialize duration based on availability
@@ -396,11 +402,20 @@ export default function Checkout({
 			return;
 		}
 
+		// Prepare domain data
+		const domains = selectedDomains.map((domain) => ({
+			domain: domain.domain,
+			price_cents: domain.price || 0,
+			original_price_cents: domain.originalPrice || domain.price || 0,
+			discount_percent: domain.discountPercent || 0,
+		}));
+
 		// Update form data
 		checkoutForm.setData({
 			product_id: product.id,
 			payment_method: paymentMethod,
 			duration_months: parseInt(duration),
+			domains: domains,
 		});
 
 		// Submit checkout

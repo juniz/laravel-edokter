@@ -58,8 +58,15 @@ class CheckoutCatalogService
 
             $setupFeeCents = $product->setup_fee_cents ?? 0;
 
+            // Calculate domain total (domains are not subject to product discounts)
+            $domains = $data['domains'] ?? [];
+            $domainTotalCents = 0;
+            foreach ($domains as $domain) {
+                $domainTotalCents += $domain['price_cents'] ?? 0;
+            }
+
             // Apply coupon discount if provided (on top of annual discount)
-            // Calculate coupon discount based on original subtotal + setup fee
+            // Calculate coupon discount based on original subtotal + setup fee (domains not included in discount calculation)
             $couponDiscountCents = 0;
             $couponId = null;
             if (isset($data['coupon_code']) && ! empty($data['coupon_code'])) {
@@ -75,7 +82,7 @@ class CheckoutCatalogService
                 }
             }
 
-            // Total discount = annual discount + coupon discount
+            // Total discount = annual discount + coupon discount (only applies to product, not domains)
             $discountCents = $annualDiscountCents + $couponDiscountCents;
 
             // Calculate PPH (Pajak Penghasilan) - get from database settings or config
@@ -85,38 +92,59 @@ class CheckoutCatalogService
             // Subtotal setelah diskon (untuk perhitungan pajak dan total)
             $subtotalAfterDiscountCents = $originalSubtotalCents - $discountCents;
 
-            // Calculate tax based on amount after discount
-            $taxableAmount = $subtotalAfterDiscountCents + $setupFeeCents;
+            // Calculate tax based on amount after discount + domains
+            // Tax applies to: (product after discount + setup fee) + domains
+            $taxableAmount = $subtotalAfterDiscountCents + $setupFeeCents + $domainTotalCents;
             $taxCents = (int) round($taxableAmount * $pphRate);
 
-            // Total = subtotal setelah diskon + setup fee + tax
-            $totalCents = $subtotalAfterDiscountCents + $setupFeeCents + $taxCents;
+            // Total = subtotal setelah diskon + setup fee + domains + tax
+            $totalCents = $subtotalAfterDiscountCents + $setupFeeCents + $domainTotalCents + $taxCents;
+
+            // Prepare order items
+            $orderItems = [
+                [
+                    'product_id' => $product->id,
+                    'qty' => 1,
+                    'unit_price_cents' => $subtotalAfterDiscountCents,
+                    'total_cents' => $subtotalAfterDiscountCents,
+                    'meta' => [
+                        'type' => 'catalog',
+                        'setup_fee' => $setupFeeCents,
+                        'duration_months' => $durationMonths,
+                        'original_subtotal' => $originalSubtotalCents,
+                        'original_unit_price' => $originalSubtotalCents,
+                        'discount_applied' => $discountCents,
+                    ],
+                ],
+            ];
+
+            // Add domain items
+            foreach ($domains as $domain) {
+                $domainPriceCents = $domain['price_cents'] ?? 0;
+                $orderItems[] = [
+                    'product_id' => null, // Domain tidak punya product
+                    'qty' => 1,
+                    'unit_price_cents' => $domainPriceCents,
+                    'total_cents' => $domainPriceCents,
+                    'meta' => [
+                        'type' => 'domain',
+                        'domain_name' => $domain['domain'] ?? '',
+                        'original_price_cents' => $domain['original_price_cents'] ?? $domainPriceCents,
+                        'discount_percent' => $domain['discount_percent'] ?? 0,
+                    ],
+                ];
+            }
 
             // Create order
             $order = $this->placeOrderService->execute([
                 'customer_id' => $customer->id,
                 'currency' => $product->currency ?? 'IDR',
-                'subtotal_cents' => $originalSubtotalCents,
+                'subtotal_cents' => $originalSubtotalCents + $domainTotalCents,
                 'discount_cents' => $discountCents,
                 'tax_cents' => $taxCents,
                 'total_cents' => $totalCents,
                 'coupon_id' => $couponId,
-                'items' => [
-                    [
-                        'product_id' => $product->id,
-                        'qty' => 1,
-                        'unit_price_cents' => $subtotalAfterDiscountCents,
-                        'total_cents' => $subtotalAfterDiscountCents,
-                        'meta' => [
-                            'type' => 'catalog',
-                            'setup_fee' => $setupFeeCents,
-                            'duration_months' => $durationMonths,
-                            'original_subtotal' => $originalSubtotalCents,
-                            'original_unit_price' => $originalSubtotalCents,
-                            'discount_applied' => $discountCents,
-                        ],
-                    ],
-                ],
+                'items' => $orderItems,
             ]);
 
             // Generate invoice
@@ -125,12 +153,12 @@ class CheckoutCatalogService
                 'order_id' => $order->id,
                 'customer_id' => $customer->id,
                 'currency' => $product->currency ?? 'IDR',
-                'subtotal_cents' => $originalSubtotalCents + $setupFeeCents,
+                'subtotal_cents' => $originalSubtotalCents + $setupFeeCents + $domainTotalCents,
                 'discount_cents' => $discountCents,
                 'tax_cents' => $taxCents,
                 'total_cents' => $totalCents,
                 'due_at' => now()->addDays(1),
-                'notes' => "Pembayaran untuk {$product->name}",
+                'notes' => "Pembayaran untuk {$product->name}".(count($domains) > 0 ? ' + '.count($domains).' domain' : ''),
             ]);
 
             // Add invoice items
@@ -170,6 +198,31 @@ class CheckoutCatalogService
                 ],
             ]);
 
+            // Add domain items to invoice
+            foreach ($domains as $domain) {
+                $domainPriceCents = $domain['price_cents'] ?? 0;
+                $domainName = $domain['domain'] ?? '';
+                $discountPercent = $domain['discount_percent'] ?? 0;
+
+                $domainDescription = "Domain: {$domainName}";
+                if ($discountPercent > 0) {
+                    $domainDescription .= " (Diskon {$discountPercent}%)";
+                }
+
+                $invoice->items()->create([
+                    'description' => $domainDescription,
+                    'qty' => 1,
+                    'unit_price_cents' => $domainPriceCents,
+                    'total_cents' => $domainPriceCents,
+                    'meta' => [
+                        'type' => 'domain',
+                        'domain_name' => $domainName,
+                        'original_price_cents' => $domain['original_price_cents'] ?? $domainPriceCents,
+                        'discount_percent' => $discountPercent,
+                    ],
+                ]);
+            }
+
             // Add tax as separate item (required to match gross_amount)
             if ($taxCents > 0) {
                 $invoice->items()->create([
@@ -184,8 +237,8 @@ class CheckoutCatalogService
                 ]);
             }
 
-            // Verify: productPriceAfterDiscount + taxCents should equal totalCents
-            // ($subtotalAfterDiscountCents + $setupFeeCents) + $taxCents = $totalCents ✓
+            // Verify: productPriceAfterDiscount + domainTotalCents + taxCents should equal totalCents
+            // ($subtotalAfterDiscountCents + $setupFeeCents) + $domainTotalCents + $taxCents = $totalCents ✓
 
             // Create payment via Midtrans
             $paymentOptions = [

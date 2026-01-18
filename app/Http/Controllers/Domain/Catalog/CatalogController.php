@@ -225,6 +225,11 @@ class CatalogController extends Controller
             'product_id' => ['required', 'string'],
             'payment_method' => ['required', 'string'],
             'duration_months' => ['required', 'integer', 'in:1,12'],
+            'domains' => ['nullable', 'array'],
+            'domains.*.domain' => ['required', 'string'],
+            'domains.*.price_cents' => ['required', 'integer', 'min:0'],
+            'domains.*.original_price_cents' => ['nullable', 'integer', 'min:0'],
+            'domains.*.discount_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
         $user = $request->user();
@@ -263,6 +268,7 @@ class CatalogController extends Controller
                 'product_id' => $request->product_id,
                 'payment_method' => $request->payment_method,
                 'duration_months' => $request->duration_months,
+                'domains' => $request->domains ?? [],
             ]);
 
             // Redirect ke halaman payment
