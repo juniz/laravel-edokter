@@ -102,7 +102,20 @@ export default function Checkout({
 	const { auth } = usePage<{
 		auth: { user?: { id: number; name: string; email: string } | null };
 	}>().props;
-	const [duration, setDuration] = useState<"1" | "12">("1");
+
+	// Initialize duration based on availability
+	const getInitialDuration = (): "1" | "12" => {
+		if (product.duration_1_month_enabled) {
+			return "1";
+		}
+		if (product.duration_12_months_enabled) {
+			return "12";
+		}
+		// Fallback to "1" if both are disabled (shouldn't happen, but safety)
+		return "1";
+	};
+
+	const [duration, setDuration] = useState<"1" | "12">(getInitialDuration());
 	const [domainQuery, setDomainQuery] = useState("");
 	const [isSearchingDomain, setIsSearchingDomain] = useState(false);
 	const [domainResults, setDomainResults] = useState<DomainResult[]>([]);
@@ -114,7 +127,7 @@ export default function Checkout({
 	const checkoutForm = useForm({
 		product_id: product.id,
 		payment_method: paymentMethod,
-		duration_months: parseInt(duration),
+		duration_months: parseInt(getInitialDuration()),
 		domains: [] as Array<{
 			domain: string;
 			price_cents: number;
@@ -123,15 +136,11 @@ export default function Checkout({
 		}>,
 	});
 
-	// Initialize duration based on availability
+	// Update form when duration changes
 	useEffect(() => {
-		if (
-			!product.duration_1_month_enabled &&
-			product.duration_12_months_enabled
-		) {
-			setDuration("12");
-		}
-	}, [product]);
+		checkoutForm.setData("duration_months", parseInt(duration));
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [duration]);
 
 	const formatPrice = (amount: number) => {
 		return new Intl.NumberFormat("id-ID", {
