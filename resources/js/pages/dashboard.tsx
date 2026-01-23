@@ -52,11 +52,35 @@ import {
     AlertCircle,
     CheckCircle2,
     XCircle,
+    Copy,
+    ExternalLink,
+    Zap,
+    Package,
+    Star,
+    Clock,
+    Database,
+    Mail,
+    Cpu,
+    MemoryStick,
+    Wifi,
+    Folder,
+    Lock,
+    Cloud,
+    Activity,
+    HardDriveIcon,
 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
+
+interface ProductFeature {
+    id: string;
+    key: string;
+    value: string;
+    label?: string;
+    unit?: string;
+}
 
 interface FeaturedProduct {
     id: string;
@@ -74,7 +98,8 @@ interface FeaturedProduct {
     } | null;
     original_price_cents: number | null;
     discount_percent: number;
-    features?: string[];
+    features: ProductFeature[];
+    metadata_features?: string[];
     is_popular?: boolean;
 }
 
@@ -170,6 +195,74 @@ const CHART_COLORS = {
     pink: 'hsl(330, 81%, 60%)',
 };
 
+// Map feature key/label to appropriate icon - Copied from Catalog/Index.tsx
+function getFeatureIcon(key: string, label?: string): React.ComponentType<{ className?: string }> {
+    const searchText = (label || key).toLowerCase();
+    
+    // Website/Domain related
+    if (searchText.includes('website') || searchText.includes('domain') || searchText.includes('site')) {
+        return Globe;
+    }
+    
+    // SSL/Security
+    if (searchText.includes('ssl') || searchText.includes('certificate') || searchText.includes('security')) {
+        return Lock;
+    }
+    
+    // Email
+    if (searchText.includes('email') || searchText.includes('mail')) {
+        return Mail;
+    }
+    
+    // Storage/Disk
+    if (searchText.includes('storage') || searchText.includes('disk') || searchText.includes('space') || searchText.includes('gb')) {
+        return HardDriveIcon;
+    }
+    
+    // CPU
+    if (searchText.includes('cpu') || searchText.includes('core') || searchText.includes('processor')) {
+        return Cpu;
+    }
+    
+    // RAM/Memory
+    if (searchText.includes('ram') || searchText.includes('memory')) {
+        return MemoryStick;
+    }
+    
+    // Bandwidth/Network
+    if (searchText.includes('bandwidth') || searchText.includes('transfer') || searchText.includes('network') || searchText.includes('mbps')) {
+        return Wifi;
+    }
+    
+    // Backup
+    if (searchText.includes('backup') || searchText.includes('backup')) {
+        return Folder;
+    }
+    
+    // Database
+    if (searchText.includes('database') || searchText.includes('db') || searchText.includes('mysql')) {
+        return Database;
+    }
+    
+    // Cloud/CDN
+    if (searchText.includes('cloud') || searchText.includes('cdn')) {
+        return Cloud;
+    }
+    
+    // Performance/Monitoring
+    if (searchText.includes('uptime') || searchText.includes('monitoring') || searchText.includes('performance')) {
+        return Activity;
+    }
+    
+    // Default icons based on common patterns
+    if (searchText.includes('free') || searchText.includes('gratis')) {
+        return Star;
+    }
+    
+    // Default fallback
+    return CheckCircle2;
+}
+
 const PIE_COLORS = [CHART_COLORS.primary, CHART_COLORS.teal, CHART_COLORS.orange, CHART_COLORS.purple, CHART_COLORS.pink];
 
 function AdminDashboard({
@@ -196,7 +289,13 @@ function AdminDashboard({
             active: { variant: 'success', label: 'Active' },
         };
         const config = statusMap[status] || { variant: 'default', label: status };
-        return <Badge variant={`${config.variant}-soft`}>{config.label.toUpperCase()}</Badge>;
+        
+        // Handle variants that don't have a -soft equivalent
+        if (config.variant === 'default') {
+            return <Badge variant="outline">{config.label.toUpperCase()}</Badge>;
+        }
+        
+        return <Badge variant={`${config.variant}-soft` as any}>{config.label.toUpperCase()}</Badge>;
     };
 
     return (
@@ -780,69 +879,114 @@ function CustomerDashboard({
                         {featuredProducts.map((pkg) => (
                             <Card
                                 key={pkg.id}
-                                className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
-                                    pkg.is_popular 
-                                        ? 'border-2 border-primary shadow-xl scale-[1.02] z-10' 
-                                        : 'border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                                }`}
+                                className="relative overflow-hidden flex flex-col h-full border-2 hover:border-primary/50 transition-all group"
                             >
-                                {/* Popular Badge - Diagonal */}
+                                {/* Popular badge */}
                                 {pkg.is_popular && (
-                                    <div className="absolute top-0 left-0 z-20">
-                                        <div className="relative">
-                                            <div className="absolute -left-12 top-6 w-40 bg-primary text-primary-foreground text-xs font-bold py-1.5 text-center transform -rotate-45 shadow-md">
-                                                POPULER
-                                            </div>
-                                        </div>
+                                    <div className="absolute top-0 right-0 px-3 py-1 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-xs font-semibold rounded-bl-xl z-10">
+                                        <Star className="h-3 w-3 inline mr-1" />
+                                        POPULER
                                     </div>
                                 )}
 
-                                <CardContent className="p-6 pt-10">
-                                    {/* Package Header */}
-                                    <div className="text-center mb-6">
-                                        <h3 className="font-bold text-xl text-gray-900 dark:text-white mb-1">
-                                            {pkg.name}
-                                        </h3>
-                                        <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
+                                <CardHeader className="text-center pb-4 pt-8">
+                                    <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                                        {pkg.name}
+                                    </h3>
+                                    {pkg.description && (
+                                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 min-h-[40px]">
                                             {pkg.description}
                                         </p>
-                                    </div>
+                                    )}
+                                </CardHeader>
 
-                                    {/* Pricing */}
-                                    <div className="text-center mb-6">
-                                        <div className="flex items-baseline justify-center gap-1">
-                                            <span className="font-mono text-4xl font-bold text-gray-900 dark:text-white">
+                                <CardContent className="flex-1 flex flex-col space-y-6">
+                                    {/* Pricing Section - Google AI Style */}
+                                    <div className="text-center space-y-2">
+                                        <div className="flex items-baseline justify-center gap-2">
+                                        {/* TODO: Add proper annual/monthly logic if needed, currently matching catalog display logic implies we might need more data, but using existing best_plan */}
+                                            {pkg.original_price_cents && (
+                                                <span className="text-base text-muted-foreground line-through">
+                                                    {formatCurrency(pkg.original_price_cents)}
+                                                </span>
+                                            )}
+                                            {/* Green price if discounted/popular or just following design */}
+                                            <span className={`text-3xl font-bold ${pkg.original_price_cents ? 'text-emerald-600' : 'text-gray-900 dark:text-white'}`}>
                                                 {formatCurrency(pkg.best_plan?.monthly_price_cents || 0)}
                                             </span>
-                                            <span className="text-muted-foreground">/bln</span>
+                                            <span className="text-sm text-muted-foreground">/bln</span>
                                         </div>
                                     </div>
 
-                                    {/* Features List */}
-                                    <ul className="space-y-3 mb-6">
-                                        {pkg.features?.slice(0, 8).map((feature, idx) => (
-                                            <li key={idx} className="flex items-start gap-3">
-                                                <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300">
-                                                    {feature}
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-
                                     {/* CTA Button */}
-                                    <Link href={route('catalog.index')}>
+                                    <Link href={route('catalog.show', pkg.slug)} className="block">
                                         <Button 
-                                            className={`w-full h-12 font-semibold transition-all duration-200 ${
-                                                pkg.is_popular 
-                                                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl hover:scale-[1.02]' 
-                                                    : 'bg-transparent border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:border-primary hover:text-primary'
-                                            }`}
-                                            variant={pkg.is_popular ? 'default' : 'outline'}
+                                            variant="default" 
+                                            className="w-full h-12 text-base font-medium"
+                                            size="lg"
                                         >
                                             Pilih Paket
                                         </Button>
                                     </Link>
+
+                                    {/* Features List - Google AI Style */}
+                                    <div className="space-y-4 pt-4 border-t">
+                                        {((pkg.features && pkg.features.length > 0) || (pkg.metadata_features && pkg.metadata_features.length > 0)) ? (
+                                            <>
+                                                {/* Database Features */}
+                                                {pkg.features && pkg.features.map((feature, idx) => {
+                                                    const displayLabel = feature.label || feature.key;
+                                                    const displayValue = feature.value + (feature.unit ? ` ${feature.unit}` : '');
+                                                    const IconComponent = getFeatureIcon(feature.key, feature.label);
+                                                    
+                                                    return (
+                                                        <div key={feature.id || idx} className="flex items-start gap-3">
+                                                            <div className="flex-shrink-0 mt-0.5">
+                                                                <IconComponent className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-semibold text-sm">
+                                                                    {displayValue ? `${displayLabel}: ${displayValue}` : displayLabel}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+
+                                                {/* Separator */}
+                                                {pkg.features && pkg.features.length > 0 && pkg.metadata_features && pkg.metadata_features.length > 0 && (
+                                                    <div className="pt-2 pb-2 border-t border-b border-muted/50">
+                                                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">
+                                                            FITUR TAMBAHAN
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {/* Metadata Features (Strings) */}
+                                                {pkg.metadata_features && pkg.metadata_features.map((feature, idx) => {
+                                                    const parts = feature.split(':');
+                                                    const label = parts[0] || feature;
+                                                    const value = parts.slice(1).join(':').trim() || '';
+                                                    const IconComponent = getFeatureIcon(label, label);
+                                                    
+                                                    return (
+                                                         <div key={`meta-${idx}`} className="flex items-start gap-3">
+                                                             <div className="flex-shrink-0 mt-0.5">
+                                                                 <IconComponent className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                                             </div>
+                                                             <div className="flex-1 min-w-0">
+                                                                 <p className="font-semibold text-sm">
+                                                                     {value ? `${label}: ${value}` : label}
+                                                                 </p>
+                                                             </div>
+                                                         </div>
+                                                    );
+                                                })}
+                                            </>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground text-center">Fitur lengkap tersedia di halaman detail.</p>
+                                        )}
+                                    </div>
                                 </CardContent>
                             </Card>
                         ))}

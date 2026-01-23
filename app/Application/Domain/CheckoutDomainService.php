@@ -84,12 +84,38 @@ class CheckoutDomainService
 
                 // Try to get price for the specific period first
                 $price = null;
-                if (isset($domainPrice->registration[$periodKey]) && is_numeric($domainPrice->registration[$periodKey])) {
+                $isPromo = false;
+
+                // Log the promo registration data for debugging
+                Log::info('Domain price lookup', [
+                    'extension' => $extension,
+                    'period' => $period,
+                    'period_key' => $periodKey,
+                    'has_promo_registration' => !empty($domainPrice->promoRegistration),
+                    'promo_registration' => $domainPrice->promoRegistration,
+                    'registration' => $domainPrice->registration,
+                ]);
+
+                // Check for Promo Price First
+                if (
+                    !empty($domainPrice->promoRegistration) && 
+                    !empty($domainPrice->promoRegistration['registration']) &&
+                    isset($domainPrice->promoRegistration['registration'][$periodKey]) &&
+                    is_numeric($domainPrice->promoRegistration['registration'][$periodKey])
+                ) {
+                    $price = (int) $domainPrice->promoRegistration['registration'][$periodKey];
+                    $isPromo = true;
+                    Log::info('Using promo price', ['price' => $price, 'period' => $periodKey]);
+                }
+                // Regular Price
+                elseif (isset($domainPrice->registration[$periodKey]) && is_numeric($domainPrice->registration[$periodKey])) {
                     $price = (int) $domainPrice->registration[$periodKey];
+                    Log::info('Using regular price for period', ['price' => $price, 'period' => $periodKey]);
                 } elseif (isset($domainPrice->registration['1']) && is_numeric($domainPrice->registration['1'])) {
                     // Fallback: calculate from 1-year price
                     $oneYearPrice = (int) $domainPrice->registration['1'];
                     $price = $oneYearPrice * $period;
+                    Log::info('Using calculated price from 1-year', ['price' => $price, 'period' => $period]);
                 } else {
                     // No valid price found - fail the transaction
                     Log::error('Domain price not found for period', [
@@ -123,8 +149,18 @@ class CheckoutDomainService
                 // Apply margin keuntungan
                 $priceWithMargin = $this->calculateMarginService->calculateDomainPrice($price);
 
-                $subtotalCents = $priceWithMargin * 100; // Convert to cents
-                $totalCents = $subtotalCents; // No tax/discount for now
+                // Calculate Billing (Tax & Fees)
+                $setting = \App\Models\Domain\Shared\Setting::where('key', 'billing_settings')->first();
+                $pphRate = $setting?->value['pph_rate'] ?? config('billing.pph_rate', 0.11);
+                $applicationFeeCents = $setting?->value['application_fee'] ?? 0;
+
+                $subtotalCents = $priceWithMargin; 
+                
+                // Calculate Tax
+                $taxCents = (int) round($subtotalCents * $pphRate);
+                
+                // Total = Subtotal + Tax + Application Fee
+                $totalCents = $subtotalCents + $taxCents + $applicationFeeCents;
 
                 // Create order
                 $order = $this->placeOrderService->execute([
@@ -132,7 +168,7 @@ class CheckoutDomainService
                     'currency' => $domainPrice->currency ?? 'IDR',
                     'subtotal_cents' => $subtotalCents,
                     'discount_cents' => 0,
-                    'tax_cents' => 0,
+                    'tax_cents' => $taxCents,
                     'total_cents' => $totalCents,
                     'items' => [
                         [
@@ -159,7 +195,7 @@ class CheckoutDomainService
                     'currency' => $domainPrice->currency ?? 'IDR',
                     'subtotal_cents' => $subtotalCents,
                     'discount_cents' => 0,
-                    'tax_cents' => 0,
+                    'tax_cents' => $taxCents,
                     'total_cents' => $totalCents,
                     'due_at' => now()->addDays(1), // Due date 1 hari
                     'notes' => "Pembayaran untuk domain: {$domainName}",
@@ -184,6 +220,33 @@ class CheckoutDomainService
                         'auto_renew' => $data['auto_renew'] ?? false,
                     ],
                 ]);
+
+                // Add Application Fee Item
+                if ($applicationFeeCents > 0) {
+                    $invoice->items()->create([
+                        'description' => 'Biaya Aplikasi',
+                        'qty' => 1,
+                        'unit_price_cents' => $applicationFeeCents,
+                        'total_cents' => $applicationFeeCents,
+                        'meta' => [
+                            'type' => 'fee',
+                        ],
+                    ]);
+                }
+
+                // Add Tax Item
+                if ($taxCents > 0) {
+                    $invoice->items()->create([
+                        'description' => 'Pajak (PPH)',
+                        'qty' => 1,
+                        'unit_price_cents' => $taxCents,
+                        'total_cents' => $taxCents,
+                        'meta' => [
+                            'type' => 'tax',
+                            'pph_rate' => $pphRate,
+                        ],
+                    ]);
+                }
 
                 // Create payment via Midtrans
                 $paymentOptions = [
@@ -252,8 +315,19 @@ class CheckoutDomainService
             return '';
         }
 
-        // Ambil extension (bagian terakhir)
-        return '.'.end($parts);
+        // Indonesian compound TLDs (second-level domains under .id)
+        $indonesianSlds = ['co', 'web', 'biz', 'my', 'or', 'ac', 'sch'];
+        
+        $lastPart = end($parts);
+        $secondLast = count($parts) >= 2 ? $parts[count($parts) - 2] : '';
+
+        // Check if it's a compound Indonesian TLD (e.g., .web.id, .co.id)
+        if ($lastPart === 'id' && in_array($secondLast, $indonesianSlds)) {
+            return '.' . $secondLast . '.' . $lastPart;
+        }
+
+        // Standard TLD (e.g., .com, .net, .id)
+        return '.' . $lastPart;
     }
 
     /**

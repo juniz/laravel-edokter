@@ -951,14 +951,6 @@ export default function Checkout({
 										</SelectTrigger>
 										<SelectContent>
 											<SelectGroup>
-												<SelectLabel>E-Wallet</SelectLabel>
-												<SelectItem value="gopay">GoPay</SelectItem>
-												<SelectItem value="shopeepay">ShopeePay</SelectItem>
-												<SelectItem value="dana">DANA</SelectItem>
-												<SelectItem value="ovo">OVO</SelectItem>
-												<SelectItem value="linkaja">LinkAja</SelectItem>
-											</SelectGroup>
-											<SelectGroup>
 												<SelectLabel>Virtual Account</SelectLabel>
 												<SelectItem value="bca_va">
 													BCA Virtual Account

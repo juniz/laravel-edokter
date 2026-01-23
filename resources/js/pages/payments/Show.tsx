@@ -322,7 +322,7 @@ export default function PaymentShow({
                                         <Button
                                             variant="gradient"
                                             size="lg"
-                                            className="w-full h-12 text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 animate-pulse"
+                                            className="w-full h-12 text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40"
                                             onClick={() => window.open(redirect_url, '_blank')}
                                         >
                                             Bayar Sekarang

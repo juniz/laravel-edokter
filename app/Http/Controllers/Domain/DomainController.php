@@ -102,8 +102,16 @@ class DomainController extends Controller
                 ->get();
         }
 
+        // Get billing settings
+        $setting = \App\Models\Domain\Shared\Setting::where('key', 'billing_settings')->first();
+        $billingSettings = [
+            'pph_rate' => $setting?->value['pph_rate'] ?? config('billing.pph_rate', 0.11),
+            'application_fee' => $setting?->value['application_fee'] ?? 0,
+        ];
+
         return Inertia::render('domains/Form', [
             'customers' => $customers,
+            'billingSettings' => $billingSettings,
         ]);
     }
 
@@ -198,7 +206,7 @@ class DomainController extends Controller
             'period' => $validated['period'],
             'customer_id' => $customerId ?? $validated['customer_id'],
             'auto_renew' => $validated['auto_renew'] ?? false,
-            'payment_method' => $validated['payment_method'] ?? 'credit_card',
+            'payment_method' => $validated['payment_method'] ?? 'bca_va',
         ];
 
         if (isset($validated['nameserver'])) {
@@ -226,6 +234,26 @@ class DomainController extends Controller
         // Redirect ke invoice payment page dengan payment token
         $payment = $result['payment'];
         $redirectUrl = $payment->raw_payload['redirect_url'] ?? null;
+        $snapToken = $payment->raw_payload['snap_token'] ?? null; // Assume snap_token might be here
+        // If not in raw_payload, check if it's in core_api_response (some adapters structure it differently)
+        if (!$snapToken && isset($payment->raw_payload['token'])) {
+             $snapToken = $payment->raw_payload['token'];
+        }
+
+        // Return JSON for frontend handling (Snap Popup)
+        $routePrefix = auth()->user()->hasRole('admin') ? 'admin' : 'customer';
+        $invoiceRoute = $routePrefix . '.invoices.show';
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'invoice_url' => route($invoiceRoute, $result['invoice']->id),
+                'snap_token' => $snapToken,
+                'redirect_url' => $redirectUrl,
+            ]);
+        }
+
         $paymentMethod = $payment->raw_payload['payment_method'] ?? null;
 
         // Untuk payment method yang memiliki redirect_url (credit card, e-wallet dengan deeplink)
@@ -235,7 +263,7 @@ class DomainController extends Controller
 
         // Untuk payment method tanpa redirect_url (VA, convenience store)
         // Redirect ke invoice page dengan payment details
-        return redirect()->route('invoices.show', $result['invoice']->id)
+        return redirect()->route($invoiceRoute, $result['invoice']->id)
             ->with('success', $result['message'])
             ->with('payment_details', [
                 'method' => $paymentMethod,

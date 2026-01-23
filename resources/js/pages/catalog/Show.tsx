@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import InputError from '@/components/input-error';
+import DomainSearch, { type DomainResult } from '@/components/DomainSearch';
 import {
     Wallet,
     Building2,
@@ -111,6 +112,9 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
     const [selectedDuration, setSelectedDuration] = useState<1 | 12>(defaultDuration);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('bca_va');
     const [isSubmittingCheckout, setIsSubmittingCheckout] = useState(false);
+    
+    // Domain State
+    const [selectedDomains, setSelectedDomains] = useState<DomainResult[]>([]);
 
     const typeConfig = getProductTypeConfig(product.type);
     const TypeIcon = typeConfig.icon;
@@ -125,15 +129,21 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
         : 0;
     const annualPriceWithDiscount = annualPriceWithoutDiscount - annualDiscountAmount;
 
-  const addToCartForm = useForm({
-    product_id: product.id,
-    qty: 1,
-  });
+    const addToCartForm = useForm({
+        product_id: product.id,
+        qty: 1,
+    });
 
     const checkoutForm = useForm({
         product_id: product.id,
         payment_method: 'bca_va',
         duration_months: 1,
+        domains: [] as Array<{
+            domain: string;
+            price_cents: number;
+            original_price_cents: number;
+            discount_percent: number;
+        }>,
     });
 
     const formatPrice = (cents: number) => {
@@ -142,6 +152,15 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
             currency: 'IDR',
             minimumFractionDigits: 0,
         }).format(cents);
+    };
+    
+    const handleAddDomain = (domain: DomainResult) => {
+        if (selectedDomains.some((d) => d.domain === domain.domain)) return;
+        setSelectedDomains([...selectedDomains, domain]);
+    };
+
+    const handleRemoveDomain = (domainName: string) => {
+        setSelectedDomains(selectedDomains.filter((d) => d.domain !== domainName));
     };
 
   const handleAddToCart = () => {
@@ -185,6 +204,12 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
             ...data,
             payment_method: selectedPaymentMethod,
             duration_months: selectedDuration,
+            domains: selectedDomains.map(d => ({
+                domain: d.domain,
+                price_cents: d.price || 0,
+                original_price_cents: d.originalPrice || d.price || 0,
+                discount_percent: d.discountPercent || 0,
+            })),
         }));
 
         checkoutForm.post(route('catalog.checkout'), {
@@ -235,15 +260,6 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
                 { value: 'mandiri_va', label: 'Mandiri Virtual Account', icon: Building2 },
             ],
         },
-        {
-            category: 'E-Wallet',
-            methods: [
-                { value: 'gopay', label: 'GoPay', icon: Wallet },
-                { value: 'shopeepay', label: 'ShopeePay', icon: Wallet },
-                { value: 'dana', label: 'DANA', icon: Wallet },
-                { value: 'ovo', label: 'OVO', icon: Wallet },
-            ],
-        },
     ];
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -278,6 +294,31 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Product Features */}
                     <div className="lg:col-span-2 space-y-6">
+                        {/* Domain Search Upsell */}
+                        <Card variant="premium">
+                            <CardHeader>
+                                <div className="flex items-center gap-2">
+                                    <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg text-blue-600">
+                                        <Globe className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-lg">
+                                            Tambah Domain
+                                        </CardTitle>
+                                        <div className="text-sm text-muted-foreground">
+                                            Cari dan tambahkan domain untuk website Anda
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <DomainSearch
+                                    onAddDomain={handleAddDomain}
+                                    onRemoveDomain={(d) => handleRemoveDomain(d)}
+                                    selectedDomains={selectedDomains}
+                                />
+                            </CardContent>
+                        </Card>
                         {/* Product Features (CPU, RAM, Bandwidth, etc) */}
                         {product.features && product.features.length > 0 && (
                             <Card variant="premium">
@@ -379,6 +420,8 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
                                 </div>
                             </CardContent>
                         </Card>
+
+
                     </div>
 
                     {/* Product Pricing */}
@@ -745,12 +788,39 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
                                                             productPrice = product.price_cents * selectedDuration;
                                                         }
                                                         
-                                                        const subtotal = productPrice + (product.setup_fee_cents || 0);
+                                                        // Calculate domain total
+                                                        const domainTotal = selectedDomains.reduce((sum, d) => sum + (d.price || 0), 0);
+
+                                                        const subtotal = productPrice + (product.setup_fee_cents || 0) + domainTotal;
                                                         const tax = Math.round(subtotal * pphRate);
                                                         const total = subtotal + tax;
                                                         
                                                         return (
                                                             <>
+                                                                {selectedDomains.length > 0 && (
+                                                                    <>
+                                                                        <div className="space-y-2 text-sm mt-4">
+                                                                            <Label className="font-semibold text-muted-foreground">Domain Tambahan</Label>
+                                                                            {selectedDomains.map((domain, idx) => (
+                                                                                <div key={idx} className="flex justify-between items-center bg-muted/20 p-2 rounded">
+                                                                                    <div>
+                                                                                        <p className="font-medium">{domain.domain}</p>
+                                                                                        <button 
+                                                                                            type="button" 
+                                                                                            onClick={() => handleRemoveDomain(domain.domain)}
+                                                                                            className="text-xs text-red-500 hover:text-red-600 flex items-center mt-0.5"
+                                                                                        >
+                                                                                            <span className="mr-1">Hapus</span>
+                                                                                        </button>
+                                                                                    </div>
+                                                                                    <span className="font-medium">{formatPrice(domain.price || 0)}</span>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                        <Separator className="my-2" />
+                                                                    </>
+                                                                )}
+
                                                                 <div className="space-y-2 text-sm">
                                                                     <div className="flex justify-between">
                                                                         <span className="text-muted-foreground">

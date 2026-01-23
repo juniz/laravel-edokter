@@ -19,9 +19,10 @@ class MidtransAdapter implements PaymentAdapterInterface
     {
         $serverKey = config('payment.midtrans.server_key');
         $isProduction = config('payment.midtrans.is_production', false);
+        // Snap API Endpoint
         $baseUrl = $isProduction
-            ? 'https://api.midtrans.com/v2'
-            : 'https://api.sandbox.midtrans.com/v2';
+            ? 'https://app.midtrans.com/snap/v1/transactions'
+            : 'https://app.sandbox.midtrans.com/snap/v1/transactions';
 
         // Load customer untuk mendapatkan data customer
         $invoice->load('customer');
@@ -31,15 +32,11 @@ class MidtransAdapter implements PaymentAdapterInterface
         $orderId = 'INV-' . $invoice->number . '-' . time();
 
         // Prepare transaction details
-        // Midtrans expects gross_amount in rupiah (not cents)
-        // Data di database sudah dalam format rupiah (meskipun field namanya _cents)
-        // Jadi tidak perlu dibagi 100
         $grossAmount = $invoice->total_cents;
 
-        Log::info('Midtrans payment amount conversion', [
+        Log::info('Midtrans payment setup', [
             'invoice_id' => $invoice->id,
-            'invoice_total_cents' => $invoice->total_cents,
-            'gross_amount_sent' => $grossAmount,
+            'amount' => $grossAmount,
             'currency' => $invoice->currency,
         ]);
 
@@ -56,7 +53,6 @@ class MidtransAdapter implements PaymentAdapterInterface
         ];
 
         // Prepare item details
-        // Data sudah dalam format rupiah, tidak perlu dibagi 100
         $itemDetails = [];
         $itemsTotal = 0;
         foreach ($invoice->items as $item) {
@@ -69,63 +65,56 @@ class MidtransAdapter implements PaymentAdapterInterface
                 'id' => $item->id,
                 'price' => $itemPrice,
                 'quantity' => $itemQuantity,
-                'name' => $item->description ?? 'Item',
+                // Midtrans max item name length is 50 chars
+                'name' => substr($item->description ?? 'Item', 0, 50),
             ];
         }
 
         // Validate that sum of item_details equals gross_amount
-        // If not, adjust the last item to match (for rounding differences)
         if (abs($itemsTotal - $grossAmount) > 0) {
             Log::warning('Midtrans item_details sum mismatch', [
                 'invoice_id' => $invoice->id,
-                'gross_amount' => $grossAmount,
-                'items_total' => $itemsTotal,
-                'difference' => $grossAmount - $itemsTotal,
+                'expected' => $grossAmount,
+                'actual' => $itemsTotal,
             ]);
 
             // Adjust the last item to match gross_amount exactly
-            // Adjustment must be divided by quantity since Midtrans calculates total as price * quantity
             if (! empty($itemDetails)) {
                 $lastItemIndex = count($itemDetails) - 1;
                 $adjustment = $grossAmount - $itemsTotal;
                 $lastItemQuantity = $itemDetails[$lastItemIndex]['quantity'] ?? 1;
-                // Divide adjustment by quantity to get per-unit adjustment
                 $perUnitAdjustment = (int) round($adjustment / $lastItemQuantity);
                 $itemDetails[$lastItemIndex]['price'] += $perUnitAdjustment;
-
-                Log::info('Midtrans item_details adjusted', [
-                    'invoice_id' => $invoice->id,
-                    'adjusted_item' => $lastItemIndex,
-                    'adjustment' => $adjustment,
-                    'per_unit_adjustment' => $perUnitAdjustment,
-                    'quantity' => $lastItemQuantity,
-                ]);
             }
         }
 
         // Get payment method from options
         $paymentMethod = $options['payment_method'] ?? 'bca_va';
 
-        // Prepare request payload untuk Midtrans Core API
+        // Prepare request payload untuk Midtrans Snap API
         $payload = [
             'transaction_details' => $transactionDetails,
             'customer_details' => $customerDetails,
             'item_details' => $itemDetails,
+            'enabled_payments' => $this->getEnabledPayments($paymentMethod),
+            // 'credit_card' => ['secure' => true],
         ];
 
-        // Add payment method specific parameters berdasarkan Core API
-        $this->addPaymentMethodParams($payload, $paymentMethod, $customer);
-
-        // Call Midtrans Core API
+        // Call Midtrans Snap API
         try {
+            Log::info('Midtrans Snap Request', [
+                'url' => $baseUrl,
+                'payload' => $payload,
+            ]);
+
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Basic ' . base64_encode($serverKey . ':'),
-            ])->post("{$baseUrl}/charge", $payload);
+            ])->post($baseUrl, $payload);
 
             if (! $response->successful()) {
-                Log::error('Midtrans Core API error', [
+                Log::error('Midtrans Snap API HTTP error', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                     'payment_method' => $paymentMethod,
@@ -135,33 +124,17 @@ class MidtransAdapter implements PaymentAdapterInterface
 
             $responseData = $response->json();
 
-            // Validate response - check if responseData is null or invalid
-            if ($responseData === null || ! is_array($responseData)) {
-                Log::error('Midtrans Core API returned invalid JSON response', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
+            // Validate response
+            $token = $responseData['token'] ?? null;
+            $redirectUrl = $responseData['redirect_url'] ?? null;
+
+            if (! $token || ! $redirectUrl) {
+                Log::error('Midtrans Snap API returned invalid response', [
+                    'response' => $responseData,
                     'payment_method' => $paymentMethod,
                 ]);
-                throw new \RuntimeException('Failed to parse Midtrans payment response: Invalid JSON');
+                throw new \RuntimeException('Midtrans payment failed: No token or redirect URL received.');
             }
-
-            // Validate response status code
-            // Midtrans API may return status_code as integer or string
-            $statusCode = $responseData['status_code'] ?? null;
-            $statusCodeNormalized = $statusCode !== null ? (string) $statusCode : null;
-
-            if ($statusCodeNormalized !== '201') {
-                Log::error('Midtrans Core API returned error', [
-                    'status_code' => $statusCode,
-                    'status_code_normalized' => $statusCodeNormalized,
-                    'status_message' => $responseData['status_message'] ?? null,
-                    'response' => $responseData,
-                ]);
-                throw new \RuntimeException('Midtrans payment failed: ' . ($responseData['status_message'] ?? 'Unknown error'));
-            }
-
-            // Extract payment information berdasarkan payment method
-            $redirectUrl = $this->extractRedirectUrl($responseData, $paymentMethod);
 
             // Create payment record
             $payment = $this->paymentRepository->create([
@@ -173,12 +146,13 @@ class MidtransAdapter implements PaymentAdapterInterface
                 'raw_payload' => [
                     'order_id' => $orderId,
                     'payment_method' => $paymentMethod,
+                    'snap_token' => $token,
                     'redirect_url' => $redirectUrl,
-                    'core_api_response' => $responseData,
+                    'core_api_response' => $responseData, // Keeping key for compatibility
                 ],
             ]);
 
-            Log::info("Midtrans Core API payment created for invoice: {$invoice->id}", [
+            Log::info("Midtrans Snap payment created for invoice: {$invoice->id}", [
                 'order_id' => $orderId,
                 'payment_method' => $paymentMethod,
                 'redirect_url' => $redirectUrl,
@@ -186,158 +160,31 @@ class MidtransAdapter implements PaymentAdapterInterface
 
             return $payment;
         } catch (\Exception $e) {
-            Log::error("Midtrans Core API payment creation failed for invoice: {$invoice->id}", [
+            Log::error("Midtrans payment creation failed for invoice: {$invoice->id}", [
                 'error' => $e->getMessage(),
-                'payment_method' => $paymentMethod,
             ]);
             throw $e;
         }
     }
 
     /**
-     * Add payment method specific parameters untuk Core API
+     * Get enabled payments array for Snap based on selected method
      */
-    private function addPaymentMethodParams(array &$payload, string $paymentMethod, $customer): void
+    private function getEnabledPayments(string $paymentMethod): array
     {
-        switch ($paymentMethod) {
-            case 'credit_card':
-                $payload['payment_type'] = 'credit_card';
-                // Credit card akan menggunakan 3DS jika diperlukan
-                break;
+        $map = [
+            'credit_card' => ['credit_card'],
+            'bca_va' => ['bca_va'],
+            'bni_va' => ['bni_va'],
+            'bri_va' => ['bri_va'],
+            'mandiri_va' => ['echannel'], // Mandiri Bill Payment
+            'permata_va' => ['permata_va'],
+            'cimb_va' => ['cimb_va'],
+            'danamon_va' => ['danamon_va'],
+            'bsi_va' => ['other_va'], 
+        ];
 
-            case 'bank_transfer':
-                // Default bank transfer (akan dipilih oleh Midtrans)
-                $payload['payment_type'] = 'bank_transfer';
-                break;
-
-            case 'bca_va':
-                $payload['payment_type'] = 'bank_transfer';
-                $payload['bank_transfer'] = ['bank' => 'bca'];
-                break;
-
-            case 'bni_va':
-                $payload['payment_type'] = 'bank_transfer';
-                $payload['bank_transfer'] = ['bank' => 'bni'];
-                break;
-
-            case 'bri_va':
-                $payload['payment_type'] = 'bank_transfer';
-                $payload['bank_transfer'] = ['bank' => 'bri'];
-                break;
-
-            case 'mandiri_va':
-                $payload['payment_type'] = 'echannel';
-                $payload['echannel'] = [
-                    'bill_info1' => 'Payment:',
-                    'bill_info2' => 'Online purchase',
-                ];
-                break;
-
-            case 'permata_va':
-                $payload['payment_type'] = 'bank_transfer';
-                $payload['bank_transfer'] = ['bank' => 'permata'];
-                break;
-
-            case 'cimb_va':
-                $payload['payment_type'] = 'bank_transfer';
-                $payload['bank_transfer'] = ['bank' => 'cimb'];
-                break;
-
-            case 'danamon_va':
-                $payload['payment_type'] = 'bank_transfer';
-                $payload['bank_transfer'] = ['bank' => 'danamon'];
-                break;
-
-            case 'bsi_va':
-                $payload['payment_type'] = 'bank_transfer';
-                $payload['bank_transfer'] = ['bank' => 'bsi'];
-                break;
-
-            case 'qris':
-                $payload['payment_type'] = 'qris';
-                break;
-
-            case 'gopay':
-                $payload['payment_type'] = 'gopay';
-                break;
-
-            case 'shopeepay':
-                $payload['payment_type'] = 'shopeepay';
-                break;
-
-            case 'dana':
-                $payload['payment_type'] = 'dana';
-                break;
-
-            case 'ovo':
-                $payload['payment_type'] = 'ovo';
-                break;
-
-            case 'linkaja':
-                $payload['payment_type'] = 'linkaja';
-                break;
-
-            case 'cstore':
-            case 'indomaret':
-                $payload['payment_type'] = 'cstore';
-                $payload['cstore'] = ['store' => 'indomaret'];
-                break;
-
-            case 'alfamart':
-                $payload['payment_type'] = 'cstore';
-                $payload['cstore'] = ['store' => 'alfamart'];
-                break;
-
-            default:
-                // Default ke bank_transfer jika payment method tidak dikenali
-                $payload['payment_type'] = 'bank_transfer';
-                $payload['bank_transfer'] = ['bank' => 'bca'];
-                break;
-        }
-    }
-
-    /**
-     * Extract redirect URL dari Core API response berdasarkan payment method
-     */
-    private function extractRedirectUrl(array $responseData, string $paymentMethod): ?string
-    {
-        // Credit card: redirect_url untuk 3DS
-        if ($paymentMethod === 'credit_card' && isset($responseData['redirect_url'])) {
-            return $responseData['redirect_url'];
-        }
-
-        // Bank transfer: tidak ada redirect_url, gunakan VA number
-        if (str_starts_with($paymentMethod, 'bank_transfer') || str_ends_with($paymentMethod, '_va') || $paymentMethod === 'mandiri_va') {
-            // VA number akan disimpan di raw_payload untuk ditampilkan ke user
-            return null;
-        }
-
-        // E-Wallet: actions dengan deeplink atau QR code
-        if (in_array($paymentMethod, ['gopay', 'shopeepay', 'dana', 'ovo', 'linkaja', 'qris'])) {
-            if (isset($responseData['actions']) && is_array($responseData['actions'])) {
-                foreach ($responseData['actions'] as $action) {
-                    // Validate action structure
-                    if (! is_array($action) || ! isset($action['name'])) {
-                        continue;
-                    }
-
-                    if ($action['name'] === 'generate-qr-code' && isset($action['url']) && is_string($action['url'])) {
-                        return $action['url'];
-                    }
-                    if ($action['name'] === 'deeplink-redirect' && isset($action['url']) && is_string($action['url'])) {
-                        return $action['url'];
-                    }
-                }
-            }
-        }
-
-        // Convenience Store: actions dengan payment code
-        if (in_array($paymentMethod, ['cstore', 'indomaret', 'alfamart'])) {
-            // Payment code akan disimpan di raw_payload untuk ditampilkan ke user
-            return null;
-        }
-
-        return null;
+        return $map[$paymentMethod] ?? ['bca_va', 'bni_va', 'bri_va', 'echannel', 'permata_va']; // Default fallback to banks only
     }
 
     public function handleWebhook(array $payload): ?Payment

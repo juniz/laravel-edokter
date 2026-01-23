@@ -346,7 +346,14 @@ class DashboardController extends Controller
                     'slug' => $product->slug,
                     'type' => $product->type,
                     'description' => $product->metadata['description'] ?? '',
-                    'features' => $product->metadata['features'] ?? [],
+                    'features' => $product->features->map(fn($f) => [
+                            'id' => $f->id,
+                            'key' => $f->key,
+                            'value' => $f->value,
+                            'label' => $f->label,
+                            'unit' => $f->unit,
+                        ])->toArray(),
+                    'metadata_features' => $product->metadata['features'] ?? [],
                     'is_popular' => $product->metadata['popular'] ?? false,
                     'best_plan' => [
                         'id' => $product->id, // Using product ID as plan ID equivalent for now
