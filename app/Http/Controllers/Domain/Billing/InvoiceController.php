@@ -67,7 +67,7 @@ class InvoiceController extends Controller
                 ->latest()
                 ->first();
 
-            $invoice->pending_payment_id = $pendingPayment?->id;
+            $invoice->setAttribute('pending_payment_id', $pendingPayment?->id);
 
             return $invoice;
         });
@@ -151,6 +151,41 @@ class InvoiceController extends Controller
             return redirect()->back()
                 ->withErrors(['error' => 'Gagal memproses pembayaran: ' . $e->getMessage()]);
         }
+    }
+
+    public function checkPaymentStatus(Request $request, string $id)
+    {
+        $invoice = $this->invoiceRepository->findByUlid($id);
+
+        if (! $invoice) {
+            abort(404);
+        }
+
+        // Check ownership
+        if ($request->user()->customer->id !== $invoice->customer_id) {
+            abort(403);
+        }
+
+        // Cari last pending payment
+        $payment = \App\Models\Domain\Billing\Payment::where('invoice_id', $invoice->id)
+            ->latest()
+            ->first();
+
+        if (! $payment) {
+            return redirect()->back()
+                ->with('info', 'Belum ada data pembayaran untuk invoice ini.');
+        }
+
+        // Check status via adapter
+        $updatedPayment = $this->paymentAdapter->checkStatus($payment);
+
+        if ($updatedPayment && $updatedPayment->status === 'succeeded') {
+             return redirect()->back()
+                ->with('success', 'Pembayaran berhasil dikonfirmasi.');
+        }
+
+        return redirect()->back()
+            ->with('info', 'Status pembayaran belum berubah. Silakan coba lagi nanti.');
     }
 
     public function download(Request $request, string $id)

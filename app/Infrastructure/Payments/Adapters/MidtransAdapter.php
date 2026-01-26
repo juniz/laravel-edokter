@@ -357,6 +357,57 @@ class MidtransAdapter implements PaymentAdapterInterface
     }
 
     /**
+     * Check payment status directly from Midtrans API
+     */
+    public function checkStatus(Payment $payment): ?Payment
+    {
+        $serverKey = config('payment.midtrans.server_key');
+        $isProduction = config('payment.midtrans.is_production', false);
+        $baseUrl = $isProduction
+            ? 'https://api.midtrans.com/v2'
+            : 'https://api.sandbox.midtrans.com/v2';
+            
+        $orderId = $payment->provider_ref;
+        
+        if (!$orderId) {
+            Log::warning('Cannot check status for payment without provider_ref', ['payment_id' => $payment->id]);
+            return null;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($serverKey . ':'),
+            ])->get("{$baseUrl}/{$orderId}/status");
+
+            if (!$response->successful()) {
+                Log::error('Midtrans Status API error', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'order_id' => $orderId
+                ]);
+                
+                // If 404, it might mean the transaction doesn't exist yet on Midtrans side (unlikely if we have provider_ref)
+                return null;
+            }
+
+            $responseData = $response->json();
+            
+            // Map API response to webhook format to reuse handleWebhook logic
+            // providing a synthetic payload
+            return $this->handleWebhook($responseData);
+            
+        } catch (\Exception $e) {
+            Log::error('Midtrans status check exception', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
      * Verify webhook signature untuk keamanan
      *
      * Midtrans menggunakan signature_key yang dihitung dari:

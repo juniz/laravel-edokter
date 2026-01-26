@@ -439,14 +439,27 @@ export default function Invoices({ invoices, filters = {} }: InvoicesProps) {
                                                         </Button>
                                                     </Link>
                                                     {(invoice.status === 'unpaid' || invoice.status === 'overdue') && (
-                                                        <Button
-                                                            variant="gradient"
-                                                            size="sm"
-                                                            onClick={() => handleOpenPayment(invoice)}
-                                                        >
-                                                            <Wallet className="h-4 w-4 mr-1" />
-                                                            Bayar
-                                                        </Button>
+                                                        <>
+                                                            {invoice.pending_payment_id && (
+                                                              <Button
+                                                                    variant="icon"
+                                                                    size="sm"
+                                                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                                    title="Cek Status Pembayaran"
+                                                                    onClick={() => router.post(route('customer.invoices.check-payment', invoice.id))}
+                                                                >
+                                                                    <Loader2 className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                            <Button
+                                                                variant="gradient"
+                                                                size="sm"
+                                                                onClick={() => handleOpenPayment(invoice)}
+                                                            >
+                                                                <Wallet className="h-4 w-4 mr-1" />
+                                                                Bayar
+                                                            </Button>
+                                                        </>
                                                     )}
                                                     {invoice.status === 'paid' && (
                                                         <Button

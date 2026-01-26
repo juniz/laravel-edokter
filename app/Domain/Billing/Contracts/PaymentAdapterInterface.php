@@ -9,5 +9,6 @@ interface PaymentAdapterInterface
 {
     public function createCharge(Invoice $invoice, array $options): Payment;
     public function handleWebhook(array $payload): ?Payment;
+    public function checkStatus(Payment $payment): ?Payment;
 }
 

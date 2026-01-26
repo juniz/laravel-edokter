@@ -76,6 +76,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
         // Route download dipindahkan ke luar middleware group
         Route::post('/invoices/{id}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+        Route::post('/invoices/{id}/check-payment', [InvoiceController::class, 'checkPaymentStatus'])->name('invoices.check-payment');
 
         Route::get('/payments/{id}', [PaymentController::class, 'show'])->name('payments.show');
 
