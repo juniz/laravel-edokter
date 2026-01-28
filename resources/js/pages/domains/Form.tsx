@@ -7,7 +7,7 @@ import { ArrowLeft, Check, Search, Globe, CreditCard } from 'lucide-react';
 import axios from 'axios';
 
 // Partial Components
-import DomainSearch, { DomainResult } from '@/Components/DomainSearch';
+import DomainSearch, { DomainResult } from '@/components/DomainSearch';
 import Step2Config from './partials/Step2Config';
 import Step3Checkout from './partials/Step3Checkout';
 
