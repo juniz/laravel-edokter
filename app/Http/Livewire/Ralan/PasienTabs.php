@@ -545,4 +545,20 @@ class PasienTabs extends Component
 
         return $dataobat;
     }
+
+    public function getPenilaianAwalKeperawatanKebidananRanap($noRawat)
+    {
+        return DB::table('penilaian_awal_keperawatan_kebidanan_ranap')
+            ->leftJoin('petugas as petugas1', 'penilaian_awal_keperawatan_kebidanan_ranap.nip1', '=', 'petugas1.nip')
+            ->leftJoin('petugas as petugas2', 'penilaian_awal_keperawatan_kebidanan_ranap.nip2', '=', 'petugas2.nip')
+            ->leftJoin('dokter', 'penilaian_awal_keperawatan_kebidanan_ranap.kd_dokter', '=', 'dokter.kd_dokter')
+            ->where('penilaian_awal_keperawatan_kebidanan_ranap.no_rawat', $noRawat)
+            ->select(
+                'penilaian_awal_keperawatan_kebidanan_ranap.*',
+                'petugas1.nama as nama_petugas1',
+                'petugas2.nama as nama_petugas2',
+                'dokter.nm_dokter'
+            )
+            ->first();
+    }
 }

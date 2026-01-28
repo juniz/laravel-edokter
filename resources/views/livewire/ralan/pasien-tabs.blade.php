@@ -137,6 +137,893 @@
                         </div>
 
                         @if(count($data)>0)
+                        @php
+                        // Ambil data Penilaian Awal Keperawatan Kebidanan Ranap dari data pertama yang memiliki status Ranap
+                        $penilaianKebidananRanap = null;
+                        $noRawatRanap = null;
+                        foreach($data as $row) {
+                            $no_rawat_temp = is_array($row) ? ($row['no_rawat'] ?? null) : ($row->no_rawat ?? null);
+                            $status_lanjut_temp = is_array($row) ? ($row['status_lanjut'] ?? null) : ($row->status_lanjut ?? null);
+                            if ($no_rawat_temp && $status_lanjut_temp == 'Ranap') {
+                                $penilaianKebidananRanap = $this->getPenilaianAwalKeperawatanKebidananRanap($no_rawat_temp);
+                                $noRawatRanap = $no_rawat_temp;
+                                break;
+                            }
+                        }
+                        @endphp
+                        
+                        @if($penilaianKebidananRanap)
+                        <x-adminlte-card theme="warning" title="Penilaian Awal Keperawatan Kebidanan Ranap" icon="fas fa-clipboard-check" theme-mode="outline" collapsible class="mb-4">
+                            @php
+                            $tglPenilaian = date_create($penilaianKebidananRanap->tanggal ?? '0000-00-00');
+                            $datePenilaian = date_format($tglPenilaian,"d M Y H:i");
+                            @endphp
+                            
+                            <div class="mb-3 pb-3 border-bottom">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Tanggal Penilaian</small>
+                                        <strong><i class="fas fa-calendar"></i> {{ $datePenilaian }}</strong>
+                                    </div>
+                                    @if($penilaianKebidananRanap->nm_dokter)
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Dokter</small>
+                                        <strong><i class="fas fa-user-md"></i> {{ $penilaianKebidananRanap->nm_dokter }}</strong>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Informasi Umum -->
+                            <div class="card mb-3 border-left-info" style="border-left-width: 4px;">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="fas fa-info-circle"></i> Informasi Umum</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4 mb-2">
+                                            <small class="text-muted d-block">Informasi</small>
+                                            <strong>{{ $penilaianKebidananRanap->informasi ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <small class="text-muted d-block">Tiba di Ruang Rawat</small>
+                                            <strong>{{ $penilaianKebidananRanap->tiba_diruang_rawat ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <small class="text-muted d-block">Cara Masuk</small>
+                                            <strong>{{ $penilaianKebidananRanap->cara_masuk ?? '-' }}</strong>
+                                        </div>
+                                    </div>
+                                    @if($penilaianKebidananRanap->keluhan)
+                                    <div class="mt-2">
+                                        <small class="text-muted d-block">Keluhan</small>
+                                        <div class="border rounded p-2 bg-light">{!! nl2br(e($penilaianKebidananRanap->keluhan)) !!}</div>
+                                    </div>
+                                    @endif
+                                    <div class="row mt-2">
+                                        <div class="col-md-4 mb-2">
+                                            <small class="text-muted d-block">RPK</small>
+                                            <strong>{{ $penilaianKebidananRanap->rpk ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <small class="text-muted d-block">PSK</small>
+                                            <strong>{{ $penilaianKebidananRanap->psk ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <small class="text-muted d-block">RP</small>
+                                            <strong>{{ $penilaianKebidananRanap->rp ?? '-' }}</strong>
+                                        </div>
+                                    </div>
+                                    @if($penilaianKebidananRanap->alergi && $penilaianKebidananRanap->alergi != '-' && $penilaianKebidananRanap->alergi != 'Tidak Ada')
+                                    <div class="mt-2">
+                                        <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Alergi: {{ $penilaianKebidananRanap->alergi }}</span>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Riwayat Menstruasi -->
+                            <div class="card mb-3 border-left-primary" style="border-left-width: 4px;">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-calendar-alt"></i> Riwayat Menstruasi</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Umur</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_mens_umur ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Lamanya</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_mens_lamanya ?? '-' }} hari</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Banyaknya</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_mens_banyaknya ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Siklus</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_mens_siklus ?? '-' }} hari</strong>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Keterangan Siklus</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_mens_ket_siklus ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Dirasakan</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_mens_dirasakan ?? '-' }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Riwayat Perkawinan -->
+                            <div class="card mb-3 border-left-success" style="border-left-width: 4px;">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-heart"></i> Riwayat Perkawinan</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Status</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_perkawinan_status ?? '-' }}</strong>
+                                        @if($penilaianKebidananRanap->riwayat_perkawinan_ket_status && $penilaianKebidananRanap->riwayat_perkawinan_ket_status != '-')
+                                        <span class="ml-2">({{ $penilaianKebidananRanap->riwayat_perkawinan_ket_status }} tahun)</span>
+                                        @endif
+                                    </div>
+                                    @if($penilaianKebidananRanap->riwayat_perkawinan_usia1 && $penilaianKebidananRanap->riwayat_perkawinan_usia1 != '-')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Usia Perkawinan 1</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_perkawinan_usia1 }} tahun - {{ $penilaianKebidananRanap->riwayat_perkawinan_ket_usia1 ?? '-' }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->riwayat_perkawinan_usia2 && $penilaianKebidananRanap->riwayat_perkawinan_usia2 != '-')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Usia Perkawinan 2</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_perkawinan_usia2 }} tahun - {{ $penilaianKebidananRanap->riwayat_perkawinan_ket_usia2 ?? '-' }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->riwayat_perkawinan_usia3 && $penilaianKebidananRanap->riwayat_perkawinan_usia3 != '-')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Usia Perkawinan 3</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_perkawinan_usia3 }} tahun - {{ $penilaianKebidananRanap->riwayat_perkawinan_ket_usia3 ?? '-' }}</strong>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Riwayat Persalinan & Kehamilan -->
+                            <div class="card mb-3 border-left-danger" style="border-left-width: 4px;">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0"><i class="fas fa-baby"></i> Riwayat Persalinan & Kehamilan</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">G</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_persalinan_g ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">P</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_persalinan_p ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">A</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_persalinan_a ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Hidup</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_persalinan_hidup ?? '-' }}</strong>
+                                        </div>
+                                    </div>
+                                    @if($penilaianKebidananRanap->riwayat_hamil_hpht && $penilaianKebidananRanap->riwayat_hamil_hpht != '0000-00-00')
+                                    <div class="row mb-2">
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block">HPHT</small>
+                                            <strong>{{ date('d M Y', strtotime($penilaianKebidananRanap->riwayat_hamil_hpht)) }}</strong>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block">Usia Kehamilan</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_hamil_usiahamil ?? '-' }} minggu</strong>
+                                        </div>
+                                        @if($penilaianKebidananRanap->riwayat_hamil_tp && $penilaianKebidananRanap->riwayat_hamil_tp != '0000-00-00')
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block">TP</small>
+                                            <strong>{{ date('d M Y', strtotime($penilaianKebidananRanap->riwayat_hamil_tp)) }}</strong>
+                                        </div>
+                                        @endif
+                                    </div>
+                                    @endif
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Imunisasi TT</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_hamil_imunisasi ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">ANC</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_hamil_anc ?? '-' }}x</strong>
+                                            @if($penilaianKebidananRanap->riwayat_hamil_ancke && $penilaianKebidananRanap->riwayat_hamil_ancke != '-')
+                                            <span class="ml-2">({{ $penilaianKebidananRanap->riwayat_hamil_ancke }}x - {{ $penilaianKebidananRanap->riwayat_hamil_ket_ancke ?? '-' }})</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if($penilaianKebidananRanap->riwayat_hamil_keluhan_hamil_muda && $penilaianKebidananRanap->riwayat_hamil_keluhan_hamil_muda != 'Tidak Ada')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Keluhan Hamil Muda</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_hamil_keluhan_hamil_muda }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->riwayat_hamil_keluhan_hamil_tua && $penilaianKebidananRanap->riwayat_hamil_keluhan_hamil_tua != 'Tidak Ada')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Keluhan Hamil Tua</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_hamil_keluhan_hamil_tua }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->komplikasi_sebelumnya && $penilaianKebidananRanap->komplikasi_sebelumnya != 'Tidak')
+                                    <div class="mt-2">
+                                        <span class="badge badge-warning">
+                                            <i class="fas fa-exclamation-triangle"></i> Komplikasi Sebelumnya: {{ $penilaianKebidananRanap->komplikasi_sebelumnya }}
+                                            @if($penilaianKebidananRanap->keterangan_komplikasi_sebelumnya && $penilaianKebidananRanap->keterangan_komplikasi_sebelumnya != '-')
+                                            - {{ $penilaianKebidananRanap->keterangan_komplikasi_sebelumnya }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Riwayat KB -->
+                            @if($penilaianKebidananRanap->riwayat_kb && $penilaianKebidananRanap->riwayat_kb != 'Belum Pernah')
+                            <div class="card mb-3 border-left-secondary" style="border-left-width: 4px;">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-pills"></i> Riwayat KB</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Jenis KB</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_kb }}</strong>
+                                        @if($penilaianKebidananRanap->riwayat_kb_lamanya && $penilaianKebidananRanap->riwayat_kb_lamanya != '-')
+                                        <span class="ml-2">({{ $penilaianKebidananRanap->riwayat_kb_lamanya }})</span>
+                                        @endif
+                                    </div>
+                                    @if($penilaianKebidananRanap->riwayat_kb_komplikasi && $penilaianKebidananRanap->riwayat_kb_komplikasi == 'Ada')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Komplikasi</small>
+                                        <strong class="text-danger">{{ $penilaianKebidananRanap->riwayat_kb_ket_komplikasi ?? '-' }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->riwayat_kb_kapaberhenti && $penilaianKebidananRanap->riwayat_kb_kapaberhenti != '-')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Kapan Berhenti</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_kb_kapaberhenti }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->riwayat_kb_alasanberhenti && $penilaianKebidananRanap->riwayat_kb_alasanberhenti != '-')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Alasan Berhenti</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_kb_alasanberhenti }}</strong>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Pemeriksaan Kebidanan -->
+                            <div class="card mb-3 border-left-warning" style="border-left-width: 4px;">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="fas fa-stethoscope"></i> Pemeriksaan Kebidanan</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Keadaan Umum</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_keadaan_umum ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">GCS</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_gcs ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">TD</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_td ?? '-' }} mmHg</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Nadi</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_nadi ?? '-' }} /min</strong>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">RR</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_rr ?? '-' }} /min</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Suhu</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_suhu ?? '-' }} °C</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">SpO2</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_spo2 ?? '-' }}%</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">BB</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_bb ?? '-' }} kg</strong>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">TB</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_tb ?? '-' }} cm</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">LILA</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_lila ?? '-' }} cm</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">TFU</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_tfu ?? '-' }} cm</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">TBJ</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_tbj ?? '-' }} cm</strong>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Letak</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_letak ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Presentasi</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_presentasi ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Penurunan</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_penurunan ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">HIS</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_his ?? '-' }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Kekuatan</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_kekuatan ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Lamanya</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_lamanya ?? '-' }} detik</strong>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">DJJ</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_djj ?? '-' }} /min</strong>
+                                            @if($penilaianKebidananRanap->pemeriksaan_kebidanan_ket_djj)
+                                            <span class="ml-1">({{ $penilaianKebidananRanap->pemeriksaan_kebidanan_ket_djj }})</span>
+                                            @endif
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <small class="text-muted d-block">Pembukaan</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_pembukaan ?? '-' }} cm</strong>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 mb-2">
+                                            <small class="text-muted d-block">Portio</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_portio ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <small class="text-muted d-block">Ketuban</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_ketuban ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <small class="text-muted d-block">Hodge</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_hodge ?? '-' }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Panggul</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_panggul ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Mental</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_mental ?? '-' }}</strong>
+                                        </div>
+                                    </div>
+                                    @if($penilaianKebidananRanap->pemeriksaan_kebidanan_inspekulo && $penilaianKebidananRanap->pemeriksaan_kebidanan_inspekulo == 'Dilakukan')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Inspekulo</small>
+                                        <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_ket_inspekulo ?? '-' }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->pemeriksaan_kebidanan_lakmus && $penilaianKebidananRanap->pemeriksaan_kebidanan_lakmus == 'Dilakukan')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Lakmus</small>
+                                        <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_ket_lakmus ?? '-' }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->pemeriksaan_kebidanan_ctg && $penilaianKebidananRanap->pemeriksaan_kebidanan_ctg == 'Dilakukan')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">CTG</small>
+                                        <strong>{{ $penilaianKebidananRanap->pemeriksaan_kebidanan_ket_ctg ?? '-' }}</strong>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Pemeriksaan Umum -->
+                            <div class="card mb-3 border-left-dark" style="border-left-width: 4px;">
+                                <div class="card-header bg-dark text-white">
+                                    <h6 class="mb-0"><i class="fas fa-user-check"></i> Pemeriksaan Umum</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Kepala</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_kepala ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Muka</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_muka ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Mata</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_mata ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Hidung</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_hidung ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Telinga</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_telinga ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Mulut</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_mulut ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Leher</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_leher ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Dada</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_dada ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Perut</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_perut ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Genitalia</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_genitalia ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Ekstrimitas</small>
+                                            <strong>{{ $penilaianKebidananRanap->pemeriksaan_umum_ekstrimitas ?? '-' }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pengkajian Fungsi -->
+                            <div class="card mb-3 border-left-info" style="border-left-width: 4px;">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="fas fa-walking"></i> Pengkajian Fungsi</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Kemampuan Aktivitas</small>
+                                        <strong>{{ $penilaianKebidananRanap->pengkajian_fungsi_kemampuan_aktifitas ?? '-' }}</strong>
+                                    </div>
+                                    @if($penilaianKebidananRanap->pengkajian_fungsi_berjalan && $penilaianKebidananRanap->pengkajian_fungsi_berjalan != 'TAK')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Berjalan</small>
+                                        <strong>{{ $penilaianKebidananRanap->pengkajian_fungsi_berjalan }}</strong>
+                                        @if($penilaianKebidananRanap->pengkajian_fungsi_ket_berjalan && $penilaianKebidananRanap->pengkajian_fungsi_ket_berjalan != '-')
+                                        <span class="ml-2">({{ $penilaianKebidananRanap->pengkajian_fungsi_ket_berjalan }})</span>
+                                        @endif
+                                    </div>
+                                    @endif
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Aktivitas</small>
+                                            <strong>{{ $penilaianKebidananRanap->pengkajian_fungsi_aktivitas ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Ambulasi</small>
+                                            <strong>{{ $penilaianKebidananRanap->pengkajian_fungsi_ambulasi ?? '-' }}</strong>
+                                        </div>
+                                    </div>
+                                    @if($penilaianKebidananRanap->pengkajian_fungsi_ekstrimitas_atas && $penilaianKebidananRanap->pengkajian_fungsi_ekstrimitas_atas != 'TAK')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Ekstrimitas Atas</small>
+                                        <strong>{{ $penilaianKebidananRanap->pengkajian_fungsi_ekstrimitas_atas }}</strong>
+                                        @if($penilaianKebidananRanap->pengkajian_fungsi_ket_ekstrimitas_atas && $penilaianKebidananRanap->pengkajian_fungsi_ket_ekstrimitas_atas != '-')
+                                        <span class="ml-2">({{ $penilaianKebidananRanap->pengkajian_fungsi_ket_ekstrimitas_atas }})</span>
+                                        @endif
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->pengkajian_fungsi_ekstrimitas_bawah && $penilaianKebidananRanap->pengkajian_fungsi_ekstrimitas_bawah != 'TAK')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Ekstrimitas Bawah</small>
+                                        <strong>{{ $penilaianKebidananRanap->pengkajian_fungsi_ekstrimitas_bawah }}</strong>
+                                        @if($penilaianKebidananRanap->pengkajian_fungsi_ket_ekstrimitas_bawah && $penilaianKebidananRanap->pengkajian_fungsi_ket_ekstrimitas_bawah != '-')
+                                        <span class="ml-2">({{ $penilaianKebidananRanap->pengkajian_fungsi_ket_ekstrimitas_bawah }})</span>
+                                        @endif
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->pengkajian_fungsi_gangguan_fungsi && $penilaianKebidananRanap->pengkajian_fungsi_gangguan_fungsi == 'Ya (Co DPJP)')
+                                    <div class="mt-2">
+                                        <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Ada Gangguan Fungsi (Perlu Co DPJP)</span>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Riwayat Psikososial -->
+                            <div class="card mb-3 border-left-purple" style="border-left-width: 4px; border-left-color: #6f42c1;">
+                                <div class="card-header text-white" style="background-color: #6f42c1;">
+                                    <h6 class="mb-0"><i class="fas fa-brain"></i> Riwayat Psikososial</h6>
+                                </div>
+                                <div class="card-body">
+                                    @if($penilaianKebidananRanap->riwayat_psiko_kondisipsiko && $penilaianKebidananRanap->riwayat_psiko_kondisipsiko != 'Tidak Ada Masalah')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Kondisi Psikologis</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_psiko_kondisipsiko }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->riwayat_psiko_adakah_prilaku && $penilaianKebidananRanap->riwayat_psiko_adakah_prilaku != 'Tidak Ada Masalah')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Perilaku</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_psiko_adakah_prilaku }}</strong>
+                                        @if($penilaianKebidananRanap->riwayat_psiko_ket_adakah_prilaku && $penilaianKebidananRanap->riwayat_psiko_ket_adakah_prilaku != '-')
+                                        <span class="ml-2">({{ $penilaianKebidananRanap->riwayat_psiko_ket_adakah_prilaku }})</span>
+                                        @endif
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->riwayat_psiko_gangguan_jiwa && $penilaianKebidananRanap->riwayat_psiko_gangguan_jiwa == 'Ya')
+                                    <div class="mb-2">
+                                        <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Ada Gangguan Jiwa</span>
+                                    </div>
+                                    @endif
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Hubungan Pasien</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_psiko_hubungan_pasien ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Tinggal Dengan</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_psiko_tinggal_dengan ?? '-' }}</strong>
+                                            @if($penilaianKebidananRanap->riwayat_psiko_ket_tinggal_dengan && $penilaianKebidananRanap->riwayat_psiko_ket_tinggal_dengan != '-')
+                                            <span class="ml-2">({{ $penilaianKebidananRanap->riwayat_psiko_ket_tinggal_dengan }})</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if($penilaianKebidananRanap->riwayat_psiko_budaya && $penilaianKebidananRanap->riwayat_psiko_budaya == 'Ada')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Budaya</small>
+                                        <strong>{{ $penilaianKebidananRanap->riwayat_psiko_ket_budaya ?? '-' }}</strong>
+                                    </div>
+                                    @endif
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Pendidikan PJ</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_psiko_pend_pj ?? '-' }}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Edukasi Pada</small>
+                                            <strong>{{ $penilaianKebidananRanap->riwayat_psiko_edukasi_pada ?? '-' }}</strong>
+                                            @if($penilaianKebidananRanap->riwayat_psiko_ket_edukasi_pada && $penilaianKebidananRanap->riwayat_psiko_ket_edukasi_pada != '-')
+                                            <span class="ml-2">({{ $penilaianKebidananRanap->riwayat_psiko_ket_edukasi_pada }})</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Penilaian Nyeri -->
+                            @if($penilaianKebidananRanap->penilaian_nyeri && $penilaianKebidananRanap->penilaian_nyeri != 'Tidak Ada Nyeri')
+                            <div class="card mb-3 border-left-danger" style="border-left-width: 4px;">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Penilaian Nyeri</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Jenis Nyeri</small>
+                                            <strong>{{ $penilaianKebidananRanap->penilaian_nyeri }}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block mb-2">Skala Nyeri</small>
+                                            @php
+                                            $skalaNyeri = (int)($penilaianKebidananRanap->penilaian_nyeri_skala ?? 0);
+                                            $persentase = ($skalaNyeri / 10) * 100;
+                                            
+                                            // Tentukan warna berdasarkan skala
+                                            $colorClass = 'success';
+                                            $badgeClass = 'success';
+                                            $icon = 'fa-smile';
+                                            $label = 'Ringan';
+                                            
+                                            if ($skalaNyeri >= 7) {
+                                                $colorClass = 'danger';
+                                                $badgeClass = 'danger';
+                                                $icon = 'fa-exclamation-triangle';
+                                                $label = 'Berat';
+                                            } elseif ($skalaNyeri >= 4) {
+                                                $colorClass = 'warning';
+                                                $badgeClass = 'warning';
+                                                $icon = 'fa-meh';
+                                                $label = 'Sedang';
+                                            } elseif ($skalaNyeri >= 1) {
+                                                $colorClass = 'info';
+                                                $badgeClass = 'info';
+                                                $icon = 'fa-smile';
+                                                $label = 'Ringan';
+                                            } else {
+                                                $colorClass = 'success';
+                                                $badgeClass = 'success';
+                                                $icon = 'fa-smile';
+                                                $label = 'Tidak Ada';
+                                            }
+                                            @endphp
+                                            
+                                            <div class="pain-scale-visual">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <strong class="text-{{ $colorClass }} mr-2" style="font-size: 1.5rem;">
+                                                        {{ $skalaNyeri }}/10
+                                                    </strong>
+                                                    <span class="badge badge-{{ $badgeClass }}">
+                                                        <i class="fas {{ $icon }}"></i> {{ $label }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <!-- Visual Pain Scale 0-10 -->
+                                                <div class="pain-scale-container mb-2">
+                                                    <!-- Progress Bar dengan gradient warna sebagai background -->
+                                                    <div class="pain-scale-bar-wrapper" style="position: relative; height: 30px; margin-bottom: 8px;">
+                                                        <!-- Background gradient untuk seluruh skala -->
+                                                        <div class="pain-scale-background" 
+                                                             style="position: absolute; top: 0; left: 0; right: 0; height: 100%; border-radius: 15px; background: linear-gradient(to right, #28a745 0%, #ffc107 40%, #ff9800 60%, #dc3545 100%); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                                                        </div>
+                                                        
+                                                        <!-- Filled portion berdasarkan skala -->
+                                                        @if($skalaNyeri > 0)
+                                                        <div class="pain-scale-filled" 
+                                                             style="position: absolute; top: 0; left: 0; height: 100%; width: {{ $persentase }}%; border-radius: 15px; background: rgba(255,255,255,0.3); backdrop-filter: blur(2px);">
+                                                        </div>
+                                                        @endif
+                                                        
+                                                        <!-- Indicator untuk skala saat ini -->
+                                                        @if($skalaNyeri > 0)
+                                                        <div class="pain-indicator" 
+                                                             style="position: absolute; left: {{ $persentase }}%; top: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; background: #fff; border: 3px solid #dc3545; border-radius: 50%; box-shadow: 0 3px 8px rgba(220,53,69,0.4); z-index: 10;">
+                                                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.75rem; font-weight: bold; color: #dc3545; line-height: 1;">
+                                                                {{ $skalaNyeri }}
+                                                            </div>
+                                                        </div>
+                                                        @endif
+                                                    </div>
+                                                    
+                                                    <!-- Numbers 0-10 di bawah progress bar -->
+                                                    <div class="pain-scale-numbers d-flex justify-content-between mb-1" style="padding: 0 2px;">
+                                                        @for($i = 0; $i <= 10; $i++)
+                                                        <span class="pain-scale-number {{ $i == $skalaNyeri ? 'active' : '' }}" 
+                                                              style="font-size: 0.7rem; font-weight: {{ $i == $skalaNyeri ? 'bold' : 'normal' }}; color: {{ $i == $skalaNyeri ? '#dc3545' : '#6c757d' }}; transition: all 0.3s ease;">
+                                                            {{ $i }}
+                                                        </span>
+                                                        @endfor
+                                                    </div>
+                                                    
+                                                    <!-- Label di bawah numbers -->
+                                                    <div class="d-flex justify-content-between mt-1">
+                                                        <small class="text-muted" style="font-size: 0.65rem;">
+                                                            <i class="fas fa-smile text-success"></i> Tidak Ada
+                                                        </small>
+                                                        <small class="text-muted" style="font-size: 0.65rem;">
+                                                            <i class="fas fa-exclamation-triangle text-danger"></i> Sangat Berat
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Penyebab</small>
+                                            <strong>{{ $penilaianKebidananRanap->penilaian_nyeri_penyebab ?? '-' }}</strong>
+                                            @if($penilaianKebidananRanap->penilaian_nyeri_ket_penyebab && $penilaianKebidananRanap->penilaian_nyeri_ket_penyebab != '-')
+                                            <span class="ml-2">({{ $penilaianKebidananRanap->penilaian_nyeri_ket_penyebab }})</span>
+                                            @endif
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Kualitas</small>
+                                            <strong>{{ $penilaianKebidananRanap->penilaian_nyeri_kualitas ?? '-' }}</strong>
+                                            @if($penilaianKebidananRanap->penilaian_nyeri_ket_kualitas && $penilaianKebidananRanap->penilaian_nyeri_ket_kualitas != '-')
+                                            <span class="ml-2">({{ $penilaianKebidananRanap->penilaian_nyeri_ket_kualitas }})</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if($penilaianKebidananRanap->penilaian_nyeri_lokasi && $penilaianKebidananRanap->penilaian_nyeri_lokasi != '-')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Lokasi</small>
+                                        <strong>{{ $penilaianKebidananRanap->penilaian_nyeri_lokasi }}</strong>
+                                        @if($penilaianKebidananRanap->penilaian_nyeri_menyebar && $penilaianKebidananRanap->penilaian_nyeri_menyebar == 'Ya')
+                                        <span class="badge badge-warning ml-2">Menyebar</span>
+                                        @endif
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->penilaian_nyeri_waktu && $penilaianKebidananRanap->penilaian_nyeri_waktu != '-')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Waktu</small>
+                                        <strong>{{ $penilaianKebidananRanap->penilaian_nyeri_waktu }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->penilaian_nyeri_hilang && $penilaianKebidananRanap->penilaian_nyeri_hilang != '-')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Hilang Dengan</small>
+                                        <strong>{{ $penilaianKebidananRanap->penilaian_nyeri_hilang }}</strong>
+                                        @if($penilaianKebidananRanap->penilaian_nyeri_ket_hilang && $penilaianKebidananRanap->penilaian_nyeri_ket_hilang != '-')
+                                        <span class="ml-2">({{ $penilaianKebidananRanap->penilaian_nyeri_ket_hilang }})</span>
+                                        @endif
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->penilaian_nyeri_diberitahukan_dokter && $penilaianKebidananRanap->penilaian_nyeri_diberitahukan_dokter == 'Ya')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Diberitahukan ke Dokter</small>
+                                        <strong>Ya</strong>
+                                        @if($penilaianKebidananRanap->penilaian_nyeri_jam_diberitahukan_dokter && $penilaianKebidananRanap->penilaian_nyeri_jam_diberitahukan_dokter != '-')
+                                        <span class="ml-2">({{ $penilaianKebidananRanap->penilaian_nyeri_jam_diberitahukan_dokter }})</span>
+                                        @endif
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Penilaian Jatuh -->
+                            @if($penilaianKebidananRanap->penilaian_jatuh_totalnilai && $penilaianKebidananRanap->penilaian_jatuh_totalnilai > 0)
+                            <div class="card mb-3 border-left-warning" style="border-left-width: 4px;">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Penilaian Risiko Jatuh</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Total Nilai</small>
+                                        <strong class="text-danger" style="font-size: 1.5rem;">{{ number_format($penilaianKebidananRanap->penilaian_jatuh_totalnilai, 1) }}</strong>
+                                        @if($penilaianKebidananRanap->penilaian_jatuh_totalnilai >= 25)
+                                        <span class="badge badge-danger ml-2">Risiko Tinggi</span>
+                                        @elseif($penilaianKebidananRanap->penilaian_jatuh_totalnilai >= 15)
+                                        <span class="badge badge-warning ml-2">Risiko Sedang</span>
+                                        @else
+                                        <span class="badge badge-success ml-2">Risiko Rendah</span>
+                                        @endif
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Skala 1</small>
+                                            <strong>{{ $penilaianKebidananRanap->penilaian_jatuh_skala1 ?? '-' }} ({{ $penilaianKebidananRanap->penilaian_jatuh_nilai1 ?? 0 }})</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Skala 2</small>
+                                            <strong>{{ $penilaianKebidananRanap->penilaian_jatuh_skala2 ?? '-' }} ({{ $penilaianKebidananRanap->penilaian_jatuh_nilai2 ?? 0 }})</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Skala 3</small>
+                                            <strong>{{ $penilaianKebidananRanap->penilaian_jatuh_skala3 ?? '-' }} ({{ $penilaianKebidananRanap->penilaian_jatuh_nilai3 ?? 0 }})</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Skala 4</small>
+                                            <strong>{{ $penilaianKebidananRanap->penilaian_jatuh_skala4 ?? '-' }} ({{ $penilaianKebidananRanap->penilaian_jatuh_nilai4 ?? 0 }})</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Skala 5</small>
+                                            <strong>{{ $penilaianKebidananRanap->penilaian_jatuh_skala5 ?? '-' }} ({{ $penilaianKebidananRanap->penilaian_jatuh_nilai5 ?? 0 }})</strong>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <small class="text-muted d-block">Skala 6</small>
+                                            <strong>{{ $penilaianKebidananRanap->penilaian_jatuh_skala6 ?? '-' }} ({{ $penilaianKebidananRanap->penilaian_jatuh_nilai6 ?? 0 }})</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Skrining Gizi -->
+                            @if($penilaianKebidananRanap->nilai_total_gizi && $penilaianKebidananRanap->nilai_total_gizi > 0)
+                            <div class="card mb-3 border-left-success" style="border-left-width: 4px;">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-utensils"></i> Skrining Gizi</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Total Nilai</small>
+                                        <strong class="text-primary" style="font-size: 1.5rem;">{{ number_format($penilaianKebidananRanap->nilai_total_gizi, 1) }}</strong>
+                                        @if($penilaianKebidananRanap->nilai_total_gizi >= 3)
+                                        <span class="badge badge-danger ml-2">Risiko Malnutrisi</span>
+                                        @elseif($penilaianKebidananRanap->nilai_total_gizi >= 1)
+                                        <span class="badge badge-warning ml-2">Risiko Sedang</span>
+                                        @else
+                                        <span class="badge badge-success ml-2">Normal</span>
+                                        @endif
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Skala 1</small>
+                                            <strong>{{ $penilaianKebidananRanap->skrining_gizi1 ?? '-' }} ({{ $penilaianKebidananRanap->nilai_gizi1 ?? 0 }})</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Skala 2</small>
+                                            <strong>{{ $penilaianKebidananRanap->skrining_gizi2 ?? '-' }} ({{ $penilaianKebidananRanap->nilai_gizi2 ?? 0 }})</strong>
+                                        </div>
+                                    </div>
+                                    @if($penilaianKebidananRanap->skrining_gizi_diagnosa_khusus && $penilaianKebidananRanap->skrining_gizi_diagnosa_khusus == 'Ya')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Diagnosa Khusus</small>
+                                        <strong>{{ $penilaianKebidananRanap->skrining_gizi_ket_diagnosa_khusus ?? '-' }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->skrining_gizi_diketahui_dietisen && $penilaianKebidananRanap->skrining_gizi_diketahui_dietisen == 'Ya')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Diketahui Dietisen</small>
+                                        <strong>Ya</strong>
+                                        @if($penilaianKebidananRanap->skrining_gizi_jam_diketahui_dietisen && $penilaianKebidananRanap->skrining_gizi_jam_diketahui_dietisen != '-')
+                                        <span class="ml-2">({{ $penilaianKebidananRanap->skrining_gizi_jam_diketahui_dietisen }})</span>
+                                        @endif
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Masalah & Rencana -->
+                            @if($penilaianKebidananRanap->masalah || $penilaianKebidananRanap->rencana)
+                            <div class="card mb-3 border-left-primary" style="border-left-width: 4px;">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-clipboard-list"></i> Masalah & Rencana</h6>
+                                </div>
+                                <div class="card-body">
+                                    @if($penilaianKebidananRanap->masalah && $penilaianKebidananRanap->masalah != '-')
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block mb-1"><strong>Masalah:</strong></small>
+                                        <div class="border rounded p-2 bg-light">{!! nl2br(e($penilaianKebidananRanap->masalah)) !!}</div>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->rencana && $penilaianKebidananRanap->rencana != '-')
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block mb-1"><strong>Rencana:</strong></small>
+                                        <div class="border rounded p-2 bg-light">{!! nl2br(e($penilaianKebidananRanap->rencana)) !!}</div>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Petugas -->
+                            @if($penilaianKebidananRanap->nama_petugas1 || $penilaianKebidananRanap->nama_petugas2)
+                            <div class="mt-3 pt-3 border-top">
+                                <div class="row">
+                                    @if($penilaianKebidananRanap->nama_petugas1)
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Petugas 1</small>
+                                        <strong>{{ $penilaianKebidananRanap->nama_petugas1 }}</strong>
+                                    </div>
+                                    @endif
+                                    @if($penilaianKebidananRanap->nama_petugas2)
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Petugas 2</small>
+                                        <strong>{{ $penilaianKebidananRanap->nama_petugas2 }}</strong>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+                        </x-adminlte-card>
+                        @endif
+                        
                         <div>
                             @foreach($data as $row)
                             @php
@@ -195,6 +1082,7 @@
                                             return isset($item->jenis_petugas) && $item->jenis_petugas == 'Dokter';
                                         });
                                         @endphp
+
                                         @if(count($pemeriksaanDokter) > 0)
                                         <x-adminlte-card theme="primary" title="SOAP/CPPT" icon="fas fa-clipboard-list" theme-mode="outline" collapsible>
                                             @foreach($pemeriksaanDokter as $pemeriksaan)
@@ -1941,6 +2829,77 @@
     }
     .nav-link {
         cursor: pointer;
+    }
+    
+    /* Visualisasi Skala Nyeri */
+    .pain-scale-visual {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .pain-scale-container {
+        position: relative;
+    }
+    
+    .pain-scale-numbers {
+        font-size: 0.75rem;
+    }
+    
+    .pain-scale-number {
+        flex: 1;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .pain-scale-number.active {
+        font-weight: bold;
+        font-size: 0.85rem !important;
+        color: #dc3545 !important;
+        transform: scale(1.2);
+    }
+    
+    .pain-indicator {
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+        }
+        50% {
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.6);
+        }
+    }
+    
+    .pain-scale-bar-wrapper {
+        margin: 0.5rem 0;
+    }
+    
+    .pain-scale-background {
+        transition: all 0.3s ease;
+    }
+    
+    .pain-scale-filled {
+        transition: width 0.6s ease;
+    }
+    
+    .pain-indicator {
+        transition: left 0.6s ease;
+    }
+    
+    .pain-indicator::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 8px solid #dc3545;
     }
 </style>
 @endpush
