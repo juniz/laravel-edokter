@@ -90,7 +90,7 @@ class ResepController extends Controller
             $db = DB::table('set_depo_ranap')->where('kd_bangsal', $kode)->first();
             $bangsal = $db?->kd_depo;
         }
-        
+
         // Ambil stok terakhir untuk obat & depo terkait.
         // Untuk 1 obat saja, correlated subquery masih aman dan sederhana.
         $data = DB::table('databarang')
@@ -196,7 +196,7 @@ class ResepController extends Controller
             // FIX: Gunakan query yang lebih efisien untuk menghindari hang
             // Query dengan correlated subquery sangat lambat, gunakan derived table
             $obatKodes = array_column($obatData, 'kode');
-            
+
             try {
                 // FIX: Query harus mencari MAX(tanggal) dulu, lalu MAX(jam) untuk tanggal tersebut
                 // Query sebelumnya salah karena mengambil MAX(tanggal) dan MAX(jam) secara terpisah
@@ -204,7 +204,7 @@ class ResepController extends Controller
                 // Query ini menggunakan pendekatan yang lebih efisien dengan derived table
                 // yang tetap memastikan tanggal dan jam berasal dari record yang sama
                 $placeholders = implode(',', array_fill(0, count($obatKodes), '?'));
-                
+
                 $stokData = DB::select("
                     SELECT rbm.kode_brng, rbm.stok_akhir
                     FROM riwayat_barang_medis rbm
@@ -232,7 +232,7 @@ class ResepController extends Controller
                         AND rbm.jam = max_jam.max_jam
                     WHERE rbm.kd_bangsal = ?
                 ", array_merge($obatKodes, [$bangsal], $obatKodes, [$bangsal, $bangsal]));
-                
+
                 $stokData = collect($stokData)->keyBy('kode_brng');
             } catch (\Exception $e) {
                 DB::rollback();
@@ -251,7 +251,7 @@ class ResepController extends Controller
             // Filter obat yang stoknya mencukupi dan siapkan detail untuk yang tidak mencukupi
             $obatTersedia = [];
             $obatStokKurang = [];
-            
+
             // Identifikasi obat yang stoknya kurang
             $obatKurangKodes = [];
             foreach ($obatData as $obat) {
@@ -271,7 +271,7 @@ class ResepController extends Controller
             // Jika semua obat stoknya kurang
             if (empty($obatTersedia)) {
                 DB::rollback();
-                
+
                 // FIX: Ambil nama obat untuk ditampilkan di error message
                 $namaObat = [];
                 if (!empty($obatKurangKodes)) {
@@ -280,7 +280,7 @@ class ResepController extends Controller
                         ->pluck('nama_brng', 'kode_brng')
                         ->toArray();
                 }
-                
+
                 // Gabungkan nama obat dengan detail stok
                 $detailStok = [];
                 foreach ($obatStokKurang as $obat) {
@@ -291,20 +291,20 @@ class ResepController extends Controller
                         'jumlah_diminta' => $obat['jumlah_diminta'],
                     ];
                 }
-                
+
                 Log::warning('POST RESEP - Stok tidak mencukupi', [
                     'no_rawat' => $noRawat,
                     'bangsal' => $bangsal,
                     'detail_stok' => $detailStok,
                 ]);
-                
+
                 return response()->json([
                     'status' => 'gagal',
                     'pesan' => 'Stok obat tidak mencukupi',
                     'detail_stok' => $detailStok
                 ]);
             }
-            
+
             // Jika ada yang kurang tapi ada yang cukup, tampilkan yang kurang saja
             if (!empty($obatStokKurang)) {
                 // Ambil nama obat untuk yang kurang
@@ -315,7 +315,7 @@ class ResepController extends Controller
                         ->pluck('nama_brng', 'kode_brng')
                         ->toArray();
                 }
-                
+
                 $detailStok = [];
                 foreach ($obatStokKurang as $obat) {
                     $detailStok[] = [
@@ -325,13 +325,13 @@ class ResepController extends Controller
                         'jumlah_diminta' => $obat['jumlah_diminta'],
                     ];
                 }
-                
+
                 DB::rollback();
                 Log::warning('POST RESEP - Beberapa obat stok tidak mencukupi', [
                     'no_rawat' => $noRawat,
                     'detail_stok' => $detailStok,
                 ]);
-                
+
                 return response()->json([
                     'status' => 'gagal',
                     'pesan' => 'Stok beberapa obat tidak mencukupi',
@@ -437,13 +437,13 @@ class ResepController extends Controller
                     'pesan' => 'Error saat mengambil data resep: ' . $e->getMessage()
                 ], 500);
             }
-            
+
             DB::commit();
 
             // FIX: Lakukan operasi resep_iter di luar transaksi utama untuk menghindari lock timeout
             // FIX: Hanya lakukan operasi jika iter tidak kosong (tidak null, tidak empty, tidak hanya whitespace, dan bukan '-')
             $iterNotEmpty = !empty($iter) && trim($iter) !== '' && trim($iter) !== '-';
-            
+
             if ($status == 'Ralan' && $iterNotEmpty) {
                 try {
                     DB::table('resep_iter')->upsert(
@@ -563,7 +563,7 @@ class ResepController extends Controller
                 // Query ini menggunakan pendekatan yang lebih efisien dengan derived table
                 // yang tetap memastikan tanggal dan jam berasal dari record yang sama
                 $placeholders = implode(',', array_fill(0, count($obatKodes), '?'));
-                
+
                 $stokData = DB::select("
                     SELECT rbm.kode_brng, rbm.stok_akhir
                     FROM riwayat_barang_medis rbm
@@ -591,7 +591,7 @@ class ResepController extends Controller
                         AND rbm.jam = max_jam.max_jam
                     WHERE rbm.kd_bangsal = ?
                 ", array_merge($obatKodes, [$bangsal], $obatKodes, [$bangsal, $bangsal]));
-                
+
                 $stokData = collect($stokData)->keyBy('kode_brng');
             } catch (\Exception $e) {
                 DB::rollback();
@@ -610,7 +610,7 @@ class ResepController extends Controller
             // Filter obat yang stoknya mencukupi dan siapkan detail untuk yang tidak mencukupi
             $obatTersedia = [];
             $obatStokKurang = [];
-            
+
             // Identifikasi obat yang stoknya kurang
             $obatKurangKodes = [];
             foreach ($obatData as $obat) {
@@ -630,7 +630,7 @@ class ResepController extends Controller
             // Jika semua obat stoknya kurang
             if (empty($obatTersedia)) {
                 DB::rollback();
-                
+
                 // FIX: Ambil nama obat untuk ditampilkan di error message
                 $namaObat = [];
                 if (!empty($obatKurangKodes)) {
@@ -639,7 +639,7 @@ class ResepController extends Controller
                         ->pluck('nama_brng', 'kode_brng')
                         ->toArray();
                 }
-                
+
                 // Gabungkan nama obat dengan detail stok
                 $detailStok = [];
                 foreach ($obatStokKurang as $obat) {
@@ -650,20 +650,20 @@ class ResepController extends Controller
                         'jumlah_diminta' => $obat['jumlah_diminta'],
                     ];
                 }
-                
+
                 Log::warning('POST RESEP RANAP - Stok tidak mencukupi', [
                     'no_rawat' => $noRawat,
                     'bangsal' => $bangsal,
                     'detail_stok' => $detailStok,
                 ]);
-                
+
                 return response()->json([
                     'status' => 'gagal',
                     'pesan' => 'Stok obat tidak mencukupi',
                     'detail_stok' => $detailStok
                 ]);
             }
-            
+
             // Jika ada yang kurang tapi ada yang cukup, tampilkan yang kurang saja
             if (!empty($obatStokKurang)) {
                 // Ambil nama obat untuk yang kurang
@@ -674,7 +674,7 @@ class ResepController extends Controller
                         ->pluck('nama_brng', 'kode_brng')
                         ->toArray();
                 }
-                
+
                 $detailStok = [];
                 foreach ($obatStokKurang as $obat) {
                     $detailStok[] = [
@@ -684,13 +684,13 @@ class ResepController extends Controller
                         'jumlah_diminta' => $obat['jumlah_diminta'],
                     ];
                 }
-                
+
                 DB::rollback();
                 Log::warning('POST RESEP RANAP - Beberapa obat stok tidak mencukupi', [
                     'no_rawat' => $noRawat,
                     'detail_stok' => $detailStok,
                 ]);
-                
+
                 return response()->json([
                     'status' => 'gagal',
                     'pesan' => 'Stok beberapa obat tidak mencukupi',
@@ -705,7 +705,7 @@ class ResepController extends Controller
                 ->where('tgl_peresepan', $tglPeresepan)
                 ->where('kd_dokter', $dokter)
                 ->max('jam_peresepan');
-            
+
             $resep = null;
             if ($maxTglResep) {
                 $resep = DB::table('resep_obat')
@@ -719,7 +719,7 @@ class ResepController extends Controller
             // OPTIMASI: Single query untuk generate nomor resep (O(log n))
             $tgl = date('Ymd');
             $noResep = null;
-            
+
             if (!empty($resep) && $resep->tgl_perawatan != '0000-00-00') {
                 // Resep sudah divalidasi, buat resep baru
                 $no = DB::table('resep_obat')
@@ -996,7 +996,8 @@ class ResepController extends Controller
             // }
         } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
-            return response()->json(['status' => 'gagal', 'message' => 'Maaf ada obat masih kosong']);
+            Log::error('POST RESEP - QueryException' . $ex->getMessage());
+            return response()->json(['status' => 'gagal', 'message' => $ex->getMessage()]);
         }
     }
 
@@ -1221,7 +1222,7 @@ class ResepController extends Controller
     {
         try {
             $noRM = $request->get('no_rm');
-            
+
             if (empty($noRM)) {
                 return response()->json([
                     'draw' => intval($request->get('draw', 1)),
@@ -1245,15 +1246,15 @@ class ResepController extends Controller
             $orderData = $request->get('order', []);
             $orderColumn = isset($orderData[0]['column']) ? intval($orderData[0]['column']) : 2;
             $orderDir = isset($orderData[0]['dir']) ? $orderData[0]['dir'] : 'desc';
-            
+
             $orderColumns = [
                 0 => 'resep_obat.no_resep',
                 1 => 'dokter.nm_dokter',
                 2 => 'resep_obat.tgl_peresepan',
             ];
-            
+
             $orderBy = $orderColumns[$orderColumn] ?? 'resep_obat.tgl_peresepan';
-            
+
             $data = $query->select('resep_obat.no_resep', 'resep_obat.tgl_peresepan', 'dokter.nm_dokter')
                 ->orderBy($orderBy, $orderDir)
                 ->orderByDesc('resep_obat.jam_peresepan')
@@ -1295,7 +1296,6 @@ class ResepController extends Controller
                 'recordsFiltered' => $recordsTotal,
                 'data' => $formattedData
             ]);
-
         } catch (\Exception $e) {
             Log::error('GET RIWAYAT PERESEPAN - Error', [
                 'error' => $e->getMessage(),
@@ -1323,7 +1323,7 @@ class ResepController extends Controller
 
             // Cek apakah resep sudah tervalidasi
             $resep = DB::table('resep_obat')->where('no_resep', $noResep)->first();
-            
+
             if (!$resep) {
                 DB::rollBack();
                 return response()->json([
@@ -1342,13 +1342,13 @@ class ResepController extends Controller
 
             // Hapus resep_dokter (detail obat) terlebih dahulu
             DB::table('resep_dokter')->where('no_resep', $noResep)->delete();
-            
+
             // Hapus resep_dokter_racikan_detail jika ada
             DB::table('resep_dokter_racikan_detail')->where('no_resep', $noResep)->delete();
-            
+
             // Hapus resep_dokter_racikan jika ada
             DB::table('resep_dokter_racikan')->where('no_resep', $noResep)->delete();
-            
+
             // Hapus resep_obat
             DB::table('resep_obat')->where('no_resep', $noResep)->delete();
 
@@ -1358,7 +1358,6 @@ class ResepController extends Controller
                 'status' => 'sukses',
                 'pesan' => 'Resep berhasil dihapus'
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('HAPUS RESEP - Error', [
