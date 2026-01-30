@@ -914,15 +914,18 @@ class ResepController extends Controller
                 ]);
 
             for ($i = 0; $i < count($kdObat); $i++) {
-                DB::table('resep_dokter_racikan_detail')->insert([
-                    'no_resep' => $noResep,
-                    'no_racik' => '1',
-                    'kode_brng' => $kdObat[$i],
-                    'p1' => $p1[$i],
-                    'p2' => $p2[$i],
-                    'kandungan' => $kandungan[$i],
-                    'jml' => $jml[$i],
-                ]);
+                $cek = DB::table('resep_dokter_racikan_detail')->where('no_resep', $noResep)->where('no_racik', '1')->where('kode_brng', $kdObat[$i])->first();
+                if (empty($cek)) {
+                    DB::table('resep_dokter_racikan_detail')->insert([
+                        'no_resep' => $noResep,
+                        'no_racik' => '1',
+                        'kode_brng' => $kdObat[$i],
+                        'p1' => $p1[$i],
+                        'p2' => $p2[$i],
+                        'kandungan' => $kandungan[$i],
+                        'jml' => $jml[$i],
+                    ]);
+                }
             }
             DB::commit();
             return response()->json(['status' => 'sukses', 'message' => 'Racikan berhasil ditambahkan']);
