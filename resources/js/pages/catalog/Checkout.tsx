@@ -26,6 +26,8 @@ import {
 	Loader2,
 	XCircle,
 	Globe,
+	Building2,
+	ChevronRight,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -102,6 +104,13 @@ export default function Checkout({
 
 	// Initialize duration based on availability
 	const getInitialDuration = (): "1" | "12" => {
+		// Check URL for duration param
+		const urlParams = new URLSearchParams(window.location.search);
+		const urlDuration = urlParams.get('duration');
+		if (urlDuration === "1" || urlDuration === "12") {
+			return urlDuration;
+		}
+
 		if (product.duration_1_month_enabled) {
 			return "1";
 		}
@@ -120,6 +129,13 @@ export default function Checkout({
 	const [selectedDomains, setSelectedDomains] = useState<DomainResult[]>([]);
 	const [paymentMethod, setPaymentMethod] = useState<string>("");
 	const INITIAL_DOMAIN_LIMIT = 6;
+
+	const paymentMethods = [
+		{ value: 'bri_va', label: 'Bank BRI', logo: '/images/payment/bank/bri.png' },
+		{ value: 'bni_va', label: 'BNI', logo: '/images/payment/bank/bni.png' },
+		{ value: 'mandiri_va', label: 'Mandiri', logo: '/images/payment/bank/mandiri.png' },
+		{ value: 'permata_va', label: 'Permata Bank', logo: '/images/payment/bank/permata.png' },
+	];
 
 	const checkoutForm = useForm({
 		product_id: product.id,
@@ -937,39 +953,41 @@ export default function Checkout({
 									</div>
 								</div>
 
-								{/* Payment Method Selection */}
-								<div className="space-y-3 pt-2 border-t">
-									<Label className="text-sm font-semibold">
+								{/* Payment Method Selection - Snap Style */}
+								<div className="space-y-3 pt-4 border-t">
+									<Label className="text-sm font-semibold text-gray-900 dark:text-white mb-2 block">
 										Metode Pembayaran
 									</Label>
-									<Select
-										value={paymentMethod}
-										onValueChange={setPaymentMethod}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Pilih Metode Pembayaran" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectGroup>
-												<SelectLabel>Virtual Account</SelectLabel>
-												<SelectItem value="bca_va">
-													BCA Virtual Account
-												</SelectItem>
-												<SelectItem value="bni_va">
-													BNI Virtual Account
-												</SelectItem>
-												<SelectItem value="bri_va">
-													BRI Virtual Account
-												</SelectItem>
-												<SelectItem value="mandiri_va">
-													Mandiri Virtual Account
-												</SelectItem>
-												<SelectItem value="permata_va">
-													Permata Virtual Account
-												</SelectItem>
-											</SelectGroup>
-										</SelectContent>
-									</Select>
+									<div className="space-y-2">
+										{paymentMethods.map((method) => (
+											<button
+												key={method.value}
+												type="button"
+												onClick={() => setPaymentMethod(method.value)}
+												className={`w-full flex items-center justify-between p-3 bg-white dark:bg-gray-900 border rounded-xl transition-all hover:bg-gray-50 dark:hover:bg-gray-800 group ${
+													paymentMethod === method.value 
+														? 'border-[#4a1fb8] ring-1 ring-[#4a1fb8]' 
+														: 'border-gray-100 dark:border-gray-800'
+												}`}
+											>
+												<div className="flex items-center gap-3">
+													<div className="w-10 h-6 flex items-center justify-center bg-white rounded p-1">
+														<img src={method.logo} alt={method.label} className="max-h-full max-w-full object-contain" />
+													</div>
+													<span className="font-semibold text-sm text-gray-700 dark:text-gray-300">{method.label}</span>
+												</div>
+												<div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
+													paymentMethod === method.value 
+														? 'bg-[#4a1fb8] border-[#4a1fb8]' 
+														: 'border-gray-300'
+												}`}>
+													{paymentMethod === method.value && (
+														<div className="w-1.5 h-1.5 bg-white rounded-full" />
+													)}
+												</div>
+											</button>
+										))}
+									</div>
 								</div>
 
 								<div className="pt-2">

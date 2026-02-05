@@ -364,8 +364,8 @@ export default function Catalog({ products }: CatalogProps) {
                                         
                                         // Determine which price to show (prioritize annual if available)
                                         const showAnnual = hasAnnualDiscount && (product.duration_12_months_enabled ?? true);
-                                        const displayPrice = showAnnual ? annualPriceWithDiscount : monthlyPrice;
-                                        const originalPrice = showAnnual ? annualPriceWithoutDiscount : null;
+                                        const displayPrice = showAnnual ? (annualPriceWithDiscount / 12) : monthlyPrice;
+                                        const originalPrice = showAnnual ? monthlyPrice : null;
                                         const durationLabel = showAnnual ? '12 bulan' : '1 bulan';
 
                                         return (

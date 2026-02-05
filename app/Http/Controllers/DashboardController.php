@@ -362,6 +362,7 @@ class DashboardController extends Controller
                         'duration_1_month_enabled' => $product->duration_1_month_enabled ?? true,
                         'duration_12_months_enabled' => $product->duration_12_months_enabled ?? true,
                     ],
+                    'annual_discount_percent' => $product->annual_discount_percent ?: 0,
                     'original_price_cents' => $monthlyPrice,
                     'discount_percent' => 0,
                 ];
