@@ -98,6 +98,7 @@ interface FeaturedProduct {
     } | null;
     original_price_cents: number | null;
     discount_percent: number;
+    annual_discount_percent?: number;
     features: ProductFeature[];
     metadata_features?: string[];
     is_popular?: boolean;
@@ -902,21 +903,45 @@ function CustomerDashboard({
 
                                 <CardContent className="flex-1 flex flex-col space-y-6">
                                     {/* Pricing Section - Google AI Style */}
-                                    <div className="text-center space-y-2">
-                                        <div className="flex items-baseline justify-center gap-2">
-                                        {/* TODO: Add proper annual/monthly logic if needed, currently matching catalog display logic implies we might need more data, but using existing best_plan */}
-                                            {pkg.original_price_cents && (
-                                                <span className="text-base text-muted-foreground line-through">
-                                                    {formatCurrency(pkg.original_price_cents)}
-                                                </span>
-                                            )}
-                                            {/* Green price if discounted/popular or just following design */}
-                                            <span className={`text-3xl font-bold ${pkg.original_price_cents ? 'text-emerald-600' : 'text-gray-900 dark:text-white'}`}>
-                                                {formatCurrency(pkg.best_plan?.monthly_price_cents || 0)}
-                                            </span>
-                                            <span className="text-sm text-muted-foreground">/bln</span>
-                                        </div>
-                                    </div>
+                                    {(() => {
+                                        const monthlyPrice = pkg.best_plan?.monthly_price_cents || 0;
+                                        const annualDiscountPercent = pkg.annual_discount_percent || 0;
+                                        const hasAnnualDiscount = annualDiscountPercent > 0 && (pkg.best_plan?.duration_12_months_enabled ?? true);
+                                        
+                                        // Calculate annual pricing
+                                        const annualPriceWithoutDiscount = monthlyPrice * 12;
+                                        const annualDiscountAmount = hasAnnualDiscount 
+                                            ? Math.round(annualPriceWithoutDiscount * (annualDiscountPercent / 100))
+                                            : 0;
+                                        const annualPriceWithDiscount = annualPriceWithoutDiscount - annualDiscountAmount;
+                                        
+                                        // Determine which price to show (prioritize annual if available)
+                                        const showAnnual = hasAnnualDiscount && (pkg.best_plan?.duration_12_months_enabled ?? true);
+                                        const displayPrice = showAnnual ? (annualPriceWithDiscount / 12) : monthlyPrice;
+                                        const originalPrice = showAnnual ? monthlyPrice : null;
+                                        const durationLabel = showAnnual ? '12 bulan' : '1 bulan';
+
+                                        return (
+                                            <div className="text-center space-y-2">
+                                                <div className="flex items-baseline justify-center gap-2">
+                                                    {originalPrice && (
+                                                        <span className="text-base text-muted-foreground line-through">
+                                                            {formatCurrency(originalPrice)}
+                                                        </span>
+                                                    )}
+                                                    <span className={`text-3xl font-bold ${hasAnnualDiscount ? 'text-emerald-600' : 'text-gray-900 dark:text-white'}`}>
+                                                        {formatCurrency(displayPrice)}
+                                                    </span>
+                                                    <span className="text-sm text-muted-foreground">/bln</span>
+                                                </div>
+                                                {hasAnnualDiscount && (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        untuk {durationLabel}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* CTA Button */}
                                     <Link href={route('catalog.show', pkg.slug)} className="block">
