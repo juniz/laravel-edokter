@@ -32,21 +32,21 @@ class PasienRanapController extends Controller
         $kd_dokter = session()->get('username');
         $kd_sps = session()->get('kd_sps');
         // Kolom header tabel pasien ranap
-        $heads = ['Nama', 'No Rawat Ibu', 'No. RM', 'Kamar', 'Bed', 'Tanggal Masuk', 'Cara Bayar'];
+        $heads = ['Nama', 'No Rawat', 'No. RM', 'Kamar', 'Bed', 'Tanggal Masuk', 'Cara Bayar'];
 
         // Proses data dengan struktur hierarkis (ibu-anak)
         $rows = $this->buildPasienRanapQuery($statusPasien, $tanggalMulai, $tanggalAkhir, $kd_dokter, $kd_sps)->get();
         $grouped = $rows->groupBy('no_rawat_ibu');
-        
+
         $processedData = [];
-        
+
         foreach ($grouped as $noRawatIbu => $group) {
             $row = $group->first();
-            
+
             // Data ibu
             $noRawatIbuEnc = self::encryptData($row->no_rawat_ibu);
             $noRMEnc = self::encryptData($row->no_rkm_medis);
-            
+
             $processedData[] = [
                 'type' => 'ibu',
                 'nama' => $row->nm_pasien,
@@ -65,22 +65,22 @@ class PasienRanapController extends Controller
                 'png_jawab' => $row->png_jawab,
                 'kd_bangsal' => $row->kd_bangsal,
             ];
-            
+
             // Data anak
             $anakList = DB::table('ranap_gabung')
                 ->where('no_rawat', $noRawatIbu)
                 ->whereNotNull('no_rawat2')
                 ->where('no_rawat2', '!=', '')
                 ->pluck('no_rawat2')
-                ->filter(function($value) {
+                ->filter(function ($value) {
                     return !empty($value);
                 })
                 ->unique()
                 ->values();
-            
+
             foreach ($anakList as $noRawatAnak) {
                 $anakData = $this->getAnakData($noRawatAnak, $statusPasien, $tanggalMulai, $tanggalAkhir, $kd_dokter, $kd_sps);
-                
+
                 if (!$anakData) {
                     $anakData = DB::table('reg_periksa')
                         ->join('pasien', 'pasien.no_rkm_medis', '=', 'reg_periksa.no_rkm_medis')
@@ -97,12 +97,12 @@ class PasienRanapController extends Controller
                         )
                         ->first();
                 }
-                
+
                 if ($anakData && !empty($anakData->nm_pasien)) {
                     $noRawatAnakEnc = self::encryptData($noRawatAnak);
                     $noRMAnakEnc = self::encryptData($anakData->no_rkm_medis);
                     $kdBangsalAnak = ($anakData->kd_bangsal && $anakData->kd_bangsal != '-') ? $anakData->kd_bangsal : $row->kd_bangsal;
-                    
+
                     $processedData[] = [
                         'type' => 'anak',
                         'nama' => $anakData->nm_pasien,
@@ -165,14 +165,14 @@ class PasienRanapController extends Controller
             $dropdown = '
                 <div class="dropdown">
                     <button id="my-dropdown-' . e($row->no_rawat_ibu) . '" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'
-                        . e($row->no_rawat_ibu) .
-                    '</button>
+                . e($row->no_rawat_ibu) .
+                '</button>
                     <div class="dropdown-menu" aria-labelledby="my-dropdown-' . e($row->no_rawat_ibu) . '">
                         <button id="' . e($row->no_rawat_ibu) . '" class="dropdown-item btn-awal-medis-ranap"> Penilaian Awal Medis Ranap</button>
                         <a class="dropdown-item" href="' . route('ralan.pemeriksaan', [
-                            'no_rawat' => $noRawatIbuEnc,
-                            'no_rm'    => $noRMEnc,
-                        ]) . '">Pemeriksaan Ralan</a>
+                    'no_rawat' => $noRawatIbuEnc,
+                    'no_rm'    => $noRMEnc,
+                ]) . '">Pemeriksaan Ralan</a>
                     </div>
                 </div>';
 
@@ -193,7 +193,7 @@ class PasienRanapController extends Controller
                 ->whereNotNull('no_rawat2')
                 ->where('no_rawat2', '!=', '')
                 ->pluck('no_rawat2')
-                ->filter(function($value) {
+                ->filter(function ($value) {
                     return !empty($value);
                 })
                 ->unique()
@@ -203,7 +203,7 @@ class PasienRanapController extends Controller
             foreach ($anakList as $noRawatAnak) {
                 // Ambil data anak - coba dari getAnakData dulu, jika tidak ada ambil dari reg_periksa
                 $anakData = $this->getAnakData($noRawatAnak, $statusPasien, $tanggalMulai, $tanggalAkhir, $kd_dokter, $kd_sps);
-                
+
                 // Jika data anak tidak ditemukan, ambil data minimal dari reg_periksa dan pasien
                 if (!$anakData) {
                     $anakData = DB::table('reg_periksa')
@@ -221,7 +221,7 @@ class PasienRanapController extends Controller
                         )
                         ->first();
                 }
-                
+
                 // Pastikan data anak ada sebelum menambahkan ke result
                 if ($anakData && !empty($anakData->nm_pasien)) {
                     $noRawatAnakEnc = self::encryptData($noRawatAnak);
@@ -237,14 +237,14 @@ class PasienRanapController extends Controller
                     $dropdownAnak = '
                         <div class="dropdown">
                             <button id="my-dropdown-' . e($noRawatAnak) . '" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'
-                                . e($noRawatAnak) .
-                            '</button>
+                        . e($noRawatAnak) .
+                        '</button>
                             <div class="dropdown-menu" aria-labelledby="my-dropdown-' . e($noRawatAnak) . '">
                                 <button id="' . e($noRawatAnak) . '" class="dropdown-item btn-awal-medis-ranap"> Penilaian Awal Medis Ranap</button>
                                 <a class="dropdown-item" href="' . route('ralan.pemeriksaan', [
-                                    'no_rawat' => $noRawatAnakEnc,
-                                    'no_rm'    => $noRMAnakEnc,
-                                ]) . '">Pemeriksaan Ralan</a>
+                            'no_rawat' => $noRawatAnakEnc,
+                            'no_rm'    => $noRMAnakEnc,
+                        ]) . '">Pemeriksaan Ralan</a>
                             </div>
                         </div>';
 
