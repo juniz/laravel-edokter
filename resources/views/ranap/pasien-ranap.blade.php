@@ -74,7 +74,7 @@
                         @endif
                         <div class="ml-auto">
                             <span class="badge badge-success">
-                                <i class="fas fa-users"></i> Total: {{ count($data) }} Pasien
+                                <i class="fas fa-users"></i> Total: {{ $data instanceof \Illuminate\Support\Collection ? $data->count() : 0 }} Pasien
                             </span>
                         </div>
                     </div>
@@ -84,41 +84,49 @@
     </form>
 </x-adminlte-card>
 
-<x-adminlte-callout theme="info" >
-    @php
-        $config["responsive"] = true;
-    @endphp
-    {{-- Minimal example / fill data using the component slot --}}
-    <x-adminlte-datatable id="tablePasienRanap" :heads="$heads" :config="$config" head-theme="dark" striped hoverable bordered compressed>
-        @foreach($data as $row)
-            @php
-                $noRawat = App\Http\Controllers\Ranap\PasienRanapController::encryptData($row->no_rawat);
-                $noRM = App\Http\Controllers\Ranap\PasienRanapController::encryptData($row->no_rkm_medis);
-            @endphp
-            <tr>
-                <td> 
-                    <a class="text-primary" href="{{route('ranap.pemeriksaan', ['no_rawat' => $noRawat, 'no_rm' => $noRM, 'bangsal' => $row->kd_bangsal])}}">
-                        {{$row->nm_pasien}}
-                    </a>
-                </td>
-                <td>
-                    <div class="dropdown">
-                        <button id="my-dropdown-{{$row->no_rawat}}" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">{{$row->no_rawat}}</button>
-                        <div class="dropdown-menu" aria-labelledby="my-dropdown-{{$row->no_rawat}}">
-                            <button id="{{$row->no_rawat}}" class="dropdown-item btn-awal-medis-ranap"> Penilaian Awal Medis Ranap</button>
-                            <a class="dropdown-item" href="{{route('ralan.pemeriksaan', ['no_rawat' => $noRawat, 'no_rm' => $noRM])}}">Pemeriksaan Ralan</a>
-                        </div>
-                    </div>
-                </td>
-                <td>{{$row->no_rkm_medis}}</td>
-                <td>{{$row->nm_bangsal}}</td>
-                <td>{{$row->kd_kamar}}</td>
-                <td>{{$row->tgl_masuk}}</td>
-                <td>{{$row->png_jawab}}</td>
-            </tr>
-        @endforeach
-    </x-adminlte-datatable>
-    
+<x-adminlte-callout theme="info">
+    <div class="table-responsive">
+        <table id="tablePasienRanap" class="table table-bordered table-striped table-hover" style="width:100%">
+            <thead class="thead-dark">
+                <tr>
+                    @foreach($heads as $head)
+                        <th>{{ $head }}</th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($data as $row)
+                    <tr class="{{ $row['type'] == 'anak' ? 'table-secondary' : '' }}">
+                        <td>
+                            @if($row['type'] == 'anak')
+                                <span class="ml-3 text-muted">└─ </span>
+                            @endif
+                            <a class="text-primary" href="{{ $row['nama_link'] }}">{{ $row['nama'] }}</a>
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button id="my-dropdown-{{ $row['no_rawat'] }}" class="btn btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                    {{ $row['no_rawat'] }}
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="my-dropdown-{{ $row['no_rawat'] }}">
+                                    <button id="{{ $row['no_rawat'] }}" class="dropdown-item btn-awal-medis-ranap">Penilaian Awal Medis Ranap</button>
+                                    <a class="dropdown-item" href="{{ route('ralan.pemeriksaan', [
+                                        'no_rawat' => $row['no_rawat_enc'],
+                                        'no_rm' => $row['no_rm_enc'],
+                                    ]) }}">Pemeriksaan Ralan</a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ $row['no_rkm_medis'] }}</td>
+                        <td>{{ $row['nm_bangsal'] }}</td>
+                        <td>{{ $row['kd_kamar'] }}</td>
+                        <td>{{ $row['tgl_masuk'] }}</td>
+                        <td>{{ $row['png_jawab'] }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </x-adminlte-callout>
 <x-adminlte-modal wire:ignore.self id="modal-awal-medis-ranap" title=" Medis Ranap" size="xl" v-centered static-backdrop scrollable>
     <livewire:component.awal-medis-ranap.form />
@@ -346,11 +354,55 @@
             min-width: 300px;
         }
     }
+    
+    /* Styling untuk baris anak (indentasi visual) */
+    .ml-3 {
+        margin-left: 1rem;
+    }
+    
+    .text-muted {
+        color: #6c757d !important;
+    }
+    
+    /* Styling untuk baris anak di tabel */
+    #tablePasienRanap tbody tr.child-row {
+        background-color: #f8f9fa;
+    }
+    
+    #tablePasienRanap tbody tr.child-row:hover {
+        background-color: #e9ecef;
+    }
 </style>
 @stop
 @section('js')
 <script>
     $(function() {
+        // Inisialisasi DataTables untuk tabel pasien ranap
+        // Urutan baris dipertahankan (ibu diikuti anaknya) dengan menonaktifkan sorting default
+        var table = $('#tablePasienRanap').DataTable({
+            responsive: true,
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            order: [], // Tidak ada sorting default
+            ordering: false, // Nonaktifkan sorting untuk mempertahankan urutan hierarkis
+            columnDefs: [
+                { orderable: false, targets: '_all' }, // Semua kolom tidak bisa diurutkan
+            ],
+            language: {
+                search: "Cari:",
+                lengthMenu: "Tampilkan _MENU_ entri",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+                infoFiltered: "(disaring dari _MAX_ total entri)",
+                paginate: {
+                    first: "Pertama",
+                    last: "Terakhir",
+                    next: "Selanjutnya",
+                    previous: "Sebelumnya"
+                }
+            }
+        });
+        
         var form = $('#filterForm');
         var isSubmitting = false;
         
