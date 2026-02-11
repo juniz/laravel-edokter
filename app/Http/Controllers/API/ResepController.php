@@ -414,14 +414,18 @@ class ResepController extends Controller
                 }
             }
 
-            // Query untuk response
+            // Query untuk response (dengan harga dari databarang.ralan untuk total & PPN)
             try {
                 $resep = DB::table('resep_dokter')
                     ->join('databarang', 'resep_dokter.kode_brng', '=', 'databarang.kode_brng')
                     ->join('resep_obat', 'resep_obat.no_resep', '=', 'resep_dokter.no_resep')
                     ->where('resep_obat.no_rawat', $noRawat)
                     ->where('resep_obat.kd_dokter', $dokter)
-                    ->select('resep_dokter.no_resep', 'resep_dokter.kode_brng', 'resep_dokter.jml', 'databarang.nama_brng', 'resep_dokter.aturan_pakai', 'resep_obat.tgl_peresepan', 'resep_obat.jam_peresepan')
+                    ->select(
+                        'resep_dokter.no_resep', 'resep_dokter.kode_brng', 'resep_dokter.jml',
+                        'databarang.nama_brng', 'databarang.ralan as harga_satuan',
+                        'resep_dokter.aturan_pakai', 'resep_obat.tgl_peresepan', 'resep_obat.jam_peresepan'
+                    )
                     ->orderBy('resep_obat.jam_peresepan', 'desc')
                     ->get();
             } catch (\Exception $e) {
@@ -466,10 +470,18 @@ class ResepController extends Controller
                 }
             }
 
+            $ppnRate = 0.11;
+            $totalHargaObat = $resep->sum(fn ($r) => (float) ($r->jml ?? 0) * (float) ($r->harga_satuan ?? 0));
+            $totalPpn = $totalHargaObat * $ppnRate;
+            $totalDenganPpn = $totalHargaObat + $totalPpn;
+
             return response()->json([
                 'status' => 'sukses',
                 'pesan' => 'Input resep berhasil',
                 'data' => $resep,
+                'total_harga_obat' => $totalHargaObat,
+                'total_ppn' => $totalPpn,
+                'total_dengan_ppn' => $totalDenganPpn,
             ]);
         } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollback();
@@ -1178,9 +1190,24 @@ class ResepController extends Controller
                 ->join('resep_obat', 'resep_obat.no_resep', '=', 'resep_dokter.no_resep')
                 ->where('resep_obat.no_rawat', $noRawat)
                 ->where('resep_obat.kd_dokter', $dokter)
-                ->select('resep_dokter.no_resep', 'resep_dokter.kode_brng', 'resep_dokter.jml', 'databarang.nama_brng', 'resep_dokter.aturan_pakai', 'resep_dokter.no_resep', 'databarang.nama_brng', 'resep_obat.tgl_peresepan', 'resep_obat.jam_peresepan')
+                ->select(
+                    'resep_dokter.no_resep', 'resep_dokter.kode_brng', 'resep_dokter.jml',
+                    'databarang.nama_brng', 'databarang.ralan as harga_satuan',
+                    'resep_dokter.aturan_pakai', 'resep_obat.tgl_peresepan', 'resep_obat.jam_peresepan'
+                )
                 ->get();
-            return response()->json(['status' => 'sukses', 'pesan' => 'Obat berhasil dihapus', 'data' => $resep]);
+            $ppnRate = 0.11;
+            $totalHargaObat = $resep->sum(fn ($r) => (float) ($r->jml ?? 0) * (float) ($r->harga_satuan ?? 0));
+            $totalPpn = $totalHargaObat * $ppnRate;
+            $totalDenganPpn = $totalHargaObat + $totalPpn;
+            return response()->json([
+                'status' => 'sukses',
+                'pesan' => 'Obat berhasil dihapus',
+                'data' => $resep,
+                'total_harga_obat' => $totalHargaObat,
+                'total_ppn' => $totalPpn,
+                'total_dengan_ppn' => $totalDenganPpn,
+            ]);
         } catch (\Exception $ex) {
             return response()->json(['status' => 'gagal', 'pesan' => $ex->getMessage()]);
         }
@@ -1203,15 +1230,29 @@ class ResepController extends Controller
                 DB::table('resep_dokter')->where('no_resep', $noResep)->where('kode_brng', $kdObat[$key])->delete();
             }
             DB::commit();
-            DB::table('resep_dokter')->where('no_resep', $noResep)->where('kode_brng', $kdObat)->delete();
             $resep = DB::table('resep_dokter')
                 ->join('databarang', 'resep_dokter.kode_brng', '=', 'databarang.kode_brng')
                 ->join('resep_obat', 'resep_obat.no_resep', '=', 'resep_dokter.no_resep')
                 ->where('resep_obat.no_rawat', $noRawat)
                 ->where('resep_obat.kd_dokter', $dokter)
-                ->select('resep_dokter.no_resep', 'resep_dokter.kode_brng', 'resep_dokter.jml', 'databarang.nama_brng', 'resep_dokter.aturan_pakai', 'resep_dokter.no_resep', 'databarang.nama_brng', 'resep_obat.tgl_peresepan', 'resep_obat.jam_peresepan')
+                ->select(
+                    'resep_dokter.no_resep', 'resep_dokter.kode_brng', 'resep_dokter.jml',
+                    'databarang.nama_brng', 'databarang.ralan as harga_satuan',
+                    'resep_dokter.aturan_pakai', 'resep_obat.tgl_peresepan', 'resep_obat.jam_peresepan'
+                )
                 ->get();
-            return response()->json(['status' => 'sukses', 'pesan' => 'Obat berhasil dihapus', 'data' => $resep]);
+            $ppnRate = 0.11;
+            $totalHargaObat = $resep->sum(fn ($r) => (float) ($r->jml ?? 0) * (float) ($r->harga_satuan ?? 0));
+            $totalPpn = $totalHargaObat * $ppnRate;
+            $totalDenganPpn = $totalHargaObat + $totalPpn;
+            return response()->json([
+                'status' => 'sukses',
+                'pesan' => 'Obat berhasil dihapus',
+                'data' => $resep,
+                'total_harga_obat' => $totalHargaObat,
+                'total_ppn' => $totalPpn,
+                'total_dengan_ppn' => $totalDenganPpn,
+            ]);
         } catch (\Exception $ex) {
             DB::rollBack();
             return response()->json(['status' => 'gagal', 'pesan' => $ex->getMessage()]);
@@ -1258,10 +1299,19 @@ class ResepController extends Controller
 
             $orderBy = $orderColumns[$orderColumn] ?? 'resep_obat.tgl_peresepan';
 
-            $data = $query->select('resep_obat.no_resep', 'resep_obat.tgl_peresepan', 'dokter.nm_dokter')
+            // Pagination: default 5 baris per halaman (length -1 = tampilkan semua)
+            $length = (int) $request->get('length', 5);
+            $start = (int) $request->get('start', 0);
+
+            $dataQuery = $query->select('resep_obat.no_resep', 'resep_obat.tgl_peresepan', 'dokter.nm_dokter')
                 ->orderBy($orderBy, $orderDir)
-                ->orderByDesc('resep_obat.jam_peresepan')
-                ->get();
+                ->orderByDesc('resep_obat.jam_peresepan');
+
+            if ($length > 0) {
+                $data = $dataQuery->skip($start)->take($length)->get();
+            } else {
+                $data = $dataQuery->get();
+            }
 
             // Format data untuk DataTable
             $formattedData = [];

@@ -10,6 +10,7 @@ use Illuminate\View\Component;
 class Resep extends Component
 {
     public $heads, $riwayatPeresepan, $resep, $dokter, $noRM, $noRawat, $encryptNoRawat, $encryptNoRM, $dataMetodeRacik;
+    public $totalHargaObat, $totalPpn, $totalDenganPpn;
     /**
      * Create a new component instance.
      *
@@ -40,8 +41,20 @@ class Resep extends Component
             ->join('resep_obat', 'resep_obat.no_resep', '=', 'resep_dokter.no_resep')
             ->where('resep_obat.no_rawat', $this->noRawat)
             ->where('resep_obat.kd_dokter', $this->dokter)
-            ->select('resep_dokter.no_resep', 'resep_dokter.kode_brng', 'resep_dokter.jml', 'databarang.nama_brng', 'resep_dokter.aturan_pakai', 'resep_dokter.no_resep', 'databarang.nama_brng', 'resep_obat.tgl_peresepan', 'resep_obat.jam_peresepan')
+            ->select(
+                'resep_dokter.no_resep', 'resep_dokter.kode_brng', 'resep_dokter.jml',
+                'databarang.nama_brng', 'databarang.ralan as harga_satuan',
+                'resep_dokter.aturan_pakai', 'resep_obat.tgl_peresepan', 'resep_obat.jam_peresepan'
+            )
             ->get();
+
+        // Total harga obat dan total + PPN (11%) dari databarang.ralan
+        $ppnRate = 0.11;
+        $this->totalHargaObat = $this->resep->sum(function ($r) {
+            return (float) ($r->jml ?? 0) * (float) ($r->harga_satuan ?? 0);
+        });
+        $this->totalPpn = $this->totalHargaObat * $ppnRate;
+        $this->totalDenganPpn = $this->totalHargaObat + $this->totalPpn;
 
         $this->dataMetodeRacik = DB::table('metode_racik')
             ->get();
@@ -64,6 +77,9 @@ class Resep extends Component
             'poli' => session()->get('kd_poli'),
             'dataMetodeRacik' => $this->dataMetodeRacik,
             'resepRacikan' => $this->getResepRacikan($this->noRM, session()->get('username')),
+            'totalHargaObat' => $this->totalHargaObat,
+            'totalPpn' => $this->totalPpn,
+            'totalDenganPpn' => $this->totalDenganPpn,
         ]);
     }
 

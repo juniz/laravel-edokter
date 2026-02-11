@@ -58,12 +58,18 @@
                                 <th>Nama Obat</th>
                                 <th>Tanggal / Jam</th>
                                 <th>Jumlah</th>
+                                <th>Harga Satuan</th>
+                                <th>Subtotal</th>
                                 <th>Aturan Pakai</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="body-resep">
                             @forelse($resep as $r)
+                            @php
+                                $hargaSatuan = (float) ($r->harga_satuan ?? 0);
+                                $subtotal = (float) ($r->jml ?? 0) * $hargaSatuan;
+                            @endphp
                             <tr>
                                 {{--
                             <tr data-target="{{$r->kode_brng}}" class="cursor-pointer"> --}}
@@ -71,6 +77,8 @@
                                 <td>{{$r->nama_brng}}</td>
                                 <td>{{$r->tgl_peresepan}} {{$r->jam_peresepan}}</td>
                                 <td>{{$r->jml}}</td>
+                                <td class="text-right">Rp {{ number_format($hargaSatuan, 0, ',', '.') }}</td>
+                                <td class="text-right">Rp {{ number_format($subtotal, 0, ',', '.') }}</td>
                                 <td>{{$r->aturan_pakai}}</td>
                                 <td>
                                     <button class="btn btn-danger btn-sm"
@@ -79,11 +87,31 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center">Tidak ada data</td>
+                                <td colspan="7" class="text-center">Tidak ada data</td>
                             </tr>
                             @endforelse
                         </tbody>
                     </table>
+                    <div id="resep-total-summary" class="mt-2 p-2 border-top bg-light rounded">
+                        <div class="row justify-content-end">
+                            <div class="col-md-4 col-sm-6">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr>
+                                        <td>Total Harga Obat</td>
+                                        <td id="summary-total-harga" class="text-right font-weight-bold">Rp {{ number_format($totalHargaObat ?? 0, 0, ',', '.') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>PPN (11%)</td>
+                                        <td id="summary-total-ppn" class="text-right font-weight-bold">Rp {{ number_format($totalPpn ?? 0, 0, ',', '.') }}</td>
+                                    </tr>
+                                    <tr class="border-top">
+                                        <td>Total + PPN</td>
+                                        <td id="summary-total-dengan-ppn" class="text-right font-weight-bold text-primary">Rp {{ number_format($totalDenganPpn ?? 0, 0, ',', '.') }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                     <div class="container-delete-resep-button">
                         @php
                         if(count($resep) > 0){
@@ -106,6 +134,7 @@
                 $config['order'] = [[2, 'desc']];
                 $config['processing'] = true;
                 $config['serverSide'] = true;
+                $config['pageLength'] = 5;
                 $config['ajax'] = [
                     'url' => url('/api/riwayat-peresepan') . '?no_rm=' . $noRM,
                     'type' => 'GET',
@@ -585,6 +614,28 @@
 </script>
 
 <script>
+    function formatRupiah(num) {
+        var n = parseFloat(num) || 0;
+        return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    }
+    function updateResepTotalSummary(totals) {
+        if (!totals) totals = {};
+        $('#summary-total-harga').text(formatRupiah(totals.total_harga_obat));
+        $('#summary-total-ppn').text(formatRupiah(totals.total_ppn));
+        $('#summary-total-dengan-ppn').text(formatRupiah(totals.total_dengan_ppn));
+    }
+    function buildResepRow(item) {
+        var harga = parseFloat(item.harga_satuan) || 0;
+        var jml = parseFloat(item.jml) || 0;
+        var subtotal = harga * jml;
+        return '<td>' + (item.nama_brng || '') + '</td>' +
+            '<td>' + (item.tgl_peresepan || '') + ' ' + (item.jam_peresepan || '') + '</td>' +
+            '<td>' + (item.jml || '') + '</td>' +
+            '<td class="text-right">' + formatRupiah(harga) + '</td>' +
+            '<td class="text-right">' + formatRupiah(subtotal) + '</td>' +
+            '<td>' + (item.aturan_pakai || '') + '</td>' +
+            '<td><button class="btn btn-danger btn-sm" onclick="hapusObat(\'' + item.no_resep + '\', \'' + item.kode_brng + '\', event)">Hapus</button></td>';
+    }
     function getValue(name) {
             var data = [];
             var doc = document.getElementsByName(name);
@@ -755,21 +806,16 @@
                         success: function(data) {
                             if(data.status == 'sukses'){
                                 Swal.close();
-                                // OPTIMASI: Batch DOM manipulation dengan DocumentFragment (O(n))
                                 var fragment = document.createDocumentFragment();
                                 var tbody = $('.body-resep')[0];
-                                tbody.innerHTML = ''; // Clear sekali saja
-                                
-                                data.data.forEach(function(item) {
+                                tbody.innerHTML = '';
+                                (data.data || []).forEach(function(item) {
                                     var tr = document.createElement('tr');
-                                    tr.innerHTML = '<td>' + item.nama_brng + '</td>' +
-                                        '<td>' + item.tgl_peresepan + ' ' + item.jam_peresepan + '</td>' +
-                                        '<td>' + item.jml + '</td>' +
-                                        '<td>' + item.aturan_pakai + '</td>' +
-                                        '<td><button class="btn btn-danger btn-sm" onclick="hapusObat(\''+item.no_resep+'\', \''+item.kode_brng+'\', event)">Hapus</button></td>';
+                                    tr.innerHTML = buildResepRow(item);
                                     fragment.appendChild(tr);
                                 });
                                 tbody.appendChild(fragment);
+                                updateResepTotalSummary(data);
                                 }else{
                                     Swal.fire(
                                         'Gagal!',
@@ -921,16 +967,12 @@
                                     var tr = document.createElement('tr');
                                     tr.setAttribute('data-target', item.kode_brng);
                                     tr.className = 'cursor-pointer';
-                                    tr.innerHTML = '<td><input type="checkbox" id="checkbox-resep" disabled></td>' +
-                                        '<td>' + (item.nama_brng || '') + '</td>' +
-                                        '<td>' + (item.tgl_peresepan || '') + ' ' + (item.jam_peresepan || '') + '</td>' +
-                                        '<td>' + (item.jml || '') + '</td>' +
-                                        '<td>' + (item.aturan_pakai || '') + '</td>' +
-                                        '<td><button class="btn btn-danger btn-sm" onclick="hapusObat(\''+item.no_resep+'\', \''+item.kode_brng+'\', event)">Hapus</button></td>';
+                                    tr.innerHTML = buildResepRow(item);
                                     fragment.appendChild(tr);
                                 });
                                 tbody.appendChild(fragment);
                             }
+                            updateResepTotalSummary(response);
                         }
                         
                         // FIX: Refresh tabel riwayat peresepan setelah input resep berhasil menggunakan AJAX reload
@@ -1077,15 +1119,12 @@
                             if (response.data && Array.isArray(response.data) && response.data.length > 0) {
                                 response.data.forEach(function(item) {
                                     var tr = document.createElement('tr');
-                                    tr.innerHTML = '<td>' + (item.nama_brng || '') + '</td>' +
-                                        '<td>' + (item.tgl_peresepan || '') + ' ' + (item.jam_peresepan || '') + '</td>' +
-                                        '<td>' + (item.jml || '') + '</td>' +
-                                        '<td>' + (item.aturan_pakai || '') + '</td>' +
-                                        '<td><button class="btn btn-danger btn-sm" onclick="hapusObat(\''+item.no_resep+'\', \''+item.kode_brng+'\', event)">Hapus</button></td>';
+                                    tr.innerHTML = buildResepRow(item);
                                     fragment.appendChild(tr);
                                 });
                                 tbody.appendChild(fragment);
                             }
+                            updateResepTotalSummary(response);
                         }
                         
                         // FIX: Refresh tabel riwayat peresepan setelah input resep berhasil menggunakan AJAX reload
@@ -1403,16 +1442,11 @@
                                     var tr = document.createElement('tr');
                                     tr.setAttribute('data-target', item.kode_brng);
                                     tr.className = 'cursor-pointer';
-                                    tr.innerHTML = '<td><input type="checkbox" id="checkbox-resep" disabled></td>' +
-                                        '<td>' + item.nama_brng + '</td>' +
-                                        '<td>' + item.tgl_peresepan + ' ' + item.jam_peresepan + '</td>' +
-                                        '<td>' + item.jml + '</td>' +
-                                        '<td>' + item.aturan_pakai + '</td>' +
-                                        '<td><button class="btn btn-danger btn-sm" onclick="hapusObat(\''+item.no_resep+'\', \''+item.kode_brng+'\', event)">Hapus</button></td>';
+                                    tr.innerHTML = buildResepRow(item);
                                     fragment.appendChild(tr);
                                 });
                                 tbody.appendChild(fragment);
-                                
+                                updateResepTotalSummary(data);
                                 listObat = [];
                                 $('#delete-batch-button').addClass('disabled');
                                 $('#delete-batch-button').html('Hapus Obat'); 

@@ -99,6 +99,10 @@ Route::get('/ranap/pasien', [
     App\Http\Controllers\Ranap\PasienRanapController::class,
     'index',
 ])->name('ranap.pasien');
+Route::get('/ranap/pasien/data', [
+    App\Http\Controllers\Ranap\PasienRanapController::class,
+    'data',
+])->name('ranap.pasien.data');
 Route::get('/ranap/pemeriksaan', [
     App\Http\Controllers\Ranap\PemeriksaanRanapController::class,
     'index',
