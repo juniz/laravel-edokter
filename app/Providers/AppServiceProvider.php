@@ -5,13 +5,23 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Database\Events\TransactionBeginning;
+use Illuminate\Database\Events\TransactionCommitted;
+use Illuminate\Database\Events\TransactionRolledBack;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use App\Jobs\ProcessAuditLog;
 use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * Buffer audit data per connection untuk transaksi (hanya dispatch saat commit).
+     * Key: connection name, Value: stack of arrays (untuk nested transactions)
+     */
+    protected static array $pendingAuditsByConnection = [];
+
     /**
      * Register any application services.
      *
@@ -29,73 +39,127 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // DB::listen(function (QueryExecuted $q) {
-        //     $username = session()?->get('username');
+        $this->registerTransactionListeners();
+        $this->registerQueryListener();
+    }
 
-        //     // 1) Hanya DML
-        //     $sql = $q->sql;
-        //     if (!preg_match('/^\s*(insert|update|delete)\s/i', $sql)) return;
+    /**
+     * Listener untuk event transaksi: buffer query, hanya log saat commit.
+     */
+    protected function registerTransactionListeners(): void
+    {
+        Event::listen(TransactionBeginning::class, function (TransactionBeginning $event) {
+            $conn = $event->connection->getName();
+            if (!isset(self::$pendingAuditsByConnection[$conn])) {
+                self::$pendingAuditsByConnection[$conn] = [];
+            }
+            self::$pendingAuditsByConnection[$conn][] = [];
+        });
 
-        //     // 2) Hindari rekursi
-        //     if ($q->connectionName === 'audit') return;
-        //     if (stripos($sql, 'audit_sql_logs') !== false) return;
+        Event::listen(TransactionCommitted::class, function (TransactionCommitted $event) {
+            $conn = $event->connection->getName();
+            if (empty(self::$pendingAuditsByConnection[$conn])) {
+                return;
+            }
+            $popped = array_pop(self::$pendingAuditsByConnection[$conn]);
+            if (!empty(self::$pendingAuditsByConnection[$conn])) {
+                $parentIdx = count(self::$pendingAuditsByConnection[$conn]) - 1;
+                self::$pendingAuditsByConnection[$conn][$parentIdx] = array_merge(
+                    self::$pendingAuditsByConnection[$conn][$parentIdx],
+                    $popped
+                );
+            } else {
+                foreach ($popped as $auditData) {
+                    $this->dispatchAudit($auditData);
+                }
+                unset(self::$pendingAuditsByConnection[$conn]);
+            }
+        });
 
-        //     // 3) Hindari query table finger_bpjs
-        //     if (stripos($sql, 'finger_bpjs') !== false) return;
+        Event::listen(TransactionRolledBack::class, function (TransactionRolledBack $event) {
+            $conn = $event->connection->getName();
+            if (!empty(self::$pendingAuditsByConnection[$conn])) {
+                array_pop(self::$pendingAuditsByConnection[$conn]);
+                if (empty(self::$pendingAuditsByConnection[$conn])) {
+                    unset(self::$pendingAuditsByConnection[$conn]);
+                }
+            }
+        });
+    }
 
-        //     // 3) Buat unique hash untuk query (mencegah duplikasi)
-        //     $queryHash = md5($sql . json_encode($q->bindings) . $username . time());
+    /**
+     * Listener untuk QueryExecuted: buffer jika dalam transaksi, else dispatch.
+     */
+    protected function registerQueryListener(): void
+    {
+        DB::listen(function (QueryExecuted $q) {
+            $username = session()?->get('username');
 
-        //     // 4) Check cache untuk mencegah duplikasi dalam satu request
-        //     $cacheKey = "audit_query_{$queryHash}";
-        //     if (Cache::has($cacheKey)) {
-        //         return; // Query sudah diproses
-        //     }
+            if (!preg_match('/^\s*(insert|update|delete)\s/i', $q->sql)) return;
+            if ($q->connectionName === 'audit') return;
+            if (stripos($q->sql, 'audit_sql_logs') !== false) return;
+            if (stripos($q->sql, 'finger_bpjs') !== false) return;
 
-        //     // 5) Set cache lock dengan TTL pendek
-        //     Cache::put($cacheKey, true, 10); // 10 detik
+            $auditData = $this->buildAuditData($q, $username);
 
-        //     // 6) Normalkan & batasi ukuran bindings
-        //     $bindings = array_map(function ($b) {
-        //         if (is_resource($b)) return '[resource]';
-        //         if ($b instanceof \DateTimeInterface) return $b->format(DATE_ATOM);
-        //         $s = is_scalar($b)
-        //             ? (string) $b
-        //             : json_encode($b, JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR);
-        //         return Str::limit($s ?? '[non-scalar]', 1000);
-        //     }, $q->bindings);
+            $conn = $q->connectionName ?? $q->connection->getName();
+            if (!empty(self::$pendingAuditsByConnection[$conn])) {
+                $topIdx = count(self::$pendingAuditsByConnection[$conn]) - 1;
+                self::$pendingAuditsByConnection[$conn][$topIdx][] = $auditData;
+            } else {
+                if (!$this->isDuplicate($auditData)) {
+                    $this->dispatchAudit($auditData);
+                }
+            }
+        });
+    }
 
-        //     // 7) Batasi panjang SQL
-        //     $sqlLimited = Str::limit($sql, 10000);
+    protected function buildAuditData(QueryExecuted $q, ?string $username): array
+    {
+        $bindings = array_map(function ($b) {
+            if (is_resource($b)) return '[resource]';
+            if ($b instanceof \DateTimeInterface) return $b->format(DATE_ATOM);
+            $s = is_scalar($b)
+                ? (string) $b
+                : json_encode($b, JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR);
+            return Str::limit($s ?? '[non-scalar]', 1000);
+        }, $q->bindings);
 
-        //     // 8) Dispatch job ke queue untuk diproses di background
-        //     try {
-        //         ProcessAuditLog::dispatch([
-        //             'sql' => $sqlLimited,
-        //             'bindings' => json_encode($bindings, JSON_UNESCAPED_UNICODE),
-        //             'time_ms' => (int) $q->time,
-        //             'user_id' => $username,
-        //             'ip' => request()?->ip(),
-        //             'url' => request()?->fullUrl(),
-        //             'query_hash' => $queryHash,
-        //         ]);
+        $requestId = $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true);
+        $queryHash = md5($q->sql . json_encode($q->bindings) . $username . $requestId);
 
-        //         // Log success untuk monitoring
-        //         Log::info('Audit log job dispatched', [
-        //             'query_hash' => $queryHash,
-        //             'user_id' => $username,
-        //             'queue' => 'audit-logs'
-        //         ]);
-        //     } catch (\Exception $e) {
-        //         // Log error jika dispatch gagal
-        //         Log::error('Failed to dispatch audit log job: ' . $e->getMessage(), [
-        //             'query_hash' => $queryHash,
-        //             'error' => $e->getMessage()
-        //         ]);
+        return [
+            'sql' => Str::limit($q->sql, 10000),
+            'bindings' => json_encode($bindings, JSON_UNESCAPED_UNICODE),
+            'time_ms' => (int) $q->time,
+            'user_id' => $username,
+            'ip' => request()?->ip(),
+            'url' => request()?->fullUrl(),
+            'query_hash' => $queryHash,
+        ];
+    }
 
-        //         // Remove cache lock jika gagal
-        //         Cache::forget($cacheKey);
-        //     }
-        // });
+    protected function isDuplicate(array $auditData): bool
+    {
+        // Tip: Gunakan CACHE_DRIVER=redis di .env untuk performa lebih baik
+        $cacheKey = "audit_query_{$auditData['query_hash']}";
+        if (Cache::has($cacheKey)) {
+            return true;
+        }
+        Cache::put($cacheKey, true, 10);
+        return false;
+    }
+
+    protected function dispatchAudit(array $auditData): void
+    {
+        try {
+            ProcessAuditLog::dispatch($auditData);
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch audit log job: ' . $e->getMessage(), [
+                'query_hash' => $auditData['query_hash'] ?? null,
+                'error' => $e->getMessage()
+            ]);
+            Cache::forget("audit_query_{$auditData['query_hash']}");
+        }
     }
 }
