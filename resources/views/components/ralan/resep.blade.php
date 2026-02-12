@@ -946,14 +946,31 @@
                     
                     // console.log(response);
                     if(response.status == 'sukses'){
-                        Swal.fire({
+                        var hasDetailStok = response.detail_stok && response.detail_stok.length > 0;
+                        var swalConfig = {
                             title: 'Data berhasil disimpan',
                             icon: 'success',
-                            timer: 3000,
-                            toast: true,
-                            position: 'center',
-                            showConfirmButton: false,
-                        });
+                            confirmButtonText: 'Ok',
+                        };
+                        if (hasDetailStok) {
+                            var htmlContent = '<p>' + (response.pesan || 'Beberapa obat tidak dapat ditambahkan karena stok tidak mencukupi.') + '</p>';
+                            htmlContent += '<strong>Obat yang tidak dapat ditambahkan:</strong><ul style="text-align: left; padding-left: 20px; margin-top: 10px;">';
+                            response.detail_stok.forEach(function(obat) {
+                                var namaObat = obat.nama_brng || obat.kode || 'Unknown';
+                                var stokTersedia = obat.stok_tersedia || obat.tersedia || 0;
+                                var jumlahDiminta = obat.jumlah_diminta || obat.diminta || 0;
+                                htmlContent += '<li style="margin-bottom: 8px;"><strong>' + namaObat + '</strong><br><small style="margin-left: 20px;">Stok: ' + stokTersedia + ' | Diminta: ' + jumlahDiminta + '</small></li>';
+                            });
+                            htmlContent += '</ul>';
+                            swalConfig.html = htmlContent;
+                            swalConfig.width = '600px';
+                        } else {
+                            swalConfig.timer = 3000;
+                            swalConfig.toast = true;
+                            swalConfig.position = 'center';
+                            swalConfig.showConfirmButton = false;
+                        }
+                        Swal.fire(swalConfig);
                         
                         // OPTIMASI: Batch DOM manipulation dengan DocumentFragment (O(n))
                         var fragment = document.createDocumentFragment();
@@ -1100,14 +1117,31 @@
                     Swal.close();
                     
                     if(response.status == 'sukses'){
-                        Swal.fire({
+                        var hasDetailStok = response.detail_stok && response.detail_stok.length > 0;
+                        var swalConfig = {
                             title: 'Data berhasil disimpan',
                             icon: 'success',
-                            timer: 3000,
-                            toast: true,
-                            position: 'center',
-                            showConfirmButton: false,
-                        });
+                            confirmButtonText: 'Ok',
+                        };
+                        if (hasDetailStok) {
+                            var htmlContent = '<p>' + (response.pesan || 'Beberapa obat tidak dapat ditambahkan karena stok tidak mencukupi.') + '</p>';
+                            htmlContent += '<strong>Obat yang tidak dapat ditambahkan:</strong><ul style="text-align: left; padding-left: 20px; margin-top: 10px;">';
+                            response.detail_stok.forEach(function(obat) {
+                                var namaObat = obat.nama_brng || obat.kode || 'Unknown';
+                                var stokTersedia = obat.stok_tersedia || obat.tersedia || 0;
+                                var jumlahDiminta = obat.jumlah_diminta || obat.diminta || 0;
+                                htmlContent += '<li style="margin-bottom: 8px;"><strong>' + namaObat + '</strong><br><small style="margin-left: 20px;">Stok: ' + stokTersedia + ' | Diminta: ' + jumlahDiminta + '</small></li>';
+                            });
+                            htmlContent += '</ul>';
+                            swalConfig.html = htmlContent;
+                            swalConfig.width = '600px';
+                        } else {
+                            swalConfig.timer = 3000;
+                            swalConfig.toast = true;
+                            swalConfig.position = 'center';
+                            swalConfig.showConfirmButton = false;
+                        }
+                        Swal.fire(swalConfig);
                         
                         // OPTIMASI: Batch DOM manipulation dengan DocumentFragment (O(n))
                         var fragment = document.createDocumentFragment();

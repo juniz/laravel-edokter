@@ -784,35 +784,57 @@
                 },
                 success: function (response) {
                     console.log(response);
+                    Swal.close();
                     if(response.status == 'sukses'){
-                        Swal.fire({
-                        title: 'Sukses',
-                        text: 'Data berhasil disimpan',
-                        icon: 'success',
-                        confirmButtonText: 'Ok'
-                        }).then((result) => {
+                        var hasDetailStok = response.detail_stok && response.detail_stok.length > 0;
+                        var swalConfig = { title: 'Sukses', icon: 'success', confirmButtonText: 'Ok' };
+                        if (hasDetailStok) {
+                            var html = '<p>' + (response.pesan || 'Beberapa obat tidak dapat ditambahkan karena stok tidak mencukupi.') + '</p>';
+                            html += '<strong>Obat yang tidak dapat ditambahkan:</strong><ul style="text-align: left; padding-left: 20px;">';
+                            response.detail_stok.forEach(function(o) {
+                                html += '<li><strong>' + (o.nama_brng || o.kode || 'Unknown') + '</strong> - Stok: ' + (o.stok_tersedia || 0) + ' | Diminta: ' + (o.jumlah_diminta || 0) + '</li>';
+                            });
+                            html += '</ul>';
+                            swalConfig.html = html;
+                            swalConfig.width = '600px';
+                        } else {
+                            swalConfig.text = 'Data berhasil disimpan';
+                        }
+                        Swal.fire(swalConfig).then((result) => {
                             if (result.value) {
                                 window.location.reload();
                             }
-                        })
+                        });
                     }
                     else{
-                        Swal.fire({
-                        title: 'Gagal',
-                        text: response.pesan,
-                        icon: 'error',
-                        confirmButtonText: 'Ok'
-                        })
+                        var errContent = response.pesan || 'Terjadi kesalahan';
+                        if (response.detail_stok && response.detail_stok.length > 0) {
+                            errContent = '<p>' + errContent + '</p><strong>Obat yang stoknya tidak mencukupi:</strong><ul style="text-align: left; padding-left: 20px;">';
+                            response.detail_stok.forEach(function(o) {
+                                errContent += '<li><strong>' + (o.nama_brng || o.kode || 'Unknown') + '</strong> - Stok: ' + (o.stok_tersedia || 0) + ' | Diminta: ' + (o.jumlah_diminta || 0) + '</li>';
+                            });
+                            errContent += '</ul>';
+                            Swal.fire({ title: 'Gagal', html: errContent, icon: 'error', confirmButtonText: 'Ok', width: '600px' });
+                        } else {
+                            Swal.fire({ title: 'Gagal', text: errContent, icon: 'error', confirmButtonText: 'Ok' });
+                        }
                     }
                 },
                 error: function (response) {
                     console.log(response);
-                    Swal.fire({
-                        title: 'Error',
-                        text: response.pesan ?? 'Terjadi kesalahan',
-                        icon: 'error',
-                        confirmButtonText: 'Ok'
-                    })
+                    Swal.close();
+                    var errData = response.responseJSON || {};
+                    var errContent = errData.pesan || response.pesan || 'Terjadi kesalahan';
+                    if (errData.detail_stok && errData.detail_stok.length > 0) {
+                        errContent = '<p>' + errContent + '</p><strong>Obat yang stoknya tidak mencukupi:</strong><ul style="text-align: left; padding-left: 20px;">';
+                        errData.detail_stok.forEach(function(o) {
+                            errContent += '<li><strong>' + (o.nama_brng || o.kode || 'Unknown') + '</strong> - Stok: ' + (o.stok_tersedia || 0) + ' | Diminta: ' + (o.jumlah_diminta || 0) + '</li>';
+                        });
+                        errContent += '</ul>';
+                        Swal.fire({ title: 'Error', html: errContent, icon: 'error', confirmButtonText: 'Ok', width: '600px' });
+                    } else {
+                        Swal.fire({ title: 'Error', text: errContent, icon: 'error', confirmButtonText: 'Ok' });
+                    }
                 }
             });
         });
@@ -854,36 +876,57 @@
                 },
                 success: function (response) {
                     console.log(response);
+                    Swal.close();
                     if(response.status == 'sukses'){
-                        window.location.reload();
-                        // Swal.fire({
-                        // title: 'Sukses',
-                        // text: 'Data berhasil disimpan',
-                        // icon: 'success',
-                        // confirmButtonText: 'Ok'
-                        // }).then((result) => {
-                        //     if (result.value) {
-                        //         window.location.reload();
-                        //     }
-                        // })
+                        var hasDetailStok = response.detail_stok && response.detail_stok.length > 0;
+                        var swalConfig = { title: 'Sukses', icon: 'success', confirmButtonText: 'Ok' };
+                        if (hasDetailStok) {
+                            var html = '<p>' + (response.pesan || 'Beberapa obat tidak dapat ditambahkan karena stok tidak mencukupi.') + '</p>';
+                            html += '<strong>Obat yang tidak dapat ditambahkan:</strong><ul style="text-align: left; padding-left: 20px;">';
+                            response.detail_stok.forEach(function(o) {
+                                html += '<li><strong>' + (o.nama_brng || o.kode || 'Unknown') + '</strong> - Stok: ' + (o.stok_tersedia || 0) + ' | Diminta: ' + (o.jumlah_diminta || 0) + '</li>';
+                            });
+                            html += '</ul>';
+                            swalConfig.html = html;
+                            swalConfig.width = '600px';
+                        } else {
+                            swalConfig.text = 'Data berhasil disimpan';
+                        }
+                        Swal.fire(swalConfig).then((result) => {
+                            if (result.value) {
+                                window.location.reload();
+                            }
+                        });
                     }
                     else{
-                        Swal.fire({
-                        title: 'Gagal',
-                        text: response.pesan,
-                        icon: 'error',
-                        confirmButtonText: 'Ok'
-                        })
+                        var errContent = response.pesan || 'Terjadi kesalahan';
+                        if (response.detail_stok && response.detail_stok.length > 0) {
+                            errContent = '<p>' + errContent + '</p><strong>Obat yang stoknya tidak mencukupi:</strong><ul style="text-align: left; padding-left: 20px;">';
+                            response.detail_stok.forEach(function(o) {
+                                errContent += '<li><strong>' + (o.nama_brng || o.kode || 'Unknown') + '</strong> - Stok: ' + (o.stok_tersedia || 0) + ' | Diminta: ' + (o.jumlah_diminta || 0) + '</li>';
+                            });
+                            errContent += '</ul>';
+                            Swal.fire({ title: 'Gagal', html: errContent, icon: 'error', confirmButtonText: 'Ok', width: '600px' });
+                        } else {
+                            Swal.fire({ title: 'Gagal', text: errContent, icon: 'error', confirmButtonText: 'Ok' });
+                        }
                     }
                 },
                 error: function (response) {
                     console.log(response);
-                    Swal.fire({
-                        title: 'Error',
-                        text: response.pesan ?? 'Terjadi kesalahan',
-                        icon: 'error',
-                        confirmButtonText: 'Ok'
-                    })
+                    Swal.close();
+                    var errData = response.responseJSON || {};
+                    var errContent = errData.pesan || response.pesan || 'Terjadi kesalahan';
+                    if (errData.detail_stok && errData.detail_stok.length > 0) {
+                        errContent = '<p>' + errContent + '</p><strong>Obat yang stoknya tidak mencukupi:</strong><ul style="text-align: left; padding-left: 20px;">';
+                        errData.detail_stok.forEach(function(o) {
+                            errContent += '<li><strong>' + (o.nama_brng || o.kode || 'Unknown') + '</strong> - Stok: ' + (o.stok_tersedia || 0) + ' | Diminta: ' + (o.jumlah_diminta || 0) + '</li>';
+                        });
+                        errContent += '</ul>';
+                        Swal.fire({ title: 'Error', html: errContent, icon: 'error', confirmButtonText: 'Ok', width: '600px' });
+                    } else {
+                        Swal.fire({ title: 'Error', text: errContent, icon: 'error', confirmButtonText: 'Ok' });
+                    }
                 }
             });
         });
