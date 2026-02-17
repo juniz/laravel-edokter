@@ -30,7 +30,7 @@ interface ProvisionTask {
     };
     plan: {
       code: string;
-    };
+    } | null;
     customer?: {
       name: string;
       email: string;
@@ -178,7 +178,7 @@ export default function ProvisionTaskShow({ task }: ProvisionTaskShowProps) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Plan</span>
-                    <span>{task.subscription.plan.code}</span>
+                    <span>{task.subscription.plan?.code ?? 'Default'}</span>
                   </div>
                   {task.subscription.customer && (
                     <>
@@ -230,4 +230,3 @@ export default function ProvisionTaskShow({ task }: ProvisionTaskShowProps) {
     </AppLayout>
   );
 }
-

@@ -65,7 +65,7 @@ export default function DomainSearch({
             const isAdminPage = window.location.pathname.startsWith("/admin");
 
             let url: string;
-            let params: Record<string, string> = { extension };
+            const params: Record<string, string> = { extension };
 
             if (isCheckoutPage) {
                 url = "/domain-prices/by-extension";

@@ -6,6 +6,7 @@ use App\Domain\Billing\Contracts\PaymentAdapterInterface;
 use App\Domain\Billing\Contracts\PaymentRepository;
 use App\Models\Domain\Billing\Invoice;
 use App\Models\Domain\Billing\Payment;
+use App\Models\Domain\Shared\Setting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -15,10 +16,39 @@ class MidtransAdapter implements PaymentAdapterInterface
         private PaymentRepository $paymentRepository
     ) {}
 
+    private function getGatewaySettings(): array
+    {
+        static $cached = null;
+
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $defaults = [
+            'midtrans_enabled' => true,
+            'midtrans_is_production' => (bool) config('payment.midtrans.is_production', false),
+            'midtrans_verify_webhook_signature' => (bool) config('payment.midtrans.verify_webhook_signature', true),
+        ];
+
+        try {
+            $setting = Setting::where('key', 'payment_gateway_settings')->first();
+            $cached = array_merge($defaults, $setting?->value ?? []);
+        } catch (\Throwable) {
+            $cached = $defaults;
+        }
+
+        return $cached;
+    }
+
     public function createCharge(Invoice $invoice, array $options): Payment
     {
+        $gatewaySettings = $this->getGatewaySettings();
+        if (($gatewaySettings['midtrans_enabled'] ?? true) === false) {
+            throw new \RuntimeException('Midtrans sedang dinonaktifkan.');
+        }
+
         $serverKey = config('payment.midtrans.server_key');
-        $isProduction = config('payment.midtrans.is_production', false);
+        $isProduction = (bool) ($gatewaySettings['midtrans_is_production'] ?? config('payment.midtrans.is_production', false));
         // Snap API Endpoint
         $baseUrl = $isProduction
             ? 'https://app.midtrans.com/snap/v1/transactions'
@@ -198,7 +228,8 @@ class MidtransAdapter implements PaymentAdapterInterface
         }
 
         // Verify webhook signature untuk keamanan
-        $shouldVerifySignature = config('payment.midtrans.verify_webhook_signature', true);
+        $gatewaySettings = $this->getGatewaySettings();
+        $shouldVerifySignature = (bool) ($gatewaySettings['midtrans_verify_webhook_signature'] ?? config('payment.midtrans.verify_webhook_signature', true));
         if ($shouldVerifySignature) {
             $signature = $payload['signature_key'] ?? null;
             if (! $this->verifySignature($payload, $signature)) {
@@ -362,7 +393,8 @@ class MidtransAdapter implements PaymentAdapterInterface
     public function checkStatus(Payment $payment): ?Payment
     {
         $serverKey = config('payment.midtrans.server_key');
-        $isProduction = config('payment.midtrans.is_production', false);
+        $gatewaySettings = $this->getGatewaySettings();
+        $isProduction = (bool) ($gatewaySettings['midtrans_is_production'] ?? config('payment.midtrans.is_production', false));
         $baseUrl = $isProduction
             ? 'https://api.midtrans.com/v2'
             : 'https://api.sandbox.midtrans.com/v2';

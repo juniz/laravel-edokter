@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Domain\Catalog;
 
 use App\Domain\Catalog\Contracts\ProductRepository;
 use App\Http\Controllers\Controller;
+use App\Models\Domain\Catalog\ProductType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,7 +17,7 @@ class ProductController extends Controller
 
     public function index(): Response
     {
-        $products = \App\Models\Domain\Catalog\Product::with('features')
+        $products = \App\Models\Domain\Catalog\Product::with(['features', 'productType'])
             ->latest()
             ->paginate(15);
 
@@ -27,7 +28,14 @@ class ProductController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('admin/products/Form');
+        $productTypes = ProductType::query()
+            ->orderBy('display_order')
+            ->orderBy('name')
+            ->get(['id', 'slug', 'name', 'status']);
+
+        return Inertia::render('admin/products/Form', [
+            'productTypes' => $productTypes,
+        ]);
     }
 
     public function store(Request $request)
@@ -35,7 +43,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:products,slug'],
-            'type' => ['required', 'in:hosting_shared,vps,addon,domain'],
+            'product_type_id' => ['required', 'string', 'exists:product_types,id'],
             'status' => ['required', 'in:active,draft,archived'],
             'price_cents' => ['required', 'integer', 'min:0'],
             'currency' => ['required', 'string', 'size:3'],
@@ -82,7 +90,7 @@ class ProductController extends Controller
         }
 
         return Inertia::render('admin/products/Show', [
-            'product' => $product->load('features'),
+            'product' => $product->load(['features', 'productType']),
         ]);
     }
 
@@ -94,8 +102,14 @@ class ProductController extends Controller
             abort(404);
         }
 
+        $productTypes = ProductType::query()
+            ->orderBy('display_order')
+            ->orderBy('name')
+            ->get(['id', 'slug', 'name', 'status']);
+
         return Inertia::render('admin/products/Form', [
-            'product' => $product->load('features'),
+            'product' => $product->load(['features', 'productType']),
+            'productTypes' => $productTypes,
         ]);
     }
 
@@ -110,7 +124,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:products,slug,'.$id],
-            'type' => ['required', 'in:hosting_shared,vps,addon,domain'],
+            'product_type_id' => ['required', 'string', 'exists:product_types,id'],
             'status' => ['required', 'in:active,draft,archived'],
             'price_cents' => ['required', 'integer', 'min:0'],
             'currency' => ['required', 'string', 'size:3'],

@@ -55,5 +55,11 @@ class XenditAdapter implements PaymentAdapterInterface
 
         return $payment;
     }
-}
 
+    public function checkStatus(Payment $payment): ?Payment
+    {
+        $payment->refresh();
+
+        return $payment;
+    }
+}

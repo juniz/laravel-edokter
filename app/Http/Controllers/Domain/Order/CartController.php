@@ -8,6 +8,7 @@ use App\Application\Order\ValidateCouponService;
 use App\Http\Controllers\Controller;
 use App\Models\Domain\Order\Cart;
 use App\Models\Domain\Order\CartItem;
+use App\Models\Domain\Shared\Setting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -61,6 +62,26 @@ class CartController extends Controller
                 }),
             ],
         ]);
+    }
+
+    private function isManualOnly(): bool
+    {
+        $defaultGateway = config('payment.default', 'manual');
+
+        try {
+            $setting = Setting::where('key', 'payment_gateway_settings')->first();
+            $value = $setting?->value ?? [];
+
+            $defaultGateway = $value['default_gateway'] ?? $defaultGateway;
+            $midtransEnabled = $value['midtrans_enabled'] ?? true;
+
+            if ($defaultGateway === 'midtrans' && $midtransEnabled === false) {
+                $defaultGateway = 'manual';
+            }
+        } catch (\Throwable) {
+        }
+
+        return $defaultGateway === 'manual';
     }
 
     /**
@@ -265,7 +286,7 @@ class CartController extends Controller
     public function checkout(Request $request)
     {
         $request->validate([
-            'payment_method' => ['required', 'string'],
+            'payment_method' => ['nullable', 'string'],
         ]);
 
         $customer = $request->user()->customer;
@@ -283,8 +304,13 @@ class CartController extends Controller
         }
 
         try {
+            $paymentMethod = $request->input('payment_method');
+            if (! $paymentMethod && $this->isManualOnly()) {
+                $paymentMethod = 'manual';
+            }
+
             $payment = $this->checkoutCartService->execute($cart, [
-                'payment_method' => $request->payment_method,
+                'payment_method' => $paymentMethod,
             ]);
 
             return redirect()->route('customer.payments.show', $payment->id)

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\Payment;
 
-use App\Domain\Billing\Contracts\PaymentAdapterInterface;
 use App\Http\Controllers\Controller;
+use App\Infrastructure\Payments\Adapters\MidtransAdapter;
 use App\Models\Domain\Billing\MidtransWebhookLog;
 use App\Models\Domain\Billing\Payment;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 class MidtransWebhookController extends Controller
 {
     public function __construct(
-        private PaymentAdapterInterface $paymentAdapter
+        private MidtransAdapter $paymentAdapter
     ) {}
 
     /**
@@ -103,7 +103,7 @@ class MidtransWebhookController extends Controller
                 // Update payment_id jika sebelumnya null
                 if (! $webhookLog->payment_id) {
                     $webhookLog->update(['payment_id' => $payment->id]);
-            }
+                }
 
                 // Success
                 $webhookLog->update([
@@ -112,8 +112,8 @@ class MidtransWebhookController extends Controller
                 ]);
 
                 $response = response()->json([
-                'success' => true,
-                'message' => 'Webhook processed successfully',
+                    'success' => true,
+                    'message' => 'Webhook processed successfully',
                     'order_id' => $payment->provider_ref,
                 ], 200);
             }

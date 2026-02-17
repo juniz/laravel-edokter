@@ -6,8 +6,8 @@ use App\Http\Controllers\Domain\Billing\InvoiceController;
 use App\Http\Controllers\Domain\Billing\PaymentController;
 use App\Http\Controllers\Domain\Catalog\CatalogController;
 use App\Http\Controllers\Domain\Catalog\CouponController;
-use App\Http\Controllers\Domain\Catalog\PlanController;
 use App\Http\Controllers\Domain\Catalog\ProductController;
+use App\Http\Controllers\Domain\Catalog\ProductTypeController;
 use App\Http\Controllers\Domain\DomainController;
 use App\Http\Controllers\Domain\DomainPriceController;
 use App\Http\Controllers\Domain\Order\CartController;
@@ -29,6 +29,11 @@ use App\Http\Controllers\UserFileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [CatalogController::class, 'guest'])->name('home');
+
+// Endpoint untuk log browser (digunakan oleh tooling pengembangan)
+Route::post('/_boost/browser-logs', function () {
+    return response()->noContent();
+})->withoutMiddleware(\App\Http\Middleware\HandleInertiaRequests::class);
 
 // Test email route (without queue)
 Route::get('/send_email', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'testSend'])
@@ -110,7 +115,10 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     // Admin routes
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::resource('products', ProductController::class);
-        Route::resource('plans', PlanController::class);
+        Route::resource('product-types', ProductTypeController::class)->except(['show']);
+        Route::get('plans', fn () => redirect()->route('admin.products.index'))->name('plans.index');
+        Route::get('plans/create', fn () => redirect()->route('admin.products.create'))->name('plans.create');
+        Route::get('plans/{any}', fn () => redirect()->route('admin.products.index'))->where('any', '.*');
         Route::resource('coupons', CouponController::class);
         Route::post('servers/{id}/test-connection', [ServerController::class, 'testConnection'])->name('servers.test-connection');
         Route::resource('servers', ServerController::class);
@@ -132,11 +140,20 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::post('/invoices/{id}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+        Route::get('/invoices/{id}/download', [InvoiceController::class, 'download'])
+            ->name('invoices.download')
+            ->withoutMiddleware(\App\Http\Middleware\HandleInertiaRequests::class);
+        Route::post('/invoices/{id}/mark-paid', [InvoiceController::class, 'markAsPaidManual'])->name('invoices.mark-paid');
+        Route::post('/invoices/{id}/mark-unpaid', [InvoiceController::class, 'markAsUnpaidManual'])->name('invoices.mark-unpaid');
+
+        Route::post('/payments/{id}/approve', [PaymentController::class, 'approve'])->name('payments.approve');
+        Route::post('/payments/{id}/reject', [PaymentController::class, 'reject'])->name('payments.reject');
 
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
         Route::get('/subscriptions/{id}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
         Route::post('/subscriptions/{id}/suspend', [SubscriptionController::class, 'suspendPanelAccount'])->name('subscriptions.suspend');
         Route::post('/subscriptions/{id}/unsuspend', [SubscriptionController::class, 'unsuspendPanelAccount'])->name('subscriptions.unsuspend');
+        Route::post('/subscriptions/{id}/status', [SubscriptionController::class, 'updateStatus'])->name('subscriptions.update-status');
         Route::get('/subscriptions/{id}/panel-login', [SubscriptionController::class, 'getPanelLoginUrl'])->name('subscriptions.panel-login');
 
         // Admin tickets
@@ -181,6 +198,10 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::put('/settings/margin', [\App\Http\Controllers\Settings\MarginController::class, 'update'])->name('margin.update')->middleware('admin');
     Route::get('/settings/billing', [\App\Http\Controllers\Settings\BillingController::class, 'edit'])->name('settings.billing.edit')->middleware('admin');
     Route::put('/settings/billing', [\App\Http\Controllers\Settings\BillingController::class, 'update'])->name('settings.billing.update')->middleware('admin');
+    Route::get('/settings/payment-gateway', [\App\Http\Controllers\Settings\PaymentGatewayController::class, 'edit'])->name('settings.payment-gateway.edit')->middleware('admin');
+    Route::put('/settings/payment-gateway', [\App\Http\Controllers\Settings\PaymentGatewayController::class, 'update'])->name('settings.payment-gateway.update')->middleware('admin');
+    Route::get('/settings/site-footer', [\App\Http\Controllers\Settings\SiteFooterController::class, 'edit'])->name('settings.site-footer.edit')->middleware('admin');
+    Route::put('/settings/site-footer', [\App\Http\Controllers\Settings\SiteFooterController::class, 'update'])->name('settings.site-footer.update')->middleware('admin');
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('/utilities/log-viewer', [LogViewerController::class, 'index'])->name('log-viewer.index');
     Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');

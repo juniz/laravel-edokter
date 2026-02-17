@@ -19,11 +19,17 @@ class ProductRepository implements ProductRepositoryContract
 
     public function findBySlug(string $slug): ?Product
     {
-        return Product::where('slug', $slug)->where('status', 'active')->first();
+        return Product::where('slug', $slug)
+            ->where('status', 'active')
+            ->with(['productType'])
+            ->first();
     }
 
     public function findAllActive(): array
     {
-        return Product::where('status', 'active')->get()->all();
+        return Product::where('status', 'active')
+            ->with(['productType'])
+            ->get()
+            ->all();
     }
 }

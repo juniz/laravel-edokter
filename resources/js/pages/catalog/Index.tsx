@@ -11,6 +11,7 @@ import {
     Zap,
     Globe,
     Package,
+    LayoutGrid,
     CheckCircle2,
     Star,
     Shield,
@@ -55,7 +56,15 @@ interface Product {
     id: string;
     name: string;
     slug: string;
-    type: string;
+    product_type_id: string;
+    product_type?: {
+        id: string;
+        slug: string;
+        name: string;
+        icon?: string | null;
+        display_order?: number;
+        metadata?: Record<string, any> | null;
+    } | null;
     status: string;
     price_cents?: number;
     annual_discount_percent?: number;
@@ -76,41 +85,6 @@ interface Product {
 interface CatalogProps {
     products: Product[];
     pphRate?: number;
-}
-
-function getProductTypeConfig(type: string) {
-    const config: Record<string, { icon: React.ElementType; color: string; bgColor: string; label: string }> = {
-        hosting_shared: {
-            icon: HardDrive,
-            color: 'text-blue-600',
-            bgColor: 'from-blue-500 to-cyan-500',
-            label: 'Shared Hosting',
-        },
-        vps: {
-            icon: Server,
-            color: 'text-purple-600',
-            bgColor: 'from-purple-500 to-pink-500',
-            label: 'VPS',
-        },
-        addon: {
-            icon: Package,
-            color: 'text-emerald-600',
-            bgColor: 'from-emerald-500 to-green-500',
-            label: 'Addon',
-        },
-        domain: {
-            icon: Globe,
-            color: 'text-orange-600',
-            bgColor: 'from-orange-500 to-amber-500',
-            label: 'Domain',
-        },
-    };
-    return config[type] || {
-        icon: Package,
-        color: 'text-gray-600',
-        bgColor: 'from-gray-500 to-slate-500',
-        label: type.replace('_', ' ').toUpperCase(),
-    };
 }
 
 function formatPrice(amount: number) {
@@ -196,14 +170,26 @@ export default function Catalog({ products }: CatalogProps) {
 
     // Group products by type
     const groupedProducts = products.reduce((acc, product) => {
-        if (!acc[product.type]) {
-            acc[product.type] = [];
+        const typeSlug = product.product_type?.slug ?? 'other';
+        if (!acc[typeSlug]) {
+            acc[typeSlug] = [];
         }
-        acc[product.type].push(product);
+        acc[typeSlug].push(product);
         return acc;
     }, {} as Record<string, Product[]>);
 
-    const productTypes = Object.keys(groupedProducts);
+    const productTypeEntries = Object.keys(groupedProducts)
+        .map((typeSlug) => ({
+            typeSlug,
+            productType: groupedProducts[typeSlug][0]?.product_type ?? null,
+            products: groupedProducts[typeSlug],
+        }))
+        .sort((a, b) => {
+            const orderA = a.productType?.display_order ?? 999;
+            const orderB = b.productType?.display_order ?? 999;
+            if (orderA !== orderB) return orderA - orderB;
+            return (a.productType?.name ?? a.typeSlug).localeCompare(b.productType?.name ?? b.typeSlug);
+        });
 
     const handleApplyPromo = (e: React.FormEvent) => {
         e.preventDefault();
@@ -315,7 +301,7 @@ export default function Catalog({ products }: CatalogProps) {
                 </div>
 
                 {/* Products by Type */}
-                {productTypes.length === 0 ? (
+                {productTypeEntries.length === 0 ? (
                     <Card variant="premium">
                         <CardContent className="p-12 text-center">
                             <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center mx-auto mb-4">
@@ -328,19 +314,18 @@ export default function Catalog({ products }: CatalogProps) {
                         </CardContent>
                     </Card>
                 ) : (
-                    productTypes.map((type) => {
-                        const typeConfig = getProductTypeConfig(type);
-                        const typeProducts = groupedProducts[type];
+                    productTypeEntries.map(({ typeSlug, productType, products: typeProducts }) => {
+                        const typeLabel = productType?.name ?? typeSlug.replace('_', ' ').toUpperCase();
 
                         return (
-                            <section key={type} className="space-y-4">
+                            <section key={productType?.id ?? typeSlug} className="space-y-4">
                                 {/* Section Header */}
                                 <div className="flex items-center gap-3">
                                     {/* <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${typeConfig.bgColor} flex items-center justify-center`}>
                                         <TypeIcon className="h-5 w-5 text-white" />
                                     </div> */}
                                     <div>
-                                        <h2 className="text-xl font-bold">{typeConfig.label}</h2>
+                                        <h2 className="text-xl font-bold">{typeLabel}</h2>
                                         <p className="text-sm text-muted-foreground">
                                             {typeProducts.length} paket tersedia
                                         </p>

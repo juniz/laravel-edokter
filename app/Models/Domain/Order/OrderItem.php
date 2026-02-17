@@ -2,6 +2,7 @@
 
 namespace App\Models\Domain\Order;
 
+use App\Models\Domain\Catalog\Plan;
 use App\Models\Domain\Catalog\Product;
 use App\Models\Domain\Subscription\Subscription;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -42,6 +43,11 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
     }
 
     public function subscription(): BelongsTo

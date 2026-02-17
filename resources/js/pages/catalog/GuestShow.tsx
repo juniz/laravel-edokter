@@ -3,10 +3,8 @@ import { Head, Link } from "@inertiajs/react";
 import GuestLayout from "@/layouts/guest-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { iconMapper } from "@/lib/iconMapper";
 import {
-	Server,
-	HardDrive,
-	Globe,
 	Package,
 	ArrowLeft,
 	Check,
@@ -49,7 +47,15 @@ interface Product {
 	id: string;
 	name: string;
 	slug: string;
-	type: string;
+	product_type_id: string;
+	product_type?: {
+		id: string;
+		slug: string;
+		name: string;
+		icon?: string | null;
+		display_order?: number;
+		metadata?: Record<string, any> | null;
+	} | null;
 	status: string;
 	metadata?: {
 		description?: string;
@@ -66,20 +72,6 @@ interface GuestShowProps {
 	companyName?: string;
 	companyLogo?: string;
 }
-
-const typeIcons: Record<string, React.ElementType> = {
-	hosting_shared: HardDrive,
-	vps: Server,
-	addon: Package,
-	domain: Globe,
-};
-
-const typeLabels: Record<string, string> = {
-	hosting_shared: "Shared Hosting",
-	vps: "VPS Server",
-	addon: "Add-on",
-	domain: "Domain",
-};
 
 function formatPrice(cents: number) {
 	return new Intl.NumberFormat("id-ID", {
@@ -111,8 +103,8 @@ export default function GuestShow({
 	);
 	const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
 
-	const TypeIcon = typeIcons[product.type] || Package;
-	const typeLabel = typeLabels[product.type] || product.type;
+	const TypeIcon = iconMapper(product.product_type?.icon || undefined);
+	const typeLabel = product.product_type?.name ?? product.product_type?.slug ?? "-";
 
 	const highlights = [
 		{ icon: Shield, text: "SSL Certificate", subtext: "Gratis" },

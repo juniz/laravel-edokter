@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Domain\Shared\Setting;
 use App\Models\SettingApp;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
@@ -52,6 +53,43 @@ class HandleInertiaRequests extends Middleware
                 'error' => session('error'),
             ],
             'setting' => fn () => SettingApp::first(),
+            'paymentGateway' => fn () => (function () {
+                $setting = Setting::where('key', 'payment_gateway_settings')->first();
+                $value = $setting?->value ?? [];
+
+                $defaultGateway = $value['default_gateway'] ?? config('payment.default', 'manual');
+                $midtransEnabled = $value['midtrans_enabled'] ?? true;
+                $midtransIsProduction = $value['midtrans_is_production'] ?? (bool) config('payment.midtrans.is_production', false);
+
+                if ($defaultGateway === 'midtrans' && $midtransEnabled === false) {
+                    $defaultGateway = 'manual';
+                }
+
+                return [
+                    'default_gateway' => $defaultGateway,
+                    'midtrans_enabled' => (bool) $midtransEnabled,
+                    'midtrans_is_production' => (bool) $midtransIsProduction,
+                    'manual_only' => $defaultGateway === 'manual',
+                ];
+            })(),
+            'siteFooter' => fn () => (
+                Setting::where('key', 'site_footer')->first()?->value
+                ?? [
+                    'description' => 'Solusi produk & layanan terbaik untuk bisnis Anda. Performa tinggi, keamanan terjamin, dan dukungan 24/7.',
+                    'quick_links_title' => 'Produk',
+                    'quick_links' => [
+                        ['label' => 'Shared Hosting', 'href' => route('catalog.guest', absolute: false)],
+                        ['label' => 'VPS', 'href' => route('catalog.guest', absolute: false)],
+                        ['label' => 'Domain', 'href' => route('catalog.guest', absolute: false)],
+                    ],
+                    'support_links_title' => 'Dukungan',
+                    'support_links' => [
+                        ['label' => 'Client Area', 'href' => route('login', absolute: false)],
+                        ['label' => 'Knowledge Base', 'href' => '#'],
+                        ['label' => 'Hubungi Kami', 'href' => '#'],
+                    ],
+                ]
+            ),
             'cartCount' => $cartCount,
         ]);
     }

@@ -344,7 +344,7 @@ class DashboardController extends Controller
                     'id' => $product->id,
                     'name' => $product->name,
                     'slug' => $product->slug,
-                    'type' => $product->type,
+                    'type' => $product->productType?->slug ?? 'other',
                     'description' => $product->metadata['description'] ?? '',
                     'features' => $product->features->map(fn($f) => [
                             'id' => $f->id,

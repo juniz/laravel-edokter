@@ -43,7 +43,15 @@ interface Product {
 	id: string;
 	name: string;
 	slug: string;
-	type: string;
+	product_type_id: string;
+	product_type?: {
+		id: string;
+		slug: string;
+		name: string;
+		icon?: string | null;
+		display_order?: number;
+		metadata?: Record<string, any> | null;
+	} | null;
 	description: string;
 	price_cents: number;
 	currency: string;
@@ -98,9 +106,11 @@ export default function Checkout({
 	pphRate = 0.11,
 	promo,
 }: CheckoutProps) {
-	const { auth } = usePage<{
+	const { auth, paymentGateway } = usePage<{
 		auth: { user?: { id: number; name: string; email: string } | null };
+		paymentGateway?: { manual_only?: boolean } | null;
 	}>().props;
+	const manualOnly = paymentGateway?.manual_only === true;
 
 	// Initialize duration based on availability
 	const getInitialDuration = (): "1" | "12" => {
@@ -129,6 +139,11 @@ export default function Checkout({
 	const [selectedDomains, setSelectedDomains] = useState<DomainResult[]>([]);
 	const [paymentMethod, setPaymentMethod] = useState<string>("");
 	const INITIAL_DOMAIN_LIMIT = 6;
+
+	useEffect(() => {
+		if (!manualOnly) return;
+		if (!paymentMethod) setPaymentMethod("manual");
+	}, [manualOnly, paymentMethod]);
 
 	const paymentMethods = [
 		{ value: 'bri_va', label: 'Bank BRI', logo: '/images/payment/bank/bri.png' },
@@ -431,10 +446,11 @@ export default function Checkout({
 		}
 
 		// Check if payment method is selected
-		if (!paymentMethod) {
+		if (!manualOnly && !paymentMethod) {
 			alert("Silakan pilih metode pembayaran terlebih dahulu");
 			return;
 		}
+		const effectivePaymentMethod = manualOnly ? "manual" : paymentMethod;
 
 		// Prepare domain data
 		const domains = selectedDomains.map((domain) => ({
@@ -448,7 +464,7 @@ export default function Checkout({
 		// Use setData to ensure all fields are updated before submit
 		checkoutForm.setData({
 			product_id: product.id,
-			payment_method: paymentMethod,
+			payment_method: effectivePaymentMethod,
 			duration_months: parseInt(duration),
 			domains: domains,
 		});
@@ -954,41 +970,52 @@ export default function Checkout({
 								</div>
 
 								{/* Payment Method Selection - Snap Style */}
-								<div className="space-y-3 pt-4 border-t">
-									<Label className="text-sm font-semibold text-gray-900 dark:text-white mb-2 block">
-										Metode Pembayaran
-									</Label>
-									<div className="space-y-2">
-										{paymentMethods.map((method) => (
-											<button
-												key={method.value}
-												type="button"
-												onClick={() => setPaymentMethod(method.value)}
-												className={`w-full flex items-center justify-between p-3 bg-white dark:bg-gray-900 border rounded-xl transition-all hover:bg-gray-50 dark:hover:bg-gray-800 group ${
-													paymentMethod === method.value 
-														? 'border-[#4a1fb8] ring-1 ring-[#4a1fb8]' 
-														: 'border-gray-100 dark:border-gray-800'
-												}`}
-											>
-												<div className="flex items-center gap-3">
-													<div className="w-10 h-6 flex items-center justify-center bg-white rounded p-1">
-														<img src={method.logo} alt={method.label} className="max-h-full max-w-full object-contain" />
+								{!manualOnly ? (
+									<div className="space-y-3 pt-4 border-t">
+										<Label className="text-sm font-semibold text-gray-900 dark:text-white mb-2 block">
+											Metode Pembayaran
+										</Label>
+										<div className="space-y-2">
+											{paymentMethods.map((method) => (
+												<button
+													key={method.value}
+													type="button"
+													onClick={() => setPaymentMethod(method.value)}
+													className={`w-full flex items-center justify-between p-3 bg-white dark:bg-gray-900 border rounded-xl transition-all hover:bg-gray-50 dark:hover:bg-gray-800 group ${
+														paymentMethod === method.value 
+															? 'border-[#4a1fb8] ring-1 ring-[#4a1fb8]' 
+															: 'border-gray-100 dark:border-gray-800'
+													}`}
+												>
+													<div className="flex items-center gap-3">
+														<div className="w-10 h-6 flex items-center justify-center bg-white rounded p-1">
+															<img src={method.logo} alt={method.label} className="max-h-full max-w-full object-contain" />
+														</div>
+														<span className="font-semibold text-sm text-gray-700 dark:text-gray-300">{method.label}</span>
 													</div>
-													<span className="font-semibold text-sm text-gray-700 dark:text-gray-300">{method.label}</span>
-												</div>
-												<div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
-													paymentMethod === method.value 
-														? 'bg-[#4a1fb8] border-[#4a1fb8]' 
-														: 'border-gray-300'
-												}`}>
-													{paymentMethod === method.value && (
-														<div className="w-1.5 h-1.5 bg-white rounded-full" />
-													)}
-												</div>
-											</button>
-										))}
+													<div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
+														paymentMethod === method.value 
+															? 'bg-[#4a1fb8] border-[#4a1fb8]' 
+															: 'border-gray-300'
+													}`}>
+														{paymentMethod === method.value && (
+															<div className="w-1.5 h-1.5 bg-white rounded-full" />
+														)}
+													</div>
+												</button>
+											))}
+										</div>
 									</div>
-								</div>
+								) : (
+									<div className="space-y-3 pt-4 border-t">
+										<Label className="text-sm font-semibold text-gray-900 dark:text-white mb-2 block">
+											Metode Pembayaran
+										</Label>
+										<div className="text-sm text-muted-foreground">
+											Pembayaran manual, menunggu approval.
+										</div>
+									</div>
+								)}
 
 								<div className="pt-2">
 									<button className="text-primary hover:text-primary/80 text-sm font-medium hover:underline flex items-center gap-1 transition-colors">
@@ -1017,7 +1044,7 @@ export default function Checkout({
 									type="button"
 									onClick={handleCheckout}
 									disabled={
-										!auth?.user || !paymentMethod || checkoutForm.processing
+										!auth?.user || (!manualOnly && !paymentMethod) || checkoutForm.processing
 									}
 									className="w-full h-12 text-lg font-bold shadow-lg hover:shadow-xl hover:translate-y-[-1px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 								>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { LogIn, UserPlus, Menu, X } from "lucide-react";
 
@@ -17,6 +17,65 @@ export default function GuestLayout({
 	companyLogo,
 }: GuestLayoutProps) {
 	const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+	const { props } = usePage();
+	const siteFooter = props?.siteFooter as
+		| {
+				description?: string | null;
+				quick_links_title?: string;
+				quick_links?: Array<{ label: string; href: string }>;
+				support_links_title?: string;
+				support_links?: Array<{ label: string; href: string }>;
+		  }
+		| undefined;
+
+	const footerDescription =
+		siteFooter?.description ??
+		"Solusi produk & layanan terbaik untuk bisnis Anda. Performa tinggi, keamanan terjamin, dan dukungan 24/7.";
+
+	const quickLinksTitle = siteFooter?.quick_links_title ?? "Produk";
+	const quickLinks =
+		siteFooter?.quick_links ?? [
+			{ label: "Shared Hosting", href: route("catalog.guest") },
+			{ label: "VPS", href: route("catalog.guest") },
+			{ label: "Domain", href: route("catalog.guest") },
+		];
+
+	const supportLinksTitle = siteFooter?.support_links_title ?? "Dukungan";
+	const supportLinks =
+		siteFooter?.support_links ?? [
+			{ label: "Client Area", href: route("login") },
+			{ label: "Knowledge Base", href: "#" },
+			{ label: "Hubungi Kami", href: "#" },
+		];
+
+	const renderFooterLink = (item: { label: string; href: string }, index: number) => {
+		const href = item?.href || "#";
+		const label = item?.label || "";
+		const isExternal =
+			href.startsWith("http://") ||
+			href.startsWith("https://") ||
+			href.startsWith("mailto:") ||
+			href.startsWith("tel:") ||
+			href.startsWith("#");
+
+		if (isExternal) {
+			return (
+				<li key={`${href}-${index}`}>
+					<a href={href} className="hover:text-foreground transition-colors">
+						{label}
+					</a>
+				</li>
+			);
+		}
+
+		return (
+			<li key={`${href}-${index}`}>
+				<Link href={href} className="hover:text-foreground transition-colors">
+					{label}
+				</Link>
+			</li>
+		);
+	};
 
 	return (
 		<div className="min-h-screen bg-background">
@@ -161,70 +220,23 @@ export default function GuestLayout({
 								<span className="font-bold text-xl">{companyName}</span>
 							</div>
 							<p className="text-sm text-muted-foreground max-w-sm">
-								Solusi hosting terbaik untuk bisnis Anda. Performa tinggi,
-								keamanan terjamin, dan dukungan 24/7.
+								{footerDescription}
 							</p>
 						</div>
 
 						{/* Quick Links */}
 						<div>
-							<h3 className="font-semibold mb-4">Layanan</h3>
+							<h3 className="font-semibold mb-4">{quickLinksTitle}</h3>
 							<ul className="space-y-2 text-sm text-muted-foreground">
-								<li>
-									<Link
-										href={route("catalog.guest")}
-										className="hover:text-foreground transition-colors"
-									>
-										Shared Hosting
-									</Link>
-								</li>
-								<li>
-									<Link
-										href={route("catalog.guest")}
-										className="hover:text-foreground transition-colors"
-									>
-										VPS
-									</Link>
-								</li>
-								<li>
-									<Link
-										href={route("catalog.guest")}
-										className="hover:text-foreground transition-colors"
-									>
-										Domain
-									</Link>
-								</li>
+								{quickLinks.map(renderFooterLink)}
 							</ul>
 						</div>
 
 						{/* Support */}
 						<div>
-							<h3 className="font-semibold mb-4">Dukungan</h3>
+							<h3 className="font-semibold mb-4">{supportLinksTitle}</h3>
 							<ul className="space-y-2 text-sm text-muted-foreground">
-								<li>
-									<Link
-										href={route("login")}
-										className="hover:text-foreground transition-colors"
-									>
-										Client Area
-									</Link>
-								</li>
-								<li>
-									<a
-										href="#"
-										className="hover:text-foreground transition-colors"
-									>
-										Knowledge Base
-									</a>
-								</li>
-								<li>
-									<a
-										href="#"
-										className="hover:text-foreground transition-colors"
-									>
-										Hubungi Kami
-									</a>
-								</li>
+								{supportLinks.map(renderFooterLink)}
 							</ul>
 						</div>
 					</div>

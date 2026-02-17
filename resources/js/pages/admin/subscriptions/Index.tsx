@@ -20,7 +20,7 @@ interface Subscription {
   };
   plan: {
     code: string;
-  };
+  } | null;
   start_at: string;
   end_at?: string;
   next_renewal_at?: string;
@@ -90,7 +90,12 @@ export default function AdminSubscriptionsIndex({ subscriptions }: Subscriptions
                         {subscription.customer && (
                           <p>Customer: <span className="font-semibold">{subscription.customer.name} ({subscription.customer.email})</span></p>
                         )}
-                        <p>Plan: <span className="font-semibold">{subscription.plan.code}</span></p>
+                        <p>
+                          Plan:{' '}
+                          <span className="font-semibold">
+                            {subscription.plan?.code ?? 'Default'}
+                          </span>
+                        </p>
                         <p>Started: {dayjs(subscription.start_at).format('DD MMM YYYY')}</p>
                         {subscription.end_at && (
                           <p>Ends: {dayjs(subscription.end_at).format('DD MMM YYYY')}</p>
@@ -137,4 +142,3 @@ export default function AdminSubscriptionsIndex({ subscriptions }: Subscriptions
     </AppLayout>
   );
 }
-

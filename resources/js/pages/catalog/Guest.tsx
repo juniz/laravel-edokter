@@ -2,13 +2,13 @@ import React from "react";
 import { Head, Link } from "@inertiajs/react";
 import GuestLayout from "@/layouts/guest-layout";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
 	Server,
 	HardDrive,
 	Globe,
 	Package,
+	LayoutGrid,
 	ArrowRight,
 	Check,
 	Tag,
@@ -39,10 +39,20 @@ interface Product {
 	id: string;
 	name: string;
 	slug: string;
-	type: string;
+	product_type_id: string;
+	product_type?: {
+		id: string;
+		slug: string;
+		name: string;
+		icon?: string | null;
+		display_order?: number;
+		metadata?: Record<string, any> | null;
+	} | null;
 	status: string;
 	price_cents: number;
 	currency: string;
+	duration_1_month_enabled?: boolean;
+	duration_12_months_enabled?: boolean;
 	annual_discount_percent?: number;
 	metadata?: {
 		description?: string;
@@ -56,57 +66,6 @@ interface CatalogGuestProps {
 	products: Product[];
 	companyName?: string;
 	companyLogo?: string;
-}
-
-function getProductTypeConfig(type: string) {
-	const config: Record<
-		string,
-		{
-			icon: React.ElementType;
-			color: string;
-			bgColor: string;
-			label: string;
-			gradient: string;
-		}
-	> = {
-		hosting_shared: {
-			icon: HardDrive,
-			color: "text-blue-600",
-			bgColor: "from-blue-500 to-cyan-500",
-			label: "Shared Hosting",
-			gradient: "from-blue-500/10 to-cyan-500/10",
-		},
-		vps: {
-			icon: Server,
-			color: "text-purple-600",
-			bgColor: "from-purple-500 to-pink-500",
-			label: "VPS",
-			gradient: "from-purple-500/10 to-pink-500/10",
-		},
-		addon: {
-			icon: Package,
-			color: "text-emerald-600",
-			bgColor: "from-emerald-500 to-green-500",
-			label: "Addon",
-			gradient: "from-emerald-500/10 to-green-500/10",
-		},
-		domain: {
-			icon: Globe,
-			color: "text-orange-600",
-			bgColor: "from-orange-500 to-amber-500",
-			label: "Domain",
-			gradient: "from-orange-500/10 to-amber-500/10",
-		},
-	};
-	return (
-		config[type] || {
-			icon: Package,
-			color: "text-gray-600",
-			bgColor: "from-gray-500 to-slate-500",
-			label: type.replace("_", " ").toUpperCase(),
-			gradient: "from-gray-500/10 to-slate-500/10",
-		}
-	);
 }
 
 function formatPrice(amount: number) {
@@ -190,23 +149,16 @@ export default function CatalogGuest({
 	companyName = "AbaHost",
 	companyLogo,
 }: CatalogGuestProps) {
-	// Group products by type
-	const groupedProducts = products.reduce((acc, product) => {
-		if (!acc[product.type]) {
-			acc[product.type] = [];
-		}
-		acc[product.type].push(product);
-		return acc;
-	}, {} as Record<string, Product[]>);
-
-	const productTypes = Object.keys(groupedProducts);
+	const [billingPeriod, setBillingPeriod] = React.useState<"monthly" | "annual">(
+		"monthly"
+	);
 
 	// Get all products for the main display
 	const displayFeatured = products;
 
 	return (
 		<GuestLayout showHeader companyName={companyName} companyLogo={companyLogo}>
-			<Head title="Layanan Hosting Terbaik" />
+			<Head title="Katalog Produk & Layanan" />
 
 			{/* Products Section (Pricing) - Langsung tampilkan produk */}
 			{displayFeatured.length > 0 && (
@@ -220,20 +172,43 @@ export default function CatalogGuest({
 					<div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
 						<div className="text-center max-w-2xl mx-auto mb-8 md:mb-12">
 							<h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 text-foreground">
-								Pilihan Paket <span className="text-primary">Hosting</span>
+								Pilihan <span className="text-primary">Produk</span> Terbaik
 							</h1>
 							<p className="text-muted-foreground text-base md:text-lg">
 								Transparan, tanpa biaya tersembunyi. Pilih sesuai kebutuhan
 								Anda.
 							</p>
+							<div className="mt-5 flex items-center justify-center gap-3">
+								<div className="inline-flex items-center rounded-xl border border-border/60 bg-background/70 p-1">
+									<Button
+										type="button"
+										size="sm"
+										variant={billingPeriod === "monthly" ? "default" : "ghost"}
+										onClick={() => setBillingPeriod("monthly")}
+										className="rounded-lg"
+									>
+										Bulanan
+									</Button>
+									<Button
+										type="button"
+										size="sm"
+										variant={billingPeriod === "annual" ? "default" : "ghost"}
+										onClick={() => setBillingPeriod("annual")}
+										className="rounded-lg"
+									>
+										Tahunan
+									</Button>
+								</div>
+							</div>
 						</div>
 
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 							{displayFeatured.map((product) => {
 								const isPopular = product.metadata?.popular;
-								const annualDiscountPercent =
-									product.annual_discount_percent ?? 0;
-								const hasAnnualDiscount = annualDiscountPercent > 0;
+								const canMonthly = product.duration_1_month_enabled ?? true;
+								const canAnnual = product.duration_12_months_enabled ?? true;
+								const annualDiscountPercent = product.annual_discount_percent ?? 0;
+								const hasAnnualDiscount = annualDiscountPercent > 0 && canAnnual;
 
 								// Calculate annual savings
 								const monthlyPrice = product.price_cents;
@@ -243,6 +218,19 @@ export default function CatalogGuest({
 								);
 								const annualPriceWithDiscount =
 									annualPriceWithoutDiscount - annualDiscountAmount;
+
+								const effectiveBillingPeriod =
+									billingPeriod === "annual" && canAnnual
+										? "annual"
+										: billingPeriod === "monthly" && !canMonthly && canAnnual
+											? "annual"
+											: "monthly";
+
+								const showAnnual = effectiveBillingPeriod === "annual";
+								const monthlyEquivalent = Math.round(annualPriceWithDiscount / 12);
+								const displayPrice = showAnnual ? monthlyEquivalent : monthlyPrice;
+								const checkoutDuration = showAnnual ? 12 : 1;
+								const checkoutHref = `${route("catalog.guest.checkout", product.slug)}?duration=${checkoutDuration}`;
 
 								return (
 									<Card
@@ -283,9 +271,16 @@ export default function CatalogGuest({
 
 												{/* Price */}
 												<div className="mb-3">
-													<div className="flex items-baseline justify-center gap-1 mb-1">
+													<div className="flex items-baseline justify-center gap-2 mb-1">
+														{showAnnual && (
+															<span className="text-sm text-muted-foreground line-through">
+																{formatPrice(monthlyPrice)
+																	.replace("Rp", "")
+																	.trim()}
+															</span>
+														)}
 														<span className="font-bold text-3xl text-primary">
-															{formatPrice(product.price_cents)
+															{formatPrice(displayPrice)
 																.replace("Rp", "")
 																.trim()}
 														</span>
@@ -295,24 +290,26 @@ export default function CatalogGuest({
 													</div>
 
 													{/* Annual Price with Discount */}
-													{hasAnnualDiscount && (
+													{showAnnual && (
 														<div className="mt-2 space-y-1">
-															<div className="flex items-center justify-center gap-2">
-																<span className="text-xs text-muted-foreground line-through">
-																	{formatPrice(annualPriceWithoutDiscount)
-																		.replace("Rp", "")
-																		.trim()}
-																	/tahun
-																</span>
-																<span className="text-xs font-semibold text-emerald-600">
-																	Hemat{" "}
-																	{formatPrice(annualDiscountAmount)
-																		.replace("Rp", "")
-																		.trim()}
-																</span>
-															</div>
+															{hasAnnualDiscount && (
+																<div className="flex items-center justify-center gap-2">
+																	<span className="text-xs text-muted-foreground line-through">
+																		{formatPrice(annualPriceWithoutDiscount)
+																			.replace("Rp", "")
+																			.trim()}
+																		/tahun
+																	</span>
+																	<span className="text-xs font-semibold text-emerald-600">
+																		Hemat{" "}
+																		{formatPrice(annualDiscountAmount)
+																			.replace("Rp", "")
+																			.trim()}
+																	</span>
+																</div>
+															)}
 															<div className="flex items-baseline justify-center gap-1">
-																<span className="font-bold text-xl text-emerald-600">
+																<span className={`font-bold text-xl ${hasAnnualDiscount ? "text-emerald-600" : "text-muted-foreground"}`}>
 																	{formatPrice(annualPriceWithDiscount)
 																		.replace("Rp", "")
 																		.trim()}
@@ -404,7 +401,7 @@ export default function CatalogGuest({
 
 											{/* CTA */}
 											<Link
-												href={route("catalog.guest.checkout", product.slug)}
+												href={checkoutHref}
 												className="mt-auto"
 											>
 												<Button

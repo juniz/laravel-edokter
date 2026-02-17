@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\Events\CustomerCreated;
 use App\Events\CustomerUpdated;
+use App\Events\InvoicePaid;
 use App\Events\UserCreated;
 use App\Events\UserUpdated;
 use App\Listeners\SyncCustomerToRdashListener;
 use App\Listeners\SyncUserToRdashListener;
+use App\Listeners\UpdateOrderStatusOnInvoicePaid;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -30,6 +32,9 @@ class EventServiceProvider extends ServiceProvider
         CustomerUpdated::class => [
             SyncCustomerToRdashListener::class,
         ],
+        InvoicePaid::class => [
+            UpdateOrderStatusOnInvoicePaid::class,
+        ],
     ];
 
     /**
@@ -48,4 +53,3 @@ class EventServiceProvider extends ServiceProvider
         return false;
     }
 }
-

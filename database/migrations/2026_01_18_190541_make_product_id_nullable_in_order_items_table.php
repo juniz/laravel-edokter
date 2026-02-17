@@ -12,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::connection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Drop existing foreign key constraint if it exists
         if ($this->hasForeignKey('order_items', 'order_items_product_id_foreign')) {
             Schema::table('order_items', function (Blueprint $table) {
@@ -53,6 +57,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::connection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Drop foreign key constraint if it exists
         if ($this->hasForeignKey('order_items', 'order_items_product_id_foreign')) {
             Schema::table('order_items', function (Blueprint $table) {
@@ -80,6 +88,10 @@ return new class extends Migration
     private function hasForeignKey(string $table, string $foreignKey): bool
     {
         $connection = Schema::getConnection();
+        if ($connection->getDriverName() !== 'mysql') {
+            return false;
+        }
+
         $database = $connection->getDatabaseName();
 
         $result = $connection->selectOne(

@@ -27,7 +27,7 @@ interface Subscription {
   plan: {
     code: string;
     billing_cycle: string;
-  };
+  } | null;
   start_at: string;
   end_at?: string;
   next_renewal_at?: string;
@@ -58,7 +58,7 @@ export default function SubscriptionShow({ subscription }: SubscriptionShowProps
           <div>
             <h1 className="text-3xl font-bold">{subscription.product.name}</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Plan: {subscription.plan.code}
+              Plan: {subscription.plan?.code ?? 'Default'}
             </p>
           </div>
           <Badge className={subscription.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'}>
@@ -78,11 +78,11 @@ export default function SubscriptionShow({ subscription }: SubscriptionShowProps
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Plan</span>
-                <span className="font-semibold">{subscription.plan.code}</span>
+                <span className="font-semibold">{subscription.plan?.code ?? 'Default'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Billing Cycle</span>
-                <span>{subscription.plan.billing_cycle}</span>
+                <span>{subscription.plan?.billing_cycle ?? '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Started</span>
@@ -146,4 +146,3 @@ export default function SubscriptionShow({ subscription }: SubscriptionShowProps
     </AppLayout>
   );
 }
-

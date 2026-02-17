@@ -468,7 +468,7 @@ function AdminDashboard({
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Pesanan Terbaru</CardTitle>
                         <Button variant="ghost" size="sm" asChild>
-                            <Link href={route('customer.orders.index')}>
+                            <Link href={route('admin.orders.index')}>
                                 Lihat Semua
                                 <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
@@ -508,7 +508,7 @@ function AdminDashboard({
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Invoice Menunggu Pembayaran</CardTitle>
                         <Button variant="ghost" size="sm" asChild>
-                            <Link href={route('customer.invoices.index')}>
+                            <Link href={route('admin.invoices.index')}>
                                 Lihat Semua
                                 <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>

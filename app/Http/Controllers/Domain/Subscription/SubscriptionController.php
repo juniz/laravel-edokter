@@ -205,6 +205,35 @@ class SubscriptionController extends Controller
     }
 
     /**
+     * Update status subscription (admin only)
+     */
+    public function updateStatus(Request $request, string $id): JsonResponse
+    {
+        $subscription = $this->subscriptionRepository->findByUlid($id);
+
+        if (! $subscription) {
+            return response()->json(['success' => false, 'message' => 'Subscription tidak ditemukan'], 404);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|string|in:trialing,active,past_due,suspended,cancelled,terminated',
+        ]);
+
+        $status = $validated['status'];
+
+        $this->subscriptionRepository->updateStatus($subscription, $status);
+
+        if (in_array($status, ['cancelled', 'terminated'], true)) {
+            $subscription->update(['auto_renew' => false]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => $status,
+        ]);
+    }
+
+    /**
      * Suspend panel account dari subscription
      */
     public function suspendPanelAccount(string $id): JsonResponse

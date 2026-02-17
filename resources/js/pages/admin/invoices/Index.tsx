@@ -28,17 +28,19 @@ interface Invoice {
 
 interface InvoicesProps {
   invoices: {
-    data: Invoice[];
-    links: any;
-    meta: any;
+    data?: Invoice[];
+    links?: any;
+    meta?: any;
   };
 }
 
 export default function AdminInvoicesIndex({ invoices }: InvoicesProps) {
-  const formatPrice = (cents: number, currency: string = 'IDR') => {
+  const formatPrice = (cents: number, currency?: string) => {
+    const currencyCode = currency || 'IDR';
+
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
-      currency: currency,
+      currency: currencyCode,
       minimumFractionDigits: 0,
     }).format(cents);
   };
@@ -66,7 +68,7 @@ export default function AdminInvoicesIndex({ invoices }: InvoicesProps) {
           </div>
         </div>
 
-        {invoices.data.length === 0 ? (
+        {!invoices?.data || invoices.data.length === 0 ? (
           <Card className="bg-white dark:bg-gray-800 shadow-md">
             <CardContent className="p-8 text-center">
               <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -140,4 +142,3 @@ export default function AdminInvoicesIndex({ invoices }: InvoicesProps) {
     </AppLayout>
   );
 }
-

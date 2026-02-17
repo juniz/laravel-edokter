@@ -25,7 +25,7 @@ interface Product {
   id?: string;
   name: string;
   slug: string;
-  type: string;
+  product_type_id: string;
   status: string;
   price_cents: number;
   currency: string;
@@ -38,13 +38,21 @@ interface Product {
   features?: ProductFeature[];
 }
 
+interface ProductTypeOption {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+}
+
 interface ProductFormProps {
   product?: Product;
+  productTypes?: ProductTypeOption[];
 }
 
 
 
-export default function ProductForm({ product }: ProductFormProps) {
+export default function ProductForm({ product, productTypes = [] }: ProductFormProps) {
   const isEdit = !!product;
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -70,10 +78,13 @@ export default function ProductForm({ product }: ProductFormProps) {
       : []
   );
 
+  const initialProductTypeId =
+    product?.product_type_id || (productTypes.length > 0 ? productTypes[0].id : '');
+
   const { data, setData, post, put, processing, errors, transform } = useForm<any>({
     name: product?.name || '',
     slug: product?.slug || '',
-    type: product?.type || 'hosting_shared',
+    product_type_id: initialProductTypeId,
     status: product?.status || 'draft',
     price_cents: product?.price_cents || 0,
     currency: product?.currency || 'IDR',
@@ -221,19 +232,23 @@ export default function ProductForm({ product }: ProductFormProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="type">Type</Label>
-                    <Select value={data.type} onValueChange={(value) => setData('type', value)}>
+                    <Label htmlFor="product_type_id">Product Type</Label>
+                    <Select
+                      value={data.product_type_id}
+                      onValueChange={(value) => setData('product_type_id', value)}
+                    >
                       <SelectTrigger className="mt-1">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="hosting_shared">Shared Hosting</SelectItem>
-                        <SelectItem value="vps">VPS</SelectItem>
-                        <SelectItem value="addon">Addon</SelectItem>
-                        <SelectItem value="domain">Domain</SelectItem>
+                        {productTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                    <InputError message={errors.type} className="mt-2" />
+                    <InputError message={errors.product_type_id} className="mt-2" />
                   </div>
 
                   <div>
@@ -579,4 +594,3 @@ export default function ProductForm({ product }: ProductFormProps) {
     </AppLayout>
   );
 }
-

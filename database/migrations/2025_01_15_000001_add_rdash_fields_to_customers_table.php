@@ -11,23 +11,58 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('customers', function (Blueprint $table) {
-            // RDASH required fields
-            $table->string('organization')->nullable()->after('email');
-            $table->string('street_1')->nullable()->after('organization');
-            $table->string('street_2')->nullable()->after('street_1');
-            $table->string('city')->nullable()->after('street_2');
-            $table->string('state')->nullable()->after('city');
-            $table->char('country_code', 2)->default('ID')->after('state'); // ISO 3166-1 alpha-2
-            $table->string('postal_code')->nullable()->after('country_code');
-            $table->string('fax')->nullable()->after('phone');
-            
-            // Rename phone to voice untuk konsistensi dengan RDASH API
-            // Tapi kita tetap pakai phone karena sudah ada data
-            // voice akan diambil dari phone saat sync ke RDASH
-            
-            $table->index('country_code');
-        });
+        if (! Schema::hasTable('customers')) {
+            return;
+        }
+
+        if (! Schema::hasColumn('customers', 'organization')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->string('organization')->nullable()->after('email');
+            });
+        }
+
+        if (! Schema::hasColumn('customers', 'street_1')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->string('street_1')->nullable()->after('organization');
+            });
+        }
+
+        if (! Schema::hasColumn('customers', 'street_2')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->string('street_2')->nullable()->after('street_1');
+            });
+        }
+
+        if (! Schema::hasColumn('customers', 'city')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->string('city')->nullable()->after('street_2');
+            });
+        }
+
+        if (! Schema::hasColumn('customers', 'state')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->string('state')->nullable()->after('city');
+            });
+        }
+
+        if (! Schema::hasColumn('customers', 'country_code')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->char('country_code', 2)->default('ID')->after('state');
+                $table->index('country_code');
+            });
+        }
+
+        if (! Schema::hasColumn('customers', 'postal_code')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->string('postal_code')->nullable()->after('country_code');
+            });
+        }
+
+        if (! Schema::hasColumn('customers', 'fax')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->string('fax')->nullable()->after('phone');
+            });
+        }
     }
 
     /**
@@ -35,19 +70,36 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('customers', function (Blueprint $table) {
-            $table->dropIndex(['country_code']);
-            $table->dropColumn([
-                'organization',
-                'street_1',
-                'street_2',
-                'city',
-                'state',
-                'country_code',
-                'postal_code',
-                'fax',
-            ]);
-        });
+        if (! Schema::hasTable('customers')) {
+            return;
+        }
+
+        if (Schema::hasColumn('customers', 'country_code')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->dropIndex(['country_code']);
+            });
+        }
+
+        $columnsToDrop = [
+            'organization',
+            'street_1',
+            'street_2',
+            'city',
+            'state',
+            'country_code',
+            'postal_code',
+            'fax',
+        ];
+
+        $existingColumnsToDrop = array_values(array_filter(
+            $columnsToDrop,
+            fn (string $column) => Schema::hasColumn('customers', $column)
+        ));
+
+        if ($existingColumnsToDrop !== []) {
+            Schema::table('customers', function (Blueprint $table) use ($existingColumnsToDrop) {
+                $table->dropColumn($existingColumnsToDrop);
+            });
+        }
     }
 };
-

@@ -3,6 +3,7 @@
 namespace Database\Factories\Domain\Catalog;
 
 use App\Models\Domain\Catalog\Product;
+use App\Models\Domain\Catalog\ProductType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -14,11 +15,28 @@ class ProductFactory extends Factory
 
     public function definition(): array
     {
-        $types = ['hosting_shared', 'vps', 'addon', 'domain'];
-        $type = $this->faker->randomElement($types);
+        $typeNameMap = [
+            'hosting_shared' => 'Shared Hosting',
+            'vps' => 'VPS',
+            'addon' => 'Addon',
+            'app' => 'Aplikasi (SaaS)',
+            'domain' => 'Domain',
+        ];
+
+        $typeSlug = $this->faker->randomElement(array_keys($typeNameMap));
+        $productType = ProductType::firstOrCreate(
+            ['slug' => $typeSlug],
+            [
+                'name' => $typeNameMap[$typeSlug],
+                'status' => 'active',
+                'icon' => null,
+                'display_order' => 0,
+                'metadata' => null,
+            ]
+        );
 
         return [
-            'type' => $type,
+            'product_type_id' => $productType->id,
             'name' => $this->faker->words(3, true),
             'slug' => $this->faker->unique()->slug(),
             'status' => $this->faker->randomElement(['active', 'draft', 'archived']),
@@ -44,16 +62,38 @@ class ProductFactory extends Factory
 
     public function hostingShared(): static
     {
+        $productType = ProductType::firstOrCreate(
+            ['slug' => 'hosting_shared'],
+            [
+                'name' => 'Shared Hosting',
+                'status' => 'active',
+                'icon' => null,
+                'display_order' => 0,
+                'metadata' => null,
+            ]
+        );
+
         return $this->state(fn (array $attributes) => [
-            'type' => 'hosting_shared',
+            'product_type_id' => $productType->id,
             'name' => 'Shared Hosting',
         ]);
     }
 
     public function vps(): static
     {
+        $productType = ProductType::firstOrCreate(
+            ['slug' => 'vps'],
+            [
+                'name' => 'VPS',
+                'status' => 'active',
+                'icon' => null,
+                'display_order' => 0,
+                'metadata' => null,
+            ]
+        );
+
         return $this->state(fn (array $attributes) => [
-            'type' => 'vps',
+            'product_type_id' => $productType->id,
             'name' => 'VPS Hosting',
         ]);
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Domain\Catalog;
 use App\Application\Catalog\CheckoutCatalogService;
 use App\Domain\Catalog\Contracts\ProductRepository;
 use App\Http\Controllers\Controller;
+use App\Models\Domain\Shared\Setting;
 use App\Models\SettingApp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -221,16 +222,23 @@ class CatalogController extends Controller
 
     public function checkout(Request $request)
     {
-        $request->validate([
+        $rules = [
             'product_id' => ['required', 'string'],
-            'payment_method' => ['required', 'string'],
             'duration_months' => ['required', 'integer', 'in:1,12'],
             'domains' => ['nullable', 'array'],
             'domains.*.domain' => ['required', 'string'],
             'domains.*.price_cents' => ['required', 'integer', 'min:0'],
             'domains.*.original_price_cents' => ['nullable', 'integer', 'min:0'],
             'domains.*.discount_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
-        ]);
+        ];
+
+        if ($this->isManualOnly()) {
+            $rules['payment_method'] = ['nullable', 'string'];
+        } else {
+            $rules['payment_method'] = ['required', 'string'];
+        }
+
+        $request->validate($rules);
 
         $user = $request->user();
 
@@ -264,9 +272,14 @@ class CatalogController extends Controller
         }
 
         try {
+            $paymentMethod = $request->input('payment_method');
+            if (! $paymentMethod && $this->isManualOnly()) {
+                $paymentMethod = 'manual';
+            }
+
             $payment = $this->checkoutCatalogService->execute($customer, [
                 'product_id' => $request->product_id,
-                'payment_method' => $request->payment_method,
+                'payment_method' => $paymentMethod,
                 'duration_months' => $request->duration_months,
                 'domains' => $request->domains ?? [],
             ]);
@@ -282,5 +295,25 @@ class CatalogController extends Controller
                 ->withErrors(['error' => $e->getMessage()])
                 ->withInput();
         }
+    }
+
+    private function isManualOnly(): bool
+    {
+        $defaultGateway = config('payment.default', 'manual');
+
+        try {
+            $setting = Setting::where('key', 'payment_gateway_settings')->first();
+            $value = $setting?->value ?? [];
+
+            $defaultGateway = $value['default_gateway'] ?? $defaultGateway;
+            $midtransEnabled = $value['midtrans_enabled'] ?? true;
+
+            if ($defaultGateway === 'midtrans' && $midtransEnabled === false) {
+                $defaultGateway = 'manual';
+            }
+        } catch (\Throwable) {
+        }
+
+        return $defaultGateway === 'manual';
     }
 }

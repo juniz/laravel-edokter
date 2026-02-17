@@ -2,8 +2,6 @@
 
 namespace App\Models\Domain\Catalog;
 
-use App\Models\Domain\Order\OrderItem;
-use App\Models\Domain\Subscription\Subscription;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,58 +9,42 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Product extends Model
+class Plan extends Model
 {
     use HasFactory, HasUlids, SoftDeletes;
 
-    protected $table = 'products';
+    protected $table = 'plans';
 
     protected $fillable = [
-        'product_type_id',
-        'name',
-        'slug',
-        'status',
-        'metadata',
+        'product_id',
+        'code',
         'price_cents',
         'currency',
-        'setup_fee_cents',
         'trial_days',
+        'setup_fee_cents',
         'duration_1_month_enabled',
         'duration_12_months_enabled',
-        'annual_discount_percent',
-        'display_order',
     ];
 
     protected function casts(): array
     {
         return [
-            'metadata' => 'array',
             'price_cents' => 'integer',
             'setup_fee_cents' => 'integer',
+            'trial_days' => 'integer',
             'duration_1_month_enabled' => 'boolean',
             'duration_12_months_enabled' => 'boolean',
-            'annual_discount_percent' => 'integer',
-            'display_order' => 'integer',
         ];
     }
 
-    public function orderItems(): HasMany
+    public function product(): BelongsTo
     {
-        return $this->hasMany(OrderItem::class);
-    }
-
-    public function subscriptions(): HasMany
-    {
-        return $this->hasMany(Subscription::class);
-    }
-
-    public function productType(): BelongsTo
-    {
-        return $this->belongsTo(ProductType::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function features(): HasMany
     {
-        return $this->hasMany(ProductFeature::class)->orderBy('display_order');
+        return $this->hasMany(PlanFeature::class);
     }
 }
+

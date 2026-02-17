@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,6 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $driver = Schema::getConnection()->getDriverName();
+
         // 1. Tambah kolom harga ke products
         Schema::table('products', function (Blueprint $table) {
             $table->unsignedBigInteger('price_cents')->default(0)->after('status');
@@ -24,26 +27,35 @@ return new class extends Migration
         // 2. Migrasi data dari plans ke products
         // Ambil harga dari plan pertama untuk setiap product
         if (Schema::hasTable('plans')) {
-            \DB::statement('
-                UPDATE products p
-                INNER JOIN (
-                    SELECT product_id, 
-                           MIN(price_cents) as price_cents,
-                           MIN(currency) as currency,
-                           MIN(setup_fee_cents) as setup_fee_cents,
-                           MIN(trial_days) as trial_days,
-                           MAX(duration_1_month_enabled) as duration_1_month_enabled,
-                           MAX(duration_12_months_enabled) as duration_12_months_enabled
-                    FROM plans
-                    GROUP BY product_id
-                ) pl ON p.id = pl.product_id
-                SET p.price_cents = pl.price_cents,
-                    p.currency = pl.currency,
-                    p.setup_fee_cents = pl.setup_fee_cents,
-                    p.trial_days = pl.trial_days,
-                    p.duration_1_month_enabled = pl.duration_1_month_enabled,
-                    p.duration_12_months_enabled = pl.duration_12_months_enabled
-            ');
+            $planRows = DB::table('plans')
+                ->select([
+                    'product_id',
+                    DB::raw('MIN(price_cents) as price_cents'),
+                    DB::raw('MIN(currency) as currency'),
+                    DB::raw('MIN(setup_fee_cents) as setup_fee_cents'),
+                    DB::raw('MIN(trial_days) as trial_days'),
+                    DB::raw('MAX(duration_1_month_enabled) as duration_1_month_enabled'),
+                    DB::raw('MAX(duration_12_months_enabled) as duration_12_months_enabled'),
+                ])
+                ->groupBy('product_id')
+                ->get();
+
+            foreach ($planRows as $pl) {
+                DB::table('products')
+                    ->where('id', $pl->product_id)
+                    ->update([
+                        'price_cents' => $pl->price_cents,
+                        'currency' => $pl->currency,
+                        'setup_fee_cents' => $pl->setup_fee_cents,
+                        'trial_days' => $pl->trial_days,
+                        'duration_1_month_enabled' => (bool) $pl->duration_1_month_enabled,
+                        'duration_12_months_enabled' => (bool) $pl->duration_12_months_enabled,
+                    ]);
+            }
+        }
+
+        if ($driver !== 'mysql') {
+            return;
         }
 
         // 3. Hapus foreign key constraints untuk plan_id
@@ -155,6 +167,10 @@ return new class extends Migration
     private function hasForeignKey(string $table, string $foreignKey): bool
     {
         $connection = Schema::getConnection();
+        if ($connection->getDriverName() !== 'mysql') {
+            return false;
+        }
+
         $database = $connection->getDatabaseName();
 
         $result = $connection->selectOne(

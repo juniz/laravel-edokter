@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Domain\Billing;
 
 use App\Http\Controllers\Controller;
+use App\Infrastructure\Persistence\Eloquent\PaymentRepository;
 use App\Models\Domain\Billing\Payment;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -73,7 +76,46 @@ class PaymentController extends Controller
             'payment_code' => $paymentCode,
             'qr_code_url' => $qrCodeUrl,
             'expiry_time' => $expiryTime,
-            'payment_method' => $rawPayload['payment_method'] ?? null,
+            'payment_method' => $rawPayload['payment_method'] ?? ($payment->provider === 'manual' ? 'manual' : null),
         ]);
+    }
+
+    public function approve(Request $request, string $id, PaymentRepository $paymentRepository): RedirectResponse
+    {
+        $payment = Payment::with(['invoice'])->findOrFail($id);
+
+        if ($payment->provider !== 'manual' || $payment->status !== 'pending') {
+            return redirect()->back()->with('error', 'Pembayaran ini tidak dapat di-approve.');
+        }
+
+        $payload = array_merge($payment->raw_payload ?? [], [
+            'manual_approval' => true,
+            'approved_by' => $request->user()?->id,
+            'approved_at' => now()->toISOString(),
+        ]);
+
+        $paymentRepository->markAsSucceeded($payment, $payload);
+
+        return redirect()->back()->with('success', 'Pembayaran manual berhasil di-approve.');
+    }
+
+    public function reject(Request $request, string $id): RedirectResponse
+    {
+        $payment = Payment::with(['invoice'])->findOrFail($id);
+
+        if ($payment->provider !== 'manual' || $payment->status !== 'pending') {
+            return redirect()->back()->with('error', 'Pembayaran ini tidak dapat ditolak.');
+        }
+
+        $payment->update([
+            'status' => 'failed',
+            'raw_payload' => array_merge($payment->raw_payload ?? [], [
+                'manual_approval' => true,
+                'rejected_by' => $request->user()?->id,
+                'rejected_at' => now()->toISOString(),
+            ]),
+        ]);
+
+        return redirect()->back()->with('success', 'Pembayaran manual ditolak.');
     }
 }

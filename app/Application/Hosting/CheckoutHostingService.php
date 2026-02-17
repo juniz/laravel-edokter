@@ -49,7 +49,7 @@ class CheckoutHostingService
 
                 // Validasi product (harus shared hosting)
                 $product = $this->productRepository->findByUlid($data['product_id']);
-                if (! $product || $product->type !== 'hosting_shared') {
+                if (! $product || $product->productType?->slug !== 'hosting_shared') {
                     return [
                         'success' => false,
                         'message' => 'Product tidak valid atau bukan shared hosting.',

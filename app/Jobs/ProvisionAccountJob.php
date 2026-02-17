@@ -39,6 +39,19 @@ class ProvisionAccountJob implements ShouldQueue
             // Determine server type berdasarkan product type
             $serverType = $this->determineServerType($subscription);
 
+            if ($serverType === 'none') {
+                $subscription->update([
+                    'provisioning_status' => 'done',
+                    'status' => 'active',
+                ]);
+
+                Log::info("Provisioning skipped for subscription: {$this->subscriptionId}", [
+                    'server_type' => $serverType,
+                ]);
+
+                return;
+            }
+
             // Get server untuk provisioning
             $server = Server::where('type', $serverType)
                 ->where('status', 'active')
@@ -86,12 +99,13 @@ class ProvisionAccountJob implements ShouldQueue
      */
     private function determineServerType(Subscription $subscription): string
     {
-        $productType = $subscription->product->type;
+        $productTypeSlug = $subscription->product?->productType?->slug;
 
         // Map product type ke server type
-        return match ($productType) {
+        return match ($productTypeSlug) {
             'hosting_shared' => 'aapanel', // Default untuk shared hosting adalah aaPanel
             'vps' => 'proxmox',
+            'app' => 'none',
             default => config('provisioning.default', 'cpanel'),
         };
     }

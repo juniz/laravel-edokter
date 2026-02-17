@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Domain\Catalog\Product;
+use App\Models\Domain\Catalog\ProductType;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -10,92 +11,147 @@ class CatalogSeeder extends Seeder
 {
     public function run(): void
     {
-        // Disable foreign key checks to allow truncation
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        Product::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        $driver = DB::connection()->getDriverName();
 
-        // Starter Package
+        $productTypeIds = [
+            'hosting_shared' => ProductType::firstOrCreate(
+                ['slug' => 'hosting_shared'],
+                [
+                    'name' => 'Shared Hosting',
+                    'status' => 'active',
+                    'icon' => 'HardDrive',
+                    'display_order' => 1,
+                    'metadata' => null,
+                ]
+            )->id,
+            'app' => ProductType::firstOrCreate(
+                ['slug' => 'app'],
+                [
+                    'name' => 'Aplikasi (SaaS)',
+                    'status' => 'active',
+                    'icon' => 'LayoutGrid',
+                    'display_order' => 2,
+                    'metadata' => null,
+                ]
+            )->id,
+        ];
+
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
+        Product::truncate();
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
+
+        // Paket Hosting Faskesku.id
         Product::create([
-            'type' => 'hosting_shared',
-            'name' => 'Starter',
-            'slug' => 'starter',
+            'product_type_id' => $productTypeIds['hosting_shared'],
+            'name' => 'Faskesku Personal',
+            'slug' => 'faskesku-personal',
             'status' => 'active',
-            'price_cents' => 29900, 
+            'price_cents' => 60000,
             'currency' => 'IDR',
             'setup_fee_cents' => 0,
             'trial_days' => 0,
             'duration_1_month_enabled' => true,
             'duration_12_months_enabled' => true,
             'metadata' => [
-                'description' => 'Cocok untuk blog dan website pribadi',
+                'description' => 'Hosting khusus sistem kesehatan & aplikasi klinik (Faskesku.id).',
                 'popular' => false,
                 'features' => [
-                    '1 Website',
-                    '10 GB SSD Storage',
-                    'Free SSL Certificate',
-                    '1 Email Account',
-                    'Weekly Backups',
+                    'Untuk Dokter Praktek Mandiri',
+                    'SSD 10 GB Storage',
+                    '1 Domain',
+                    'Unlimited Bandwidth',
+                    '2 MySQL Database',
+                    '10 Email Account',
+                    'Free SSL & Backup Mingguan',
+                    'Cocok untuk 1 User',
                 ],
             ],
         ]);
 
-        // Professional Package (Popular)
         Product::create([
-            'type' => 'hosting_shared',
-            'name' => 'Professional',
-            'slug' => 'professional',
+            'product_type_id' => $productTypeIds['hosting_shared'],
+            'name' => 'Faskesku Klinik',
+            'slug' => 'faskesku-klinik',
             'status' => 'active',
-            'price_cents' => 59900, 
+            'price_cents' => 150000,
             'currency' => 'IDR',
             'setup_fee_cents' => 0,
             'trial_days' => 0,
             'duration_1_month_enabled' => true,
             'duration_12_months_enabled' => true,
             'metadata' => [
-                'description' => 'Ideal untuk bisnis dan toko online',
+                'description' => 'Hosting khusus sistem kesehatan & aplikasi klinik (Faskesku.id).',
                 'popular' => true,
                 'features' => [
-                    '100 Website',
-                    '100 GB NVMe Storage',
-                    'Free SSL Certificate',
-                    'Unlimited Email',
-                    'Daily Backups',
-                    'Free Domain 1 Tahun',
-                    'Priority Support',
+                    'Untuk Klinik Rawat Jalan',
+                    'SSD 30 GB Storage',
+                    '3 Domain',
+                    'Unlimited Bandwidth',
+                    '10 Database',
+                    '50 Email Account',
+                    'Free SSL & Backup Harian',
+                    'Multi User (Dokter & Staf)',
                 ],
             ],
         ]);
 
-
-        // Enterprise Package
         Product::create([
-            'type' => 'hosting_shared',
-            'name' => 'Enterprise',
-            'slug' => 'enterprise',
+            'product_type_id' => $productTypeIds['hosting_shared'],
+            'name' => 'Faskesku Enterprise',
+            'slug' => 'faskesku-enterprise',
             'status' => 'active',
-            'price_cents' => 149900, 
+            'price_cents' => 250000,
             'currency' => 'IDR',
             'setup_fee_cents' => 0,
             'trial_days' => 0,
             'duration_1_month_enabled' => true,
             'duration_12_months_enabled' => true,
             'metadata' => [
-                'description' => 'Untuk website dengan traffic tinggi',
+                'description' => 'Hosting khusus sistem kesehatan & aplikasi klinik (Faskesku.id).',
                 'popular' => false,
                 'features' => [
-                    'Unlimited Website',
-                    '200 GB NVMe Storage',
-                    'Free SSL Certificate',
+                    'Untuk Klinik Besar & Rawat Inap',
+                    'SSD 80 GB Storage',
+                    'Unlimited Domain',
+                    'Prioritas Bandwidth',
+                    'Unlimited Database',
                     'Unlimited Email',
-                    'Real-time Backups',
-                    'Free Domain Selamanya',
-                    'Dedicated Support',
-                    'CDN Premium',
+                    'Free SSL & Backup + Restore',
+                    'Dedicated Resource',
                 ],
             ],
         ]);
 
-        $this->command->info('Dashboard products populated successfully (Schema: Products has Price)!');
+        // Aplikasi Sistem Klinik (SaaS)
+        Product::create([
+            'product_type_id' => $productTypeIds['app'],
+            'name' => 'faskesku.id',
+            'slug' => 'faskesku-id',
+            'status' => 'active',
+            'price_cents' => 199000,
+            'currency' => 'IDR',
+            'setup_fee_cents' => 0,
+            'trial_days' => 7,
+            'duration_1_month_enabled' => true,
+            'duration_12_months_enabled' => true,
+            'metadata' => [
+                'description' => 'Aplikasi sistem klinik (SaaS) untuk operasional faskes',
+                'popular' => false,
+                'features' => [
+                    'Pendaftaran & data pasien',
+                    'Antrian & jadwal dokter',
+                    'Rekam medis',
+                    'Kasir & billing',
+                    'Laporan operasional',
+                    'Multi user & role',
+                ],
+            ],
+        ]);
+
+        $this->command->info('Catalog products populated successfully!');
     }
 }

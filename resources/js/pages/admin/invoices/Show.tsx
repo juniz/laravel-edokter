@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,16 +80,45 @@ export default function AdminInvoiceShow({ invoice }: InvoiceShowProps) {
               </p>
             )}
           </div>
-          <div className="flex gap-2">
-            <Badge className={invoice.status === 'paid' ? 'bg-green-500' : 'bg-yellow-500'}>
-              {invoice.status.toUpperCase()}
-            </Badge>
-            <Link href={route('admin.invoices.download', invoice.id)}>
-              <Button variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
-            </Link>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex gap-2">
+              <Badge className={invoice.status === 'paid' ? 'bg-green-500' : 'bg-yellow-500'}>
+                {invoice.status.toUpperCase()}
+              </Badge>
+              <Link href={route('admin.invoices.download', invoice.id)}>
+                <Button variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF
+                </Button>
+              </Link>
+            </div>
+            <div className="flex gap-2">
+              {invoice.status !== 'paid' && (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const ok = window.confirm('Tandai invoice ini sebagai SUDAH DIBAYAR secara manual?');
+                    if (!ok) return;
+                    router.post(route('admin.invoices.mark-paid', invoice.id));
+                  }}
+                >
+                  Mark as Paid
+                </Button>
+              )}
+              {invoice.status === 'paid' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const ok = window.confirm('Tandai invoice ini sebagai BELUM DIBAYAR? Semua payment aktif akan diganti gagal.');
+                    if (!ok) return;
+                    router.post(route('admin.invoices.mark-unpaid', invoice.id));
+                  }}
+                >
+                  Mark as Unpaid
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -168,6 +197,31 @@ export default function AdminInvoiceShow({ invoice }: InvoiceShowProps) {
                         {formatPrice(payment.amount_cents)}
                         {payment.paid_at && ` • Paid on ${dayjs(payment.paid_at).format('DD MMM YYYY')}`}
                       </p>
+                      {payment.provider === 'manual' && payment.status === 'pending' ? (
+                        <div className="flex gap-2 mt-3">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              const ok = window.confirm('Approve pembayaran manual ini?');
+                              if (!ok) return;
+                              router.post(route('admin.payments.approve', payment.id));
+                            }}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => {
+                              const ok = window.confirm('Tolak pembayaran manual ini?');
+                              if (!ok) return;
+                              router.post(route('admin.payments.reject', payment.id));
+                            }}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      ) : null}
                     </div>
                   ))}
                 </CardContent>
@@ -179,4 +233,3 @@ export default function AdminInvoiceShow({ invoice }: InvoiceShowProps) {
     </AppLayout>
   );
 }
-

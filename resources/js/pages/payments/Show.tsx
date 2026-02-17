@@ -27,7 +27,7 @@ interface Payment {
     status: string;
     amount_cents: number;
     provider: string;
-    provider_ref: string;
+    provider_ref: string | null;
     created_at: string;
     invoice: {
         id: string;
@@ -183,6 +183,7 @@ export default function PaymentShow({
     const isQRIS = payment_method === 'qris' && qr_code_url;
     const isConvenienceStore = payment_code && (payment_method === 'indomaret' || payment_method === 'alfamart');
     const isEWallet = ['gopay', 'shopeepay', 'dana', 'ovo', 'linkaja'].includes(payment_method || '');
+    const isManual = payment.provider === 'manual' || payment_method === 'manual';
 
     const getPaymentMethodIcon = () => {
         if (isVA) return <Building2 className="w-6 h-6 text-primary" />;
@@ -266,6 +267,12 @@ export default function PaymentShow({
                                     </div>
                                 </div>
 
+                                {isManual ? (
+                                    <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/40 rounded-xl text-sm text-blue-700 dark:text-blue-300">
+                                        Pembayaran dibuat dalam mode manual. Silakan lakukan pembayaran sesuai instruksi admin, lalu tunggu proses approval.
+                                    </div>
+                                ) : null}
+
                                 {isVA && (
                                     <div className="space-y-2">
                                         <p className="text-sm font-medium text-center text-muted-foreground">Virtual Account Number</p>
@@ -336,12 +343,21 @@ export default function PaymentShow({
                             </div>
 
                             {/* Verification Info */}
-                            <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg text-blue-700 dark:text-blue-300 text-sm">
-                                <ShieldCheck className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                <p>
-                                    Pembayaran Anda akan diverifikasi secara otomatis. Halaman ini akan memuat ulang sendiri setelah pembayaran berhasil.
-                                </p>
-                            </div>
+                            {isManual ? (
+                                <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg text-blue-700 dark:text-blue-300 text-sm">
+                                    <ShieldCheck className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                    <p>
+                                        Status pembayaran akan berubah setelah admin melakukan approval.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg text-blue-700 dark:text-blue-300 text-sm">
+                                    <ShieldCheck className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                    <p>
+                                        Pembayaran Anda akan diverifikasi secara otomatis. Halaman ini akan memuat ulang sendiri setelah pembayaran berhasil.
+                                    </p>
+                                </div>
+                            )}
                         </CardContent>
                     )}
 

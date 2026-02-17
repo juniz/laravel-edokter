@@ -15,16 +15,20 @@ class CustomerFactory extends Factory
 
     public function definition(): array
     {
+        $state = $this->faker->state();
+
         return [
             'user_id' => User::factory(),
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
+            'city' => $this->faker->city(),
+            'state' => $state,
             'phone' => $this->faker->phoneNumber(),
             'tax_number' => $this->faker->optional()->numerify('##########'),
             'billing_address_json' => [
                 'street' => $this->faker->streetAddress(),
                 'city' => $this->faker->city(),
-                'province' => $this->faker->state(),
+                'province' => $state,
                 'postal_code' => $this->faker->postcode(),
                 'country' => 'Indonesia',
             ],

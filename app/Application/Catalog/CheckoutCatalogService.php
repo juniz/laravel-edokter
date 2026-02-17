@@ -7,6 +7,7 @@ use App\Application\Order\PlaceOrderService;
 use App\Application\Order\ValidateCouponService;
 use App\Domain\Billing\Contracts\PaymentAdapterInterface;
 use App\Domain\Catalog\Contracts\ProductRepository;
+use App\Domain\Subscription\Contracts\SubscriptionRepository;
 use App\Models\Domain\Billing\Invoice;
 use App\Models\Domain\Billing\Payment;
 use App\Models\Domain\Customer\Customer;
@@ -19,6 +20,7 @@ class CheckoutCatalogService
         private GenerateInvoiceService $generateInvoiceService,
         private PaymentAdapterInterface $paymentAdapter,
         private ProductRepository $productRepository,
+        private SubscriptionRepository $subscriptionRepository,
         private ValidateCouponService $validateCouponService
     ) {}
 
@@ -181,7 +183,7 @@ class CheckoutCatalogService
             }
 
             // Main product item (subtotal + setup fee - discount)
-            $invoice->items()->create([
+            $invoiceItem = $invoice->items()->create([
                 'description' => $description,
                 'qty' => 1,
                 'unit_price_cents' => $productPriceAfterDiscount,
@@ -237,8 +239,45 @@ class CheckoutCatalogService
                 ]);
             }
 
-            // Verify: productPriceAfterDiscount + domainTotalCents + taxCents should equal totalCents
-            // ($subtotalAfterDiscountCents + $setupFeeCents) + $domainTotalCents + $taxCents = $totalCents ✓
+            $startAt = now();
+            $endAt = $startAt->copy()->addMonths($durationMonths);
+
+            $domainsMeta = array_map(function (array $domain): array {
+                return [
+                    'domain' => $domain['domain'] ?? null,
+                    'price_cents' => $domain['price_cents'] ?? 0,
+                    'original_price_cents' => $domain['original_price_cents'] ?? null,
+                    'discount_percent' => $domain['discount_percent'] ?? 0,
+                ];
+            }, $domains);
+
+            $subscription = $this->subscriptionRepository->create([
+                'customer_id' => $customer->id,
+                'product_id' => $product->id,
+                'status' => 'trialing',
+                'start_at' => $startAt,
+                'end_at' => $endAt,
+                'next_renewal_at' => $endAt,
+                'auto_renew' => $data['auto_renew'] ?? true,
+                'provisioning_status' => 'pending',
+                'meta' => [
+                    'duration_months' => $durationMonths,
+                    'domains' => $domainsMeta,
+                ],
+            ]);
+
+            $mainOrderItem = $order->items()->where('product_id', $product->id)->first();
+            if ($mainOrderItem) {
+                $mainOrderItem->update([
+                    'subscription_id' => $subscription->id,
+                ]);
+            }
+
+            $invoiceItem->update([
+                'meta' => array_merge($invoiceItem->meta ?? [], [
+                    'subscription_id' => $subscription->id,
+                ]),
+            ]);
 
             // Create payment via Midtrans
             $paymentOptions = [

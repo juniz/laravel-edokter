@@ -29,5 +29,11 @@ class ManualTransferAdapter implements PaymentAdapterInterface
         // Manual transfer tidak memiliki webhook
         return null;
     }
-}
 
+    public function checkStatus(Payment $payment): ?Payment
+    {
+        $payment->refresh();
+
+        return $payment;
+    }
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,6 +53,11 @@ interface CartIndexProps {
 }
 
 export default function CartIndex({ cart }: CartIndexProps) {
+  const { props } = usePage();
+  const paymentGateway =
+    (props?.paymentGateway as { manual_only?: boolean }) ?? {};
+  const manualOnly = paymentGateway.manual_only === true;
+
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('bca_va');
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
@@ -106,6 +111,13 @@ export default function CartIndex({ cart }: CartIndexProps) {
       onSuccess: () => {
         setIsCheckoutModalOpen(false);
       },
+    });
+  };
+
+  const handleCheckoutManual = () => {
+    checkoutForm.setData('payment_method', 'manual');
+    checkoutForm.post(route('customer.cart.checkout'), {
+      preserveScroll: true,
     });
   };
 
@@ -306,7 +318,13 @@ export default function CartIndex({ cart }: CartIndexProps) {
                   <Button
                     className="w-full"
                     size="lg"
-                    onClick={() => setIsCheckoutModalOpen(true)}
+                    onClick={() => {
+                      if (manualOnly) {
+                        handleCheckoutManual();
+                        return;
+                      }
+                      setIsCheckoutModalOpen(true);
+                    }}
                   >
                     <Wallet className="w-4 h-4 mr-2" />
                     Checkout
@@ -325,18 +343,20 @@ export default function CartIndex({ cart }: CartIndexProps) {
         )}
 
         {/* Checkout Modal */}
-        <PaymentMethodModal
-          open={isCheckoutModalOpen}
-          onOpenChange={setIsCheckoutModalOpen}
-          selectedPaymentMethod={selectedPaymentMethod}
-          onPaymentMethodChange={setSelectedPaymentMethod}
-          paymentMethods={paymentMethods}
-          totalAmount={formatPrice(cart.totals.total)}
-          onSubmit={handleCheckout}
-          processing={checkoutForm.processing}
-          errors={checkoutForm.errors as { payment_method?: string; error?: string }}
-          getPaymentLogo={getPaymentLogo}
-        />
+        {!manualOnly ? (
+          <PaymentMethodModal
+            open={isCheckoutModalOpen}
+            onOpenChange={setIsCheckoutModalOpen}
+            selectedPaymentMethod={selectedPaymentMethod}
+            onPaymentMethodChange={setSelectedPaymentMethod}
+            paymentMethods={paymentMethods}
+            totalAmount={formatPrice(cart.totals.total)}
+            onSubmit={handleCheckout}
+            processing={checkoutForm.processing}
+            errors={checkoutForm.errors as { payment_method?: string; error?: string }}
+            getPaymentLogo={getPaymentLogo}
+          />
+        ) : null}
       </div>
     </AppLayout>
   );

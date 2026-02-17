@@ -99,6 +99,9 @@ export default function Invoices({ invoices, filters = {} }: InvoicesProps) {
 
     const { props } = usePage();
     const flash = (props?.flash as { open_payment_modal?: boolean; invoice_id?: string }) ?? {};
+    const paymentGateway =
+        (props?.paymentGateway as { manual_only?: boolean }) ?? {};
+    const manualOnly = paymentGateway.manual_only === true;
 
     const paymentForm = useForm({
         payment_method: 'bca_va',
@@ -146,6 +149,7 @@ export default function Invoices({ invoices, filters = {} }: InvoicesProps) {
 
     // Handle flash message untuk membuka modal pembayaran
     useEffect(() => {
+        if (manualOnly) return;
         if (flash.open_payment_modal && flash.invoice_id) {
             const invoice = invoices.data.find((inv) => inv.id === flash.invoice_id);
             if (invoice) {
@@ -153,7 +157,7 @@ export default function Invoices({ invoices, filters = {} }: InvoicesProps) {
                 setIsPaymentModalOpen(true);
             }
         }
-    }, [flash.open_payment_modal, flash.invoice_id, invoices]);
+    }, [flash.open_payment_modal, flash.invoice_id, invoices, manualOnly]);
 
     const handleOpenPayment = (invoice: Invoice) => {
         // Jika sudah ada payment pending, langsung redirect ke halaman payment
@@ -162,7 +166,11 @@ export default function Invoices({ invoices, filters = {} }: InvoicesProps) {
             return;
         }
 
-        // Jika belum ada payment pending, buka modal untuk pilih metode pembayaran
+        if (manualOnly) {
+            router.post(route('customer.invoices.pay', invoice.id), {});
+            return;
+        }
+
         setSelectedInvoice(invoice);
         setIsPaymentModalOpen(true);
     };

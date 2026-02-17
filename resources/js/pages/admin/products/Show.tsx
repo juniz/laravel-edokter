@@ -23,7 +23,12 @@ interface Product {
   id: string;
   name: string;
   slug: string;
-  type: string;
+  product_type_id: string;
+  product_type?: {
+    id: string;
+    slug: string;
+    name: string;
+  } | null;
   status: string;
   metadata?: any;
   created_at: string;
@@ -48,16 +53,6 @@ export default function ProductShow({ product }: ProductShowProps) {
       archived: 'bg-gray-500',
     };
     return colors[status] || 'bg-gray-500';
-  };
-
-  const getTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      hosting_shared: 'Shared Hosting',
-      vps: 'VPS',
-      addon: 'Addon',
-      domain: 'Domain',
-    };
-    return labels[type] || type;
   };
 
   const formatPrice = (cents: number, currency: string = 'IDR') => {
@@ -99,7 +94,7 @@ export default function ProductShow({ product }: ProductShowProps) {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Type</span>
-                  <span className="font-semibold">{getTypeLabel(product.type)}</span>
+                  <span className="font-semibold">{product.product_type?.name ?? '-'}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
@@ -179,4 +174,3 @@ export default function ProductShow({ product }: ProductShowProps) {
     </AppLayout>
   );
 }
-

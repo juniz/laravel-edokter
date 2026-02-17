@@ -90,7 +90,7 @@ interface Subscription {
   plan: {
     code: string;
     billing_cycle: string;
-  };
+  } | null;
   start_at: string;
   end_at?: string;
   next_renewal_at?: string;
@@ -114,9 +114,36 @@ export default function AdminSubscriptionShow({ subscription }: SubscriptionShow
   const [panelStatus, setPanelStatus] = useState<string | null>(
     subscription.panel_account?.[0]?.status || null
   );
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   const handleCancel = () => {
     post(route('customer.subscriptions.cancel', subscription.id));
+  };
+
+  const handleUpdateStatus = async (status: string) => {
+    setUpdatingStatus(status);
+    try {
+      const response = await fetch(route('admin.subscriptions.update-status', subscription.id), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({ status }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        router.reload({ only: ['subscription'] });
+      } else {
+        alert(data.message || 'Gagal mengubah status subscription');
+      }
+    } catch {
+      alert('Gagal mengubah status subscription');
+    } finally {
+      setUpdatingStatus(null);
+    }
   };
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -247,7 +274,7 @@ export default function AdminSubscriptionShow({ subscription }: SubscriptionShow
           <div>
             <h1 className="text-3xl font-bold">{subscription.product.name}</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Plan: {subscription.plan.code}
+              Plan: {subscription.plan?.code ?? 'Default'}
             </p>
             {subscription.customer && (
               <p className="text-gray-600 dark:text-gray-400">
@@ -276,13 +303,124 @@ export default function AdminSubscriptionShow({ subscription }: SubscriptionShow
                   <span className="text-gray-600 dark:text-gray-400">Status</span>
                   <Badge className={getStatusBadge(subscription.status)}>{subscription.status}</Badge>
                 </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={updatingStatus !== null}
+                    onClick={() => handleUpdateStatus('active')}
+                  >
+                    {updatingStatus === 'active' ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                    )}
+                    Set Active
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        disabled={updatingStatus !== null}
+                      >
+                        {updatingStatus === 'suspended' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <PauseCircle className="w-4 h-4 mr-2" />
+                        )}
+                        Set Suspended
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Suspend subscription?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Subscription akan diubah statusnya menjadi suspended. Akses layanan
+                          customer bisa ikut dibatasi sesuai konfigurasi panel.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleUpdateStatus('suspended')}>
+                          Ya, suspend
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        disabled={updatingStatus !== null}
+                      >
+                        {updatingStatus === 'cancelled' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <XCircle className="w-4 h-4 mr-2" />
+                        )}
+                        Set Cancelled
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Batalkan subscription?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Subscription akan dibatalkan dan auto renew dimatikan. Layanan dapat
+                          tetap aktif sampai akhir periode saat ini.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleUpdateStatus('cancelled')}>
+                          Ya, batalkan
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-500 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900/40"
+                        disabled={updatingStatus !== null}
+                      >
+                        {updatingStatus === 'terminated' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <XCircle className="w-4 h-4 mr-2" />
+                        )}
+                        Set Terminated
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Terminate subscription?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Subscription akan dihentikan permanen dan auto renew dimatikan. Pastikan
+                          data penting sudah dicadangkan sebelum melanjutkan.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleUpdateStatus('terminated')}>
+                          Ya, terminate
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Plan</span>
-                  <span className="font-semibold">{subscription.plan.code}</span>
+                  <span className="font-semibold">{subscription.plan?.code ?? 'Default'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Billing Cycle</span>
-                  <span>{subscription.plan.billing_cycle}</span>
+                  <span>{subscription.plan?.billing_cycle ?? '-'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Started</span>

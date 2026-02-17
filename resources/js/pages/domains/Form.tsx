@@ -250,7 +250,7 @@ export default function DomainForm({ customers, billingSettings }: Props) {
     } else if (!data.name || availabilityCheck.available === false) {
       setDomainPrice(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [data.name, availabilityCheck.available, step]);
 
   // Translate errors helper

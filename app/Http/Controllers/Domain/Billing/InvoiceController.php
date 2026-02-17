@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Domain\Billing;
 
 use App\Domain\Billing\Contracts\InvoiceRepository;
+use App\Domain\Billing\Contracts\PaymentRepository;
 use App\Http\Controllers\Controller;
+use App\Models\Domain\Shared\Setting;
 use App\Models\SettingApp;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -15,7 +17,8 @@ class InvoiceController extends Controller
 {
     public function __construct(
         private InvoiceRepository $invoiceRepository,
-        private \App\Domain\Billing\Contracts\PaymentAdapterInterface $paymentAdapter
+        private \App\Domain\Billing\Contracts\PaymentAdapterInterface $paymentAdapter,
+        private PaymentRepository $paymentRepository
     ) {}
 
     public function index(Request $request): Response
@@ -98,6 +101,26 @@ class InvoiceController extends Controller
         ]);
     }
 
+    private function isManualOnly(): bool
+    {
+        $defaultGateway = config('payment.default', 'manual');
+
+        try {
+            $setting = Setting::where('key', 'payment_gateway_settings')->first();
+            $value = $setting?->value ?? [];
+
+            $defaultGateway = $value['default_gateway'] ?? $defaultGateway;
+            $midtransEnabled = $value['midtrans_enabled'] ?? true;
+
+            if ($defaultGateway === 'midtrans' && $midtransEnabled === false) {
+                $defaultGateway = 'manual';
+            }
+        } catch (\Throwable) {
+        }
+
+        return $defaultGateway === 'manual';
+    }
+
     public function pay(Request $request, string $id)
     {
         $invoice = $this->invoiceRepository->findByUlid($id);
@@ -128,21 +151,22 @@ class InvoiceController extends Controller
                 ->with('info', 'Anda sudah memiliki pembayaran yang sedang menunggu. Silakan selesaikan pembayaran tersebut.');
         }
 
-        // Jika payment_method tidak ada di request, berarti user belum memilih metode pembayaran
-        // Redirect kembali dengan error untuk membuka modal pilihan metode pembayaran
-        if (! $request->has('payment_method')) {
-            return redirect()->back()
-                ->with('open_payment_modal', true)
-                ->with('invoice_id', $invoice->id);
+        if (! $request->has('payment_method') && ! $this->isManualOnly()) {
+            return redirect()->back()->with('open_payment_modal', true)->with('invoice_id', $invoice->id);
         }
 
         $request->validate([
-            'payment_method' => ['required', 'string'],
+            'payment_method' => ['nullable', 'string'],
         ]);
 
         try {
+            $paymentMethod = $request->input('payment_method');
+            if (! $paymentMethod && $this->isManualOnly()) {
+                $paymentMethod = 'manual';
+            }
+
             $payment = $this->paymentAdapter->createCharge($invoice, [
-                'payment_method' => $request->payment_method,
+                'payment_method' => $paymentMethod,
             ]);
 
             return redirect()->route('customer.payments.show', $payment->id)
@@ -186,6 +210,64 @@ class InvoiceController extends Controller
 
         return redirect()->back()
             ->with('info', 'Status pembayaran belum berubah. Silakan coba lagi nanti.');
+    }
+
+    public function markAsPaidManual(Request $request, string $id)
+    {
+        $invoice = $this->invoiceRepository->findByUlid($id);
+
+        if (! $invoice) {
+            abort(404);
+        }
+
+        if (! $request->user()->hasRole('admin')) {
+            abort(403);
+        }
+
+        $existingSucceeded = \App\Models\Domain\Billing\Payment::where('invoice_id', $invoice->id)
+            ->where('status', 'succeeded')
+            ->exists();
+
+        if ($existingSucceeded) {
+            return redirect()->back()->with('info', 'Invoice ini sudah memiliki pembayaran berhasil.');
+        }
+
+        $payment = $this->paymentRepository->create([
+            'invoice_id' => $invoice->id,
+            'provider' => 'manual',
+            'provider_ref' => 'manual-'.now()->timestamp,
+            'amount_cents' => $invoice->total_cents,
+            'status' => 'pending',
+            'raw_payload' => [
+                'payment_method' => 'manual',
+                'manual_marked_paid_by' => $request->user()->id,
+            ],
+        ]);
+
+        $this->paymentRepository->markAsSucceeded($payment, $payment->raw_payload ?? []);
+
+        return redirect()->back()->with('success', 'Invoice berhasil ditandai sebagai sudah dibayar.');
+    }
+
+    public function markAsUnpaidManual(Request $request, string $id)
+    {
+        $invoice = $this->invoiceRepository->findByUlid($id);
+
+        if (! $invoice) {
+            abort(404);
+        }
+
+        if (! $request->user()->hasRole('admin')) {
+            abort(403);
+        }
+
+        $invoice->update(['status' => 'unpaid']);
+
+        \App\Models\Domain\Billing\Payment::where('invoice_id', $invoice->id)
+            ->whereIn('status', ['succeeded', 'pending'])
+            ->update(['status' => 'failed']);
+
+        return redirect()->back()->with('success', 'Invoice berhasil ditandai sebagai belum dibayar.');
     }
 
     public function download(Request $request, string $id)

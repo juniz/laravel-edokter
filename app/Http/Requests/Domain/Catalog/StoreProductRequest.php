@@ -17,7 +17,7 @@ class StoreProductRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:products,slug'],
-            'type' => ['required', Rule::in(['hosting_shared', 'vps', 'addon', 'domain'])],
+            'product_type_id' => ['required', 'string', 'exists:product_types,id'],
             'status' => ['required', Rule::in(['active', 'draft', 'archived'])],
             'metadata' => ['nullable', 'array'],
         ];

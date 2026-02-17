@@ -19,7 +19,11 @@ class SubscriptionRepository implements SubscriptionRepositoryContract
 
     public function findByCustomer(string $customerId): array
     {
-        return Subscription::where('customer_id', $customerId)->get()->all();
+        return Subscription::where('customer_id', $customerId)
+            ->with(['product', 'plan'])
+            ->latest('created_at')
+            ->get()
+            ->all();
     }
 
     public function updateStatus(Subscription $subscription, string $status): void
@@ -36,4 +40,3 @@ class SubscriptionRepository implements SubscriptionRepositoryContract
             ->all();
     }
 }
-

@@ -138,14 +138,16 @@ class MenuSeeder extends Seeder
         );
 
         Menu::updateOrCreate(
-            ['route' => '/admin/plans', 'parent_id' => $adminCatalog->id],
+            ['route' => '/admin/product-types', 'parent_id' => $adminCatalog->id],
             [
-                'title' => 'Plans',
-                'icon' => 'List',
+                'title' => 'Product Types',
+                'icon' => 'Shapes',
                 'order' => 2,
-                'permission_name' => 'admin-plans-view',
+                'permission_name' => 'admin-product-types-view',
             ]
         );
+
+        Menu::where('route', '/admin/plans')->delete();
 
         Menu::updateOrCreate(
             ['route' => '/admin/coupons', 'parent_id' => $adminCatalog->id],
@@ -400,6 +402,26 @@ class MenuSeeder extends Seeder
                 'icon' => 'Receipt',
                 'order' => 5,
                 'permission_name' => 'billing-settings-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
+            ['route' => '/settings/site-footer', 'parent_id' => $settings->id],
+            [
+                'title' => 'Site Footer',
+                'icon' => 'Layout',
+                'order' => 6,
+                'permission_name' => 'site-footer-settings-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
+            ['route' => '/settings/payment-gateway', 'parent_id' => $settings->id],
+            [
+                'title' => 'Payment Gateway',
+                'icon' => 'CreditCard',
+                'order' => 7,
+                'permission_name' => 'payment-gateway-settings-view',
             ]
         );
 

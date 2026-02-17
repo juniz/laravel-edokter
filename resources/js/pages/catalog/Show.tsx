@@ -18,9 +18,7 @@ import {
     Shield,
     Clock,
     Server,
-    HardDrive,
     Globe,
-    Package,
     ArrowRight,
     Tag,
 } from 'lucide-react';
@@ -38,7 +36,15 @@ interface Product {
     id: string;
     name: string;
     slug: string;
-    type: string;
+    product_type_id: string;
+    product_type?: {
+        id: string;
+        slug: string;
+        name: string;
+        icon?: string | null;
+        display_order?: number;
+        metadata?: Record<string, any> | null;
+    } | null;
     status: string;
     price_cents: number;
     currency: string;
@@ -59,41 +65,6 @@ interface CatalogShowProps {
     pphRate?: number;
 }
 
-function getProductTypeConfig(type: string) {
-    const config: Record<string, { icon: React.ElementType; color: string; bgColor: string; label: string }> = {
-        hosting_shared: {
-            icon: HardDrive,
-            color: 'text-blue-600',
-            bgColor: 'from-blue-500 to-cyan-500',
-            label: 'Shared Hosting',
-        },
-        vps: {
-            icon: Server,
-            color: 'text-purple-600',
-            bgColor: 'from-purple-500 to-pink-500',
-            label: 'VPS',
-        },
-        addon: {
-            icon: Package,
-            color: 'text-emerald-600',
-            bgColor: 'from-emerald-500 to-green-500',
-            label: 'Addon',
-        },
-        domain: {
-            icon: Globe,
-            color: 'text-orange-600',
-            bgColor: 'from-orange-500 to-amber-500',
-            label: 'Domain',
-        },
-    };
-    return config[type] || {
-        icon: Package,
-        color: 'text-gray-600',
-        bgColor: 'from-gray-500 to-slate-500',
-        label: type.replace('_', ' ').toUpperCase(),
-    };
-}
-
 export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProps) {
     // Set default duration to 12 if 1 month is not available or price is 0
     const defaultDuration = (product.duration_1_month_enabled ?? true) && product.price_cents && product.price_cents > 0 ? 1 : 12;
@@ -101,9 +72,7 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
     
     // Domain State
     const [selectedDomains, setSelectedDomains] = useState<DomainResult[]>([]);
-
-    const typeConfig = getProductTypeConfig(product.type);
-    const TypeIcon = typeConfig.icon;
+    const typeLabel = product.product_type?.name ?? '-';
 
     // Calculate annual discount
     const annualDiscountPercent = product.annual_discount_percent ?? 0;
@@ -179,7 +148,7 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
                     </div> */}
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                            <Badge variant="outline">{typeConfig.label}</Badge>
+                            <Badge variant="outline">{typeLabel}</Badge>
                         </div>
                         <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-2">
                             {product.name}
@@ -225,7 +194,7 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
                             <Card variant="premium">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <div className={`h-8 w-8 rounded-lg bg-gradient-to-br ${typeConfig.bgColor} flex items-center justify-center`}>
+                                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center">
                                             <Server className="h-4 w-4 text-white" />
                                         </div>
                                         Spesifikasi Teknis
@@ -261,7 +230,7 @@ export default function CatalogShow({ product, pphRate = 0.11 }: CatalogShowProp
                             <Card variant="premium">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <div className={`h-8 w-8 rounded-lg bg-gradient-to-br ${typeConfig.bgColor} flex items-center justify-center`}>
+                                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center">
                                             <CheckCircle2 className="h-4 w-4 text-white" />
                                         </div>
                                         Fitur Yang Anda Dapatkan

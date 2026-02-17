@@ -40,7 +40,7 @@ interface PanelAccount {
     };
     plan: {
       code: string;
-    };
+    } | null;
   };
 }
 
@@ -412,7 +412,12 @@ export default function PanelAccountsIndex({ accounts, aapanelServers = [] }: Pa
                           <p>Server: <span className="font-semibold">{account.server.name} ({account.server.type})</span></p>
                         )}
                         {account.subscription && (
-                          <p>Subscription: <span className="font-semibold">{account.subscription.product.name} - {account.subscription.plan.code}</span></p>
+                          <p>
+                            Subscription:{' '}
+                            <span className="font-semibold">
+                              {account.subscription.product.name} - {account.subscription.plan?.code ?? 'Default'}
+                            </span>
+                          </p>
                         )}
                         {account.last_sync_at && (
                           <p>Last Sync: {dayjs(account.last_sync_at).format('DD MMM YYYY HH:mm')}</p>

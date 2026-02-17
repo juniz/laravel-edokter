@@ -40,7 +40,7 @@ interface Subscription {
     plan: {
         code: string;
         name?: string;
-    };
+    } | null;
     start_at: string;
     end_at?: string;
     next_renewal_at?: string;
@@ -210,7 +210,7 @@ export default function Subscriptions({ subscriptions }: SubscriptionsProps) {
                                                             {subscription.product.name}
                                                         </h3>
                                                         <p className="text-sm text-muted-foreground">
-                                                            {subscription.plan.name || subscription.plan.code}
+                                                            {subscription.plan?.name || subscription.plan?.code || 'Default'}
                                                         </p>
                                                     </div>
                                                     <Badge variant={`${statusConfig.variant}-soft`} className="flex-shrink-0">
