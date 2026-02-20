@@ -1307,15 +1307,22 @@ class ResepController extends Controller
                 $data = $dataQuery->get();
             }
 
+            // FIX N+1: Ambil semua detail obat dalam satu query, lalu group by no_resep
+            $allResepObat = collect();
+            if ($data->isNotEmpty()) {
+                $noResepList = $data->pluck('no_resep')->unique()->values()->toArray();
+                $allResepObat = DB::table('resep_dokter')
+                    ->join('databarang', 'resep_dokter.kode_brng', '=', 'databarang.kode_brng')
+                    ->whereIn('resep_dokter.no_resep', $noResepList)
+                    ->select('resep_dokter.no_resep', 'databarang.nama_brng', 'resep_dokter.jml', 'resep_dokter.aturan_pakai')
+                    ->get()
+                    ->groupBy('no_resep');
+            }
+
             // Format data untuk DataTable
             $formattedData = [];
             foreach ($data as $r) {
-                // Get detail obat untuk setiap resep
-                $resepObat = DB::table('resep_dokter')
-                    ->join('databarang', 'resep_dokter.kode_brng', '=', 'databarang.kode_brng')
-                    ->where('resep_dokter.no_resep', $r->no_resep)
-                    ->select('databarang.nama_brng', 'resep_dokter.jml', 'resep_dokter.aturan_pakai')
-                    ->get();
+                $resepObat = $allResepObat->get($r->no_resep, collect());
 
                 // Format detail resep sebagai HTML
                 $detailResep = '<ul class="p-4" style="margin: 0; padding-left: 20px;">';
