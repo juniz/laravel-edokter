@@ -96,7 +96,7 @@
             </thead>
             <tbody>
                 @foreach($data as $row)
-                    <tr class="{{ $row['type'] == 'anak' ? 'table-secondary' : '' }}">
+                    <tr class="{{ $row['type'] == 'anak' ? 'table-secondary' : '' }} {{ ($row['has_soap'] ?? false) ? 'table-success' : '' }}">
                         <td>
                             @if($row['type'] == 'anak')
                                 <span class="ml-3 text-muted">└─ </span>

@@ -104,8 +104,10 @@ class Pemeriksaan extends Component
         $pemeriksaan = DB::table('pemeriksaan_ranap')
             ->where('no_rawat', $this->noRawat)
             ->where('nip', session()->get('username'))
+            ->orderBy('tgl_perawatan', 'desc')
             ->orderBy('jam_rawat', 'desc')
             ->first();
+
         if ($pemeriksaan) {
             $this->keluhan = $pemeriksaan->keluhan ?? '';
             $this->pemeriksaan = $pemeriksaan->pemeriksaan ?? '';
@@ -401,6 +403,37 @@ class Pemeriksaan extends Component
             ],
             'total_pemeriksaan' => count($this->listPemeriksaan),
         ];
+    }
+
+    public function copyToForm($tgl, $jam)
+    {
+        $pemeriksaan = DB::table('pemeriksaan_ranap')
+            ->where('no_rawat', $this->noRawat)
+            ->where('tgl_perawatan', $tgl)
+            ->where('jam_rawat', $jam)
+            ->first();
+
+        if ($pemeriksaan) {
+            $this->keluhan = $pemeriksaan->keluhan ?? '';
+            $this->pemeriksaan = $pemeriksaan->pemeriksaan ?? '';
+            $this->penilaian = $pemeriksaan->penilaian ?? '';
+            $this->instruksi = $pemeriksaan->instruksi ?? '';
+            $this->rtl = $pemeriksaan->rtl ?? '';
+            $this->alergi = $pemeriksaan->alergi ?? 'Tidak Ada';
+            $this->suhu = $pemeriksaan->suhu_tubuh ?? '';
+            $this->berat = $pemeriksaan->berat ?? '';
+            $this->tinggi = $pemeriksaan->tinggi ?? '';
+            $this->tensi = $pemeriksaan->tensi ?? '';
+            $this->nadi = $pemeriksaan->nadi ?? '';
+            $this->respirasi = $pemeriksaan->respirasi ?? '';
+            $this->evaluasi = $pemeriksaan->evaluasi ?? '';
+            $this->gcs = $pemeriksaan->gcs ?? '';
+            $this->kesadaran = $pemeriksaan->kesadaran ?? 'Compos Mentis';
+            $this->spo2 = $pemeriksaan->spo2 ?? '';
+            $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse('Data pemeriksaan berhasil disalin ke form', 'success'));
+        } else {
+            $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse('Data pemeriksaan tidak ditemukan', 'error'));
+        }
     }
 
     public function toggleCollapse($tgl, $jam)

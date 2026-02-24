@@ -236,6 +236,10 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-end mt-3">
+                        <button wire:click='copyToForm("{{$item->tgl_perawatan}}", "{{$item->jam_rawat}}")'
+                            class="btn btn-sm btn-outline-info me-1" title="Salin ke form">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
                         <button wire:click='$emit("openModalEditPemeriksaan", "{{$item->no_rawat}}", "{{$item->tgl_perawatan}}","{{$item->jam_rawat}}")'
                             class="btn btn-sm btn-outline-warning me-1">
                             <i class="fas fa-edit"></i> Edit

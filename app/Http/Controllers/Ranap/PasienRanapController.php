@@ -38,6 +38,30 @@ class PasienRanapController extends Controller
         $rows = $this->buildPasienRanapQuery($statusPasien, $tanggalMulai, $tanggalAkhir, $kd_dokter, $kd_sps)->get();
         $grouped = $rows->groupBy('no_rawat_ibu');
 
+        // Kumpulkan semua no_rawat (ibu + anak) untuk cek SOAP
+        $allNoRawat = collect();
+        foreach ($grouped as $noRawatIbu => $group) {
+            $allNoRawat->push($noRawatIbu);
+            $anakList = DB::table('ranap_gabung')
+                ->where('no_rawat', $noRawatIbu)
+                ->whereNotNull('no_rawat2')
+                ->where('no_rawat2', '!=', '')
+                ->pluck('no_rawat2')
+                ->filter(fn ($v) => !empty($v))
+                ->unique()
+                ->values();
+            $allNoRawat = $allNoRawat->merge($anakList);
+        }
+        $noRawatDenganSoap = collect();
+        if ($allNoRawat->isNotEmpty()) {
+            $noRawatDenganSoap = DB::table('pemeriksaan_ranap')
+                ->where('nip', session()->get('username'))
+                ->whereIn('no_rawat', $allNoRawat->unique()->values())
+                ->distinct()
+                ->pluck('no_rawat')
+                ->flip();
+        }
+
         $processedData = [];
 
         foreach ($grouped as $noRawatIbu => $group) {
@@ -64,6 +88,7 @@ class PasienRanapController extends Controller
                 'tgl_masuk' => $row->tgl_masuk,
                 'png_jawab' => $row->png_jawab,
                 'kd_bangsal' => $row->kd_bangsal,
+                'has_soap' => $noRawatDenganSoap->has($row->no_rawat_ibu),
             ];
 
             // Data anak
@@ -120,6 +145,7 @@ class PasienRanapController extends Controller
                         'tgl_masuk' => $anakData->tgl_masuk ?? '-',
                         'png_jawab' => $anakData->png_jawab ?? '-',
                         'kd_bangsal' => $kdBangsalAnak,
+                        'has_soap' => $noRawatDenganSoap->has($noRawatAnak),
                     ];
                 }
             }
