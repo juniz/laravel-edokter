@@ -103,6 +103,7 @@ class Pemeriksaan extends Component
 
         $pemeriksaan = DB::table('pemeriksaan_ranap')
             ->where('no_rawat', $this->noRawat)
+            ->where('nip', session()->get('username'))
             ->orderBy('jam_rawat', 'desc')
             ->first();
         if ($pemeriksaan) {
@@ -415,4 +416,3 @@ class Pemeriksaan extends Component
         }
     }
 }
-
