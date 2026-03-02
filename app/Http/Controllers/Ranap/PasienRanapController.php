@@ -32,7 +32,7 @@ class PasienRanapController extends Controller
         $kd_dokter = session()->get('username');
         $kd_sps = session()->get('kd_sps');
         // Kolom header tabel pasien ranap
-        $heads = ['Nama', 'No Rawat', 'No. RM', 'Kamar', 'Bed', 'Tanggal Masuk', 'Cara Bayar'];
+        $heads = ['', 'Nama', 'No Rawat', 'No. RM', 'Kamar', 'Bed', 'Tanggal Masuk', 'Cara Bayar'];
 
         // Proses data dengan struktur hierarkis (ibu-anak)
         $rows = $this->buildPasienRanapQuery($statusPasien, $tanggalMulai, $tanggalAkhir, $kd_dokter, $kd_sps)->get();

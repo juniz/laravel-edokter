@@ -89,7 +89,7 @@
         <table id="tablePasienRanap" class="table table-bordered table-striped table-hover" style="width:100%">
             <thead class="thead-dark">
                 <tr>
-                    @foreach($heads as $head)
+                    @foreach($heads as $i => $head)
                         <th>{{ $head }}</th>
                     @endforeach
                 </tr>
@@ -97,6 +97,7 @@
             <tbody>
                 @foreach($data as $row)
                     <tr class="{{ $row['type'] == 'anak' ? 'table-secondary' : '' }} {{ ($row['has_soap'] ?? false) ? 'table-success' : '' }}">
+                        <td></td>
                         <td>
                             @if($row['type'] == 'anak')
                                 <span class="ml-3 text-muted">└─ </span>
@@ -134,7 +135,9 @@
 @stop
 
 @section('plugins.TempusDominusBs4', true)
+@section('plugins.Datatables', true)
 @section('css')
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-plugins/responsive/css/responsive.bootstrap4.css') }}">
 <style>
     .dropdown-menu .dropdown-item {
         color: #212529;
@@ -372,6 +375,25 @@
     #tablePasienRanap tbody tr.child-row:hover {
         background-color: #e9ecef;
     }
+    
+    /* Perbesar tombol expand (+/-) di kolom kontrol */
+    #tablePasienRanap.dtr-column > tbody > tr > td.control:before,
+    #tablePasienRanap.dtr-column > tbody > tr.parent > td.control:before {
+        width: 1.4em;
+        height: 1.4em;
+        margin-top: -0.8em;
+        margin-left: -0.8em;
+        font-size: 1.1em;
+        line-height: 1.4em;
+        border-width: 0.12em;
+        box-shadow: 0 0 0.3em #444;
+    }
+
+    #tablePasienRanap th.control,
+    #tablePasienRanap td.control {
+        width: 2em;
+        min-width: 2em;
+    }
 </style>
 @stop
 @section('js')
@@ -380,13 +402,23 @@
         // Inisialisasi DataTables untuk tabel pasien ranap
         // Urutan baris dipertahankan (ibu diikuti anaknya) dengan menonaktifkan sorting default
         var table = $('#tablePasienRanap').DataTable({
-            responsive: true,
+            responsive: {
+                details: { type: 'column', target: 0 },
+                breakpoints: [
+                    { name: 'desktop', width: 1200 },
+                    { name: 'tablet-l', width: 992 },
+                    { name: 'tablet-p', width: 768 },
+                    { name: 'mobile-l', width: 480 },
+                    { name: 'mobile-p', width: 320 }
+                ]
+            },
             pageLength: 10,
             lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
             order: [], // Tidak ada sorting default
             ordering: false, // Nonaktifkan sorting untuk mempertahankan urutan hierarkis
             columnDefs: [
-                { orderable: false, targets: '_all' }, // Semua kolom tidak bisa diurutkan
+                { orderable: false, targets: '_all' },
+                { className: 'control', orderable: false, targets: 0 },
             ],
             language: {
                 search: "Cari:",
