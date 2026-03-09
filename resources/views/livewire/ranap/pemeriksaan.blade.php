@@ -261,6 +261,11 @@
         </div>
         @endforelse
     </div>
+    @if($listPemeriksaan->hasPages())
+    <div class="d-flex justify-content-center mt-3">
+        {{ $listPemeriksaan->links() }}
+    </div>
+    @endif
 </div>
 
 @livewire('ranap.modal.edit-pemeriksaan')

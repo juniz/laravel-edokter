@@ -37,6 +37,9 @@
                 <livewire:ranap.sbar.detail-sbar />
                 <livewire:ranap.sbar.table-sbar :noRawat="request()->get('no_rawat')" />
             </x-adminlte-card>
+            <x-adminlte-card title="Laporan Tindakan" icon='fas fa-stethoscope' theme="info" maximizable collapsible="collapsed">
+                <livewire:ranap.lap-tindakan :noRawat="request()->get('no_rawat')" />
+            </x-adminlte-card>
         </div>
     </div>
 @stop

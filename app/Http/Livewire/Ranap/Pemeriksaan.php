@@ -5,17 +5,20 @@ namespace App\Http\Livewire\Ranap;
 use App\Traits\SwalResponse;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Gemini\Laravel\Facades\Gemini;
 
 class Pemeriksaan extends Component
 {
-    use SwalResponse, LivewireAlert;
-    public $listPemeriksaan, $isCollapsed = false, $noRawat, $noRm, $isMaximized = true, $keluhan, $pemeriksaan, $penilaian, $instruksi, $rtl, $alergi, $suhu, $berat, $tinggi, $tensi, $nadi, $respirasi, $evaluasi, $gcs, $kesadaran = 'Compos Mentis', $lingkar, $spo2;
+    use SwalResponse, LivewireAlert, WithPagination;
+    public $isCollapsed = false, $noRawat, $noRm, $isMaximized = true, $keluhan, $pemeriksaan, $penilaian, $instruksi, $rtl, $alergi, $suhu, $berat, $tinggi, $tensi, $nadi, $respirasi, $evaluasi, $gcs, $kesadaran = 'Compos Mentis', $lingkar, $spo2;
     public $tgl, $jam;
     public $statistikData = [];
     public $listeners = ['refreshData' => '$refresh', 'hapusPemeriksaan' => 'hapus', 'openModalStatistik' => 'openModalStatistik'];
     public $collapsedCards = [];
+
+    protected $paginationTheme = 'bootstrap';
 
     public function mount($noRawat, $noRm)
     {
@@ -23,7 +26,6 @@ class Pemeriksaan extends Component
         $this->noRm = $noRm;
         if (!$this->isCollapsed) {
             $this->getPemeriksaan();
-            $this->getListPemeriksaan();
         }
     }
 
@@ -34,7 +36,15 @@ class Pemeriksaan extends Component
 
     public function render()
     {
-        return view('livewire.ranap.pemeriksaan');
+        $listPemeriksaan = DB::table('pemeriksaan_ranap')
+            ->join('pegawai', 'pemeriksaan_ranap.nip', '=', 'pegawai.nik')
+            ->where('no_rawat', $this->noRawat)
+            ->select('pemeriksaan_ranap.*', 'pegawai.nama')
+            ->orderByDesc('tgl_perawatan')
+            ->orderByDesc('jam_rawat')
+            ->paginate(5);
+
+        return view('livewire.ranap.pemeriksaan', compact('listPemeriksaan'));
     }
 
     public function geminiSoap()
@@ -65,21 +75,6 @@ class Pemeriksaan extends Component
         }
     }
 
-    public function hydrate()
-    {
-        $this->getListPemeriksaan();
-    }
-
-    public function getListPemeriksaan()
-    {
-        $this->listPemeriksaan = DB::table('pemeriksaan_ranap')
-            ->join('pegawai', 'pemeriksaan_ranap.nip', '=', 'pegawai.nik')
-            ->where('no_rawat', $this->noRawat)
-            ->select('pemeriksaan_ranap.*', 'pegawai.nama')
-            ->orderByDesc('tgl_perawatan')
-            ->orderByDesc('jam_rawat')
-            ->get();
-    }
 
     public function collapsed()
     {
@@ -200,8 +195,7 @@ class Pemeriksaan extends Component
             // Reset form setelah berhasil simpan
             $this->resetForm();
 
-            // Refresh list pemeriksaan
-            $this->getListPemeriksaan();
+            $this->resetPage();
 
             // Tampilkan notifikasi sukses
             $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse('Pemeriksaan berhasil ditambahkan', 'success'));
@@ -233,7 +227,7 @@ class Pemeriksaan extends Component
                 ->where('tgl_perawatan', $this->tgl)
                 ->where('jam_rawat', $this->jam)
                 ->delete();
-            $this->getListPemeriksaan();
+            $this->resetPage();
             $this->alert('success', 'Pemeriksaan berhasil dihapus', [
                 'position' =>  'center',
                 'timer' =>  3000,
@@ -401,7 +395,7 @@ class Pemeriksaan extends Component
                 'suhu' => round($avgSuhu->avg_suhu ?? 0, 1),
                 'spo2' => round($avgSpo2->avg_spo2 ?? 0, 1),
             ],
-            'total_pemeriksaan' => count($this->listPemeriksaan),
+            'total_pemeriksaan' => DB::table('pemeriksaan_ranap')->where('no_rawat', $this->noRawat)->count(),
         ];
     }
 
