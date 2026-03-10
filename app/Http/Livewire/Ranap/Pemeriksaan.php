@@ -44,6 +44,10 @@ class Pemeriksaan extends Component
             ->orderByDesc('jam_rawat')
             ->paginate(5);
 
+        $listPemeriksaan->setCollection(
+            $listPemeriksaan->getCollection()->map(fn ($item) => (object) (array) $item)
+        );
+
         return view('livewire.ranap.pemeriksaan', compact('listPemeriksaan'));
     }
 
