@@ -46,6 +46,8 @@ class Pasien extends Component
                     'reg_periksa.no_rawat',
                     'reg_periksa.status_lanjut',
                     'reg_periksa.kd_pj',
+                    'reg_periksa.umurdaftar',
+                    'reg_periksa.sttsumur',
                     'dokter.nm_dokter',
                     'poliklinik.nm_poli',
                     'reg_periksa.kd_poli',

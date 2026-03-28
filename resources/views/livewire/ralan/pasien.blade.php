@@ -74,7 +74,7 @@
                                         <div class="info-item-content">
                                             <strong>Umur</strong>
                                             <span class="separator">:</span>
-                                            <span class="value">{{$data->umur ?? '-'}}</span>
+                                            <span class="value">{{$data->umurdaftar ?? '-'}} {{$data->sttsumur == 'Th' ? 'Tahun' : 'Bulan'}}</span>
                                         </div>
                                     </div>
                                     <div class="info-item">
