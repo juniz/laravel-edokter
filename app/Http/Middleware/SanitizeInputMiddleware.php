@@ -18,6 +18,7 @@ class SanitizeInputMiddleware extends TransformsRequest
         'api_token',
         '_token',
         'credential',
+        'isi',
     ];
 
     /**

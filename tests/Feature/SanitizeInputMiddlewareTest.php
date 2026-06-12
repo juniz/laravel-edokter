@@ -61,6 +61,7 @@ class SanitizeInputMiddlewareTest extends TestCase
             'api_token' => "a'p\"i\\t<b>o</b>ken",
             '_token' => "u'n\"i\\q<b>u</b>e",
             'credential' => "c'r\"e\\d<b>e</b>ntial",
+            'isi' => "<b>EKG Template</b> with 'quotes' and \"double quotes\" and \\backslash",
             'nested' => [
                 'password' => "n'e\"s\\t<b>ed</b>",
             ]
@@ -74,6 +75,7 @@ class SanitizeInputMiddlewareTest extends TestCase
             'api_token' => "a'p\"i\\t<b>o</b>ken",
             '_token' => "u'n\"i\\q<b>u</b>e",
             'credential' => "c'r\"e\\d<b>e</b>ntial",
+            'isi' => "<b>EKG Template</b> with 'quotes' and \"double quotes\" and \\backslash",
             'nested' => [
                 'password' => "n'e\"s\\t<b>ed</b>",
             ]
@@ -115,6 +117,13 @@ class SanitizeInputMiddlewareTest extends TestCase
                     ]
                 ],
                 [
+                    'type' => 'syncInput',
+                    'payload' => [
+                        'name' => 'isi',
+                        'value' => "<b>EKG Template</b> with 'quotes' and \"double quotes\" and \\backslash"
+                    ]
+                ],
+                [
                     'type' => 'callMethod',
                     'payload' => [
                         'method' => 'savePassword',
@@ -150,6 +159,13 @@ class SanitizeInputMiddlewareTest extends TestCase
                     'payload' => [
                         'name' => 'password',
                         'value' => "p'a\"s\\s<b>word</b>" // Exempted syncInput
+                    ]
+                ],
+                [
+                    'type' => 'syncInput',
+                    'payload' => [
+                        'name' => 'isi',
+                        'value' => "<b>EKG Template</b> with 'quotes' and \"double quotes\" and \\backslash" // Exempted syncInput
                     ]
                 ],
                 [
