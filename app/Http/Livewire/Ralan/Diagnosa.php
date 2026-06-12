@@ -42,6 +42,14 @@ class Diagnosa extends Component
             'prioritas.required' => 'Prioritas tidak boleh kosong',
         ]);
 
+        if ($this->prioritas == 1) {
+            $penyakit = DB::table('penyakit')->where('kd_penyakit', $this->diagnosa)->first();
+            if ($penyakit && $penyakit->validcode != '1') {
+                $this->alert('error', 'Penyakit yang dipilih tidak memiliki kode valid untuk prioritas ke-1.');
+                return;
+            }
+        }
+
         try {
             DB::beginTransaction();
             $cek_status = DB::table('diagnosa_pasien')

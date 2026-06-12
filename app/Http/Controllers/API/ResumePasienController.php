@@ -110,11 +110,19 @@ class ResumePasienController extends Controller
     {
         $q = $request->get('q');
         $que = '%' . $q . '%';
+        $prioritas = $request->get('prioritas');
 
-        $data = DB::table('penyakit')
-            ->where('kd_penyakit', 'like', $que)
-            ->orWhere('nm_penyakit', 'like', $que)
-            ->get();
+        $query = DB::table('penyakit')
+            ->where(function ($query) use ($que) {
+                $query->where('kd_penyakit', 'like', $que)
+                    ->orWhere('nm_penyakit', 'like', $que);
+            });
+
+        if ($prioritas == 1) {
+            $query->where('validcode', '1');
+        }
+
+        $data = $query->get();
         return response()->json($data, 200);
     }
 
@@ -143,6 +151,17 @@ class ResumePasienController extends Controller
             'prioritas.required' => 'Prioritas tidak boleh kosong',
         ]);
         try {
+            $prioritas = $request->get('prioritas');
+            if ($prioritas == 1) {
+                $penyakit = DB::table('penyakit')->where('kd_penyakit', $request->get('diagnosa'))->first();
+                if ($penyakit && $penyakit->validcode != '1') {
+                    return response()->json([
+                        'status' => 'gagal',
+                        'pesan' => 'Penyakit yang dipilih tidak memiliki kode valid untuk prioritas ke-1.'
+                    ]);
+                }
+            }
+
             $cek_status = DB::table('diagnosa_pasien')
                 ->join('reg_periksa', 'diagnosa_pasien.no_rawat', '=', 'reg_periksa.no_rawat')
                 ->where('diagnosa_pasien.kd_penyakit', $request->get('diagnosa'))

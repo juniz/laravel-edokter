@@ -72,6 +72,12 @@
             url: "{{ route('diagnosa') }}",
             dataType: 'json',
             delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term,
+                    prioritas: $('#prioritas').val()
+                };
+            },
             processResults: function (data) {
                 return {
                     results: data.map(function (item) {
