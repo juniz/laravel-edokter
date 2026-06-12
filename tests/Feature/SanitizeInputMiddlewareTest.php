@@ -84,4 +84,90 @@ class SanitizeInputMiddlewareTest extends TestCase
         $response->assertStatus(200)
                  ->assertExactJson($expected);
     }
+
+    /** @test */
+    public function it_sanitizes_livewire_payloads_selectively_without_corrupting_metadata()
+    {
+        $payload = [
+            'fingerprint' => [
+                'name' => "ralan.resume",
+                'id' => "some'id\"with\\special<b>chars</b>"
+            ],
+            'serverMemo' => [
+                'data' => [
+                    'keluhan' => "original'data\"with\\special<b>tags</b>"
+                ],
+                'checksum' => "checksum'value\"here"
+            ],
+            'updates' => [
+                [
+                    'type' => 'syncInput',
+                    'payload' => [
+                        'name' => 'keluhan',
+                        'value' => "patient's keluhan <script>alert('xss')</script>"
+                    ]
+                ],
+                [
+                    'type' => 'syncInput',
+                    'payload' => [
+                        'name' => 'password',
+                        'value' => "p'a\"s\\s<b>word</b>"
+                    ]
+                ],
+                [
+                    'type' => 'callMethod',
+                    'payload' => [
+                        'method' => 'savePassword',
+                        'params' => [
+                            "p'a\"s\\s<b>word</b>"
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $expected = [
+            'fingerprint' => [
+                'name' => "ralan.resume",
+                'id' => "some'id\"with\\special<b>chars</b>" // Untouched for checksum
+            ],
+            'serverMemo' => [
+                'data' => [
+                    'keluhan' => "original'data\"with\\special<b>tags</b>" // Untouched for checksum
+                ],
+                'checksum' => "checksum'value\"here" // Untouched for checksum
+            ],
+            'updates' => [
+                [
+                    'type' => 'syncInput',
+                    'payload' => [
+                        'name' => 'keluhan',
+                        'value' => "patient`s keluhan alert(`xss`)" // Sanitized
+                    ]
+                ],
+                [
+                    'type' => 'syncInput',
+                    'payload' => [
+                        'name' => 'password',
+                        'value' => "p'a\"s\\s<b>word</b>" // Exempted syncInput
+                    ]
+                ],
+                [
+                    'type' => 'callMethod',
+                    'payload' => [
+                        'method' => 'savePassword',
+                        'params' => [
+                            "p'a\"s\\s<b>word</b>" // Exempted method call params
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+                         ->postJson('/_test/sanitize-middleware', $payload);
+
+        $response->assertStatus(200)
+                 ->assertExactJson($expected);
+    }
 }
