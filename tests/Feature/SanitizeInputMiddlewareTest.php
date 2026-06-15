@@ -29,6 +29,7 @@ class SanitizeInputMiddlewareTest extends TestCase
             'double_quote' => 'He said "Hello"',
             'backslash' => 'Folder\\Subfolder',
             'html_tags' => '<b>Bold Text</b> <script>alert("hack")</script>',
+            'inequality' => 'WHZ <-3SD and Hb < 10 and Suhu > 38',
             'nested' => [
                 'some_key' => "Patient's condition is <i>good</i>",
             ]
@@ -40,6 +41,7 @@ class SanitizeInputMiddlewareTest extends TestCase
             'double_quote' => 'He said Hello',  // double quote removed
             'backslash' => 'FolderSubfolder',   // backslash removed
             'html_tags' => 'Bold Text alert(hack)', // HTML tags stripped, double quotes inside removed
+            'inequality' => 'WHZ <-3SD and Hb < 10 and Suhu > 38', // Math inequalities preserved
             'nested' => [
                 'some_key' => 'Patient`s condition is good', // recursively stripped
             ]

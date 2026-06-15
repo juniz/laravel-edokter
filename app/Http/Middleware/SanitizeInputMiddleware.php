@@ -74,8 +74,8 @@ class SanitizeInputMiddleware extends TransformsRequest
             return $value;
         }
 
-        // 1. Strip HTML tags
-        $value = strip_tags($value);
+        // 1. Strip HTML tags (using regex to preserve mathematical inequalities like < or >)
+        $value = preg_replace('/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/', '', $value);
 
         // 2. Replace single quote (') with backtick (`)
         $value = str_replace("'", "`", $value);
