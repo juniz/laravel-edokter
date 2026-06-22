@@ -126,6 +126,22 @@ class Pemeriksaan extends Component
             $this->kesadaran = $pemeriksaan->kesadaran ?? 'Compos Mentis';
             $this->lingkar = null; // Field tidak ada di tabel pemeriksaan_ranap
             $this->spo2 = $pemeriksaan->spo2 ?? '';
+        }else{
+            $pemeriksaanTTV = DB::table('pemeriksaan_ranap')->where('no_rawat', $this->noRawat)->orderBy('tgl_perawatan', 'desc')->orderBy('jam_rawat', 'desc')->first();
+            if($pemeriksaanTTV){
+                // Safe access: check if $data exists before accessing its property
+                // $this->alergi = $pemeriksaanTTV->alergi ?? ($data && isset($data->alergi) ? $data->alergi : null) ?? 'Tidak Ada';
+                $this->suhu = $pemeriksaanTTV->suhu_tubuh ?? '';
+                $this->berat = $pemeriksaanTTV->berat ?? '';
+                $this->tinggi = $pemeriksaanTTV->tinggi ?? '';
+                $this->tensi = $pemeriksaanTTV->tensi ?? '';
+                $this->nadi = $pemeriksaanTTV->nadi ?? '';
+                $this->respirasi = $pemeriksaanTTV->respirasi ?? '';
+                $this->gcs = $pemeriksaanTTV->gcs ?? '';
+                $this->kesadaran = $pemeriksaanTTV->kesadaran ?? 'Compos Mentis';
+                $this->lingkar = null; // Field tidak ada di tabel pemeriksaan_ranap
+                $this->spo2 = $pemeriksaanTTV->spo2 ?? '';
+            }
         }
     }
 
