@@ -13,7 +13,7 @@ class FormKandungan extends Component
 {
     use LivewireAlert;
     public $no_rawat, $editMode = false;
-    public $tanggal_kandungan, $anamnesis, $hubungan, $keluhan_utama, $rps, $rpo, $rpd, $rpk, $alergi, $keadaan, $kesadaran, $gcs, $td, $tb, $bb, $suhu, $nadi, $rr, $spo, $kepala, $abdomen, $gigi, $genital, $tht, $ekstremitas, $thoraks, $kulit, $ket_fisik, $tfu, $tbj, $his, $kontraksi, $djj, $inspeksi, $vt, $inspekulo, $ultra, $kardio, $lab, $diagnosis, $tata, $konsul;
+    public $tanggal_kandungan, $anamnesis, $hubungan, $keluhan_utama, $rps, $rpo, $rpd, $rpk, $alergi, $keadaan, $kesadaran, $gcs, $td, $tb, $bb, $suhu, $nadi, $rr, $spo, $kepala, $abdomen, $gigi, $genital, $tht, $ekstremitas, $thoraks, $kulit, $ket_fisik, $tfu, $tbj, $his, $kontraksi, $djj, $inspeksi, $vt, $inspekulo, $rt, $ultra, $kardio, $lab, $diagnosis, $tata, $konsul;
     protected $listeners = ['hapusMedisRalanKandungan' => 'hapus'];
 
     public function mount()
@@ -91,6 +91,7 @@ class FormKandungan extends Component
                 $this->inspeksi = $data->inspeksi;
                 $this->vt = $data->vt;
                 $this->inspekulo = $data->inspekulo;
+                $this->rt = $data->rt;
                 $this->ultra = $data->ultra;
                 $this->kardio = $data->kardio;
                 $this->lab = $data->lab;
@@ -147,6 +148,7 @@ class FormKandungan extends Component
             'inspeksi' => $this->inspeksi ?? '',
             'vt' => $this->vt ?? '',
             'inspekulo' => $this->inspekulo ?? '',
+            'rt' => $this->rt ?? '',
             'ultra' => $this->ultra ?? '',
             'kardio' => $this->kardio ?? '',
             'lab' => $this->lab ?? '',
