@@ -205,6 +205,7 @@ Route::middleware('loginauth')->group(function () {
     Route::get('template-ekg/{id}', [App\Http\Controllers\MasterEkgController::class, 'getTemplate'])->name('template-ekg.show');
 });
 Route::post('/print-ekg', [App\Http\Controllers\MasterEkgController::class, 'cetakEkg'])->name('print-ekg')->middleware('loginauth');
+Route::get('/view-pdf', [App\Http\Controllers\MasterEkgController::class, 'viewPdf'])->name('view-pdf')->middleware('loginauth');
 
 Route::get('/pegawai', [App\Http\Controllers\API\PemeriksaanController::class, 'getPegawai'])->name('pegawai');
 

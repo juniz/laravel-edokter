@@ -8,6 +8,8 @@ use App\Models\TemplateEKG;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Http;
 
 class MasterEkgController extends Controller
 {
@@ -149,9 +151,56 @@ class MasterEkgController extends Controller
             ['no_rawat'],
             ['kd_dokter', 'dokter_pengirim', 'hasil_bacaan']
         );
-        // $pdf = SnappyPdf::loadView('prints.echo', $data);
-        // return $pdf->inline('ekg.pdf');
-        return view('prints.echo', $data);
+
+        try {
+            // Embed logo as base64 so DomPDF can render it without HTTP requests
+            $logoPath = public_path('img/logo/logo-kop.png');
+            $logoBase64 = '';
+            if (file_exists($logoPath)) {
+                $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+            }
+            $data['logo_base64'] = $logoBase64;
+
+            // Generate PDF using DomPDF
+            $pdf = Pdf::loadView('prints.echo', $data)->setPaper('a4', 'portrait');
+            $pdfBase64 = base64_encode($pdf->output());
+
+            // Format file name
+            $namaFile = 'ECHO_' . str_replace('/', '-', $request->no_rawat) . '_' . date('YmdHis');
+
+            // Upload via HTTP client to webapps server
+            $response = Http::post("https://simrs.rsbhayangkaranganjuk.com/webapps/upload-berkas-edokter.php", [
+                "file" => $pdfBase64,
+                "no_rawat" => $request->no_rawat,
+                "kd_berkas" => 'A14',
+                "nama_file" => $namaFile,
+            ]);
+
+            if (!$response->successful()) {
+                throw new \Exception('Gagal menghubungi server webapps upload.');
+            }
+
+            $resJson = $response->json();
+            if (!$resJson || !isset($resJson['success']) || !$resJson['success']) {
+                $errorMsg = isset($resJson['message']) ? $resJson['message'] : 'Gagal upload berkas di server webapps';
+                throw new \Exception($errorMsg);
+            }
+
+            $filename = $namaFile . '.pdf';
+            $pdfUrl = 'https://simrs.rsbhayangkaranganjuk.com/webapps/berkasrawat/pages/upload/' . $filename;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Berkas Echo berhasil disimpan',
+                'pdf_url' => $pdfUrl,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses dan menyimpan PDF: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function getTemplate($id)
@@ -169,5 +218,32 @@ class MasterEkgController extends Controller
             'status' => 'success',
             'data' => $template
         ]);
+    }
+
+    public function viewPdf(Request $request)
+    {
+        $url = $request->query('url');
+        if (!$url) {
+            abort(400, 'Parameter url tidak ditemukan.');
+        }
+
+        // Validate the URL is from our trusted domain
+        if (strpos($url, 'https://simrs.rsbhayangkaranganjuk.com') !== 0) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        try {
+            $response = Http::get($url);
+            if (!$response->successful()) {
+                throw new \Exception('Gagal mengambil file PDF.');
+            }
+
+            return response($response->body(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="document.pdf"'
+            ]);
+        } catch (\Exception $e) {
+            abort(500, 'Error: ' . $e->getMessage());
+        }
     }
 }

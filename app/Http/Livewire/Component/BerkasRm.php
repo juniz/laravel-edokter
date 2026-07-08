@@ -97,8 +97,8 @@ class BerkasRm extends Component
             return DB::table('berkas_digital_perawatan')
                 ->join('master_berkas_digital', 'berkas_digital_perawatan.kode', '=', 'master_berkas_digital.kode')
                 ->whereRaw(
-                    "berkas_digital_perawatan.no_rawat IN (SELECT no_rawat FROM reg_periksa WHERE no_rkm_medis = :noRM) AND berkas_digital_perawatan.lokasi_file <> :file AND (berkas_digital_perawatan.kode = :kode OR berkas_digital_perawatan.kode = :lab OR berkas_digital_perawatan.kode = :rad OR berkas_digital_perawatan.kode = :op)",
-                    ['noRM' => $this->rm, 'file' => 'pages/upload/', 'kode' => 'B00', 'lab' => 'A15', 'rad' => 'A16', 'op' => 'A05']
+                    "berkas_digital_perawatan.no_rawat IN (SELECT no_rawat FROM reg_periksa WHERE no_rkm_medis = :noRM) AND berkas_digital_perawatan.lokasi_file <> :file AND (berkas_digital_perawatan.kode = :kode OR berkas_digital_perawatan.kode = :lab OR berkas_digital_perawatan.kode = :rad OR berkas_digital_perawatan.kode = :op OR berkas_digital_perawatan.kode = :echo)",
+                    ['noRM' => $this->rm, 'file' => 'pages/upload/', 'kode' => 'B00', 'lab' => 'A15', 'rad' => 'A16', 'op' => 'A05', 'echo' => 'A14']
                 )
                 ->select(
                     'berkas_digital_perawatan.*',

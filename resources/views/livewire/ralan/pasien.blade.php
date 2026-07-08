@@ -212,37 +212,60 @@
     <!-- The original component included modals. I should probably include them here too to ensure functionality works. -->
     
     <x-adminlte-modal wire:ignore.self id="modalEcho" title="ECHO" size="lg" theme="info" icon="fas fa-file" v-centered static-backdrop scrollable>
-        <form id="form-echo" method="POST" action="{{ url('print-ekg') }}">
-            @csrf
-            <input type="hidden" name="no_rm" value="{{ $data->no_rkm_medis }}" >
-            <input type="hidden" name="no_rawat" value="{{ $data->no_rawat }}" >
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Template Echo</label>
-                        <select name="echo-select" id="echo-select" class="form-control select2" style="width: 100%;">
-                            <option value=""></option>
-                            @foreach($echoTemplates as $item)
-                                <option value="{{$item->id}}">{{$item->nama_template}}</option>
-                            @endforeach
-                        </select>
+        <!-- Form Container -->
+        <div id="echo-form-container">
+            <form id="form-echo" method="POST" action="{{ url('print-ekg') }}">
+                @csrf
+                <input type="hidden" name="no_rm" value="{{ $data->no_rkm_medis }}" >
+                <input type="hidden" name="no_rawat" value="{{ $data->no_rawat }}" >
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Template Echo</label>
+                            <select name="echo-select" id="echo-select" class="form-control select2" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($echoTemplates as $item)
+                                    <option value="{{$item->id}}">{{$item->nama_template}}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Dokter Pengirim</label>
+                            <select name="dokter_pengirim" id="dokter_pengirim" class="form-control select2" style="width: 100%;">
+                                <option value=""></option>
+                                @foreach($dokterList as $item)
+                                    <option value="{{$item->kd_dokter}}">{{$item->nm_dokter}}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Dokter Pengirim</label>
-                        <select name="dokter_pengirim" id="dokter_pengirim" class="form-control select2" style="width: 100%;">
-                            <option value=""></option>
-                            @foreach($dokterList as $item)
-                                <option value="{{$item->kd_dokter}}">{{$item->nm_dokter}}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
+                <textarea name="isi" id="isi-echo" class="form-control summernote" style="height: 300px;"></textarea>
+                <button type="submit" id="btn-echo-submit" class="btn btn-success mt-3">
+                    <span id="echo-submit-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    <span id="echo-submit-text">Cetak & Simpan</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- PDF Preview Container (Initially Hidden) -->
+        <div id="echo-pdf-container" class="d-none">
+            <div class="alert alert-success d-flex align-items-center mb-3">
+                <i class="fas fa-check-circle mr-2"></i> Berkas Echo berhasil disimpan ke Server Berkas Digital!
             </div>
-            <textarea name="isi" id="isi-echo" class="form-control summernote" style="height: 300px;"></textarea>
-            <button type="submit" class="btn btn-success mt-3">Cetak</button>
-        </form>
+            <iframe id="echo-pdf-iframe" src="" style="width: 100%; height: 500px; border: none;"></iframe>
+            <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-secondary" onclick="resetEchoModal()">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Form
+                </button>
+                <button type="button" class="btn btn-info" onclick="printIframePDF()">
+                    <i class="fas fa-print"></i> Cetak PDF
+                </button>
+            </div>
+        </div>
+
         <x-slot name="footerSlot">
             <x-adminlte-button theme="danger" label="Tutup" data-dismiss="modal"/>
         </x-slot>
@@ -586,8 +609,93 @@
                 }
             });
         });
+
+        // Intercept form-echo submission
+        $('#form-echo').on('submit', function(e) {
+            e.preventDefault();
+            
+            var form = $(this);
+            var submitBtn = $('#btn-echo-submit');
+            var spinner = $('#echo-submit-spinner');
+            var btnText = $('#echo-submit-text');
+            
+            // Set loading state
+            submitBtn.prop('disabled', true);
+            spinner.removeClass('d-none');
+            btnText.text('Menyimpan & Menggenerate PDF...');
+            
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    // Reset loading state
+                    submitBtn.prop('disabled', false);
+                    spinner.addClass('d-none');
+                    btnText.text('Cetak & Simpan');
+                    
+                    if (response.success && response.pdf_url) {
+                        // Hide form, show iframe container
+                        $('#echo-form-container').addClass('d-none');
+                        var proxyUrl = '{{ url("/view-pdf") }}?url=' + encodeURIComponent(response.pdf_url);
+                        $('#echo-pdf-iframe').attr('src', proxyUrl);
+                        $('#echo-pdf-container').removeClass('d-none');
+                        
+                        // SweetAlert success
+                        Swal.fire({
+                            title: 'Sukses',
+                            text: 'Berkas Echo berhasil disimpan ke server berkas digital.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Gagal',
+                            text: response.message || 'Terjadi kesalahan saat menyimpan berkas.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    // Reset loading state
+                    submitBtn.prop('disabled', false);
+                    spinner.addClass('d-none');
+                    btnText.text('Cetak & Simpan');
+                    
+                    let errorMessage = 'Gagal menyimpan dan memproses berkas Echo.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: errorMessage,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        });
+
+        // Reset modal state when closed
+        $('#modalEcho').on('hidden.bs.modal', function () {
+            resetEchoModal();
+        });
     });
 
+    window.resetEchoModal = function() {
+        $('#echo-pdf-container').addClass('d-none');
+        $('#echo-pdf-iframe').attr('src', '');
+        $('#echo-form-container').removeClass('d-none');
+    };
+
+    window.printIframePDF = function() {
+        var iframe = document.getElementById('echo-pdf-iframe');
+        if (iframe) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    };
 </script>
 @endpush
 
