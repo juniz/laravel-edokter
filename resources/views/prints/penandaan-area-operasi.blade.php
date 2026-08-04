@@ -42,11 +42,11 @@
         }
 
         .kop-left {
-            display: flex;
-            flex-direction: row;
+            display: inline-flex;
+            flex-direction: column;
             align-items: center;
-            text-align: left;
-            gap: 10px;
+            text-align: center;
+            gap: 4px;
         }
 
         .hospital-logo {
@@ -54,14 +54,13 @@
             max-height: 55px;
             height: auto;
             display: block;
-            flex-shrink: 0;
         }
 
         .kop-text {
             font-size: 10px;
             font-weight: bold;
             line-height: 1.25;
-            text-align: left;
+            text-align: center;
         }
 
         .kop-text .hospital-name {
