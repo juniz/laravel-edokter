@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -17,7 +18,12 @@ class PenandaanAreaOperasiTest extends TestCase
 
         $this->assertContains('gambar_penandaan_base64', $columns);
         $this->assertContains('nama_operator', $columns);
-        $this->assertTrue(collect(Schema::getIndexes('penandaan_area_operasi'))
-            ->contains(fn (array $index) => $index['unique'] && $index['columns'] === ['no_rawat']));
+        $indexes = DB::select(
+            'SHOW INDEX FROM `penandaan_area_operasi` WHERE Key_name = ?',
+            ['penandaan_area_operasi_no_rawat_unique']
+        );
+
+        $this->assertNotEmpty($indexes);
+        $this->assertSame(0, (int) $indexes[0]->Non_unique);
     }
 }
