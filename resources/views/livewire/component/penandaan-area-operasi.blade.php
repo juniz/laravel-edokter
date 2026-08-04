@@ -272,9 +272,10 @@
     (function () {
         'use strict';
 
+        var isMale = @json($jenisKelamin === 'L');
         var diagrams = [
-            { key: 'body_front', label: 'Badan depan', asset: '/img/penandaan-area-operasi/body-front.svg' },
-            { key: 'body_back', label: 'Badan belakang', asset: '/img/penandaan-area-operasi/body-back.svg' },
+            { key: 'body_front', label: 'Badan depan', asset: isMale ? '/img/penandaan-area-operasi/body-front-male.svg' : '/img/penandaan-area-operasi/body-front.svg' },
+            { key: 'body_back', label: 'Badan belakang', asset: isMale ? '/img/penandaan-area-operasi/body-back-male.svg' : '/img/penandaan-area-operasi/body-back.svg' },
             { key: 'head_left_profile', label: 'Kepala profil kiri', asset: '/img/penandaan-area-operasi/head-left-profile.svg' },
             { key: 'head_right_profile', label: 'Kepala profil kanan', asset: '/img/penandaan-area-operasi/head-right-profile.svg' },
             { key: 'head_front', label: 'Kepala depan', asset: '/img/penandaan-area-operasi/head-front.svg' },

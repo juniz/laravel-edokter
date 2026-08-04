@@ -16,6 +16,7 @@ class PenandaanAreaOperasi extends Component
 
     public $noRawat;
     public $noRm;
+    public $jenisKelamin = 'P';
     public $prosedurOperasi = '';
     public $gambarPenandaanBase64 = [];
 
@@ -23,6 +24,16 @@ class PenandaanAreaOperasi extends Component
     {
         $this->noRawat = $noRawat;
         $this->noRm = $noRm;
+
+        $pasien = DB::table('reg_periksa')
+            ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+            ->where('reg_periksa.no_rawat', $this->noRawat)
+            ->select('pasien.jk')
+            ->first();
+
+        if ($pasien && in_array($pasien->jk, ['L', 'P'], true)) {
+            $this->jenisKelamin = $pasien->jk;
+        }
 
         $savedMarking = DB::table('penandaan_area_operasi')
             ->where('no_rawat', $this->noRawat)
