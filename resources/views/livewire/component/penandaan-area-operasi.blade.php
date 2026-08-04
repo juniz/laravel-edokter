@@ -76,7 +76,7 @@
     <div class="penandaan-actions">
         <button type="button" id="simpan-penandaan" class="btn btn-primary" disabled>
             <i class="fas fa-save mr-1" aria-hidden="true"></i>
-            Simpan
+            <span class="penandaan-btn-label">Simpan</span>
         </button>
     </div>
 </div>
@@ -598,9 +598,49 @@
         });
 
         saveButton.addEventListener('click', function () {
+            if (saveButton.disabled && saveButton.dataset.saving === 'true') {
+                return;
+            }
+
+            var icon = saveButton.querySelector('.fas');
+            var label = saveButton.querySelector('.penandaan-btn-label') || saveButton.querySelector('span');
+            var originalIconClass = icon ? icon.className : 'fas fa-save mr-1';
+            var originalText = label ? label.textContent : 'Simpan';
+
+            saveButton.disabled = true;
+            saveButton.dataset.saving = 'true';
+
+            if (icon) {
+                icon.className = 'fas fa-spinner fa-spin mr-1';
+            }
+            if (label) {
+                label.textContent = 'Menyimpan...';
+            }
+
+            function restoreButton() {
+                saveButton.disabled = false;
+                delete saveButton.dataset.saving;
+                if (icon) {
+                    icon.className = originalIconClass;
+                }
+                if (label) {
+                    label.textContent = originalText;
+                }
+            }
+
             var images = window.PenandaanAreaOperasi.exportImages();
             @this.set('gambarPenandaanBase64', images, false);
-            @this.call('simpan');
+
+            if (typeof @this.call === 'function') {
+                var callResult = @this.call('simpan');
+                if (callResult && typeof callResult.then === 'function') {
+                    callResult.then(restoreButton).catch(restoreButton);
+                } else {
+                    setTimeout(restoreButton, 1500);
+                }
+            } else {
+                setTimeout(restoreButton, 1500);
+            }
         });
 
         diagrams.forEach(initializeCanvas);

@@ -3,10 +3,13 @@
 namespace App\Http\Livewire\Component;
 
 use Illuminate\Support\Facades\DB;
+use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Livewire\Component;
 
 class PenandaanAreaOperasi extends Component
 {
+    use LivewireAlert;
+
     private const DIAGRAM_KEYS = [
         'body_front', 'body_back', 'head_left_profile', 'head_right_profile',
         'head_front', 'head_back', 'hand_left_palm', 'hand_right_palm',
@@ -72,29 +75,36 @@ class PenandaanAreaOperasi extends Component
         $operatorId = session('username');
         if (! is_string($operatorId) || trim($operatorId) === '') {
             $this->addError('operator', 'An authenticated operator is required.');
+            $this->alert('error', 'Operator tidak terotentikasi. Silakan login kembali.');
 
             return;
         }
 
-        $visit = DB::table('reg_periksa')
-            ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-            ->where('reg_periksa.no_rawat', $this->noRawat)
-            ->select('reg_periksa.no_rkm_medis', 'pasien.nm_pasien', 'pasien.tgl_lahir')
-            ->first();
-        $dokter = DB::table('dokter')->where('kd_dokter', $operatorId)->first();
-        $namaPasien = $visit->nm_pasien ?? '';
-        $tglLahir = $visit->tgl_lahir ?? null;
-        $namaOperator = $dokter->nm_dokter ?? $operatorId;
-        $noRm = $visit->no_rkm_medis ?? $this->noRm;
+        try {
+            $visit = DB::table('reg_periksa')
+                ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+                ->where('reg_periksa.no_rawat', $this->noRawat)
+                ->select('reg_periksa.no_rkm_medis', 'pasien.nm_pasien', 'pasien.tgl_lahir')
+                ->first();
+            $dokter = DB::table('dokter')->where('kd_dokter', $operatorId)->first();
+            $namaPasien = $visit->nm_pasien ?? '';
+            $tglLahir = $visit->tgl_lahir ?? null;
+            $namaOperator = $dokter->nm_dokter ?? $operatorId;
+            $noRm = $visit->no_rkm_medis ?? $this->noRm;
 
-        DB::table('penandaan_area_operasi')->updateOrInsert(
-            ['no_rawat' => $this->noRawat],
-            ['no_rm' => $noRm, 'nama_pasien' => $namaPasien, 'tgl_lahir' => $tglLahir,
-             'prosedur_operasi' => $this->prosedurOperasi, 'operator_id' => $operatorId,
-             'nama_operator' => $namaOperator, 'tanggal_penandaan' => now(),
-             'gambar_penandaan_base64' => json_encode($this->gambarPenandaanBase64, JSON_THROW_ON_ERROR),
-             'format_gambar' => 'image/png', 'updated_at' => now(), 'created_at' => now()]
-        );
+            DB::table('penandaan_area_operasi')->updateOrInsert(
+                ['no_rawat' => $this->noRawat],
+                ['no_rm' => $noRm, 'nama_pasien' => $namaPasien, 'tgl_lahir' => $tglLahir,
+                 'prosedur_operasi' => $this->prosedurOperasi, 'operator_id' => $operatorId,
+                 'nama_operator' => $namaOperator, 'tanggal_penandaan' => now(),
+                 'gambar_penandaan_base64' => json_encode($this->gambarPenandaanBase64, JSON_THROW_ON_ERROR),
+                 'format_gambar' => 'image/png', 'updated_at' => now(), 'created_at' => now()]
+            );
+
+            $this->alert('success', 'Penandaan area operasi berhasil disimpan');
+        } catch (\Throwable $e) {
+            $this->alert('error', 'Gagal menyimpan penandaan area operasi: ' . $e->getMessage());
+        }
     }
 
     public function render()
@@ -102,3 +112,4 @@ class PenandaanAreaOperasi extends Component
         return view('livewire.component.penandaan-area-operasi');
     }
 }
+
