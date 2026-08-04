@@ -68,13 +68,13 @@
                                     <tr>
                                         <td colspan="2"><b>Subjek</b></td>
                                         <td colspan="8">
-                                            <pre>{{ $pemeriksaan->keluhan ?? '' }}</pre>
+                                            <pre style="white-space: pre-wrap; word-break: break-word; margin: 0; font-family: inherit;">{{ $pemeriksaan->keluhan ?? '' }}</pre>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td colspan="2"><b>Objek</b></td>
                                         <td colspan="8">
-                                            <pre>{{ $pemeriksaan->pemeriksaan ?? '' }}</pre>
+                                            <pre style="white-space: pre-wrap; word-break: break-word; margin: 0; font-family: inherit;">{{ $pemeriksaan->pemeriksaan ?? '' }}</pre>
                                         </td>
                                     </tr>
                                     <tr>
