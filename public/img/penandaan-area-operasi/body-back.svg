@@ -1,18 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="600" height="1200" viewBox="0 0 600 1200">
-  <!-- Background -->
+  <!-- Background Canvas -->
   <rect width="600" height="1200" fill="#ffffff"/>
 
-  <!-- Body Fill and Main Contour -->
+  <!-- Main Outer Body Contour (Stroke Width 5) -->
   <g fill="#ffffff" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Head Outline (Posterior View) -->
+    <!-- Clean Posterior Head Outline (No Facial Features/Hair) -->
     <path d="M 230 110 C 230 50 260 30 300 30 C 340 30 370 50 370 110 C 370 160 345 180 300 180 C 255 180 230 160 230 110 Z"/>
 
-    <!-- Left Ear -->
+    <!-- Ears -->
     <path d="M 230 95 C 218 95 218 125 230 130"/>
-    <!-- Right Ear -->
     <path d="M 370 95 C 382 95 382 125 370 130"/>
 
-    <!-- Torso, Arms, Hands, Legs, Feet Main Body Path -->
+    <!-- Full Body Outer Silhouette (Posterior View) -->
     <path d="M 260 178 
              C 255 200 245 220 215 235 
              C 185 250 160 300 145 370 
@@ -90,35 +89,42 @@
              Z"/>
   </g>
 
-  <!-- Posterior Internal Landmark Features -->
-  <g fill="none" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Nape of Neck / Head Contour -->
+  <!-- Fine Interior Region Landmarks (Stroke Width 2.5) -->
+  <g fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Nape of Neck / Nuchal Line -->
     <path d="M 270 145 Q 300 155 330 145"/>
     <path d="M 265 185 L 260 215"/>
     <path d="M 335 185 L 340 215"/>
 
-    <!-- Spine Line -->
+    <!-- Spine Line (Vertebral Column) -->
     <path d="M 300 210 L 300 580"/>
 
-    <!-- Shoulder Blades (Scapulae) -->
-    <path d="M 255 260 Q 235 285 250 320"/>
-    <path d="M 345 260 Q 365 285 350 320"/>
+    <!-- Scapulae (Shoulder Blades) -->
+    <path d="M 255 260 Q 235 285 250 330 Q 275 320 280 280"/>
+    <path d="M 345 260 Q 365 285 350 330 Q 325 320 320 280"/>
 
-    <!-- Elbow Crease Lines (Back of elbows) -->
-    <path d="M 145 435 Q 160 440 172 445"/>
-    <path d="M 455 435 Q 440 440 428 445"/>
+    <!-- Lumbar Curve / Waist Back Guides -->
+    <path d="M 230 460 Q 260 480 300 480 Q 340 480 370 460"/>
 
-    <!-- Gluteal Fold / Buttocks Curves -->
+    <!-- Gluteal Fold & Buttocks Cleft -->
     <path d="M 225 560 Q 255 635 300 635"/>
     <path d="M 375 560 Q 345 635 300 635"/>
     <path d="M 300 580 L 300 645"/>
 
-    <!-- Popliteal Knee Creases (Back of knees) -->
+    <!-- Elbow Crease Lines (Posterior view) -->
+    <path d="M 145 435 Q 160 440 172 445"/>
+    <path d="M 455 435 Q 440 440 428 445"/>
+
+    <!-- Popliteal Knee Creases (Posterior Knee) -->
     <path d="M 225 780 Q 250 788 275 780"/>
     <path d="M 375 780 Q 350 788 325 780"/>
 
-    <!-- Heel / Achilles Tendon Lines -->
-    <path d="M 230 1010 L 230 1080"/>
-    <path d="M 370 1010 L 370 1080"/>
+    <!-- Calf Muscle Outlines -->
+    <path d="M 222 840 Q 240 870 236 920"/>
+    <path d="M 378 840 Q 360 870 364 920"/>
+
+    <!-- Heel & Achilles Tendon Lines -->
+    <path d="M 230 990 L 230 1080"/>
+    <path d="M 370 990 L 370 1080"/>
   </g>
 </svg>

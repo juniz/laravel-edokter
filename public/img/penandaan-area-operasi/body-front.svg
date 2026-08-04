@@ -1,18 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="600" height="1200" viewBox="0 0 600 1200">
-  <!-- Background -->
+  <!-- Background Canvas -->
   <rect width="600" height="1200" fill="#ffffff"/>
 
-  <!-- Body Fill and Main Contour -->
+  <!-- Main Outer Body Contour (Stroke Width 5) -->
   <g fill="#ffffff" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Head Outline -->
+    <!-- Clean Head Outline (No Facial Features) -->
     <path d="M 230 110 C 230 50 260 30 300 30 C 340 30 370 50 370 110 C 370 160 345 180 300 180 C 255 180 230 160 230 110 Z"/>
 
-    <!-- Left Ear -->
+    <!-- Ears -->
     <path d="M 230 95 C 218 95 218 125 230 130"/>
-    <!-- Right Ear -->
     <path d="M 370 95 C 382 95 382 125 370 130"/>
 
-    <!-- Torso, Arms, Hands, Legs, Feet Main Body Path -->
+    <!-- Full Body Outer Silhouette (Neck, Shoulders, Torso, Arms, Hands, Legs, Feet) -->
     <path d="M 260 178 
              C 255 200 245 220 215 235 
              C 185 250 160 300 145 370 
@@ -90,48 +89,54 @@
              Z"/>
   </g>
 
-  <!-- Facial Features and Internal Details -->
-  <g fill="none" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Eyebrows -->
-    <path d="M 258 82 Q 270 76 282 82"/>
-    <path d="M 318 82 Q 330 76 342 82"/>
-
-    <!-- Eyes (Filled pupils) -->
-    <ellipse cx="270" cy="96" rx="7" ry="5" fill="#ffffff"/>
-    <circle cx="270" cy="96" r="3" fill="#000000" stroke="none"/>
-    <ellipse cx="330" cy="96" rx="7" ry="5" fill="#ffffff"/>
-    <circle cx="330" cy="96" r="3" fill="#000000" stroke="none"/>
-
-    <!-- Nose dot -->
-    <circle cx="300" cy="116" r="3" fill="#000000" stroke="none"/>
-
-    <!-- Mouth line -->
-    <path d="M 286 142 Q 300 148 314 142"/>
-
-    <!-- Neck tendon lines -->
-    <path d="M 275 185 L 265 220"/>
-    <path d="M 325 185 L 335 220"/>
+  <!-- Fine Interior Region Landmarks (Stroke Width 2.5) -->
+  <g fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Neck Lines -->
+    <path d="M 275 180 L 268 220"/>
+    <path d="M 325 180 L 332 220"/>
 
     <!-- Clavicles (Collarbones) -->
     <path d="M 300 225 Q 260 220 230 232"/>
     <path d="M 300 225 Q 340 220 370 232"/>
 
+    <!-- Sternum Line -->
+    <path d="M 300 225 L 300 370"/>
+
     <!-- Breasts (Female Chest Outline) -->
-    <path d="M 222 300 C 210 355 265 385 292 345"/>
-    <path d="M 378 300 C 390 355 335 385 308 345"/>
+    <path d="M 222 295 C 210 355 265 385 292 345"/>
+    <path d="M 378 295 C 390 355 335 385 308 345"/>
 
-    <!-- Nipples -->
-    <circle cx="250" cy="345" r="4" fill="#000000" stroke="none"/>
-    <circle cx="350" cy="345" r="4" fill="#000000" stroke="none"/>
+    <!-- Subcostal Margin -->
+    <path d="M 235 390 Q 270 375 300 380 Q 330 375 365 390"/>
 
-    <!-- Umbilicus (Navel dot) -->
-    <circle cx="300" cy="490" r="4" fill="#000000" stroke="none"/>
+    <!-- Abdominal Region Guidelines (9-Region Status Lokalis Mapping) -->
+    <path d="M 245 440 L 355 440"/>
+    <path d="M 240 510 L 360 510"/>
+    <path d="M 270 410 L 270 540"/>
+    <path d="M 330 410 L 330 540"/>
 
-    <!-- Groin / Pubic V-Line -->
-    <path d="M 265 580 L 300 625 L 335 580"/>
+    <!-- Umbilicus (Navel) -->
+    <circle cx="300" cy="485" r="4" fill="#000000" stroke="none"/>
+
+    <!-- Iliac Crests -->
+    <path d="M 230 490 Q 242 505 250 530"/>
+    <path d="M 370 490 Q 358 505 350 530"/>
+
+    <!-- Groin / Inguinal Crease -->
+    <path d="M 245 540 C 270 575 290 605 300 620 C 310 605 330 575 355 540"/>
 
     <!-- Knees (Patellas) -->
-    <ellipse cx="250" cy="780" rx="12" ry="16"/>
-    <ellipse cx="350" cy="780" rx="12" ry="16"/>
+    <ellipse cx="250" cy="780" rx="14" ry="18"/>
+    <ellipse cx="350" cy="780" rx="14" ry="18"/>
+
+    <!-- Shins / Tibial Lines -->
+    <path d="M 248 810 L 244 940"/>
+    <path d="M 352 810 L 356 940"/>
+
+    <!-- Ankles & Feet Landmarks (Malleolus) -->
+    <path d="M 220 1050 Q 215 1065 208 1075"/>
+    <path d="M 270 1050 Q 275 1065 280 1075"/>
+    <path d="M 380 1050 Q 385 1065 392 1075"/>
+    <path d="M 330 1050 Q 325 1065 320 1075"/>
   </g>
 </svg>
