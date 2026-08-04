@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Http\Livewire\Component\PenandaanAreaOperasi;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
@@ -11,47 +10,85 @@ use Tests\TestCase;
 
 class PenandaanAreaOperasiTest extends TestCase
 {
-    use RefreshDatabase;
+    private $createdFixtureTables = [];
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        if (! Schema::hasTable('pasien')) {
-            Schema::create('pasien', function ($table) {
-                $table->string('no_rkm_medis')->primary();
-                $table->string('nm_pasien');
-                $table->date('tgl_lahir')->nullable();
-            });
-        }
+        $this->requireTestingEnvironment();
 
-        if (! Schema::hasTable('reg_periksa')) {
-            Schema::create('reg_periksa', function ($table) {
-                $table->string('no_rawat')->primary();
-                $table->string('no_rkm_medis');
-            });
-        }
+        $this->createFixtureTable('dokter', function ($table) {
+            $table->string('kd_dokter')->primary();
+            $table->string('nm_dokter');
+        });
+        $this->createFixtureTable('pasien', function ($table) {
+            $table->string('no_rkm_medis')->primary();
+            $table->string('nm_pasien');
+            $table->date('tgl_lahir')->nullable();
+        });
+        $this->createFixtureTable('reg_periksa', function ($table) {
+            $table->string('no_rawat')->primary();
+            $table->string('no_rkm_medis');
+        });
+        $this->createFixtureTable('penandaan_area_operasi', function ($table) {
+            $table->id();
+            $table->string('no_rawat')->unique();
+            $table->string('no_rm');
+            $table->string('nama_pasien');
+            $table->date('tgl_lahir')->nullable();
+            $table->text('prosedur_operasi');
+            $table->string('operator_id')->nullable();
+            $table->string('nama_operator');
+            $table->dateTime('tanggal_penandaan');
+            $table->longText('gambar_penandaan_base64');
+            $table->string('format_gambar')->default('image/png');
+            $table->timestamps();
+        });
 
-        if (! Schema::hasTable('dokter')) {
-            Schema::create('dokter', function ($table) {
-                $table->string('kd_dokter')->primary();
-                $table->string('nm_dokter');
-            });
-        }
-
-        DB::table('pasien')->upsert([
+        DB::table('pasien')->insert([
             ['no_rkm_medis' => '000001', 'nm_pasien' => 'Patient One', 'tgl_lahir' => '1990-01-02'],
             ['no_rkm_medis' => '000002', 'nm_pasien' => 'Patient Two', 'tgl_lahir' => '1991-02-03'],
-        ], ['no_rkm_medis'], ['nm_pasien', 'tgl_lahir']);
-        DB::table('reg_periksa')->upsert([
+        ]);
+        DB::table('reg_periksa')->insert([
             ['no_rawat' => '2026/08/04/000001', 'no_rkm_medis' => '000001'],
             ['no_rawat' => '2026/08/04/000002', 'no_rkm_medis' => '000002'],
-        ], ['no_rawat'], ['no_rkm_medis']);
-        DB::table('dokter')->upsert([
+        ]);
+        DB::table('dokter')->insert([
             'kd_dokter' => 'D001', 'nm_dokter' => 'Dr. Operator',
-        ], ['kd_dokter'], ['nm_dokter']);
+        ]);
 
         session(['username' => 'D001']);
+    }
+
+    protected function tearDown(): void
+    {
+        try {
+            $this->requireTestingEnvironment();
+
+            foreach (array_reverse($this->createdFixtureTables) as $table) {
+                Schema::dropIfExists($table);
+            }
+        } finally {
+            parent::tearDown();
+        }
+    }
+
+    private function requireTestingEnvironment(): void
+    {
+        if (! app()->environment('testing')) {
+            throw new \LogicException('PenandaanAreaOperasiTest fixtures may only run in the testing environment.');
+        }
+    }
+
+    private function createFixtureTable(string $table, \Closure $definition): void
+    {
+        if (Schema::hasTable($table)) {
+            throw new \LogicException("Test fixture table [{$table}] already exists.");
+        }
+
+        Schema::create($table, $definition);
+        $this->createdFixtureTables[] = $table;
     }
 
     public function test_penandaan_table_has_required_columns_and_unique_visit(): void
