@@ -304,7 +304,10 @@
         var activeIndex = 0;
         var nextPinNumber = 1;
         var readyCount = 0;
-        var pendingSavedImages = null;
+        var initialSavedImages = @json($savedGambarPenandaanBase64);
+        var pendingSavedImages = (initialSavedImages && typeof initialSavedImages === 'object' && Object.keys(initialSavedImages).length > 0)
+            ? initialSavedImages
+            : null;
 
         function setStatus(key, message, isError) {
             var status = root.querySelector('[data-status-for="' + key + '"]');

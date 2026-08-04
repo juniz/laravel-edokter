@@ -22,6 +22,7 @@ class PenandaanAreaOperasi extends Component
     public $jenisKelamin = 'P';
     public $prosedurOperasi = '';
     public $gambarPenandaanBase64 = [];
+    public $savedGambarPenandaanBase64 = [];
 
     public function mount(string $noRawat, string $noRm): void
     {
@@ -44,9 +45,10 @@ class PenandaanAreaOperasi extends Component
 
         if ($savedMarking) {
             $this->prosedurOperasi = $savedMarking->prosedur_operasi;
+            $this->savedGambarPenandaanBase64 = json_decode($savedMarking->gambar_penandaan_base64, true, 512, JSON_THROW_ON_ERROR) ?? [];
             $this->emit(
                 'loadPenandaanCanvases',
-                json_decode($savedMarking->gambar_penandaan_base64, true, 512, JSON_THROW_ON_ERROR)
+                $this->savedGambarPenandaanBase64
             );
         }
     }
@@ -101,6 +103,7 @@ class PenandaanAreaOperasi extends Component
                  'format_gambar' => 'image/png', 'updated_at' => now(), 'created_at' => now()]
             );
 
+            $this->savedGambarPenandaanBase64 = $this->gambarPenandaanBase64;
             $this->alert('success', 'Penandaan area operasi berhasil disimpan');
         } catch (\Throwable $e) {
             $this->alert('error', 'Gagal menyimpan penandaan area operasi: ' . $e->getMessage());
