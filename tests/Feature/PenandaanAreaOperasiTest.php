@@ -225,4 +225,51 @@ class PenandaanAreaOperasiTest extends TestCase
             'noRawat' => '2026/08/04/000001', 'noRm' => '000001',
         ])->assertEmitted('loadPenandaanCanvases', $firstPayload);
     }
+
+    public function test_print_endpoint_displays_the_saved_marking(): void
+    {
+        $image = 'data:image/png;base64,' . base64_encode('front');
+
+        DB::table('penandaan_area_operasi')->insert([
+            'no_rawat' => '2026/08/04/000001',
+            'no_rm' => '000001',
+            'nama_pasien' => 'Patient One',
+            'tgl_lahir' => '1990-01-02',
+            'prosedur_operasi' => 'Appendectomy',
+            'operator_id' => 'D001',
+            'nama_operator' => 'Dr. Operator',
+            'tanggal_penandaan' => '2026-08-04 10:30:00',
+            'gambar_penandaan_base64' => json_encode(['body_front' => $image]),
+            'format_gambar' => 'image/png',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withSession(['username' => 'D001', 'password' => 'secret'])
+            ->get(route('penandaan-area-operasi.cetak', ['no_rawat' => '2026/08/04/000001']))
+            ->assertOk()
+            ->assertSee('FORMULIR PENANDAAN AREA OPERASI')
+            ->assertSee('Patient One')
+            ->assertSee('Appendectomy')
+            ->assertSee('Dr. Operator')
+            ->assertSee('data:image/png;base64,', false);
+    }
+
+    public function test_examination_views_mount_the_marking_component_with_the_current_visit(): void
+    {
+        $noRawat = '2026/08/04/000001';
+        $noRm = '000001';
+
+        $this->app['request']->query->replace([
+            'no_rawat' => $noRawat,
+            'no_rm' => $noRm,
+        ]);
+
+        foreach (['ralan.pemeriksaan-ralan', 'ranap.pemeriksaan-ranap'] as $view) {
+            $this->view($view)
+                ->assertSeeLivewire('component.penandaan-area-operasi')
+                ->assertSee(str_replace('/', '\\/', $noRawat), false)
+                ->assertSee($noRm);
+        }
+    }
 }

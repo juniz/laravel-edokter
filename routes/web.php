@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PenandaanAreaOperasiController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -214,6 +215,10 @@ Route::get('/offline', function () {
 });
 
 Route::get('/echo-ar', fn() => view('prints.echo-ar'))->name('echo-ar');
+
+Route::get('/penandaan-area-operasi/cetak', [PenandaanAreaOperasiController::class, 'cetak'])
+    ->middleware('loginauth')
+    ->name('penandaan-area-operasi.cetak');
 
 Route::get('/persetujuan-penolakan-tindakan', [
     App\Http\Controllers\PersetujuanPenolakanTindakan::class,
