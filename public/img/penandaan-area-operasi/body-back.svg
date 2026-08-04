@@ -4,7 +4,7 @@
 
   <!-- Main Outer Body Contour (Stroke Width 5) -->
   <g fill="#ffffff" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Clean Posterior Head Outline (No Facial Features) -->
+    <!-- Clean Posterior Head Outline -->
     <path d="M 240 120 C 240 60 265 40 300 40 C 335 40 360 60 360 120 C 360 170 340 200 300 200 C 260 200 240 170 240 120 Z"/>
 
     <!-- Ears -->
@@ -70,10 +70,10 @@
              Z"/>
   </g>
 
-  <!-- Fine Interior Region Landmarks (Stroke Width 2.5) -->
-  <g fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Posterior Interior Region Landmarks (Stroke Width 5) -->
+  <g fill="none" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
     <!-- Nape of Neck / Nuchal Line -->
-    <path d="M 270 160 Q 300 170 330 160"/>
+    <path d="M 270 165 Q 300 175 330 165"/>
     <path d="M 275 200 L 268 240"/>
     <path d="M 325 200 L 332 240"/>
 

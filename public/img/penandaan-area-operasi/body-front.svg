@@ -4,7 +4,7 @@
 
   <!-- Main Outer Body Contour (Stroke Width 5) -->
   <g fill="#ffffff" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Clean Head Outline (No Facial Features) -->
+    <!-- Cranial Head Outline -->
     <path d="M 240 120 C 240 60 265 40 300 40 C 335 40 360 60 360 120 C 360 170 340 200 300 200 C 260 200 240 170 240 120 Z"/>
 
     <!-- Ears -->
@@ -78,51 +78,52 @@
              Z"/>
   </g>
 
-  <!-- Fine Interior Region Landmarks (Stroke Width 2.5) -->
-  <g fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Facial Features (Eyebrows, Almond Eyes, Pupils, Nose Dash, Mouth) -->
+  <g fill="none" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Eyebrows -->
+    <path d="M 262 98 Q 275 90 288 98"/>
+    <path d="M 312 98 Q 325 90 338 98"/>
+
+    <!-- Almond Eyes with Pupils -->
+    <path d="M 262 118 Q 275 108 288 118 Q 275 128 262 118 Z" fill="#ffffff"/>
+    <circle cx="275" cy="118" r="4" fill="#000000" stroke="none"/>
+    <path d="M 312 118 Q 325 108 338 118 Q 325 128 312 118 Z" fill="#ffffff"/>
+    <circle cx="325" cy="118" r="4" fill="#000000" stroke="none"/>
+
+    <!-- Nose Dash -->
+    <path d="M 300 132 L 300 148"/>
+
+    <!-- Mouth Line -->
+    <path d="M 282 165 Q 300 173 318 165"/>
+  </g>
+
+  <!-- Interior Body Landmarks (Stroke Width 5) -->
+  <g fill="none" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
     <!-- Neck Lines -->
-    <path d="M 275 200 L 268 240"/>
-    <path d="M 325 200 L 332 240"/>
+    <path d="M 270 195 L 265 235"/>
+    <path d="M 330 195 L 335 235"/>
 
-    <!-- Clavicles (Collarbones) -->
-    <path d="M 300 245 Q 260 240 220 252"/>
-    <path d="M 300 245 Q 340 240 380 252"/>
+    <!-- Suprasternal Neck Dots -->
+    <circle cx="292" cy="235" r="3" fill="#000000" stroke="none"/>
+    <circle cx="308" cy="235" r="3" fill="#000000" stroke="none"/>
 
-    <!-- Sternum Line -->
-    <path d="M 300 245 L 300 380"/>
+    <!-- Breasts (Underbust Curves, Axillary Creases & Nipple Dots) -->
+    <path d="M 220 315 C 210 375 265 405 292 365"/>
+    <path d="M 380 315 C 390 375 335 405 308 365"/>
+    <path d="M 205 300 Q 212 325 218 345"/>
+    <path d="M 395 300 Q 388 325 382 345"/>
+    <circle cx="245" cy="360" r="4" fill="#000000" stroke="none"/>
+    <circle cx="355" cy="360" r="4" fill="#000000" stroke="none"/>
 
-    <!-- Breasts (Female Chest Outline) -->
-    <path d="M 225 315 C 215 375 265 405 292 365"/>
-    <path d="M 375 315 C 385 375 335 405 308 365"/>
-    <circle cx="245" cy="360" r="3" fill="#000000" stroke="none"/>
-    <circle cx="355" cy="360" r="3" fill="#000000" stroke="none"/>
+    <!-- Umbilicus (Navel Dot) -->
+    <circle cx="300" cy="510" r="4" fill="#000000" stroke="none"/>
 
-    <!-- Antecubital Flexure (Elbow Creases) -->
-    <path d="M 125 440 Q 135 443 145 448"/>
-    <path d="M 475 440 Q 465 443 455 448"/>
-
-    <!-- Subcostal Margin -->
-    <path d="M 235 410 Q 270 395 300 400 Q 330 395 365 410"/>
-
-    <!-- Abdominal Region Guidelines (9-Region Status Lokalis Mapping) -->
-    <path d="M 235 450 L 365 450"/>
-    <path d="M 230 530 L 370 530"/>
-    <path d="M 270 410 L 270 560"/>
-    <path d="M 330 410 L 330 560"/>
-
-    <!-- Umbilicus (Navel) -->
-    <circle cx="300" cy="500" r="4" fill="#000000" stroke="none"/>
-
-    <!-- Iliac Crests -->
-    <path d="M 225 500 Q 238 520 245 550"/>
-    <path d="M 375 500 Q 362 520 355 550"/>
-
-    <!-- Groin / Inguinal Crease -->
-    <path d="M 240 550 C 265 585 290 600 300 600 C 310 600 335 585 360 550"/>
+    <!-- V-shaped Groin Crease -->
+    <path d="M 250 600 L 300 645 L 350 600"/>
 
     <!-- Knees (Patellas) -->
-    <ellipse cx="242.5" cy="900" rx="14" ry="18"/>
-    <ellipse cx="357.5" cy="900" rx="14" ry="18"/>
+    <ellipse cx="242.5" cy="900" rx="15" ry="20" fill="none"/>
+    <ellipse cx="357.5" cy="900" rx="15" ry="20" fill="none"/>
 
     <!-- Shins / Tibial Lines -->
     <path d="M 242.5 930 L 240 1040"/>
@@ -135,15 +136,15 @@
     <path d="M 385 1070 Q 388 1080 390 1090"/>
 
     <!-- Toe Separation Lines (Left Foot) -->
-    <path d="M 255 1153 L 257 1140"/>
-    <path d="M 240 1157 L 242 1144"/>
-    <path d="M 227 1154 L 229 1145"/>
-    <path d="M 216 1152 L 217 1146"/>
+    <path d="M 255 1153 L 257 1138"/>
+    <path d="M 240 1157 L 242 1142"/>
+    <path d="M 227 1154 L 229 1143"/>
+    <path d="M 216 1150 L 217 1144"/>
 
     <!-- Toe Separation Lines (Right Foot) -->
-    <path d="M 345 1153 L 343 1140"/>
-    <path d="M 360 1157 L 358 1144"/>
-    <path d="M 373 1154 L 371 1145"/>
-    <path d="M 384 1152 L 383 1146"/>
+    <path d="M 345 1153 L 343 1138"/>
+    <path d="M 360 1157 L 358 1142"/>
+    <path d="M 373 1154 L 371 1143"/>
+    <path d="M 384 1150 L 383 1144"/>
   </g>
 </svg>
