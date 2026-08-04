@@ -84,10 +84,16 @@
                 Reset Semua
             </button>
         </div>
-        <button type="button" id="simpan-penandaan" class="btn btn-primary" disabled>
-            <i class="fas fa-save mr-1" aria-hidden="true"></i>
-            <span class="penandaan-btn-label">Simpan</span>
-        </button>
+        <div class="penandaan-submit-group d-flex align-items-center">
+            <button type="button" id="simpan-penandaan" class="btn btn-primary" disabled>
+                <i class="fas fa-save mr-1" aria-hidden="true"></i>
+                <span class="penandaan-btn-label">Simpan</span>
+            </button>
+            <a href="{{ route('penandaan-area-operasi.cetak', ['no_rawat' => $noRawat]) }}" target="_blank" class="btn btn-info ml-2" id="cetak-penandaan" title="Cetak Formulir Penandaan Area Operasi (A4)">
+                <i class="fas fa-print mr-1" aria-hidden="true"></i>
+                Cetak
+            </a>
+        </div>
     </div>
 </div>
 
@@ -224,9 +230,10 @@
         padding-top: 1rem;
     }
 
-    #simpan-penandaan {
+    #simpan-penandaan,
+    #cetak-penandaan {
         min-height: 44px;
-        min-width: 132px;
+        min-width: 120px;
     }
 
     @media (max-width: 420px) {
