@@ -188,4 +188,24 @@ class SanitizeInputMiddlewareTest extends TestCase
         $response->assertStatus(200)
                  ->assertExactJson($expected);
     }
+
+    /** @test */
+    public function it_preserves_base64_marking_data_in_a_livewire_sync_input_request()
+    {
+        $image = 'data:image/png;base64,a+/b=c==';
+        $payload = [
+            'updates' => [[
+                'type' => 'syncInput',
+                'payload' => [
+                    'name' => 'gambarPenandaanBase64',
+                    'value' => ['body_front' => $image],
+                ],
+            ]],
+        ];
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson('/_test/sanitize-middleware', $payload)
+            ->assertStatus(200)
+            ->assertExactJson($payload);
+    }
 }

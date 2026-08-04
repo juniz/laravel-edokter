@@ -19,6 +19,7 @@ class SanitizeInputMiddleware extends TransformsRequest
         '_token',
         'credential',
         'isi',
+        'gambarPenandaanBase64',
     ];
 
     /**
@@ -40,7 +41,7 @@ class SanitizeInputMiddleware extends TransformsRequest
 
             // Check if this update targets an excepted field (e.g. password)
             // Case 1: syncInput -> updates.0.payload.value
-            if (preg_match('/^updates\.(\d+)\.payload\.value$/', $key, $matches)) {
+            if (preg_match('/^updates\.(\d+)\.payload\.value(?:\.|$)/', $key, $matches)) {
                 $index = $matches[1];
                 $name = request()->input("updates.{$index}.payload.name");
                 if (in_array($name, $this->except, true)) {
