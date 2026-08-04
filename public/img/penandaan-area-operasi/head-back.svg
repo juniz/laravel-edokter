@@ -1,10 +1,55 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="900" viewBox="0 0 800 900">
-  <rect width="800" height="900" fill="#fff"/>
-  <g fill="#fff" stroke="#202830" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M255 138c-46 54-57 147-38 251 21 115 83 215 183 215s162-100 183-215c19-104 8-197-38-251-56-66-234-66-290 0Z"/>
-    <path d="M232 280c-25-18-48 3-43 41 4 35 24 63 52 62M568 280c25-18 48 3 43 41-4 35-24 63-52 62"/>
-    <path d="M259 197c38-78 244-78 282 0M246 248c35 28 70 42 105 44M554 248c-35 28-70 42-105 44M400 101v384" fill="none" stroke-width="5"/>
-    <path d="M271 501c36-29 78-44 129-44s93 15 129 44M317 576v85l-96 53c-36 21-56 61-61 122M483 576v85l96 53c36 21 56 61 61 122M317 661c18 31 46 47 83 47s65-16 83-47" fill="none"/>
-    <path d="M242 381c10 16 21 24 34 24M558 381c-10 16-21 24-34 24" fill="none" stroke-width="5"/>
+  <rect width="800" height="900" fill="#ffffff"/>
+  
+  <!-- Outer Contour (stroke-width: 6) -->
+  <g fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Head vault, posterior ears, neck, trapezius slope contour -->
+    <path d="M 270 180 C 220 260, 210 360, 225 430 C 235 480, 270 570, 340 610 C 370 627, 430 627, 460 610 C 530 570, 565 480, 575 430 C 590 360, 580 260, 530 180 C 480 100, 320 100, 270 180 Z"/>
+    <!-- Left Posterior Ear Outer Line -->
+    <path d="M 226 330 C 190 340, 185 410, 228 440"/>
+    <!-- Right Posterior Ear Outer Line -->
+    <path d="M 574 330 C 610 340, 615 410, 572 440"/>
+    <!-- Neck & Trapezius Shoulders Contour -->
+    <path d="M 315 595 L 315 660 C 260 690, 190 730, 120 780 L 120 840 L 680 840 L 680 780 C 610 730, 540 690, 485 660 L 485 595"/>
+  </g>
+  
+  <!-- Internal Anatomical Landmarks (stroke-width: 3) -->
+  <g fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Occipital Vault & Parietal contours -->
+    <path d="M 280 220 C 330 160, 470 160, 520 220"/>
+    <path d="M 320 270 C 360 250, 440 250, 480 270"/>
+    <path d="M 350 330 C 380 320, 420 320, 450 330"/>
+
+    <!-- Superior Nuchal Line / Hairline Base -->
+    <path d="M 255 420 C 320 455, 480 455, 545 420"/>
+    <path d="M 315 450 C 360 465, 440 465, 485 450"/>
+
+    <!-- External Occipital Protuberance (EOP) -->
+    <path d="M 385 410 C 395 403, 405 403, 415 410 C 405 417, 395 417, 385 410 Z"/>
+
+    <!-- Posterior Ears details (Concha fold & Mastoid attachment) -->
+    <!-- Left Posterior Ear -->
+    <path d="M 230 350 C 215 365, 215 395, 233 410"/>
+    <path d="M 235 340 L 245 430"/>
+    <!-- Right Posterior Ear -->
+    <path d="M 570 350 C 585 365, 585 395, 567 410"/>
+    <path d="M 565 340 L 555 430"/>
+
+    <!-- Cervical Spine / Midline Neck & C7 Vertebra Prominens -->
+    <path d="M 400 455 L 400 680"/>
+    <!-- C7 bump -->
+    <circle cx="400" cy="675" r="9"/>
+
+    <!-- Trapezius Muscle Lines & Neck musculature -->
+    <!-- Left Trapezius slope line -->
+    <path d="M 325 580 C 275 640, 200 700, 130 760"/>
+    <!-- Right Trapezius slope line -->
+    <path d="M 475 580 C 525 640, 600 700, 670 760"/>
+    <!-- Splenius Capitis / Neck muscle outlines -->
+    <path d="M 340 460 L 325 580"/>
+    <path d="M 460 460 L 475 580"/>
+    <!-- Scapular spine hints at bottom -->
+    <path d="M 310 730 C 240 735, 170 750, 130 770"/>
+    <path d="M 490 730 C 560 735, 630 750, 670 770"/>
   </g>
 </svg>

@@ -1,12 +1,77 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="900" viewBox="0 0 800 900">
-  <rect width="800" height="900" fill="#fff"/>
-  <g transform="translate(800 0) scale(-1 1)" fill="#fff" stroke="#202830" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M531 132c-82-57-207-34-260 45-44 66-49 157-22 232 14 39 4 73-40 116-16 16-11 37 12 42l54 11c23 5 36 23 37 51l2 52-101 46c-42 19-70 59-78 109h514c-8-50-36-90-78-109l-103-47-4-115c57-35 98-99 108-180 13-106 0-225-41-253Z"/>
-    <path d="M287 236c64-69 174-92 255-44M278 333c26-22 61-23 89-3" fill="none"/>
-    <path d="M282 380c22 13 49 13 70-1" fill="none" stroke-width="5"/>
-    <circle cx="320" cy="378" r="8" fill="#202830" stroke="none"/>
-    <path d="M247 415c-9 22-20 41-38 58M210 525c25 4 48-1 66-15M240 569c20 15 45 18 71 8M314 681c35 36 99 42 150-1" fill="none" stroke-width="5"/>
-    <path d="M493 319c31-22 67 2 62 47-4 39-29 69-62 64" fill="none"/>
-    <path d="M498 350c19-12 34 2 29 23-3 13-13 23-27 24" fill="none" stroke-width="5"/>
+  <rect width="800" height="900" fill="#ffffff"/>
+  
+  <!-- Outer Contour (stroke-width: 6) -->
+  <g fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Profile contour facing right: top of head -> forehead -> glabella -> nose -> lips -> chin -> jaw/neck -> chest -> back shoulder -> back neck -> occiput -> top -->
+    <path d="M 380 110 
+             C 480 110, 530 180, 540 270 
+             C 540 280, 545 290, 555 295 
+             C 565 300, 595 370, 600 380 
+             C 605 390, 580 420, 555 425 
+             C 545 427, 555 445, 570 455 
+             C 585 465, 570 485, 560 490 
+             C 550 495, 575 530, 565 565 
+             C 555 600, 490 610, 465 620 
+             L 465 680 
+             C 530 710, 600 740, 680 790 
+             L 680 840 
+             L 120 840 
+             L 120 790 
+             C 190 740, 260 700, 300 650 
+             L 300 580 
+             C 240 520, 200 430, 210 320 
+             C 220 200, 280 110, 380 110 Z"/>
+  </g>
+
+  <!-- Internal Anatomical Landmarks (stroke-width: 3) -->
+  <g fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Forehead / Frontal bone contour -->
+    <path d="M 520 220 C 470 200, 400 190, 350 200"/>
+
+    <!-- Right Eyebrow Profile -->
+    <path d="M 545 285 C 525 275, 490 275, 470 285" stroke-width="4"/>
+
+    <!-- Right Eye Profile -->
+    <!-- Upper & Lower Eyelid V-shape facing right -->
+    <path d="M 535 325 L 495 310 C 485 320, 485 330, 495 340 Z"/>
+    <!-- Pupil / Iris profile arc -->
+    <path d="M 527 318 C 532 325, 532 330, 527 335" fill="#000000"/>
+    <!-- Eyelid fold profile -->
+    <path d="M 530 310 C 510 300, 490 305, 480 312"/>
+
+    <!-- Zygomatic Arch / Cheekbone contour -->
+    <path d="M 515 365 C 470 355, 420 360, 380 375"/>
+
+    <!-- Nose details: Nostril ala & fold -->
+    <path d="M 585 390 C 590 405, 570 420, 555 410 C 545 400, 555 385, 570 385 C 580 385, 585 390, 585 390 Z"/>
+
+    <!-- Lips & Mouth Commissure Line -->
+    <path d="M 560 472 C 540 470, 515 470, 500 475"/>
+    <path d="M 550 457 C 540 460, 530 463, 525 470"/>
+    <path d="M 555 490 C 545 495, 530 495, 520 488"/>
+
+    <!-- Chin / Mental crease -->
+    <path d="M 555 535 C 540 540, 525 535, 515 525"/>
+
+    <!-- Mandible / Jawline Angle -->
+    <!-- Angle of mandible from chin under body to ramus behind ear -->
+    <path d="M 545 570 C 490 585, 390 575, 360 515 L 365 400"/>
+
+    <!-- Right Ear Detailed Profile -->
+    <!-- Outer Helix -->
+    <path d="M 360 330 C 390 330, 390 420, 350 430 C 315 435, 305 400, 310 350 C 315 320, 345 320, 360 330 Z"/>
+    <!-- Antihelix & Tragus & Lobule -->
+    <path d="M 350 345 C 370 355, 370 395, 345 405"/>
+    <path d="M 370 375 C 360 370, 355 380, 360 390"/>
+    <path d="M 345 410 C 335 415, 325 400, 335 380"/>
+
+    <!-- Neck Landmarks -->
+    <!-- Sternocleidomastoid Muscle -->
+    <path d="M 355 430 L 425 680"/>
+    <!-- Posterior Neck Cervical Spine curve -->
+    <path d="M 300 580 C 315 630, 325 680, 330 780"/>
+    <!-- Clavicle profile (anterior chest) -->
+    <path d="M 465 680 C 530 685, 610 715, 670 750"/>
   </g>
 </svg>

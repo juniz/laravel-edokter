@@ -1,13 +1,92 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="900" viewBox="0 0 800 900">
-  <rect width="800" height="900" fill="#fff"/>
-  <g fill="#fff" stroke="#202830" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M255 138c-46 54-57 147-38 251 21 115 83 215 183 215s162-100 183-215c19-104 8-197-38-251-56-66-234-66-290 0Z"/>
-    <path d="M232 280c-25-18-48 3-43 41 4 35 24 63 52 62M568 280c25-18 48 3 43 41-4 35-24 63-52 62"/>
-    <path d="M259 197c38-78 244-78 282 0M274 257c28-20 66-19 94 2M432 259c28-21 66-22 94-2" fill="none"/>
-    <path d="M278 302c26 18 58 18 84 0M438 302c26 18 58 18 84 0" fill="none" stroke-width="5"/>
-    <circle cx="321" cy="303" r="8" fill="#202830" stroke="none"/>
-    <circle cx="479" cy="303" r="8" fill="#202830" stroke="none"/>
-    <path d="M400 302c-8 70-22 118-12 131 7 9 17 9 24 0M329 485c43 24 99 24 142 0M351 510c31 10 67 10 98 0" fill="none" stroke-width="5"/>
-    <path d="M317 576v85l-96 53c-36 21-56 61-61 122M483 576v85l96 53c36 21 56 61 61 122M317 661c18 31 46 47 83 47s65-16 83-47" fill="none"/>
+  <rect width="800" height="900" fill="#ffffff"/>
+  
+  <!-- Outer Contour (stroke-width: 6) -->
+  <g fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Main head, ears, neck & shoulders outer contour -->
+    <path d="M 270 180 C 220 260, 210 360, 225 430 C 235 480, 270 570, 340 610 C 370 627, 430 627, 460 610 C 530 570, 565 480, 575 430 C 590 360, 580 260, 530 180 C 480 100, 320 100, 270 180 Z"/>
+    <!-- Left Ear Outer Curve -->
+    <path d="M 230 330 C 190 330, 185 410, 222 445 C 230 452, 238 450, 240 440"/>
+    <!-- Right Ear Outer Curve -->
+    <path d="M 570 330 C 610 330, 615 410, 578 445 C 570 452, 562 450, 560 440"/>
+    <!-- Neck & Shoulders Contour -->
+    <path d="M 315 595 L 315 670 C 270 700, 200 730, 120 780 L 120 840 L 680 840 L 680 780 C 600 730, 530 700, 485 670 L 485 595"/>
+  </g>
+  
+  <!-- Internal Anatomical Landmarks (stroke-width: 3) -->
+  <g fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Cranial Dome / Forehead / Hairline indication -->
+    <path d="M 275 220 C 320 170, 480 170, 525 220"/>
+    <path d="M 310 240 C 350 220, 450 220, 490 240"/>
+    
+    <!-- Eyebrows -->
+    <!-- Left Eyebrow -->
+    <path d="M 270 300 C 300 280, 345 285, 365 305" stroke-width="4"/>
+    <!-- Right Eyebrow -->
+    <path d="M 435 305 C 455 285, 500 280, 530 300" stroke-width="4"/>
+    
+    <!-- Eyes & Eyelids -->
+    <!-- Left Eye Eyelids -->
+    <path d="M 285 330 C 310 315, 345 315, 365 330"/>
+    <path d="M 285 330 C 310 345, 345 345, 365 330"/>
+    <!-- Left Pupil -->
+    <circle cx="325" cy="330" r="8" fill="#000000" stroke="none"/>
+    <!-- Left Eyelid Fold -->
+    <path d="M 288 322 C 310 310, 342 310, 362 322"/>
+
+    <!-- Right Eye Eyelids -->
+    <path d="M 435 330 C 455 315, 490 315, 515 330"/>
+    <path d="M 435 330 C 455 345, 490 345, 515 330"/>
+    <!-- Right Pupil -->
+    <circle cx="475" cy="330" r="8" fill="#000000" stroke="none"/>
+    <!-- Right Eyelid Fold -->
+    <path d="M 438 322 C 458 310, 490 310, 512 322"/>
+
+    <!-- Nose & Nostrils -->
+    <!-- Nose bridge & tip -->
+    <path d="M 380 305 L 375 400 C 375 425, 385 435, 400 435 C 415 435, 425 425, 425 400 L 420 305"/>
+    <path d="M 385 420 C 370 420, 355 430, 365 442 C 375 448, 390 445, 400 445 C 410 445, 425 448, 435 442 C 445 430, 430 420, 415 420"/>
+    <!-- Nostril holes -->
+    <path d="M 378 438 C 383 434, 392 436, 395 440"/>
+    <path d="M 422 438 C 417 434, 408 436, 405 440"/>
+
+    <!-- Lips & Mouth -->
+    <!-- Philtrum -->
+    <path d="M 393 445 L 391 470"/>
+    <path d="M 407 445 L 409 470"/>
+    <!-- Upper lip -->
+    <path d="M 340 480 C 370 475, 390 468, 400 473 C 410 468, 430 475, 460 480"/>
+    <!-- Mouth line -->
+    <path d="M 335 482 C 370 487, 400 490, 465 482"/>
+    <!-- Lower lip -->
+    <path d="M 355 485 C 375 512, 425 512, 445 485"/>
+
+    <!-- Chin & Mental Protuberance -->
+    <path d="M 360 550 C 380 562, 420 562, 440 550"/>
+
+    <!-- Jawline definition -->
+    <path d="M 245 430 C 260 500, 300 560, 350 595"/>
+    <path d="M 555 430 C 540 500, 500 560, 450 595"/>
+
+    <!-- Ears Details -->
+    <!-- Left Ear Inner Lines -->
+    <path d="M 225 350 C 210 365, 210 400, 228 415"/>
+    <path d="M 233 370 C 223 380, 223 395, 235 400"/>
+    <!-- Right Ear Inner Lines -->
+    <path d="M 575 350 C 590 365, 590 400, 572 415"/>
+    <path d="M 567 370 C 577 380, 577 395, 565 400"/>
+
+    <!-- Neck & Clavicles -->
+    <!-- Sternocleidomastoid muscles -->
+    <path d="M 320 600 L 370 685"/>
+    <path d="M 480 600 L 430 685"/>
+    <!-- Adam's Apple / Laryngeal prominence -->
+    <path d="M 390 625 C 395 620, 405 620, 410 625 L 400 635 Z"/>
+    <!-- Suprasternal Notch & Clavicles -->
+    <path d="M 385 685 C 395 692, 405 692, 415 685"/>
+    <!-- Left Clavicle -->
+    <path d="M 385 688 C 320 680, 230 705, 140 735"/>
+    <!-- Right Clavicle -->
+    <path d="M 415 688 C 480 680, 570 705, 660 735"/>
   </g>
 </svg>
