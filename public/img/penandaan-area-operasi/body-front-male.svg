@@ -4,36 +4,37 @@
 
   <!-- Main Outer Body Contour (Stroke Width 5) -->
   <g fill="#ffffff" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Clean Head Outline (No Facial Features) -->
+    <!-- Cranial Head Outline -->
     <path d="M 240 120 C 240 60 265 40 300 40 C 335 40 360 60 360 120 C 360 170 340 200 300 200 C 260 200 240 170 240 120 Z"/>
 
     <!-- Ears -->
     <path d="M 240 105 C 228 105 228 135 240 140"/>
     <path d="M 360 105 C 372 105 372 135 360 140"/>
 
-    <!-- Male Full Body Outer Silhouette with ~20° Arm Abduction & Anatomical 5-Toe Feet -->
-    <path d="M 265 198
-             C 260 215 220 235 170 250
-             C 148 310 125 370 115 440
-             C 105 500 92 540 85 580
-             C 75 595 62 610 65 622
-             C 68 628 75 626 78 620
-             C 77 645 75 670 77 685
-             C 79 690 83 692 85 688
-             C 86 670 87 682 88 695
-             C 90 700 94 700 96 695
-             C 97 678 98 678 99 690
-             C 100 694 104 694 106 688
-             C 107 675 109 665 111 678
-             C 112 682 116 680 116 675
-             C 114 655 111 615 112 580
-             C 125 540 135 500 140 440
-             C 152 380 185 340 205 325
-             C 205 380 215 460 225 500
-             C 222 530 205 560 195 580
-             C 188 640 195 740 225 900
-             C 228 920 225 940 225 960
-             C 218 990 210 1030 212 1085
+    <!-- Full Male Body Outer Silhouette with Broad Shoulders, 20° Arm Abduction & 5-Toe Feet -->
+    <path d="M 270 198
+             C 265 215 215 230 165 245
+             C 145 305 125 365 105 440
+             C 93 500 83 540 75 580
+             C 65 595 50 610 54 622
+             C 57 628 64 626 67 620
+             C 66 645 64 670 66 685
+             C 68 690 72 692 74 688
+             C 75 670 76 682 77 695
+             C 79 700 83 700 85 695
+             C 86 678 87 678 88 690
+             C 89 694 93 694 95 688
+             C 96 675 98 665 100 678
+             C 101 682 105 680 105 675
+             C 103 655 100 615 96 580
+             C 104 540 116 500 126 440
+             C 140 380 170 340 195 325
+             C 193 380 203 460 205 500
+             C 207 530 195 560 195 580
+             C 188 640 192 740 215 880
+             C 220 900 212 920 215 940
+             C 210 970 205 1020 212 1060
+             C 210 1075 210 1080 212 1085
              C 210 1110 206 1135 206 1148
              C 206 1154 212 1157 215 1152
              C 217 1157 223 1159 226 1154
@@ -52,76 +53,77 @@
              C 377 1157 383 1154 385 1152
              C 394 1157 394 1154 394 1148
              C 394 1135 390 1110 388 1085
-             C 390 1030 382 990 375 960
-             C 375 940 372 920 375 900
-             C 405 740 412 640 405 580
-             C 395 560 378 530 375 500
-             C 385 460 395 380 395 325
-             C 415 340 448 380 460 440
-             C 488 580 486 615 484 675
-             C 484 680 488 682 489 678
-             C 491 665 493 675 494 688
-             C 496 694 500 694 501 690
-             C 502 678 503 678 504 695
-             C 506 700 510 700 512 695
-             C 513 682 514 670 515 688
-             C 517 692 521 690 522 685
-             C 524 670 522 645 521 620
-             C 525 626 532 628 535 622
-             C 538 610 525 595 515 580
-             C 508 540 495 500 485 440
-             C 475 370 452 310 430 250
-             C 380 235 340 215 335 198
+             C 390 1080 390 1075 388 1060
+             C 395 1020 390 970 385 940
+             C 388 920 385 900 390 880
+             C 413 740 412 640 405 580
+             C 405 560 393 530 395 500
+             C 397 460 407 380 405 325
+             C 430 340 460 380 474 440
+             C 484 500 496 540 504 580
+             C 500 615 497 655 495 675
+             C 495 680 499 682 500 678
+             C 502 665 504 675 505 688
+             C 507 694 511 694 512 690
+             C 513 678 514 678 515 695
+             C 517 700 521 700 523 695
+             C 524 682 526 670 526 688
+             C 528 692 532 690 533 685
+             C 536 670 534 645 533 620
+             C 536 626 543 628 546 622
+             C 550 610 535 595 525 580
+             C 517 540 507 500 495 440
+             C 475 365 455 305 435 245
+             C 385 230 335 215 330 198
              Z"/>
   </g>
 
-  <!-- Fine Interior Region Landmarks (Stroke Width 2.5) -->
-  <g fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Facial Features (Eyebrows, Almond Eyes, Pupils, Nose Dash, Mouth) -->
+  <g fill="none" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Eyebrows -->
+    <path d="M 262 98 Q 275 90 288 98"/>
+    <path d="M 312 98 Q 325 90 338 98"/>
+
+    <!-- Almond Eyes with Pupils -->
+    <path d="M 262 118 Q 275 108 288 118 Q 275 128 262 118 Z" fill="#ffffff"/>
+    <circle cx="275" cy="118" r="4" fill="#000000" stroke="none"/>
+    <path d="M 312 118 Q 325 108 338 118 Q 325 128 312 118 Z" fill="#ffffff"/>
+    <circle cx="325" cy="118" r="4" fill="#000000" stroke="none"/>
+
+    <!-- Nose Dash -->
+    <path d="M 300 132 L 300 148"/>
+
+    <!-- Mouth Line -->
+    <path d="M 282 165 Q 300 173 318 165"/>
+  </g>
+
+  <!-- Interior Body Landmarks (Stroke Width 5) -->
+  <g fill="none" stroke="#000000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
     <!-- Neck Lines -->
-    <path d="M 265 198 L 265 240"/>
-    <path d="M 335 198 L 335 240"/>
+    <path d="M 268 195 L 263 235"/>
+    <path d="M 332 195 L 337 235"/>
 
-    <!-- Clavicles (Collarbones) -->
-    <path d="M 300 245 Q 250 240 190 252"/>
-    <path d="M 300 245 Q 350 240 410 252"/>
+    <!-- Suprasternal Neck Dots -->
+    <circle cx="292" cy="235" r="3" fill="#000000" stroke="none"/>
+    <circle cx="308" cy="235" r="3" fill="#000000" stroke="none"/>
 
-    <!-- Sternum Line -->
-    <path d="M 300 245 L 300 370"/>
+    <!-- Male Pectorals & Nipple Dots -->
+    <path d="M 200 300 Q 240 345 292 335"/>
+    <path d="M 400 300 Q 360 345 308 335"/>
+    <path d="M 195 285 Q 205 315 212 335"/>
+    <path d="M 405 285 Q 395 315 388 335"/>
+    <circle cx="240" cy="335" r="4" fill="#000000" stroke="none"/>
+    <circle cx="360" cy="335" r="4" fill="#000000" stroke="none"/>
 
-    <!-- Male Pectoral Chest Outlines -->
-    <path d="M 195 270 C 200 330 255 350 295 330"/>
-    <path d="M 405 270 C 400 330 345 350 305 330"/>
+    <!-- Umbilicus (Navel Dot) -->
+    <circle cx="300" cy="510" r="4" fill="#000000" stroke="none"/>
 
-    <!-- Male Nipples -->
-    <circle cx="240" cy="360" r="3.5" fill="#000000" stroke="none"/>
-    <circle cx="360" cy="360" r="3.5" fill="#000000" stroke="none"/>
-
-    <!-- Antecubital Flexure (Elbow Creases) -->
-    <path d="M 120 440 Q 130 443 140 448"/>
-    <path d="M 480 440 Q 470 443 460 448"/>
-
-    <!-- Subcostal Margin -->
-    <path d="M 230 420 Q 265 395 300 400 Q 335 395 370 420"/>
-
-    <!-- Abdominal Region Guidelines (9-Region Status Lokalis Grid) -->
-    <path d="M 235 440 L 365 440"/>
-    <path d="M 230 520 L 370 520"/>
-    <path d="M 265 400 L 265 540"/>
-    <path d="M 335 400 L 335 540"/>
-
-    <!-- Umbilicus (Navel) -->
-    <circle cx="300" cy="490" r="4" fill="#000000" stroke="none"/>
-
-    <!-- Iliac Crests -->
-    <path d="M 220 490 Q 235 510 245 540"/>
-    <path d="M 380 490 Q 365 510 355 540"/>
-
-    <!-- Groin / Inguinal Crease -->
-    <path d="M 245 540 C 270 575 290 600 300 600 C 310 600 330 575 355 540"/>
+    <!-- V-shaped Groin Crease -->
+    <path d="M 245 600 L 300 645 L 355 600"/>
 
     <!-- Knees (Patellas) -->
-    <ellipse cx="242.5" cy="900" rx="14" ry="18"/>
-    <ellipse cx="357.5" cy="900" rx="14" ry="18"/>
+    <ellipse cx="242.5" cy="900" rx="15" ry="20" fill="none"/>
+    <ellipse cx="357.5" cy="900" rx="15" ry="20" fill="none"/>
 
     <!-- Shins / Tibial Lines -->
     <path d="M 242.5 930 L 240 1040"/>
@@ -134,15 +136,15 @@
     <path d="M 385 1070 Q 388 1080 390 1090"/>
 
     <!-- Toe Separation Lines (Left Foot) -->
-    <path d="M 255 1153 L 257 1140"/>
-    <path d="M 240 1157 L 242 1144"/>
-    <path d="M 227 1154 L 229 1145"/>
-    <path d="M 216 1152 L 217 1146"/>
+    <path d="M 255 1153 L 257 1138"/>
+    <path d="M 240 1157 L 242 1142"/>
+    <path d="M 227 1154 L 229 1143"/>
+    <path d="M 216 1150 L 217 1144"/>
 
     <!-- Toe Separation Lines (Right Foot) -->
-    <path d="M 345 1153 L 343 1140"/>
-    <path d="M 360 1157 L 358 1144"/>
-    <path d="M 373 1154 L 371 1145"/>
-    <path d="M 384 1152 L 383 1146"/>
+    <path d="M 345 1153 L 343 1138"/>
+    <path d="M 360 1157 L 358 1142"/>
+    <path d="M 373 1154 L 371 1143"/>
+    <path d="M 384 1150 L 383 1144"/>
   </g>
 </svg>
