@@ -73,7 +73,17 @@
         <div class="alert alert-danger mt-3 mb-0" role="alert">{{ $message }}</div>
     @enderror
 
-    <div class="penandaan-actions">
+    <div class="penandaan-actions d-flex flex-wrap justify-content-between align-items-center">
+        <div class="penandaan-reset-group mb-2 mb-sm-0">
+            <button type="button" id="reset-penandaan-aktif" class="btn btn-outline-warning btn-sm" disabled title="Reset penandaan pada diagram yang tampil saat ini">
+                <i class="fas fa-undo mr-1" aria-hidden="true"></i>
+                Reset Diagram Ini
+            </button>
+            <button type="button" id="reset-semua-penandaan" class="btn btn-outline-danger btn-sm ml-2" disabled title="Hapus semua penandaan dari seluruh diagram">
+                <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i>
+                Reset Semua
+            </button>
+        </div>
         <button type="button" id="simpan-penandaan" class="btn btn-primary" disabled>
             <i class="fas fa-save mr-1" aria-hidden="true"></i>
             <span class="penandaan-btn-label">Simpan</span>
@@ -210,7 +220,6 @@
     .penandaan-actions {
         border-top: 1px solid var(--penandaan-line);
         display: flex;
-        justify-content: flex-end;
         margin-top: 1.1rem;
         padding-top: 1rem;
     }
@@ -292,6 +301,8 @@
 
         var root = document.getElementById('penandaan-area-operasi-canvas-root');
         var saveButton = document.getElementById('simpan-penandaan');
+        var resetActiveButton = document.getElementById('reset-penandaan-aktif');
+        var resetAllButton = document.getElementById('reset-semua-penandaan');
 
         if (!root || !saveButton || root.dataset.initialized === 'true') {
             return;
@@ -421,6 +432,23 @@
             return count;
         }
 
+        function updateResetButtonsState() {
+            var activeKey = diagrams[activeIndex] ? diagrams[activeIndex].key : null;
+            var activeState = activeKey ? canvasStates[activeKey] : null;
+            var activeHasPins = activeState ? countRedPins(activeState) > 0 : false;
+
+            var totalPins = Object.keys(canvasStates).reduce(function (total, key) {
+                return total + countRedPins(canvasStates[key]);
+            }, 0);
+
+            if (resetActiveButton) {
+                resetActiveButton.disabled = !activeHasPins;
+            }
+            if (resetAllButton) {
+                resetAllButton.disabled = totalPins === 0;
+            }
+        }
+
         function refreshNextPinNumber() {
             var savedCount = Object.keys(savedPinCounts).reduce(function (total, key) {
                 return total + savedPinCounts[key];
@@ -464,6 +492,7 @@
 
             savedPinCounts[state.key] = (savedPinCounts[state.key] || 0) + 1;
             nextPinNumber += 1;
+            updateResetButtonsState();
         }
 
         function markCanvasReady(state) {
@@ -482,6 +511,8 @@
                     var payload = pendingSavedImages;
                     pendingSavedImages = null;
                     loadSavedImages(payload);
+                } else {
+                    updateResetButtonsState();
                 }
             }
         }
@@ -566,6 +597,7 @@
             return Promise.all(loaders).then(function () {
                 refreshNextPinNumber();
                 saveButton.disabled = false;
+                updateResetButtonsState();
             });
         }
 
@@ -582,6 +614,8 @@
             if (label) {
                 label.textContent = diagrams[activeIndex].label;
             }
+
+            updateResetButtonsState();
         }
 
         window.PenandaanAreaOperasi = {
@@ -599,6 +633,39 @@
                 showDiagram(activeIndex + Number(button.dataset.direction));
             });
         });
+
+        if (resetActiveButton) {
+            resetActiveButton.addEventListener('click', function () {
+                var activeKey = diagrams[activeIndex] ? diagrams[activeIndex].key : null;
+                var activeState = activeKey ? canvasStates[activeKey] : null;
+
+                if (!activeState) {
+                    return;
+                }
+
+                drawBase(activeState);
+                savedPinCounts[activeKey] = 0;
+                refreshNextPinNumber();
+                updateResetButtonsState();
+                setStatus(activeKey, '', false);
+            });
+        }
+
+        if (resetAllButton) {
+            resetAllButton.addEventListener('click', function () {
+                diagrams.forEach(function (diagram) {
+                    var state = canvasStates[diagram.key];
+                    if (state) {
+                        drawBase(state);
+                        setStatus(diagram.key, '', false);
+                    }
+                });
+
+                savedPinCounts = {};
+                nextPinNumber = 1;
+                updateResetButtonsState();
+            });
+        }
 
         saveButton.addEventListener('click', function () {
             if (saveButton.disabled && saveButton.dataset.saving === 'true') {
