@@ -17,33 +17,41 @@ class PenandaanAreaOperasiTest extends TestCase
     {
         parent::setUp();
 
-        Schema::create('pasien', function ($table) {
-            $table->string('no_rkm_medis')->primary();
-            $table->string('nm_pasien');
-            $table->date('tgl_lahir')->nullable();
-        });
+        if (! Schema::hasTable('pasien')) {
+            Schema::create('pasien', function ($table) {
+                $table->string('no_rkm_medis')->primary();
+                $table->string('nm_pasien');
+                $table->date('tgl_lahir')->nullable();
+            });
+        }
 
-        Schema::create('reg_periksa', function ($table) {
-            $table->string('no_rawat')->primary();
-            $table->string('no_rkm_medis');
-        });
+        if (! Schema::hasTable('reg_periksa')) {
+            Schema::create('reg_periksa', function ($table) {
+                $table->string('no_rawat')->primary();
+                $table->string('no_rkm_medis');
+            });
+        }
 
-        Schema::create('dokter', function ($table) {
-            $table->string('kd_dokter')->primary();
-            $table->string('nm_dokter');
-        });
+        if (! Schema::hasTable('dokter')) {
+            Schema::create('dokter', function ($table) {
+                $table->string('kd_dokter')->primary();
+                $table->string('nm_dokter');
+            });
+        }
 
-        DB::table('pasien')->insert([
+        DB::table('pasien')->upsert([
             ['no_rkm_medis' => '000001', 'nm_pasien' => 'Patient One', 'tgl_lahir' => '1990-01-02'],
             ['no_rkm_medis' => '000002', 'nm_pasien' => 'Patient Two', 'tgl_lahir' => '1991-02-03'],
-        ]);
-        DB::table('reg_periksa')->insert([
+        ], ['no_rkm_medis'], ['nm_pasien', 'tgl_lahir']);
+        DB::table('reg_periksa')->upsert([
             ['no_rawat' => '2026/08/04/000001', 'no_rkm_medis' => '000001'],
             ['no_rawat' => '2026/08/04/000002', 'no_rkm_medis' => '000002'],
-        ]);
-        DB::table('dokter')->insert([
+        ], ['no_rawat'], ['no_rkm_medis']);
+        DB::table('dokter')->upsert([
             'kd_dokter' => 'D001', 'nm_dokter' => 'Dr. Operator',
-        ]);
+        ], ['kd_dokter'], ['nm_dokter']);
+
+        session(['username' => 'D001']);
     }
 
     public function test_penandaan_table_has_required_columns_and_unique_visit(): void
@@ -93,6 +101,30 @@ class PenandaanAreaOperasiTest extends TestCase
             ->set('gambarPenandaanBase64', ['body_front' => 'not-a-data-url'])
             ->call('simpan')
             ->assertHasErrors(['gambarPenandaanBase64']);
+    }
+
+    public function test_it_rejects_a_data_url_with_empty_decoded_png_bytes(): void
+    {
+        Livewire::test(PenandaanAreaOperasi::class, [
+            'noRawat' => '2026/08/04/000001', 'noRm' => '000001',
+        ])
+            ->set('prosedurOperasi', 'Appendectomy')
+            ->set('gambarPenandaanBase64', ['body_front' => 'data:image/png;base64,'])
+            ->call('simpan')
+            ->assertHasErrors(['gambarPenandaanBase64']);
+    }
+
+    public function test_it_requires_a_logged_in_operator(): void
+    {
+        session()->forget('username');
+
+        Livewire::test(PenandaanAreaOperasi::class, [
+            'noRawat' => '2026/08/04/000001', 'noRm' => '000001',
+        ])
+            ->set('prosedurOperasi', 'Appendectomy')
+            ->set('gambarPenandaanBase64', ['body_front' => 'data:image/png;base64,' . base64_encode('front')])
+            ->call('simpan')
+            ->assertHasErrors(['operator']);
     }
 
     public function test_it_updates_the_existing_visit_instead_of_creating_another_row(): void
