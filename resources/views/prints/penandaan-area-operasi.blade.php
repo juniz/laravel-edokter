@@ -43,20 +43,25 @@
 
         .kop-left {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 10px;
+            text-align: center;
+            gap: 4px;
         }
 
         .hospital-logo {
             max-width: 55px;
             max-height: 55px;
             height: auto;
+            display: block;
+            margin: 0 auto 2px;
         }
 
         .kop-text {
             font-size: 10px;
             font-weight: bold;
             line-height: 1.25;
+            text-align: center;
         }
 
         .kop-text .hospital-name {
@@ -253,9 +258,18 @@
         .pair-container {
             display: flex;
             justify-content: center;
-            align-items: center;
-            gap: 4px;
+            align-items: flex-end;
+            gap: 2px;
             width: 100%;
+            overflow: hidden;
+        }
+
+        .pair-container .diagram-img {
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: 48%;
+            height: auto;
+            object-fit: contain;
         }
 
         /* Declaration Section */
