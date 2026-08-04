@@ -88,6 +88,6 @@ class PenandaanAreaOperasi extends Component
 
     public function render()
     {
-        return '<div></div>';
+        return view('livewire.component.penandaan-area-operasi');
     }
 }

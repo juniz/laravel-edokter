@@ -8,6 +8,13 @@ use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * Manual Canvas acceptance checks:
+ * - At 375px width, one tap on body_front creates exactly pin 1.
+ * - Switching away from body_front and back preserves pin 1.
+ * - Saving and reloading restores pin 1.
+ * - Printing displays the saved body_front PNG.
+ */
 class PenandaanAreaOperasiTest extends TestCase
 {
     private $createdFixtureTables = [];
