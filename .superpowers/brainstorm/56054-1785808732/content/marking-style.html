@@ -1,0 +1,23 @@
+<h2>How should a site be marked on the anatomy canvas?</h2>
+<p class="subtitle">This applies to every diagram in the paper-replica form. The site entry keeps the diagram name and laterality where applicable.</p>
+
+<div class="cards">
+  <div class="card" data-choice="pin" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#f8fafc;min-height:230px">
+      <div style="height:196px;background:white;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;position:relative;font-size:120px">♀<span style="position:absolute;left:54%;top:46%;font-size:32px;color:#dc2626;text-shadow:0 1px 2px #fff">●</span><span style="position:absolute;left:56%;top:65%;font-size:11px;color:#991b1b;background:#fee2e2;padding:3px 5px;border-radius:3px">Left thigh</span></div>
+    </div>
+    <div class="card-body"><h3>A. Single pin <em>(recommended)</em></h3><p>Click to place a numbered red pin. The entry list holds diagram, laterality, and optional note.</p></div>
+  </div>
+  <div class="card" data-choice="circle" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#f8fafc;min-height:230px">
+      <div style="height:196px;background:white;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;position:relative;font-size:120px">♀<span style="position:absolute;left:47%;top:45%;width:55px;height:55px;border:4px solid #dc2626;border-radius:50%;box-sizing:border-box"></span><span style="position:absolute;left:56%;top:65%;font-size:11px;color:#991b1b;background:#fee2e2;padding:3px 5px;border-radius:3px">Left thigh</span></div>
+    </div>
+    <div class="card-body"><h3>B. Resizable circle</h3><p>Drag a circle over an area. More expressive for large sites, but harder to use reliably on touch screens.</p></div>
+  </div>
+  <div class="card" data-choice="freehand" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#f8fafc;min-height:230px">
+      <div style="height:196px;background:white;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;position:relative;font-size:120px">♀<svg style="position:absolute;width:100%;height:100%;left:0;top:0" viewBox="0 0 300 196"><path d="M144 95 C170 72,187 110,158 130 C137 145,125 117,147 101" fill="none" stroke="#dc2626" stroke-width="4"/></svg></div>
+    </div>
+    <div class="card-body"><h3>C. Freehand ink</h3><p>Draw directly on the diagram like the original paper form. Most flexible, but less structured for reporting and review.</p></div>
+  </div>
+</div>

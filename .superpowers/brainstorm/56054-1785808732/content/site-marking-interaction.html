@@ -1,0 +1,46 @@
+<h2>How should clinicians mark the operation site?</h2>
+<p class="subtitle">The paper form has full-body, face, hand, and foot diagrams. Choose the interaction that best fits daily clinical use.</p>
+
+<div class="cards">
+  <div class="card" data-choice="paper-replica" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#f7f9fc;min-height:260px">
+      <div style="border:1px solid #cbd5e1;background:white;padding:12px;height:230px;font-size:11px;color:#334155">
+        <strong style="font-size:13px">FORM PENANDAAN AREA OPERASI</strong>
+        <div style="height:22px;border-bottom:1px dotted #94a3b8;margin:8px 0">No. RM &nbsp; | &nbsp; Nama &nbsp; | &nbsp; Prosedur &nbsp; | &nbsp; Operator</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;height:150px">
+          <div style="border:1px solid #94a3b8;text-align:center;padding-top:35px;font-size:42px">♀<br><span style="font-size:10px">BODY FRONT / BACK</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            <div style="border:1px solid #94a3b8;text-align:center;padding-top:22px">◖<br>FACE</div><div style="border:1px solid #94a3b8;text-align:center;padding-top:22px">✋<br>HANDS</div>
+            <div style="border:1px solid #94a3b8;text-align:center;padding-top:22px">◉<br>HEAD</div><div style="border:1px solid #94a3b8;text-align:center;padding-top:22px">♧<br>FEET</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body"><h3>A. Digital paper replica</h3><p>One complete canvas mirrors the printed form. Familiar, but dense on smaller screens.</p></div>
+  </div>
+
+  <div class="card" data-choice="guided-wizard" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#f7f9fc;min-height:260px">
+      <div style="background:white;border:1px solid #cbd5e1;height:230px;padding:14px">
+        <div style="display:flex;gap:5px;margin-bottom:12px"><span style="background:#2563eb;color:white;padding:5px 9px;border-radius:12px">1 Patient</span><span style="background:#e2e8f0;padding:5px 9px;border-radius:12px">2 Site</span><span style="background:#e2e8f0;padding:5px 9px;border-radius:12px">3 Confirm</span></div>
+        <p style="margin:5px 0;font-weight:700">Select anatomy: Trunk</p>
+        <div style="height:130px;border:1px dashed #94a3b8;display:flex;align-items:center;justify-content:center;font-size:72px">♀ <span style="color:#dc2626;font-size:30px">✚</span></div>
+        <div style="margin-top:8px;text-align:right"><button class="mock-button">Next</button></div>
+      </div>
+    </div>
+    <div class="card-body"><h3>B. Guided wizard</h3><p>Breaks entry into patient, body-map, and confirmation steps. Clear and mobile-friendly, but less like the source form.</p></div>
+  </div>
+
+  <div class="card" data-choice="hybrid" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#f7f9fc;min-height:260px">
+      <div style="background:white;border:1px solid #cbd5e1;height:230px;padding:14px">
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding-bottom:7px"><strong>Penandaan Area Operasi</strong><span style="color:#64748b">RM 012345</span></div>
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;margin-top:9px">
+          <div style="border:1px solid #bfdbfe;background:#eff6ff;text-align:center;padding-top:32px;font-size:57px">♀<br><span style="font-size:9px">Tap to mark</span></div>
+          <div><div style="padding:7px;background:#dbeafe;color:#1d4ed8;border-radius:4px;margin-bottom:6px">✚ Left lower leg</div><div style="padding:7px;background:#fee2e2;color:#b91c1c;border-radius:4px;margin-bottom:6px">● 1 marker</div><div style="padding:7px;border:1px solid #cbd5e1;border-radius:4px">Procedure & operator</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body"><h3>C. Hybrid workspace <em>(recommended)</em></h3><p>Patient details and markers stay together; the canvas switches to face, hand, or foot views when selected.</p></div>
+  </div>
+</div>

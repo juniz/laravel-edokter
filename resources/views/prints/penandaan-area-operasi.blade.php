@@ -370,7 +370,7 @@
                             <div>{{ $setting->header_title_1 ?? 'POLRI DAERAH JAWA TIMUR' }}</div>
                             <div>{{ $setting->header_title_2 ?? 'BIDANG KEDOKTERAN DAN KESEHATAN' }}</div>
                             <div class="hospital-name">{{ $setting->hospital_name ?? 'RUMAH SAKIT BHAYANGKARA TK. III NGANJUK' }}</div>
-                            <div>{{ $setting->location ?? 'NGANJUK' }}</div>
+                            <!-- <div>{{ $setting->location ?? 'NGANJUK' }}</div> -->
                         </div>
                     </div>
                 </td>
