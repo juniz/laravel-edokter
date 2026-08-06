@@ -221,18 +221,43 @@
         $tglLahirRaw = $marking->pasien_tgl_lahir ?? $marking->tgl_lahir ?? null;
         $tglLahirFormatted = $tglLahirRaw ? \Carbon\Carbon::parse($tglLahirRaw)->format('d-m-Y') : '-';
         $noRm = $marking->no_rkm_medis ?? $marking->no_rm ?? '-';
+
+        $maskString = function ($str, $keepStart = 2, $keepEnd = 1) {
+            $len = strlen($str);
+            if ($len <= ($keepStart + $keepEnd)) {
+                return str_repeat('*', max(3, $len));
+            }
+            return substr($str, 0, $keepStart) . str_repeat('*', max(3, $len - $keepStart - $keepEnd)) . substr($str, -$keepEnd);
+        };
+
+        $maskName = function ($fullName) {
+            if (empty($fullName)) return '-';
+            $words = explode(' ', trim($fullName));
+            $maskedWords = array_map(function ($w) {
+                $l = strlen($w);
+                if ($l <= 2) return $w;
+                return substr($w, 0, 2) . str_repeat('*', $l - 2);
+            }, $words);
+            return implode(' ', $maskedWords);
+        };
+
+        $maskedName = $maskName($marking->nama_pasien ?? '');
+        $maskedNoRm = $maskString($noRm, 2, 1);
+        
+        $rawatParts = explode('/', $marking->no_rawat ?? '');
+        if (count($rawatParts) >= 4) {
+            $maskedNoRawat = implode('/', array_slice($rawatParts, 0, 3)) . '/******';
+        } else {
+            $maskedNoRawat = $maskString($marking->no_rawat ?? '', 4, 2);
+        }
+
+        $maskedTglLahir = ($tglLahirFormatted !== '-') ? ('**-**-' . substr($tglLahirFormatted, -4)) : '-';
     @endphp
 
     <div class="container">
         {{-- Header --}}
         <div class="header">
-            @if(!empty($setting->logo_base64))
-                <img src="{{ $setting->logo_base64 }}" class="hospital-logo" alt="Logo Instansi">
-            @elseif(file_exists(public_path('img/logo/logo-kop.png')))
-                <img src="{{ asset('img/logo/logo-kop.png') }}" class="hospital-logo" alt="Logo Instansi">
-            @elseif(file_exists(public_path('img/logo/logo.png')))
-                <img src="{{ asset('img/logo/logo.png') }}" class="hospital-logo" alt="Logo Instansi">
-            @endif
+            <img src="{{ asset('img/logo/logo.png') }}" class="hospital-logo" alt="Logo Instansi">
             <div class="header-sub">{{ $setting->header_title_1 ?? 'POLRI DAERAH JAWA TIMUR' }}</div>
             <div class="header-sub">{{ $setting->header_title_2 ?? 'BIDANG KEDOKTERAN DAN KESEHATAN' }}</div>
             <div class="hospital-name">{{ $setting->hospital_name ?? 'RUMAH SAKIT BHAYANGKARA TK. III NGANJUK' }}</div>
@@ -259,15 +284,15 @@
                 </tr>
                 <tr>
                     <td class="info-label">No. Rawat</td>
-                    <td class="info-val">{{ $marking->no_rawat }}</td>
+                    <td class="info-val">{{ $maskedNoRawat }}</td>
                 </tr>
                 <tr>
                     <td class="info-label">No. Rekam Medis</td>
-                    <td class="info-val">{{ $noRm }}</td>
+                    <td class="info-val">{{ $maskedNoRm }}</td>
                 </tr>
                 <tr>
                     <td class="info-label">Nama Pasien</td>
-                    <td class="info-val">{{ $marking->nama_pasien }}</td>
+                    <td class="info-val">{{ $maskedName }}</td>
                 </tr>
                 <tr>
                     <td class="info-label">Jenis Kelamin / Umur</td>
@@ -275,15 +300,15 @@
                 </tr>
                 <tr>
                     <td class="info-label">Tanggal Lahir Pasien</td>
-                    <td class="info-val">{{ $tglLahirFormatted }}</td>
+                    <td class="info-val">{{ $maskedTglLahir }}</td>
                 </tr>
                 <tr>
                     <td class="info-label">Prosedur Operasi</td>
                     <td class="info-val">{{ $marking->prosedur_operasi }}</td>
                 </tr>
                 <tr>
-                    <td class="info-label">Dokter Operator</td>
-                    <td class="info-val">dr. {{ $marking->nama_operator }}</td>
+                    <td class="info-label">Dokter Operator (TTE)</td>
+                    <td class="info-val"><strong>dr. {{ $marking->nama_operator }}</strong></td>
                 </tr>
                 <tr>
                     <td class="info-label">Kode Dokter / Operator</td>
@@ -298,6 +323,10 @@
                     <td class="info-val">{{ $setting->hospital_name }}</td>
                 </tr>
             </table>
+
+            <div class="footer-note" style="margin-bottom: 12px; background-color: #f0fdf4; border-color: #bbf7d0; color: #166534;">
+                🔒 <strong>Perlindungan Data Pribadi (UU PDP No. 27/2022):</strong> Data identitas pribadi pasien disamarkan (masking) pada halaman verifikasi publik ini untuk menjaga kerahasiaan rekam medis.
+            </div>
 
             <div class="footer-note">
                 <strong>Catatan Keabsahan:</strong> Halaman verifikasi ini dipublikasikan secara langsung oleh Sistem Informasi Manajemen Rumah Sakit (SIMRS) {{ $setting->hospital_name }} untuk menjamin otentisitas dokumen medis elektronik.
