@@ -258,8 +258,8 @@
         {{-- Header --}}
         <div class="header">
             <img src="{{ asset('img/logo/logo.png') }}" class="hospital-logo" alt="Logo Instansi">
-            <div class="header-sub">{{ $setting->header_title_1 ?? 'POLRI DAERAH JAWA TIMUR' }}</div>
-            <div class="header-sub">{{ $setting->header_title_2 ?? 'BIDANG KEDOKTERAN DAN KESEHATAN' }}</div>
+            <!-- <div class="header-sub">{{ $setting->header_title_1 ?? 'POLRI DAERAH JAWA TIMUR' }}</div>
+            <div class="header-sub">{{ $setting->header_title_2 ?? 'BIDANG KEDOKTERAN DAN KESEHATAN' }}</div> -->
             <div class="hospital-name">{{ $setting->hospital_name ?? 'RUMAH SAKIT BHAYANGKARA TK. III NGANJUK' }}</div>
             <div class="header-title">Verifikasi Keabsahan Dokumen Medis Elektronik (TTE)</div>
         </div>
@@ -308,7 +308,7 @@
                 </tr>
                 <tr>
                     <td class="info-label">Dokter Operator (TTE)</td>
-                    <td class="info-val"><strong>dr. {{ $marking->nama_operator }}</strong></td>
+                    <td class="info-val"><strong>{{ $marking->nama_operator }}</strong></td>
                 </tr>
                 <tr>
                     <td class="info-label">Kode Dokter / Operator</td>
