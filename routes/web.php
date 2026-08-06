@@ -220,6 +220,9 @@ Route::get('/penandaan-area-operasi/cetak', [PenandaanAreaOperasiController::cla
     ->middleware('loginauth')
     ->name('penandaan-area-operasi.cetak');
 
+Route::get('/penandaan-area-operasi/verifikasi/{no_rawat?}', [PenandaanAreaOperasiController::class, 'verifikasi'])
+    ->name('penandaan-area-operasi.verifikasi');
+
 Route::get('/persetujuan-penolakan-tindakan', [
     App\Http\Controllers\PersetujuanPenolakanTindakan::class,
     'index',
