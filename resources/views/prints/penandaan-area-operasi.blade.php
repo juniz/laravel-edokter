@@ -597,7 +597,7 @@
                         <div id="qrcode" class="tte-qr"></div>
                         <div class="tte-meta">
                             <div class="tte-title">Ditandatangani secara elektronik:</div>
-                            <div class="tte-doc-name">dr. {{ $marking->nama_operator }}</div>
+                            <div class="tte-doc-name">{{ $marking->nama_operator }}</div>
                             <div>Kode Dokter: {{ $marking->operator_id }}</div>
                             <div>Waktu TTD: {{ $tanggalPenandaan }}</div>
                         </div>
