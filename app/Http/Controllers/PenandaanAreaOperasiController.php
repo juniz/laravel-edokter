@@ -8,6 +8,13 @@ use Illuminate\Support\Facades\DB;
 
 class PenandaanAreaOperasiController extends Controller
 {
+    public static function generateToken(string $noRawat): string
+    {
+        $normalized = str_replace('-', '/', $noRawat);
+        $key = config('app.key', 'laravel-edokter-secret-key-2026');
+        return substr(hash_hmac('sha256', $normalized, $key), 0, 32);
+    }
+
     public function cetak(Request $request)
     {
         $noRawat = $request->input('no_rawat') ?? $request->route('no_rawat');
@@ -88,33 +95,62 @@ class PenandaanAreaOperasiController extends Controller
             ? Carbon::parse($marking->tanggal_penandaan)->isoFormat('D MMMM Y')
             : Carbon::now()->isoFormat('D MMMM Y');
 
+        $verificationToken = self::generateToken($marking->no_rawat);
+
         return view('prints.penandaan-area-operasi', compact(
             'marking',
             'images',
             'setting',
             'umurPasien',
             'jenisKelaminTitle',
-            'tanggalPenandaan'
+            'tanggalPenandaan',
+            'verificationToken'
         ));
     }
 
-    public function verifikasi(Request $request, ?string $no_rawat = null)
+    public function verifikasi(Request $request, ?string $token = null)
     {
-        $noRawat = $request->input('no_rawat') ?? $no_rawat ?? $request->route('no_rawat');
+        $param = $request->input('token') ?? $request->input('no_rawat') ?? $token ?? $request->route('token') ?? $request->route('no_rawat');
 
-        if ($noRawat && is_string($noRawat)) {
-            $noRawat = str_replace('-', '/', $noRawat);
+        if (! $param || ! is_string($param)) {
+            abort(400, 'Parameter verifikasi tidak valid.');
         }
 
-        if (! $noRawat || ! is_string($noRawat)) {
-            abort(400, 'Parameter no_rawat is required.');
+        $marking = null;
+        $cleanParam = trim(str_replace('-', '/', $param));
+
+        if (strlen($param) === 32 && ctype_xdigit($param)) {
+            // Find record matching HMAC token
+            $allMarkings = DB::table('penandaan_area_operasi')->select('no_rawat')->get();
+            $targetNoRawat = null;
+
+            foreach ($allMarkings as $item) {
+                if (self::generateToken($item->no_rawat) === $param) {
+                    $targetNoRawat = $item->no_rawat;
+                    break;
+                }
+            }
+
+            if (! $targetNoRawat) {
+                abort(404, 'Token verifikasi dokumen tidak ditemukan atau tidak valid.');
+            }
+
+            $cleanParam = $targetNoRawat;
+        } else {
+            // Legacy / direct no_rawat check - require valid HMAC token or session authentication
+            $tokenParam = $request->input('t');
+            $expectedToken = self::generateToken($cleanParam);
+
+            if ($tokenParam !== $expectedToken && ! session()->has('username')) {
+                abort(403, 'Akses verifikasi memerlukan token HMAC yang sah.');
+            }
         }
 
         $marking = DB::table('penandaan_area_operasi')
             ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
             ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
             ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
-            ->where('penandaan_area_operasi.no_rawat', $noRawat)
+            ->where('penandaan_area_operasi.no_rawat', $cleanParam)
             ->select([
                 'penandaan_area_operasi.*',
                 'reg_periksa.no_rkm_medis',
@@ -182,4 +218,5 @@ class PenandaanAreaOperasiController extends Controller
         ));
     }
 }
+
 

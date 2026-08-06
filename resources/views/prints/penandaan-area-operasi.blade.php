@@ -608,16 +608,16 @@
         </table>
 
         {{-- Document Code --}}
-        <div class="doc-code">
+        <!-- <div class="doc-code">
             VI/2018/Komite RM
-        </div>
+        </div> -->
     </div>
 
     {{-- QRCode Generator & Auto Print Script --}}
     <script src="{{ asset('js/qrcode.min.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var qrUrl = "{{ route('penandaan-area-operasi.verifikasi', ['no_rawat' => str_replace('/', '-', $marking->no_rawat)]) }}";
+            var qrUrl = "{{ route('penandaan-area-operasi.verifikasi', ['token' => $verificationToken ?? \App\Http\Controllers\PenandaanAreaOperasiController::generateToken($marking->no_rawat)]) }}";
             var qrElement = document.getElementById('qrcode');
             if (qrElement && typeof QRCode !== 'undefined') {
                 new QRCode(qrElement, {
