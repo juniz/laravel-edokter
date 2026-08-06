@@ -290,12 +290,57 @@
 
         .signature-table td {
             vertical-align: top;
-            text-align: center;
             font-size: 10px;
         }
 
-        .signature-space {
-            height: 48px;
+        .tte-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 6px 0;
+            padding: 4px 8px;
+            border: 1px dashed #666;
+            border-radius: 4px;
+            background-color: #fafafa;
+            text-align: left;
+        }
+
+        .tte-qr {
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tte-qr svg {
+            width: 60px !important;
+            height: 60px !important;
+            display: block;
+        }
+
+        .tte-meta {
+            font-size: 8.5px;
+            line-height: 1.35;
+            color: #222;
+        }
+
+        .tte-title {
+            font-size: 8px;
+            color: #555;
+            font-style: italic;
+        }
+
+        .tte-doc-name {
+            font-weight: bold;
+            color: #000;
+        }
+
+        .tte-footer-name {
+            font-weight: bold;
+            margin-top: 4px;
         }
 
         .doc-code {
@@ -544,16 +589,20 @@
         {{-- Signature Footer --}}
         <table class="signature-table">
             <tr>
-                <td style="width: 50%;">
-                    <div>Pasien / Keluarga Pasien</div>
-                    <div class="signature-space"></div>
-                    <div>( .................................................... )</div>
-                </td>
-                <td style="width: 50%;">
+                <td style="width: 50%;"></td>
+                <td style="width: 50%; text-align: center;">
                     <div>Nganjuk, {{ $tanggalPenandaan }}</div>
                     <div>Dokter Operator</div>
-                    <div class="signature-space"></div>
-                    <div>( dr. {{ $marking->nama_operator }} )</div>
+                    <div class="tte-container">
+                        <div id="qrcode" class="tte-qr"></div>
+                        <div class="tte-meta">
+                            <div class="tte-title">Ditandatangani secara elektronik:</div>
+                            <div class="tte-doc-name">dr. {{ $marking->nama_operator }}</div>
+                            <div>Kode Dokter: {{ $marking->operator_id }}</div>
+                            <div>Waktu TTD: {{ $tanggalPenandaan }}</div>
+                        </div>
+                    </div>
+                    <div class="tte-footer-name">( dr. {{ $marking->nama_operator }} )</div>
                 </td>
             </tr>
         </table>
@@ -564,8 +613,22 @@
         </div>
     </div>
 
-    {{-- Auto Print Script --}}
+    {{-- QRCode Generator & Auto Print Script --}}
+    <script src="{{ asset('js/qrcode.min.js') }}"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var qrUrl = "{{ route('penandaan-area-operasi.verifikasi', ['no_rawat' => str_replace('/', '-', $marking->no_rawat)]) }}";
+            var qrElement = document.getElementById('qrcode');
+            if (qrElement && typeof QRCode !== 'undefined') {
+                new QRCode(qrElement, {
+                    text: qrUrl,
+                    width: 60,
+                    height: 60,
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            }
+        });
+
         window.addEventListener('load', function() {
             window.print();
         });
