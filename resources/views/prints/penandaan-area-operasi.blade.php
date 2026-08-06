@@ -602,7 +602,7 @@
                             <div>Waktu TTD: {{ $tanggalPenandaan }}</div>
                         </div>
                     </div>
-                    <div class="tte-footer-name">( dr. {{ $marking->nama_operator }} )</div>
+                    <div class="tte-footer-name">( {{ $marking->nama_operator }} )</div>
                 </td>
             </tr>
         </table>
