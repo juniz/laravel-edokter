@@ -147,7 +147,7 @@ class PenilaianPreOperasi extends Component
         ];
 
         try {
-            if ($this->modeEdit) {
+            if ($this->modeEdit || ! empty($this->tanggalEdit)) {
                 DB::table('penilaian_pre_operasi')
                     ->where('no_rawat', $this->no_rawat)
                     ->where('tanggal', $this->tanggalEdit)
@@ -158,6 +158,19 @@ class PenilaianPreOperasi extends Component
                 $this->getData();
                 $this->alert('success', 'Berhasil ubah penilaian pre operasi');
             } else {
+                // Guard against rapid double-submission (< 5s) creating duplicate records
+                $recentDuplicate = DB::table('penilaian_pre_operasi')
+                    ->where('no_rawat', $this->no_rawat)
+                    ->where('kd_dokter', $userDokter)
+                    ->where('tanggal', '>=', Carbon::now()->subSeconds(5)->format('Y-m-d H:i:s'))
+                    ->first();
+
+                if ($recentDuplicate) {
+                    $this->resetInput();
+                    $this->getData();
+                    return;
+                }
+
                 DB::table('penilaian_pre_operasi')->insert(array_merge([
                     'no_rawat' => $this->no_rawat,
                     'tanggal' => Carbon::now()->format('Y-m-d H:i:s'),
