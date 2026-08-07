@@ -136,57 +136,97 @@ class PenilaianPreOperasi extends Component
 
         $userDokter = session()->get('username') ?? $this->kd_dokter;
 
-        $formData = [
-            'ringkasan_klinik' => $this->ringkasan_klinik,
-            'pemeriksaan_fisik' => $this->pemeriksaan_fisik,
-            'pemeriksaan_diagnostik' => $this->pemeriksaan_diagnostik,
-            'diagnosa_pre_operasi' => $this->diagnosa_pre_operasi,
-            'rencana_tindakan_bedah' => $this->rencana_tindakan_bedah,
-            'hal_hal_yang_perludi_persiapkan' => $this->hal_hal_yang_perludi_persiapkan,
-            'terapi_pre_operasi' => $this->terapi_pre_operasi,
-        ];
+        // Guard against rapid double-submission (< 3s) creating duplicate records
+        $recentDuplicate = DB::table('penilaian_pre_operasi')
+            ->where('no_rawat', $this->no_rawat)
+            ->where('kd_dokter', $userDokter)
+            ->where('tanggal', '>=', Carbon::now()->subSeconds(3)->format('Y-m-d H:i:s'))
+            ->first();
+
+        if ($recentDuplicate) {
+            $this->resetInput();
+            $this->getData();
+            return;
+        }
 
         try {
-            if ($this->modeEdit || ! empty($this->tanggalEdit)) {
-                DB::table('penilaian_pre_operasi')
-                    ->where('no_rawat', $this->no_rawat)
-                    ->where('tanggal', $this->tanggalEdit)
-                    ->where('kd_dokter', $userDokter)
-                    ->update($formData);
+            DB::table('penilaian_pre_operasi')->insert([
+                'no_rawat' => $this->no_rawat,
+                'tanggal' => Carbon::now()->format('Y-m-d H:i:s'),
+                'kd_dokter' => $userDokter,
+                'ringkasan_klinik' => $this->ringkasan_klinik,
+                'pemeriksaan_fisik' => $this->pemeriksaan_fisik,
+                'pemeriksaan_diagnostik' => $this->pemeriksaan_diagnostik,
+                'diagnosa_pre_operasi' => $this->diagnosa_pre_operasi,
+                'rencana_tindakan_bedah' => $this->rencana_tindakan_bedah,
+                'hal_hal_yang_perludi_persiapkan' => $this->hal_hal_yang_perludi_persiapkan,
+                'terapi_pre_operasi' => $this->terapi_pre_operasi,
+            ]);
 
-                $this->resetInput();
-                $this->getData();
-                $this->alert('success', 'Berhasil ubah penilaian pre operasi');
-            } else {
-                // Guard against rapid double-submission (< 5s) creating duplicate records
-                $recentDuplicate = DB::table('penilaian_pre_operasi')
-                    ->where('no_rawat', $this->no_rawat)
-                    ->where('kd_dokter', $userDokter)
-                    ->where('tanggal', '>=', Carbon::now()->subSeconds(5)->format('Y-m-d H:i:s'))
-                    ->first();
-
-                if ($recentDuplicate) {
-                    $this->resetInput();
-                    $this->getData();
-                    return;
-                }
-
-                DB::table('penilaian_pre_operasi')->insert(array_merge([
-                    'no_rawat' => $this->no_rawat,
-                    'tanggal' => Carbon::now()->format('Y-m-d H:i:s'),
-                    'kd_dokter' => $userDokter,
-                ], $formData));
-
-                $this->resetInput();
-                $this->getData();
-                $this->alert('success', 'Berhasil input penilaian pre operasi');
-            }
+            $this->resetInput();
+            $this->getData();
+            $this->alert('success', 'Berhasil input penilaian pre operasi');
         } catch (\Exception $e) {
             $this->alert('error', 'Gagal', [
                 'position' => 'center',
                 'timer' => '',
                 'toast' => false,
                 'text' => App::environment('local') ? $e->getMessage() : 'Terjadi kesalahan saat menyimpan data',
+                'confirmButtonText' => 'Ok',
+                'showConfirmButton' => true,
+            ]);
+        }
+    }
+
+    public function update(): void
+    {
+        if (empty($this->tanggalEdit)) {
+            $this->alert('warning', 'Gagal', [
+                'position' => 'center',
+                'timer' => '',
+                'toast' => false,
+                'text' => 'Data yang diubah tidak ditemukan',
+                'confirmButtonText' => 'Ok',
+                'showConfirmButton' => true,
+            ]);
+            return;
+        }
+
+        $this->validate([
+            'ringkasan_klinik' => 'nullable|string|max:500',
+            'pemeriksaan_fisik' => 'nullable|string|max:500',
+            'pemeriksaan_diagnostik' => 'nullable|string|max:500',
+            'diagnosa_pre_operasi' => 'nullable|string|max:500',
+            'rencana_tindakan_bedah' => 'nullable|string|max:500',
+            'hal_hal_yang_perludi_persiapkan' => 'nullable|string|max:500',
+            'terapi_pre_operasi' => 'nullable|string|max:500',
+        ], [
+            'max' => 'Karakter maksimal 500 karakter.',
+        ]);
+
+        try {
+            DB::table('penilaian_pre_operasi')
+                ->where('no_rawat', $this->no_rawat)
+                ->where('tanggal', $this->tanggalEdit)
+                ->update([
+                    'ringkasan_klinik' => $this->ringkasan_klinik,
+                    'pemeriksaan_fisik' => $this->pemeriksaan_fisik,
+                    'pemeriksaan_diagnostik' => $this->pemeriksaan_diagnostik,
+                    'diagnosa_pre_operasi' => $this->diagnosa_pre_operasi,
+                    'rencana_tindakan_bedah' => $this->rencana_tindakan_bedah,
+                    'hal_hal_yang_perludi_persiapkan' => $this->hal_hal_yang_perludi_persiapkan,
+                    'terapi_pre_operasi' => $this->terapi_pre_operasi,
+                ]);
+
+            $this->resetInput();
+            $this->getData();
+            $this->alert('success', 'Berhasil ubah penilaian pre operasi');
+        } catch (\Exception $e) {
+            $this->alert('error', 'Gagal', [
+                'position' => 'center',
+                'timer' => '',
+                'toast' => false,
+                'text' => App::environment('local') ? $e->getMessage() : 'Terjadi kesalahan saat mengubah data',
                 'confirmButtonText' => 'Ok',
                 'showConfirmButton' => true,
             ]);
@@ -282,4 +322,5 @@ class PenilaianPreOperasi extends Component
         return view('livewire.component.penilaian-pre-operasi');
     }
 }
+
 

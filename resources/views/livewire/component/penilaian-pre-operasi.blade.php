@@ -1,5 +1,5 @@
 <div>
-    <form wire:submit.prevent="simpan">
+    <form wire:submit.prevent="{{ $modeEdit ? 'update' : 'simpan' }}">
         <div class="form-group">
             <div class="d-flex justify-content-between align-items-center">
                 <label for="ringkasan_klinik">Ringkasan Klinik</label>
@@ -69,9 +69,9 @@
                     <i class="fas fa-times mr-1"></i> Batal
                 </button>
             @endif
-            <button type="submit" class="btn {{ $modeEdit ? 'btn-warning' : 'btn-primary' }}" wire:loading.attr="disabled">
-                <span wire:loading wire:target="simpan" class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span>
-                <i wire:loading.remove wire:target="simpan" class="{{ $modeEdit ? 'fas fa-edit' : 'fas fa-save' }} mr-1"></i>
+            <button type="submit" class="btn {{ $modeEdit ? 'btn-warning' : 'btn-primary' }}" wire:loading.attr="disabled" wire:target="{{ $modeEdit ? 'update' : 'simpan' }}">
+                <span wire:loading wire:target="{{ $modeEdit ? 'update' : 'simpan' }}" class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span>
+                <i wire:loading.remove wire:target="{{ $modeEdit ? 'update' : 'simpan' }}" class="{{ $modeEdit ? 'fas fa-edit' : 'fas fa-save' }} mr-1"></i>
                 {{ $modeEdit ? 'Ubah Penilaian' : 'Simpan Penilaian' }}
             </button>
         </div>
