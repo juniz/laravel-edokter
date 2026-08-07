@@ -60,181 +60,48 @@ class PenilaianPreOperasi extends Component
             ->get();
     }
 
-    public function simpan(): void
-    {
-        $this->validate([
-            'ringkasan_klinik' => 'nullable|string|max:500',
-            'pemeriksaan_fisik' => 'nullable|string|max:500',
-            'pemeriksaan_diagnostik' => 'nullable|string|max:500',
-            'diagnosa_pre_operasi' => 'nullable|string|max:500',
-            'rencana_tindakan_bedah' => 'nullable|string|max:500',
-            'hal_hal_yang_perludi_persiapkan' => 'nullable|string|max:500',
-            'terapi_pre_operasi' => 'nullable|string|max:500',
-        ], [
-            'max' => 'Karakter maksimal 500 karakter.',
-        ]);
-
-        $userDokter = session('username') ?? $this->kd_dokter;
-
-        try {
-            if ($this->modeEdit) {
-                if (empty($this->tanggalEdit)) {
-                    $this->alert('error', 'Tanggal data yang diubah tidak valid');
-                    return;
-                }
-
-                $tanggalTarget = Carbon::parse($this->tanggalEdit)->format('Y-m-d H:i:s');
-
-                $existing = DB::table('penilaian_pre_operasi')
-                    ->where('no_rawat', $this->no_rawat)
-                    ->where('tanggal', $tanggalTarget)
-                    ->first();
-
-                if (! $existing) {
-                    $this->alert('error', 'Data penilaian pre operasi yang akan diubah tidak ditemukan');
-                    return;
-                }
-
-                if ($existing->kd_dokter != $userDokter) {
-                    $this->alert('warning', 'Anda tidak memiliki akses untuk mengubah/menghapus data ini');
-                    return;
-                }
-
-                DB::table('penilaian_pre_operasi')
-                    ->where('no_rawat', $this->no_rawat)
-                    ->where('tanggal', $tanggalTarget)
-                    ->update([
-                        'ringkasan_klinik' => $this->ringkasan_klinik,
-                        'pemeriksaan_fisik' => $this->pemeriksaan_fisik,
-                        'pemeriksaan_diagnostik' => $this->pemeriksaan_diagnostik,
-                        'diagnosa_pre_operasi' => $this->diagnosa_pre_operasi,
-                        'rencana_tindakan_bedah' => $this->rencana_tindakan_bedah,
-                        'hal_hal_yang_perludi_persiapkan' => $this->hal_hal_yang_perludi_persiapkan,
-                        'terapi_pre_operasi' => $this->terapi_pre_operasi,
-                    ]);
-
-                $this->resetInput();
-                $this->getData();
-                $this->alert('success', 'Penilaian Pre Operasi berhasil diubah');
-            } else {
-                DB::table('penilaian_pre_operasi')->insert([
-                    'no_rawat' => $this->no_rawat,
-                    'tanggal' => Carbon::now()->format('Y-m-d H:i:s'),
-                    'kd_dokter' => $userDokter,
-                    'ringkasan_klinik' => $this->ringkasan_klinik,
-                    'pemeriksaan_fisik' => $this->pemeriksaan_fisik,
-                    'pemeriksaan_diagnostik' => $this->pemeriksaan_diagnostik,
-                    'diagnosa_pre_operasi' => $this->diagnosa_pre_operasi,
-                    'rencana_tindakan_bedah' => $this->rencana_tindakan_bedah,
-                    'hal_hal_yang_perludi_persiapkan' => $this->hal_hal_yang_perludi_persiapkan,
-                    'terapi_pre_operasi' => $this->terapi_pre_operasi,
-                ]);
-
-                $this->resetInput();
-                $this->getData();
-                $this->alert('success', 'Penilaian Pre Operasi berhasil disimpan');
-            }
-        } catch (\Exception $e) {
-            $this->alert('error', 'Gagal menyimpan data', [
-                'text' => App::environment('local') ? $e->getMessage() : 'Terjadi kesalahan saat menyimpan data',
-            ]);
-        }
-    }
-
     public function edit($tanggal): void
     {
-        $tanggalFormatted = Carbon::parse($tanggal)->format('Y-m-d H:i:s');
-
-        $record = DB::table('penilaian_pre_operasi')
+        $data = DB::table('penilaian_pre_operasi')
             ->where('no_rawat', $this->no_rawat)
-            ->where('tanggal', $tanggalFormatted)
+            ->where('tanggal', $tanggal)
             ->first();
 
-        if (! $record) {
-            $this->alert('error', 'Data tidak ditemukan');
-            return;
-        }
-
-        $userDokter = session('username') ?? $this->kd_dokter;
-        if ($record->kd_dokter != $userDokter) {
-            $this->alert('warning', 'Anda tidak memiliki akses untuk mengubah/menghapus data ini');
-            return;
-        }
-
-        $this->ringkasan_klinik = $record->ringkasan_klinik;
-        $this->pemeriksaan_fisik = $record->pemeriksaan_fisik;
-        $this->pemeriksaan_diagnostik = $record->pemeriksaan_diagnostik;
-        $this->diagnosa_pre_operasi = $record->diagnosa_pre_operasi;
-        $this->rencana_tindakan_bedah = $record->rencana_tindakan_bedah;
-        $this->hal_hal_yang_perludi_persiapkan = $record->hal_hal_yang_perludi_persiapkan;
-        $this->terapi_pre_operasi = $record->terapi_pre_operasi;
-        $this->modeEdit = true;
-        $this->tanggalEdit = $tanggalFormatted;
-    }
-
-    public function confirmHapus($tanggal): void
-    {
-        $tanggalFormatted = Carbon::parse($tanggal)->format('Y-m-d H:i:s');
-
-        $record = DB::table('penilaian_pre_operasi')
-            ->where('no_rawat', $this->no_rawat)
-            ->where('tanggal', $tanggalFormatted)
-            ->first();
-
-        if (! $record) {
-            $this->alert('error', 'Data tidak ditemukan');
-            return;
-        }
-
-        $userDokter = session('username') ?? $this->kd_dokter;
-        if ($record->kd_dokter != $userDokter) {
-            $this->alert('warning', 'Anda tidak memiliki akses untuk mengubah/menghapus data ini');
-            return;
-        }
-
-        $this->tanggalEdit = $tanggalFormatted;
-        $this->confirm('Yakin ingin menghapus penilaian pre operasi ini?', [
-            'toast' => false,
-            'position' => 'center',
-            'confirmButtonText' => 'Ya, Hapus',
-            'cancelButtonText' => 'Batal',
-            'onConfirmed' => 'hapusPenilaianPreOperasi',
-        ]);
-    }
-
-    public function hapus(): void
-    {
-        if (! $this->tanggalEdit) {
-            return;
-        }
-
-        try {
-            $tanggalFormatted = Carbon::parse($this->tanggalEdit)->format('Y-m-d H:i:s');
-            $userDokter = session('username') ?? $this->kd_dokter;
-
-            $record = DB::table('penilaian_pre_operasi')
-                ->where('no_rawat', $this->no_rawat)
-                ->where('tanggal', $tanggalFormatted)
-                ->first();
-
-            if (! $record || $record->kd_dokter != $userDokter) {
-                $this->alert('warning', 'Anda tidak memiliki akses untuk mengubah/menghapus data ini');
-                return;
-            }
-
-            DB::table('penilaian_pre_operasi')
-                ->where('no_rawat', $this->no_rawat)
-                ->where('tanggal', $tanggalFormatted)
-                ->delete();
-
-            $this->resetInput();
-            $this->getData();
-            $this->alert('success', 'Penilaian Pre Operasi berhasil dihapus');
-        } catch (\Exception $e) {
-            $this->alert('error', 'Gagal menghapus data', [
-                'text' => App::environment('local') ? $e->getMessage() : 'Terjadi kesalahan saat menghapus data',
+        if (! $data) {
+            $this->alert('warning', 'Gagal', [
+                'position' => 'center',
+                'timer' => '',
+                'toast' => false,
+                'text' => 'Data tidak ditemukan',
+                'confirmButtonText' => 'Ok',
+                'showConfirmButton' => true,
             ]);
+            return;
         }
+
+        $userDokter = session()->get('username') ?? $this->kd_dokter;
+        if ($data->kd_dokter != $userDokter) {
+            $this->alert('warning', 'Gagal', [
+                'position' => 'center',
+                'timer' => '',
+                'toast' => false,
+                'text' => 'Anda tidak memiliki akses untuk mengubah data ini',
+                'confirmButtonText' => 'Ok',
+                'showConfirmButton' => true,
+            ]);
+            return;
+        }
+
+        $this->tanggalEdit = $data->tanggal;
+        $this->ringkasan_klinik = $data->ringkasan_klinik;
+        $this->pemeriksaan_fisik = $data->pemeriksaan_fisik;
+        $this->pemeriksaan_diagnostik = $data->pemeriksaan_diagnostik;
+        $this->diagnosa_pre_operasi = $data->diagnosa_pre_operasi;
+        $this->rencana_tindakan_bedah = $data->rencana_tindakan_bedah;
+        $this->hal_hal_yang_perludi_persiapkan = $data->hal_hal_yang_perludi_persiapkan;
+        $this->terapi_pre_operasi = $data->terapi_pre_operasi;
+
+        $this->modeEdit = true;
     }
 
     public function resetInput(): void
@@ -253,8 +120,153 @@ class PenilaianPreOperasi extends Component
         $this->resetErrorBag();
     }
 
+    public function simpan(): void
+    {
+        $this->validate([
+            'ringkasan_klinik' => 'nullable|string|max:500',
+            'pemeriksaan_fisik' => 'nullable|string|max:500',
+            'pemeriksaan_diagnostik' => 'nullable|string|max:500',
+            'diagnosa_pre_operasi' => 'nullable|string|max:500',
+            'rencana_tindakan_bedah' => 'nullable|string|max:500',
+            'hal_hal_yang_perludi_persiapkan' => 'nullable|string|max:500',
+            'terapi_pre_operasi' => 'nullable|string|max:500',
+        ], [
+            'max' => 'Karakter maksimal 500 karakter.',
+        ]);
+
+        $userDokter = session()->get('username') ?? $this->kd_dokter;
+
+        $formData = [
+            'ringkasan_klinik' => $this->ringkasan_klinik,
+            'pemeriksaan_fisik' => $this->pemeriksaan_fisik,
+            'pemeriksaan_diagnostik' => $this->pemeriksaan_diagnostik,
+            'diagnosa_pre_operasi' => $this->diagnosa_pre_operasi,
+            'rencana_tindakan_bedah' => $this->rencana_tindakan_bedah,
+            'hal_hal_yang_perludi_persiapkan' => $this->hal_hal_yang_perludi_persiapkan,
+            'terapi_pre_operasi' => $this->terapi_pre_operasi,
+        ];
+
+        try {
+            if ($this->modeEdit) {
+                DB::table('penilaian_pre_operasi')
+                    ->where('no_rawat', $this->no_rawat)
+                    ->where('tanggal', $this->tanggalEdit)
+                    ->where('kd_dokter', $userDokter)
+                    ->update($formData);
+
+                $this->resetInput();
+                $this->getData();
+                $this->alert('success', 'Berhasil ubah penilaian pre operasi');
+            } else {
+                DB::table('penilaian_pre_operasi')->insert(array_merge([
+                    'no_rawat' => $this->no_rawat,
+                    'tanggal' => Carbon::now()->format('Y-m-d H:i:s'),
+                    'kd_dokter' => $userDokter,
+                ], $formData));
+
+                $this->resetInput();
+                $this->getData();
+                $this->alert('success', 'Berhasil input penilaian pre operasi');
+            }
+        } catch (\Exception $e) {
+            $this->alert('error', 'Gagal', [
+                'position' => 'center',
+                'timer' => '',
+                'toast' => false,
+                'text' => App::environment('local') ? $e->getMessage() : 'Terjadi kesalahan saat menyimpan data',
+                'confirmButtonText' => 'Ok',
+                'showConfirmButton' => true,
+            ]);
+        }
+    }
+
+    public function confirmHapus($tanggal): void
+    {
+        $data = DB::table('penilaian_pre_operasi')
+            ->where('no_rawat', $this->no_rawat)
+            ->where('tanggal', $tanggal)
+            ->first();
+
+        if (! $data) {
+            $this->alert('warning', 'Gagal', [
+                'position' => 'center',
+                'timer' => '',
+                'toast' => false,
+                'text' => 'Data tidak ditemukan',
+                'confirmButtonText' => 'Ok',
+                'showConfirmButton' => true,
+            ]);
+            return;
+        }
+
+        $userDokter = session()->get('username') ?? $this->kd_dokter;
+        if ($data->kd_dokter != $userDokter) {
+            $this->alert('warning', 'Gagal', [
+                'position' => 'center',
+                'timer' => '',
+                'toast' => false,
+                'text' => 'Anda tidak memiliki akses untuk menghapus data ini',
+                'confirmButtonText' => 'Ok',
+                'showConfirmButton' => true,
+            ]);
+            return;
+        }
+
+        $this->tanggalEdit = $tanggal;
+        $this->confirm('Apakah anda yakin ingin menghapus data ini?', [
+            'onConfirmed' => 'hapusPenilaianPreOperasi',
+            'cancelButtonText' => 'Batal',
+        ]);
+    }
+
+    public function hapus(): void
+    {
+        if (! $this->tanggalEdit) {
+            return;
+        }
+
+        try {
+            $data = DB::table('penilaian_pre_operasi')
+                ->where('no_rawat', $this->no_rawat)
+                ->where('tanggal', $this->tanggalEdit)
+                ->first();
+
+            $userDokter = session()->get('username') ?? $this->kd_dokter;
+            if (! $data || $data->kd_dokter != $userDokter) {
+                $this->alert('warning', 'Gagal', [
+                    'position' => 'center',
+                    'timer' => '',
+                    'toast' => false,
+                    'text' => 'Anda tidak memiliki akses untuk menghapus data ini',
+                    'confirmButtonText' => 'Ok',
+                    'showConfirmButton' => true,
+                ]);
+                return;
+            }
+
+            DB::table('penilaian_pre_operasi')
+                ->where('no_rawat', $this->no_rawat)
+                ->where('tanggal', $this->tanggalEdit)
+                ->delete();
+
+            $this->resetInput();
+            $this->getData();
+            $this->alert('success', 'Berhasil hapus penilaian pre operasi');
+        } catch (\Exception $e) {
+            $this->alert('error', 'Gagal', [
+                'position' => 'center',
+                'timer' => '',
+                'toast' => false,
+                'text' => App::environment('local') ? $e->getMessage() : 'Terjadi kesalahan saat menghapus data',
+                'confirmButtonText' => 'Ok',
+                'showConfirmButton' => true,
+            ]);
+        }
+    }
+
     public function render()
     {
         return view('livewire.component.penilaian-pre-operasi');
     }
 }
+

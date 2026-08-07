@@ -77,7 +77,7 @@
                     <livewire:component.penandaan-area-operasi :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" />
                 </x-adminlte-card>
                 <x-adminlte-card title="Penilaian Pre Operasi" icon="fas fa-notes-medical" theme="info" maximizable collapsible="collapsed">
-                    <livewire:component.penilaian-pre-operasi :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" />
+                    <livewire:component.penilaian-pre-operasi :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" :key="'penilaian-pre-op-ralan-'.request()->get('no_rawat')" />
                 </x-adminlte-card>
     </div>
 </div>

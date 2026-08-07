@@ -110,10 +110,10 @@
                             <td class="text-center">
                                 @if($item->kd_dokter == session('username'))
                                     <div class="btn-group btn-group-sm">
-                                        <button type="button" wire:click="edit('{{ \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d H:i:s') }}')" class="btn btn-warning" title="Edit">
+                                        <button type="button" wire:click="edit('{{ $item->tanggal }}')" class="btn btn-warning" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button type="button" wire:click="confirmHapus('{{ \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d H:i:s') }}')" class="btn btn-danger" title="Hapus">
+                                        <button type="button" wire:click="confirmHapus('{{ $item->tanggal }}')" class="btn btn-danger" title="Hapus">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
