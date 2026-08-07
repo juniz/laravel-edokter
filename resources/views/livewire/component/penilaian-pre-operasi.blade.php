@@ -1,85 +1,66 @@
 <div>
     <form wire:submit.prevent="simpan">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <label for="ringkasan_klinik">Ringkasan Klinik</label>
-                        <small class="text-muted">{{ strlen($ringkasan_klinik ?? '') }}/500</small>
-                    </div>
-                    <textarea wire:model.defer="ringkasan_klinik" id="ringkasan_klinik" class="form-control @error('ringkasan_klinik') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan ringkasan klinik..."></textarea>
-                    @error('ringkasan_klinik') <span class="text-danger small">{{ $message }}</span> @enderror
-                </div>
+        <div class="form-group">
+            <div class="d-flex justify-content-between align-items-center">
+                <label for="ringkasan_klinik">Ringkasan Klinik</label>
+                <small class="text-muted">{{ strlen($ringkasan_klinik ?? '') }}/500</small>
             </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <label for="pemeriksaan_fisik">Pemeriksaan Fisik</label>
-                        <small class="text-muted">{{ strlen($pemeriksaan_fisik ?? '') }}/500</small>
-                    </div>
-                    <textarea wire:model.defer="pemeriksaan_fisik" id="pemeriksaan_fisik" class="form-control @error('pemeriksaan_fisik') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan pemeriksaan fisik..."></textarea>
-                    @error('pemeriksaan_fisik') <span class="text-danger small">{{ $message }}</span> @enderror
-                </div>
-            </div>
+            <textarea wire:model.defer="ringkasan_klinik" id="ringkasan_klinik" class="form-control @error('ringkasan_klinik') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan ringkasan klinik..."></textarea>
+            @error('ringkasan_klinik') <span class="text-danger small">{{ $message }}</span> @enderror
         </div>
 
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <label for="pemeriksaan_diagnostik">Pemeriksaan Diagnostik</label>
-                        <small class="text-muted">{{ strlen($pemeriksaan_diagnostik ?? '') }}/500</small>
-                    </div>
-                    <textarea wire:model.defer="pemeriksaan_diagnostik" id="pemeriksaan_diagnostik" class="form-control @error('pemeriksaan_diagnostik') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan pemeriksaan diagnostik..."></textarea>
-                    @error('pemeriksaan_diagnostik') <span class="text-danger small">{{ $message }}</span> @enderror
-                </div>
+        <div class="form-group">
+            <div class="d-flex justify-content-between align-items-center">
+                <label for="pemeriksaan_fisik">Pemeriksaan Fisik</label>
+                <small class="text-muted">{{ strlen($pemeriksaan_fisik ?? '') }}/500</small>
             </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <label for="diagnosa_pre_operasi">Diagnosa Pre Operasi</label>
-                        <small class="text-muted">{{ strlen($diagnosa_pre_operasi ?? '') }}/500</small>
-                    </div>
-                    <textarea wire:model.defer="diagnosa_pre_operasi" id="diagnosa_pre_operasi" class="form-control @error('diagnosa_pre_operasi') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan diagnosa pre operasi..."></textarea>
-                    @error('diagnosa_pre_operasi') <span class="text-danger small">{{ $message }}</span> @enderror
-                </div>
-            </div>
+            <textarea wire:model.defer="pemeriksaan_fisik" id="pemeriksaan_fisik" class="form-control @error('pemeriksaan_fisik') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan pemeriksaan fisik..."></textarea>
+            @error('pemeriksaan_fisik') <span class="text-danger small">{{ $message }}</span> @enderror
         </div>
 
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <label for="rencana_tindakan_bedah">Rencana Tindakan Bedah</label>
-                        <small class="text-muted">{{ strlen($rencana_tindakan_bedah ?? '') }}/500</small>
-                    </div>
-                    <textarea wire:model.defer="rencana_tindakan_bedah" id="rencana_tindakan_bedah" class="form-control @error('rencana_tindakan_bedah') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan rencana tindakan bedah..."></textarea>
-                    @error('rencana_tindakan_bedah') <span class="text-danger small">{{ $message }}</span> @enderror
-                </div>
+        <div class="form-group">
+            <div class="d-flex justify-content-between align-items-center">
+                <label for="pemeriksaan_diagnostik">Pemeriksaan Diagnostik</label>
+                <small class="text-muted">{{ strlen($pemeriksaan_diagnostik ?? '') }}/500</small>
             </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <label for="hal_hal_yang_perludi_persiapkan">Hal-hal Yang Perlu Dipersiapkan</label>
-                        <small class="text-muted">{{ strlen($hal_hal_yang_perludi_persiapkan ?? '') }}/500</small>
-                    </div>
-                    <textarea wire:model.defer="hal_hal_yang_perludi_persiapkan" id="hal_hal_yang_perludi_persiapkan" class="form-control @error('hal_hal_yang_perludi_persiapkan') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan hal-hal yang perlu dipersiapkan..."></textarea>
-                    @error('hal_hal_yang_perludi_persiapkan') <span class="text-danger small">{{ $message }}</span> @enderror
-                </div>
-            </div>
+            <textarea wire:model.defer="pemeriksaan_diagnostik" id="pemeriksaan_diagnostik" class="form-control @error('pemeriksaan_diagnostik') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan pemeriksaan diagnostik..."></textarea>
+            @error('pemeriksaan_diagnostik') <span class="text-danger small">{{ $message }}</span> @enderror
         </div>
 
-        <div class="row">
-            <div class="col-md-12">
-                <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <label for="terapi_pre_operasi">Terapi Pre Operasi</label>
-                        <small class="text-muted">{{ strlen($terapi_pre_operasi ?? '') }}/500</small>
-                    </div>
-                    <textarea wire:model.defer="terapi_pre_operasi" id="terapi_pre_operasi" class="form-control @error('terapi_pre_operasi') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan terapi pre operasi..."></textarea>
-                    @error('terapi_pre_operasi') <span class="text-danger small">{{ $message }}</span> @enderror
-                </div>
+        <div class="form-group">
+            <div class="d-flex justify-content-between align-items-center">
+                <label for="diagnosa_pre_operasi">Diagnosa Pre Operasi</label>
+                <small class="text-muted">{{ strlen($diagnosa_pre_operasi ?? '') }}/500</small>
             </div>
+            <textarea wire:model.defer="diagnosa_pre_operasi" id="diagnosa_pre_operasi" class="form-control @error('diagnosa_pre_operasi') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan diagnosa pre operasi..."></textarea>
+            @error('diagnosa_pre_operasi') <span class="text-danger small">{{ $message }}</span> @enderror
+        </div>
+
+        <div class="form-group">
+            <div class="d-flex justify-content-between align-items-center">
+                <label for="rencana_tindakan_bedah">Rencana Tindakan Bedah</label>
+                <small class="text-muted">{{ strlen($rencana_tindakan_bedah ?? '') }}/500</small>
+            </div>
+            <textarea wire:model.defer="rencana_tindakan_bedah" id="rencana_tindakan_bedah" class="form-control @error('rencana_tindakan_bedah') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan rencana tindakan bedah..."></textarea>
+            @error('rencana_tindakan_bedah') <span class="text-danger small">{{ $message }}</span> @enderror
+        </div>
+
+        <div class="form-group">
+            <div class="d-flex justify-content-between align-items-center">
+                <label for="hal_hal_yang_perludi_persiapkan">Hal-hal Yang Perlu Dipersiapkan</label>
+                <small class="text-muted">{{ strlen($hal_hal_yang_perludi_persiapkan ?? '') }}/500</small>
+            </div>
+            <textarea wire:model.defer="hal_hal_yang_perludi_persiapkan" id="hal_hal_yang_perludi_persiapkan" class="form-control @error('hal_hal_yang_perludi_persiapkan') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan hal-hal yang perlu dipersiapkan..."></textarea>
+            @error('hal_hal_yang_perludi_persiapkan') <span class="text-danger small">{{ $message }}</span> @enderror
+        </div>
+
+        <div class="form-group">
+            <div class="d-flex justify-content-between align-items-center">
+                <label for="terapi_pre_operasi">Terapi Pre Operasi</label>
+                <small class="text-muted">{{ strlen($terapi_pre_operasi ?? '') }}/500</small>
+            </div>
+            <textarea wire:model.defer="terapi_pre_operasi" id="terapi_pre_operasi" class="form-control @error('terapi_pre_operasi') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan terapi pre operasi..."></textarea>
+            @error('terapi_pre_operasi') <span class="text-danger small">{{ $message }}</span> @enderror
         </div>
 
         <div class="d-flex justify-content-end mb-4">
