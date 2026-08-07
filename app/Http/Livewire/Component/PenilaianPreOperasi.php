@@ -73,23 +73,35 @@ class PenilaianPreOperasi extends Component
             'max' => 'Karakter maksimal 500 karakter.',
         ]);
 
-        $userDokter = session('username');
+        $userDokter = session('username') ?? $this->kd_dokter;
 
         try {
             if ($this->modeEdit) {
+                if (empty($this->tanggalEdit)) {
+                    $this->alert('error', 'Tanggal data yang diubah tidak valid');
+                    return;
+                }
+
+                $tanggalTarget = Carbon::parse($this->tanggalEdit)->format('Y-m-d H:i:s');
+
                 $existing = DB::table('penilaian_pre_operasi')
                     ->where('no_rawat', $this->no_rawat)
-                    ->where('tanggal', $this->tanggalEdit)
+                    ->where('tanggal', $tanggalTarget)
                     ->first();
 
-                if (!$existing || $existing->kd_dokter != $userDokter) {
+                if (! $existing) {
+                    $this->alert('error', 'Data penilaian pre operasi yang akan diubah tidak ditemukan');
+                    return;
+                }
+
+                if ($existing->kd_dokter != $userDokter) {
                     $this->alert('warning', 'Anda tidak memiliki akses untuk mengubah/menghapus data ini');
                     return;
                 }
 
                 DB::table('penilaian_pre_operasi')
                     ->where('no_rawat', $this->no_rawat)
-                    ->where('tanggal', $this->tanggalEdit)
+                    ->where('tanggal', $tanggalTarget)
                     ->update([
                         'ringkasan_klinik' => $this->ringkasan_klinik,
                         'pemeriksaan_fisik' => $this->pemeriksaan_fisik,
@@ -106,7 +118,7 @@ class PenilaianPreOperasi extends Component
             } else {
                 DB::table('penilaian_pre_operasi')->insert([
                     'no_rawat' => $this->no_rawat,
-                    'tanggal' => now(),
+                    'tanggal' => Carbon::now()->format('Y-m-d H:i:s'),
                     'kd_dokter' => $userDokter,
                     'ringkasan_klinik' => $this->ringkasan_klinik,
                     'pemeriksaan_fisik' => $this->pemeriksaan_fisik,
@@ -130,17 +142,20 @@ class PenilaianPreOperasi extends Component
 
     public function edit($tanggal): void
     {
+        $tanggalFormatted = Carbon::parse($tanggal)->format('Y-m-d H:i:s');
+
         $record = DB::table('penilaian_pre_operasi')
             ->where('no_rawat', $this->no_rawat)
-            ->where('tanggal', $tanggal)
+            ->where('tanggal', $tanggalFormatted)
             ->first();
 
-        if (!$record) {
+        if (! $record) {
             $this->alert('error', 'Data tidak ditemukan');
             return;
         }
 
-        if ($record->kd_dokter != session('username')) {
+        $userDokter = session('username') ?? $this->kd_dokter;
+        if ($record->kd_dokter != $userDokter) {
             $this->alert('warning', 'Anda tidak memiliki akses untuk mengubah/menghapus data ini');
             return;
         }
@@ -153,27 +168,30 @@ class PenilaianPreOperasi extends Component
         $this->hal_hal_yang_perludi_persiapkan = $record->hal_hal_yang_perludi_persiapkan;
         $this->terapi_pre_operasi = $record->terapi_pre_operasi;
         $this->modeEdit = true;
-        $this->tanggalEdit = $tanggal;
+        $this->tanggalEdit = $tanggalFormatted;
     }
 
     public function confirmHapus($tanggal): void
     {
+        $tanggalFormatted = Carbon::parse($tanggal)->format('Y-m-d H:i:s');
+
         $record = DB::table('penilaian_pre_operasi')
             ->where('no_rawat', $this->no_rawat)
-            ->where('tanggal', $tanggal)
+            ->where('tanggal', $tanggalFormatted)
             ->first();
 
-        if (!$record) {
+        if (! $record) {
             $this->alert('error', 'Data tidak ditemukan');
             return;
         }
 
-        if ($record->kd_dokter != session('username')) {
+        $userDokter = session('username') ?? $this->kd_dokter;
+        if ($record->kd_dokter != $userDokter) {
             $this->alert('warning', 'Anda tidak memiliki akses untuk mengubah/menghapus data ini');
             return;
         }
 
-        $this->tanggalEdit = $tanggal;
+        $this->tanggalEdit = $tanggalFormatted;
         $this->confirm('Yakin ingin menghapus penilaian pre operasi ini?', [
             'toast' => false,
             'position' => 'center',
@@ -185,24 +203,27 @@ class PenilaianPreOperasi extends Component
 
     public function hapus(): void
     {
-        if (!$this->tanggalEdit) {
+        if (! $this->tanggalEdit) {
             return;
         }
 
         try {
+            $tanggalFormatted = Carbon::parse($this->tanggalEdit)->format('Y-m-d H:i:s');
+            $userDokter = session('username') ?? $this->kd_dokter;
+
             $record = DB::table('penilaian_pre_operasi')
                 ->where('no_rawat', $this->no_rawat)
-                ->where('tanggal', $this->tanggalEdit)
+                ->where('tanggal', $tanggalFormatted)
                 ->first();
 
-            if (!$record || $record->kd_dokter != session('username')) {
+            if (! $record || $record->kd_dokter != $userDokter) {
                 $this->alert('warning', 'Anda tidak memiliki akses untuk mengubah/menghapus data ini');
                 return;
             }
 
             DB::table('penilaian_pre_operasi')
                 ->where('no_rawat', $this->no_rawat)
-                ->where('tanggal', $this->tanggalEdit)
+                ->where('tanggal', $tanggalFormatted)
                 ->delete();
 
             $this->resetInput();
