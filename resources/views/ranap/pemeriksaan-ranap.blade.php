@@ -36,6 +36,9 @@
             <x-adminlte-card title="Penandaan Area Operasi" icon="fas fa-map-marker-alt" theme="info" maximizable collapsible="collapsed">
                 <livewire:component.penandaan-area-operasi :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" />
             </x-adminlte-card>
+            <x-adminlte-card title="Penilaian Pre Operasi" icon="fas fa-notes-medical" theme="info" maximizable collapsible="collapsed">
+                <livewire:component.penilaian-pre-operasi :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" />
+            </x-adminlte-card>
             <x-adminlte-card title="SBAR" icon='fas fa-stethoscope' theme="info" maximizable collapsible="collapsed">
                 <livewire:ranap.sbar.detail-sbar />
                 <livewire:ranap.sbar.table-sbar :noRawat="request()->get('no_rawat')" />
