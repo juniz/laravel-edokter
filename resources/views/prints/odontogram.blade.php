@@ -149,44 +149,6 @@
             margin-top: 2px;
         }
 
-        /* Summary Stats Bar */
-        .stats-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 8px;
-        }
-
-        .stats-table td {
-            width: 16.66%;
-            border: 1px solid #ccc;
-            padding: 4px 2px;
-            text-align: center;
-            background: #fff;
-        }
-
-        .stat-card {
-            border-left: 4px solid #17a2b8 !important;
-        }
-        .stat-card.border-info { border-left-color: #17a2b8 !important; }
-        .stat-card.border-danger { border-left-color: #dc3545 !important; }
-        .stat-card.border-warning { border-left-color: #ffc107 !important; }
-        .stat-card.border-dark { border-left-color: #343a40 !important; }
-        .stat-card.border-success { border-left-color: #28a745 !important; }
-        .stat-card.border-secondary { border-left-color: #6c757d !important; }
-
-        .stat-title {
-            font-size: 8.5px;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 2px;
-            line-height: 1.1;
-        }
-
-        .stat-val {
-            font-size: 13px;
-            font-weight: bold;
-            color: #111;
-        }
 
         /* Odontogram Chart Section */
         .odontogram-wrapper {
@@ -320,40 +282,6 @@
             width: auto;
         }
 
-        /* History Table Section */
-        .history-section {
-            margin-bottom: 8px;
-        }
-
-        .history-header {
-            font-size: 10px;
-            font-weight: bold;
-            background-color: #eee;
-            border: 1px solid #000;
-            border-bottom: none;
-            padding: 3px 6px;
-            text-transform: uppercase;
-        }
-
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #000;
-            font-size: 9px;
-        }
-
-        .history-table th,
-        .history-table td {
-            border: 1px solid #000;
-            padding: 3px 5px;
-            vertical-align: middle;
-        }
-
-        .history-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-            text-align: center;
-        }
 
         /* Declaration Box */
         .declaration-box {
@@ -442,12 +370,6 @@
 <body>
     @php
         $listOdonto = collect($listPemeriksaan ?? []);
-        $totalPemeriksaan = $listOdonto->count();
-        $countHilang = $listOdonto->where('value', 'Tanggal')->count();
-        $countKaries = $listOdonto->where('value', 'Karies')->count();
-        $countAkar = $listOdonto->where('value', 'Akar')->count();
-        $countTumpat = $listOdonto->where('value', 'Tumpat')->count();
-        $countFraktur = $listOdonto->where('value', 'Fraktur Mahkota')->count();
 
         $getTooth = function($key) use ($listOdonto) {
             return $listOdonto->where('gg_xx', $key)->first();
@@ -520,35 +442,6 @@
             </tr>
         </table>
 
-        {{-- Summary Stats Bar --}}
-        <table class="stats-table">
-            <tr>
-                <td class="stat-card border-info">
-                    <div class="stat-title" style="color: #17a2b8;">TOTAL PERIKSA</div>
-                    <div class="stat-val">{{ $totalPemeriksaan }}</div>
-                </td>
-                <td class="stat-card border-danger">
-                    <div class="stat-title" style="color: #dc3545;">TANGGAL (HILANG)</div>
-                    <div class="stat-val">{{ $countHilang }}</div>
-                </td>
-                <td class="stat-card border-warning">
-                    <div class="stat-title" style="color: #d39e00;">KARIES</div>
-                    <div class="stat-val">{{ $countKaries }}</div>
-                </td>
-                <td class="stat-card border-dark">
-                    <div class="stat-title" style="color: #343a40;">SISA AKAR</div>
-                    <div class="stat-val">{{ $countAkar }}</div>
-                </td>
-                <td class="stat-card border-success">
-                    <div class="stat-title" style="color: #28a745;">TUMPATAN</div>
-                    <div class="stat-val">{{ $countTumpat }}</div>
-                </td>
-                <td class="stat-card border-secondary">
-                    <div class="stat-title" style="color: #6c757d;">FRAKTUR MAHKOTA</div>
-                    <div class="stat-val">{{ $countFraktur }}</div>
-                </td>
-            </tr>
-        </table>
 
         {{-- Odontogram Chart Section --}}
         <div class="odontogram-wrapper">
@@ -730,54 +623,6 @@
             </div>
         </div>
 
-        {{-- History Table --}}
-        <div class="history-section">
-            <div class="history-header">
-                RIWAYAT PEMERIKSAAN ODONTOGRAM
-            </div>
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th style="width: 5%;">NO</th>
-                        <th style="width: 22%;">TANGGAL & JAM</th>
-                        <th style="width: 15%;">GIGI</th>
-                        <th style="width: 23%;">HASIL PEMERIKSAAN</th>
-                        <th style="width: 35%;">CATATAN</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($listOdonto as $index => $item)
-                        <tr>
-                            <td style="text-align: center;">{{ $index + 1 }}</td>
-                            <td>{{ $item->tgl_perawatan }} {{ $item->jam_rawat ?? '' }}</td>
-                            <td><strong>{{ str_replace('gg_', 'Gigi ', $item->gg_xx) }}</strong></td>
-                            <td>
-                                @if($item->value == 'Tanggal')
-                                    Tanggal (Hilang)
-                                @elseif($item->value == 'Karies')
-                                    Karies
-                                @elseif($item->value == 'Akar')
-                                    Sisa Akar
-                                @elseif($item->value == 'Tumpat')
-                                    Tumpatan
-                                @elseif($item->value == 'Fraktur Mahkota')
-                                    Fraktur Mahkota
-                                @else
-                                    {{ $item->value }}
-                                @endif
-                            </td>
-                            <td>{{ $item->catatan ?? '-' }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: #666; padding: 6px;">
-                                Belum ada data pemeriksaan odontogram.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
 
         {{-- Declaration Box --}}
         <div class="declaration-box">
