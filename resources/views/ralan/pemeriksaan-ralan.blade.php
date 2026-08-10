@@ -34,7 +34,7 @@
             <livewire:ralan.modal.edit-pemeriksaan />
         </x-adminlte-card>
         @if(session()->get('kd_poli') == 'U002' || session()->get('kd_poli') == 'U003')
-        <livewire:ralan.odontogram :noRawat=" request()->get('no_rawat')" :noRm="request()->get('no_rm')">
+            <livewire:ralan.odontogram :noRawat="request()->get('no_rawat')" :noRm="request()->get('no_rm')">
             @endif
             <x-adminlte-card title="Resep" id="resepCard" theme="info" icon="fas fa-lg fa-pills" collapsible="collapsed"
                 maximizable>
