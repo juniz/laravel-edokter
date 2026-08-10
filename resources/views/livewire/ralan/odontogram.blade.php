@@ -17,7 +17,10 @@
         <h3 class="card-title font-weight-bold mb-0 flex-grow-1">
             <i class="fas fa-tooth mr-2"></i> Pemeriksaan Odontogram
         </h3>
-        <div class="card-tools ml-auto">
+        <div class="card-tools ml-auto d-flex align-items-center">
+            <a href="{{ route('odontogram.cetak', ['no_rawat' => $noRawat]) }}" target="_blank" class="btn btn-tool text-white mr-1" title="Cetak Odontogram">
+                <i class="fas fa-print fa-lg"></i>
+            </a>
             <button type="button" wire:click="collapsed" class="btn btn-tool text-white" data-card-widget="collapse">
                 <i wire:ignore class="fas fa-lg @if($isCollapsed) fa-plus @else fa-minus @endif"></i>
             </button>
