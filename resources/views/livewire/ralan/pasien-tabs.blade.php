@@ -150,24 +150,7 @@
                                 break;
                             }
                         }
-
-                        // Ambil data Penilaian Awal Keperawatan IGD dari kunjungan yang memiliki data
-                        $noRawatIGD = null;
-                        foreach($data as $row) {
-                            $no_rawat_temp = is_array($row) ? ($row['no_rawat'] ?? null) : ($row->no_rawat ?? null);
-                            if ($no_rawat_temp) {
-                                $checkIGD = $this->getPenilaianAwalKeperawatanIGD($no_rawat_temp);
-                                if ($checkIGD) {
-                                    $noRawatIGD = $no_rawat_temp;
-                                    break;
-                                }
-                            }
-                        }
                         @endphp
-
-                        @if($noRawatIGD)
-                            <x-ralan.penilaian-awal-medis-i-g-d :no-rawat="$noRawatIGD" />
-                        @endif
                         
                         @if($penilaianKebidananRanap)
                         <x-adminlte-card theme="warning" title="Penilaian Awal Keperawatan Kebidanan Ranap" icon="fas fa-clipboard-check" theme-mode="outline" collapsible class="mb-4">
@@ -1092,6 +1075,13 @@
                                     </div>
                                 </div>
                                 <div class="card-body p-2 p-md-3">
+                                        @php
+                                        $penilaianIGDVisit = $this->getPenilaianAwalKeperawatanIGD($no_rawat);
+                                        @endphp
+                                        @if($penilaianIGDVisit)
+                                            <x-ralan.penilaian-awal-medis-i-g-d :no-rawat="$no_rawat" />
+                                        @endif
+
                                         @php
                                         $allPemeriksaan = $this->getPemeriksaanRalan($no_rawat, $status_lanjut);
                                         // Filter hanya pemeriksaan milik dokter
