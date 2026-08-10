@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OdontogramPrintController;
 use App\Http\Controllers\PenandaanAreaOperasiController;
 use Illuminate\Support\Facades\Route;
 
@@ -270,3 +271,5 @@ Route::get('temp-konsultasi/', [App\Http\Controllers\KonsultasiMedikController::
 Route::get('dokumen-online/folders', [App\Http\Controllers\DokumenOnlineController::class, 'getFolders'])->name('dokumen-online.folders');
 Route::get('dokumen-online/documents/{folder}', [App\Http\Controllers\DokumenOnlineController::class, 'getDocuments'])->name('dokumen-online.documents');
 Route::get('dokumen-online/stream', [App\Http\Controllers\DokumenOnlineController::class, 'streamDocument'])->name('dokumen-online.stream');
+
+Route::get('/odontogram/cetak', [OdontogramPrintController::class, 'cetak'])->name('odontogram.cetak');
