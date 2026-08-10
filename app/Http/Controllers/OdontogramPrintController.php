@@ -44,15 +44,8 @@ class OdontogramPrintController extends Controller
             ->where('no_rawat', $noRawat)
             ->get();
 
-        $petugasFirst = DB::table('pemeriksaan_odontogram')
-            ->leftJoin('petugas', 'pemeriksaan_odontogram.nip', '=', 'petugas.nip')
-            ->where('pemeriksaan_odontogram.no_rawat', $noRawat)
-            ->whereNotNull('petugas.nama')
-            ->select('petugas.nama as nama_petugas', 'petugas.nip')
-            ->first();
-
-        $namaDokterPetugas = $regData->nm_dokter ?? ($petugasFirst->nama_petugas ?? '-');
-        $kodeDokterPetugas = $regData->kd_dokter ?? ($petugasFirst->nip ?? '-');
+        $namaDokterPetugas = $regData->nm_dokter ?? '-';
+        $kodeDokterPetugas = $regData->kd_dokter ?? '-';
 
         $setting = DB::table('setting')->first();
         if (!$setting) {
