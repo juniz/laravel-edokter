@@ -10,24 +10,25 @@ class Odontogram extends Component
 {
     use SwalResponse;
     public $isCollapsed = true, $gigi, $penyakit, $catatan, $listPemeriksaanOdontogram = [], $noRawat, $noRm, $swal = 'swal:odontogram';
+    
     protected $rules = [
         'gigi' => 'required',
         'penyakit' => 'required',
-        'catatan' => 'required',
+        'catatan' => 'nullable',
     ];
 
     protected $messages = [
         'gigi.required' => 'Gigi tidak boleh kosong',
-        'penyakit.required' => 'Penyakit tidak boleh kosong',
-        'catatan.required' => 'Catatan tidak boleh kosong',
+        'penyakit.required' => 'Hasil pemeriksaan tidak boleh kosong',
     ];
 
-    protected $listeners = ['hapusOdontogram'];
+    protected $listeners = ['hapusOdontogram', 'selectGigiDirect' => 'setGigi', 'selectPenyakitDirect' => 'setPenyakit'];
 
     public function mount($noRawat, $noRm)
     {
         $this->noRawat = $noRawat;
         $this->noRm = $noRm;
+        $this->getPemeriksaanOdontogram();
     }
 
     public function hydrate()
@@ -76,18 +77,18 @@ class Odontogram extends Component
                     'jam_rawat' => date('H:i:s'),
                     'gg_xx' => $this->gigi,
                     'value' => $this->penyakit,
-                    'catatan' => $this->catatan,
+                    'catatan' => $this->catatan ?? '-',
                 ]);
             $this->getPemeriksaanOdontogram();
             DB::commit();
             $this->dispatchBrowserEvent($this->swal, $this->toastResponse('Pemeriksaan Odontogram berhasil disimpan'));
             $this->reset(['gigi', 'penyakit', 'catatan']);
+            $this->dispatchBrowserEvent('odontogram:saved');
         }catch(\Illuminate\Database\QueryException $ex){
             DB::rollBack();
             $this->dispatchBrowserEvent($this->swal, $this->toastResponse($ex->getMessage() ?? 'Pemeriksaan Odontogram gagal disimpan', 'error'));
         }
     }
-
 
     public function delete($id, $tgl)
     {
@@ -106,9 +107,11 @@ class Odontogram extends Component
             $this->getPemeriksaanOdontogram();
             DB::commit();
             $this->dispatchBrowserEvent($this->swal, $this->toastResponse('Pemeriksaan Odontogram berhasil dihapus'));
+            $this->dispatchBrowserEvent('odontogram:deleted');
         }catch(\Illuminate\Database\QueryException $ex){
             DB::rollBack();
             $this->dispatchBrowserEvent($this->swal, $this->toastResponse($ex->getMessage() ?? 'Pemeriksaan Odontogram gagal dihapus', 'error'));
         }
     }
 }
+
