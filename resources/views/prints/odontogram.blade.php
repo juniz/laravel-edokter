@@ -385,7 +385,7 @@
         {{-- Header / Kop --}}
         <table class="header-table">
             <tr>
-                <td style="width: 70%;">
+                <td style="width: 100%;">
                     <div class="kop-left">
                         @if(!empty($setting->logo_base64))
                             <img src="{{ $setting->logo_base64 }}" class="hospital-logo" alt="Logo">
@@ -399,11 +399,6 @@
                             <div>{{ $setting->header_title_2 ?? 'BIDANG KEDOKTERAN DAN KESEHATAN' }}</div>
                             <div class="hospital-name">{{ $setting->hospital_name ?? 'RUMAH SAKIT BHAYANGKARA TK. III NGANJUK' }}</div>
                         </div>
-                    </div>
-                </td>
-                <td style="width: 30%; vertical-align: top;">
-                    <div class="doc-box">
-                        RM. 06.a / Odontogram
                     </div>
                 </td>
             </tr>
