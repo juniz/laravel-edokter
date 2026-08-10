@@ -237,7 +237,7 @@
                     <span>Tumpatan</span>
                 </div>
                 <div class="legend-item d-flex align-items-center mb-1">
-                    <span class="badge badge-secondary mr-1">F</span>
+                    <img src="{{ url('images/Fraktur Mahkota.png') }}" class="mr-1" style="height: 16px;">
                     <span>Fraktur Mahkota</span>
                 </div>
             </div>
@@ -269,7 +269,7 @@
                             <span>Tumpatan</span>
                         </button>
                         <button type="button" class="btn btn-outline-secondary btn-sm condition-pill" data-condition="Fraktur Mahkota" onclick="selectCondition('Fraktur Mahkota')">
-                            <i class="fas fa-heart-broken mr-1"></i>
+                            <img src="{{ url('images/Fraktur Mahkota.png') }}" class="pill-icon mr-1" alt="Fraktur Mahkota" style="height: 16px; vertical-align: middle;">
                             <span>Fraktur Mahkota</span>
                         </button>
                     </div>
@@ -499,7 +499,7 @@
                                         <i class="fas fa-fill-drip mr-1"></i> Tumpatan
                                     </button>
                                     <button type="button" onclick="selectCondition('Fraktur Mahkota')" class="btn btn-sm btn-outline-secondary condition-pill rounded-pill mr-1 mb-1" data-condition="Fraktur Mahkota">
-                                        <i class="fas fa-heart-broken mr-1"></i> Fraktur Mahkota
+                                        <img src="{{ url('images/Fraktur Mahkota.png') }}" class="pill-icon mr-1" alt="Fraktur Mahkota" style="height: 16px; vertical-align: middle;"> Fraktur Mahkota
                                     </button>
                                 </div>
                             </div>
