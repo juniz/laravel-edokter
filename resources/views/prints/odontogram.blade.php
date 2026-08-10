@@ -446,8 +446,12 @@
                 <table class="table-odontogram-grid">
                     {{-- Numbers row Gigi Permanen Atas --}}
                     <tr class="tooth-number-row">
-                        @foreach([18,17,16,15,14,13,12,11, 21,22,23,24,25,26,27,28] as $num)
-                            <td>{{ $num % 10 }}</td>
+                        @foreach([18,17,16,15,14,13,12] as $num)
+                            <td>{{ $num }}</td>
+                        @endforeach
+                        <td style="position: relative;">11 <span style="position: absolute; right: -5px; top: -1px; font-size: 8px; font-weight: bold;">▼</span></td>
+                        @foreach([21,22,23,24,25,26,27,28] as $num)
+                            <td>{{ $num }}</td>
                         @endforeach
                     </tr>
                     {{-- Teeth row Gigi Permanen Atas --}}
@@ -472,10 +476,14 @@
                         @endforeach
                     </tr>
 
-                    {{-- Spacer --}}
-                    <tr class="spacer-row"></tr>
-
-
+                    {{-- Numbers row Gigi Desidui Atas --}}
+                    <tr class="tooth-number-row">
+                        <td colspan="3" style="border: 0;"></td>
+                        @foreach([55,54,53,52,51, 61,62,63,64,65] as $num)
+                            <td>{{ $num }}</td>
+                        @endforeach
+                        <td colspan="3" style="border: 0;"></td>
+                    </tr>
 
                     {{-- Teeth row Gigi Desidui Atas --}}
                     <tr>
@@ -501,13 +509,11 @@
                         <td colspan="3" style="border: 0;"></td>
                     </tr>
 
-                    {{-- Numbers row Gigi Desidui Atas & Bawah --}}
-                    <tr class="tooth-number-row">
-                        <td colspan="3" style="border: 0;"></td>
-                        @foreach([55,54,53,52,51, 61,62,63,64,65] as $num)
-                            <td>{{ $num % 10 }}</td>
-                        @endforeach
-                        <td colspan="3" style="border: 0;"></td>
+                    {{-- Middle Gap Indicator --}}
+                    <tr>
+                        <td colspan="16" style="border: 0; text-align: center; font-size: 10px; padding: 2px 0; line-height: 1; color: #000; font-weight: bold;">
+                            &#11049;
+                        </td>
                     </tr>
 
                     {{-- Teeth row Gigi Desidui Bawah --}}
@@ -534,10 +540,14 @@
                         <td colspan="3" style="border: 0;"></td>
                     </tr>
 
-
-
-                    {{-- Spacer --}}
-                    <tr class="spacer-row"></tr>
+                    {{-- Numbers row Gigi Desidui Bawah --}}
+                    <tr class="tooth-number-row">
+                        <td colspan="3" style="border: 0;"></td>
+                        @foreach([85,84,83,82,81, 71,72,73,74,75] as $num)
+                            <td>{{ $num }}</td>
+                        @endforeach
+                        <td colspan="3" style="border: 0;"></td>
+                    </tr>
 
                     {{-- Teeth row Gigi Permanen Bawah --}}
                     <tr>
@@ -562,8 +572,12 @@
                     </tr>
                     {{-- Numbers row Gigi Permanen Bawah --}}
                     <tr class="tooth-number-row">
-                        @foreach([48,47,46,45,44,43,42,41, 31,32,33,34,35,36,37,38] as $num)
-                            <td>{{ $num % 10 }}</td>
+                        @foreach([48,47,46,45,44,43,42] as $num)
+                            <td>{{ $num }}</td>
+                        @endforeach
+                        <td style="position: relative;">41 <span style="position: absolute; right: -5px; bottom: -1px; font-size: 8px; font-weight: bold;">▲</span></td>
+                        @foreach([31,32,33,34,35,36,37,38] as $num)
+                            <td>{{ $num }}</td>
                         @endforeach
                     </tr>
                 </table>
