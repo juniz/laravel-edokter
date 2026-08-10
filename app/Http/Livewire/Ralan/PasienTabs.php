@@ -561,4 +561,13 @@ class PasienTabs extends Component
             )
             ->first();
     }
+
+    public function getPenilaianAwalKeperawatanIGD($noRawat)
+    {
+        return DB::table('penilaian_awal_keperawatan_igd')
+            ->leftJoin('petugas', 'penilaian_awal_keperawatan_igd.nip', '=', 'petugas.nip')
+            ->where('penilaian_awal_keperawatan_igd.no_rawat', $noRawat)
+            ->select('penilaian_awal_keperawatan_igd.*', 'petugas.nama as nama_petugas')
+            ->first();
+    }
 }
