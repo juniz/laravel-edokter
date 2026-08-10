@@ -466,6 +466,75 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Input Pemeriksaan Odontogram -->
+        <div class="modal fade" id="modalInputOdontogram" tabindex="-1" role="dialog" aria-labelledby="modalInputOdontogramLabel" aria-hidden="true" wire:ignore.self>
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content shadow-lg border-0">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title font-weight-bold" id="modalInputOdontogramLabel">
+                            <i class="fas fa-tooth mr-2"></i> Input Pemeriksaan <span id="modalToothTitle" class="badge badge-light text-info ml-1">Gigi</span>
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form wire:submit.prevent="save">
+                        <div class="modal-body">
+                            <div class="form-group mb-3">
+                                <label class="font-weight-bold text-dark mb-1">
+                                    <i class="fas fa-hand-pointer text-info mr-1"></i> Opsi Cepat Hasil Pemeriksaan
+                                </label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" onclick="selectCondition('Tanggal')" class="btn btn-sm btn-outline-danger condition-pill rounded-pill mr-1 mb-1" data-condition="Tanggal">
+                                        <i class="fas fa-times-circle mr-1"></i> Tanggal
+                                    </button>
+                                    <button type="button" onclick="selectCondition('Karies')" class="btn btn-sm btn-outline-warning text-dark condition-pill rounded-pill mr-1 mb-1" data-condition="Karies">
+                                        <i class="fas fa-bug mr-1"></i> Karies
+                                    </button>
+                                    <button type="button" onclick="selectCondition('Akar')" class="btn btn-sm btn-outline-dark condition-pill rounded-pill mr-1 mb-1" data-condition="Akar">
+                                        <i class="fas fa-spa mr-1"></i> Sisa Akar
+                                    </button>
+                                    <button type="button" onclick="selectCondition('Tumpat')" class="btn btn-sm btn-outline-info condition-pill rounded-pill mr-1 mb-1" data-condition="Tumpat">
+                                        <i class="fas fa-fill-drip mr-1"></i> Tumpatan
+                                    </button>
+                                    <button type="button" onclick="selectCondition('Fraktur Mahkota')" class="btn btn-sm btn-outline-secondary condition-pill rounded-pill mr-1 mb-1" data-condition="Fraktur Mahkota">
+                                        <i class="fas fa-heart-broken mr-1"></i> Fraktur Mahkota
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="penyakit_modal" class="font-weight-bold text-dark">Hasil Pemeriksaan <span class="text-danger">*</span></label>
+                                <div wire:ignore>
+                                    <select class="form-control formpemeriksaan" wire:model.defer="penyakit" id="penyakit_modal" required>
+                                        <option value="">Pilih Hasil Pemeriksaan</option>
+                                        <option value="Tanggal">Tanggal (Hilang)</option>
+                                        <option value="Karies">Karies</option>
+                                        <option value="Akar">Sisa Akar</option>
+                                        <option value="Tumpat">Tumpatan</option>
+                                        <option value="Fraktur Mahkota">Fraktur Mahkota</option>
+                                    </select>
+                                </div>
+                                @error('penyakit') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label for="catatan_modal" class="font-weight-bold text-dark">Catatan Pemeriksaan</label>
+                                <textarea wire:model.defer="catatan" class="form-control" id="catatan_modal" rows="3" placeholder="Masukkan catatan kondisi gigi..."></textarea>
+                                @error('catatan') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-info px-4 shadow-sm">
+                                <i class="fas fa-save mr-1"></i> Simpan Pemeriksaan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -649,7 +718,11 @@
 
         function selectTooth(toothId, label) {
             $('.formgigi').val(toothId).trigger('change');
+            @this.set('gigi', toothId);
+            let toothTitle = label || (toothId ? toothId.replace('gg_', 'Gigi ') : '');
+            $('#modalToothTitle').text(toothTitle);
             updateToothSelectionUI(toothId);
+            $('#modalInputOdontogram').modal('show');
         }
 
         function selectCondition(value) {
@@ -705,6 +778,7 @@
         });
 
         window.addEventListener('odontogram:saved', function() {
+            $('#modalInputOdontogram').modal('hide');
             $('.formgigi').val('').trigger('change');
             $('.formpemeriksaan').val('').trigger('change');
             $('.tooth-cell').removeClass('tooth-selected');
