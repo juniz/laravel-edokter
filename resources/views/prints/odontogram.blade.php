@@ -445,16 +445,7 @@
 
         {{-- Odontogram Chart Section --}}
         <div class="odontogram-wrapper">
-            <div class="quadrant-header">
-                <span class="quadrant-badge">&larr; KANAN (RIGHT)</span>
-                <span class="chart-title-text">CHART ODONTOGRAM</span>
-                <span class="quadrant-badge">KIRI (LEFT) &rarr;</span>
-            </div>
 
-            {{-- Gigi Permanen Atas Label --}}
-            <div class="section-label-container">
-                <span class="section-badge badge-info-custom">Gigi Permanen - Maxilla (Atas)</span>
-            </div>
 
             <div class="table-odontogram-container">
                 <table class="table-odontogram-grid">
@@ -489,12 +480,7 @@
                     {{-- Spacer --}}
                     <tr class="spacer-row"></tr>
 
-                    {{-- Gigi Desidui Atas label --}}
-                    <tr>
-                        <td colspan="16" class="text-center" style="padding: 1px 0;">
-                            <span class="section-badge badge-secondary-custom">Gigi Desidui (Anak) - Atas</span>
-                        </td>
-                    </tr>
+
 
                     {{-- Teeth row Gigi Desidui Atas --}}
                     <tr>
@@ -553,12 +539,7 @@
                         <td colspan="3" style="border: 0;"></td>
                     </tr>
 
-                    {{-- Gigi Desidui Bawah label --}}
-                    <tr>
-                        <td colspan="16" class="text-center" style="padding: 1px 0;">
-                            <span class="section-badge badge-secondary-custom">Gigi Desidui (Anak) - Bawah</span>
-                        </td>
-                    </tr>
+
 
                     {{-- Spacer --}}
                     <tr class="spacer-row"></tr>
@@ -593,10 +574,7 @@
                 </table>
             </div>
 
-            {{-- Gigi Permanen Bawah Label --}}
-            <div class="section-label-container" style="margin-top: 2px;">
-                <span class="section-badge badge-info-custom">Gigi Permanen - Mandibula (Bawah)</span>
-            </div>
+
 
             {{-- Legend Bar --}}
             <div class="legend-bar">
