@@ -13,11 +13,11 @@
 @endphp
 
 <div @if($isCollapsed) class="card card-info collapsed-card shadow-sm" @else class="card card-info shadow-sm" @endif>
-    <div class="card-header bg-info text-white d-flex align-items-center justify-content-between">
-        <h3 class="card-title font-weight-bold mb-0">
+    <div class="card-header bg-info text-white d-flex align-items-center">
+        <h3 class="card-title font-weight-bold mb-0 flex-grow-1">
             <i class="fas fa-tooth mr-2"></i> Pemeriksaan Odontogram
         </h3>
-        <div class="card-tools">
+        <div class="card-tools ml-auto">
             <button type="button" wire:click="collapsed" class="btn btn-tool text-white" data-card-widget="collapse">
                 <i wire:ignore class="fas fa-lg @if($isCollapsed) fa-plus @else fa-minus @endif"></i>
             </button>
@@ -25,40 +25,40 @@
     </div>
     <div class="card-body">
         <!-- Summary Stats Bar -->
-        <div class="row mb-4 odontogram-stats-bar">
-            <div class="col-6 col-sm-4 col-md-2 mb-2">
-                <div class="stat-card border-left-info shadow-sm rounded p-2 text-center bg-white">
-                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Periksa</div>
+        <div class="row align-items-stretch mb-4 odontogram-stats-bar">
+            <div class="col-6 col-sm-4 col-md-2 mb-2 d-flex">
+                <div class="stat-card border-left-info shadow-sm rounded p-2 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                    <div class="stat-title text-xs font-weight-bold text-info text-uppercase mb-1 d-flex align-items-center justify-content-center" style="min-height: 28px; line-height: 1.2;">Total Periksa</div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalPemeriksaan }}</div>
                 </div>
             </div>
-            <div class="col-6 col-sm-4 col-md-2 mb-2">
-                <div class="stat-card border-left-danger shadow-sm rounded p-2 text-center bg-white">
-                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Hilang (Tanggal)</div>
+            <div class="col-6 col-sm-4 col-md-2 mb-2 d-flex">
+                <div class="stat-card border-left-danger shadow-sm rounded p-2 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                    <div class="stat-title text-xs font-weight-bold text-danger text-uppercase mb-1 d-flex align-items-center justify-content-center" style="min-height: 28px; line-height: 1.2;">Hilang (Tanggal)</div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $countHilang }}</div>
                 </div>
             </div>
-            <div class="col-6 col-sm-4 col-md-2 mb-2">
-                <div class="stat-card border-left-warning shadow-sm rounded p-2 text-center bg-white">
-                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Karies</div>
+            <div class="col-6 col-sm-4 col-md-2 mb-2 d-flex">
+                <div class="stat-card border-left-warning shadow-sm rounded p-2 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                    <div class="stat-title text-xs font-weight-bold text-warning text-uppercase mb-1 d-flex align-items-center justify-content-center" style="min-height: 28px; line-height: 1.2;">Karies</div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $countKaries }}</div>
                 </div>
             </div>
-            <div class="col-6 col-sm-4 col-md-2 mb-2">
-                <div class="stat-card border-left-dark shadow-sm rounded p-2 text-center bg-white">
-                    <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">Sisa Akar</div>
+            <div class="col-6 col-sm-4 col-md-2 mb-2 d-flex">
+                <div class="stat-card border-left-dark shadow-sm rounded p-2 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                    <div class="stat-title text-xs font-weight-bold text-dark text-uppercase mb-1 d-flex align-items-center justify-content-center" style="min-height: 28px; line-height: 1.2;">Sisa Akar</div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $countAkar }}</div>
                 </div>
             </div>
-            <div class="col-6 col-sm-4 col-md-2 mb-2">
-                <div class="stat-card border-left-success shadow-sm rounded p-2 text-center bg-white">
-                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Tumpatan</div>
+            <div class="col-6 col-sm-4 col-md-2 mb-2 d-flex">
+                <div class="stat-card border-left-success shadow-sm rounded p-2 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                    <div class="stat-title text-xs font-weight-bold text-success text-uppercase mb-1 d-flex align-items-center justify-content-center" style="min-height: 28px; line-height: 1.2;">Tumpatan</div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $countTumpat }}</div>
                 </div>
             </div>
-            <div class="col-6 col-sm-4 col-md-2 mb-2">
-                <div class="stat-card border-left-secondary shadow-sm rounded p-2 text-center bg-white">
-                    <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">Fraktur Mahkota</div>
+            <div class="col-6 col-sm-4 col-md-2 mb-2 d-flex">
+                <div class="stat-card border-left-secondary shadow-sm rounded p-2 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                    <div class="stat-title text-xs font-weight-bold text-secondary text-uppercase mb-1 d-flex align-items-center justify-content-center" style="min-height: 28px; line-height: 1.2;">Fraktur Mahkota</div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $countFraktur }}</div>
                 </div>
             </div>
