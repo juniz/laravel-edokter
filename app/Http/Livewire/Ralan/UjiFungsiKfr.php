@@ -50,7 +50,7 @@ class UjiFungsiKfr extends Component
                 ->where('no_rawat', $this->idFkr)
                 ->delete();
 
-            $this->emit('refreshData');
+            $this->dispatch('refreshData');
             $this->alert('success', 'Berhasil', [
                 'position' =>  'top-end',
                 'timer' =>  3000,
@@ -101,7 +101,7 @@ class UjiFungsiKfr extends Component
                     'rekomedasi' => $this->rekomendasi,
                 ]);
 
-            $this->emit('refreshData');
+            $this->dispatch('refreshData');
             $this->alert('success', 'Berhasil', [
                 'position' =>  'top-end',
                 'timer' =>  3000,

@@ -906,17 +906,27 @@
         }
         
         // Re-initialize after Livewire updates
-        document.addEventListener('livewire:load', function() {
-            setTimeout(initLoadingOverlay, 100);
-        });
-        
-        document.addEventListener('livewire:update', function() {
-            setTimeout(checkAndHideOverlay, 100);
-        });
-        
-        // Also check after any DOM changes
-        document.addEventListener('livewire:dom-updated', function() {
-            setTimeout(checkAndHideOverlay, 100);
+        document.addEventListener('livewire:init', function() {
+            Livewire.hook('commit', ({ succeed }) => {
+                succeed(() => {
+                    queueMicrotask(() => {
+                        setTimeout(initLoadingOverlay, 100);
+                        setTimeout(checkAndHideOverlay, 100);
+                        setTimeout(function() {
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }, 100);
+                    });
+                });
+            });
+
+            Livewire.hook('morph.updated', () => {
+                setTimeout(checkAndHideOverlay, 100);
+                if (document.querySelector('.pagination a.active')) {
+                    setTimeout(function() {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 50);
+                }
+            });
         });
         
         // Handle pagination clicks for Livewire
@@ -946,22 +956,6 @@
             }
         });
         
-        // Scroll to top after Livewire updates (when pagination changes)
-        document.addEventListener('livewire:update', function() {
-            setTimeout(function() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }, 100);
-        });
-        
-        // Also scroll to top when Livewire finishes updating DOM
-        document.addEventListener('livewire:dom-updated', function() {
-            // Check if pagination was clicked
-            if (document.querySelector('.pagination a.active')) {
-                setTimeout(function() {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }, 50);
-            }
-        });
     })();
 </script>
 @endpush
@@ -1021,7 +1015,6 @@
         opacity: 0 !important;
     }
 </style>
-
 
 
 

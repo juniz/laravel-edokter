@@ -45,7 +45,7 @@ class TableSbar extends Component
                 ->orderBy('catatan_sbar.tanggal', 'desc')
                 ->get();
 
-            // $this->emit('sbarLoaded', $this->sbar);
+            // Refresh is handled through Livewire listeners elsewhere.
 
         } catch (\Exception $e) {
             // dd($e);

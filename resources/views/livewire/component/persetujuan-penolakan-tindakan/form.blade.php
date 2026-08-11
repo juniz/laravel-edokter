@@ -113,7 +113,7 @@
 
 @push('js')
 <script>
-    document.addEventListener('livewire:load', function () {
+    document.addEventListener('livewire:init', function () {
         $('#saksi2').select2({
             placeholder: 'Pilih Saksi II Perawat',
             minimumInputLength: 3,
@@ -133,8 +133,8 @@
     $('#saksi2').on('change', function (e) {
         @this.set('saksi2', e.target.value);
     });
-    Livewire.on('saksi2', function (data) {
-        $('#saksi2').val(data).trigger('change');
+    Livewire.on('saksi2', function ({ saksi2 }) {
+        $('#saksi2').val(saksi2).trigger('change');
     });
     $('.btn-persetujuan-penolakan-tindakan').on('click', function() {
         var id = $(this).attr('id');

@@ -11,7 +11,7 @@
             <td>{{ $item->advis }}</td>
             <td>{{ $item->nama }}</td>
             <td>
-                <button wire:click="$emit('pilihSbar', {{$item->no_sbar}})" type="button" class="btn btn-sm btn-primary">Pilih</button>
+                <button wire:click="$dispatch('pilihSbar', { id: {{$item->no_sbar}} })" type="button" class="btn btn-sm btn-primary">Pilih</button>
             </td>
         </tr>
         @empty

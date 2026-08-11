@@ -55,7 +55,7 @@ class EditPemeriksaan extends Component
         $this->kesadaran = $pemeriksaan->kesadaran ?? 'Compos Mentis';
         $this->lingkar = null; // Field tidak ada di tabel pemeriksaan_ranap
         $this->spo2 = $pemeriksaan->spo2 ?? '';
-        $this->dispatchBrowserEvent('openModalEditPemeriksaan');
+        $this->dispatch('modalEditPemeriksaanReady');
     }
 
     public function simpan()
@@ -83,9 +83,9 @@ class EditPemeriksaan extends Component
                     'kesadaran' => $this->kesadaran,
                     'spo2' => $this->spo2,
                 ]);
-            $this->emit('refreshData');
+            $this->dispatch('refreshData');
             $this->reset();
-            $this->dispatchBrowserEvent('closeModalEditPemeriksaan');
+            $this->dispatch('closeModalEditPemeriksaan');
             $this->alert('success', 'Data berhasil diubah', [
                 'position' =>  'center',
                 'timer' =>  3000,
@@ -102,4 +102,3 @@ class EditPemeriksaan extends Component
         }
     }
 }
-

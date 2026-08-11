@@ -54,7 +54,7 @@ class PasienTabs extends Component
             $this->tanggalAkhir = "";
             $this->jenisPerawatan = "";
         }
-        $this->dispatchBrowserEvent('activeTabUpdated', ['activeTab' => $tab]);
+        $this->dispatch('activeTabUpdated', activeTab: $tab);
     }
 
     public function getStatusLanjut($noRawat)
@@ -302,7 +302,7 @@ class PasienTabs extends Component
         $this->data = $this->getRiwayatPemeriksaan($this->pasien->no_rkm_medis);
 
         // Reset select2
-        $this->dispatchBrowserEvent('resetSelect2');
+        $this->dispatch('resetSelect2');
     }
 
     public function getPasien($noRawat)

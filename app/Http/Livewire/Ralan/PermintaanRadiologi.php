@@ -122,14 +122,14 @@ class PermintaanRadiologi extends Component
             // Setelah commit berhasil, refresh data dan reset form
             // Tidak perlu mengatur $this->jns_pemeriksaan karena resetForm() akan mereset semua field
             $this->getPermintaanRadiologi();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi berhasil ditambahkan"));
+            $this->dispatch('swal', ...$this->toastResponse("Permintaan Radiologi berhasil ditambahkan"));
             $this->resetForm();
         } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
 
             // State tidak perlu di-restore karena tidak pernah diubah sebelum commit
             // Semua operasi menggunakan variabel lokal $processedPemeriksaan
-            $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi gagal ditambahkan", 'error'));
+            $this->dispatch('swal', ...$this->toastResponse("Permintaan Radiologi gagal ditambahkan", 'error'));
         }
     }
 
@@ -150,7 +150,7 @@ class PermintaanRadiologi extends Component
         $this->reset(['klinis', 'info', 'jns_pemeriksaan']);
         $this->select2Count = 1;
         $this->jns_pemeriksaan = [];
-        $this->dispatchBrowserEvent('select2Rad:reset');
+        $this->dispatch('select2Rad:reset');
     }
 
     public function addSelect2()
@@ -160,7 +160,7 @@ class PermintaanRadiologi extends Component
         while (count($this->jns_pemeriksaan) < $this->select2Count) {
             $this->jns_pemeriksaan[] = null;
         }
-        $this->dispatchBrowserEvent('select2Rad:add', ['index' => $this->select2Count - 1]);
+        $this->dispatch('select2Rad:add', index: $this->select2Count - 1);
     }
 
     public function removeSelect2($index)
@@ -207,10 +207,7 @@ class PermintaanRadiologi extends Component
 
         // Dispatch event dengan index yang dihapus untuk cleanup
         // Setelah re-index, semua select2 perlu di-reinitialize karena index berubah
-        $this->dispatchBrowserEvent('select2Rad:remove', [
-            'removedIndex' => $removedIndex,
-            'newCount' => $this->select2Count
-        ]);
+        $this->dispatch('select2Rad:remove', removedIndex: $removedIndex, newCount: $this->select2Count);
     }
 
     public function setJnsPemeriksaan($index, $value)
@@ -241,10 +238,10 @@ class PermintaanRadiologi extends Component
 
             $this->getPermintaanRadiologi();
             DB::commit();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi berhasil dihapus"));
+            $this->dispatch('swal', ...$this->toastResponse("Permintaan Radiologi berhasil dihapus"));
         } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi gagal dihapus", 'error'));
+            $this->dispatch('swal', ...$this->toastResponse("Permintaan Radiologi gagal dihapus", 'error'));
         }
     }
 }

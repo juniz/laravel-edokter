@@ -46,9 +46,9 @@ class PenandaanAreaOperasi extends Component
         if ($savedMarking) {
             $this->prosedurOperasi = $savedMarking->prosedur_operasi;
             $this->savedGambarPenandaanBase64 = json_decode($savedMarking->gambar_penandaan_base64, true, 512, JSON_THROW_ON_ERROR) ?? [];
-            $this->emit(
+            $this->dispatch(
                 'loadPenandaanCanvases',
-                $this->savedGambarPenandaanBase64
+                images: $this->savedGambarPenandaanBase64
             );
         }
     }
@@ -115,4 +115,3 @@ class PenandaanAreaOperasi extends Component
         return view('livewire.component.penandaan-area-operasi');
     }
 }
-

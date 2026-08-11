@@ -2427,10 +2427,7 @@
             if (!container) {
                 console.log('Container #berkas-rm-container not found');
                 // Fallback: use event
-                Livewire.emit('initializeBerkas', rm);
-                if (typeof Livewire.dispatch !== 'undefined') {
-                    Livewire.dispatch('initializeBerkas', rm);
-                }
+                Livewire.dispatch('initializeBerkas', { rm: rm });
                 return false;
             }
             
@@ -2438,10 +2435,7 @@
             if (!berkasRmComponent) {
                 console.log('BerkasRm component not found in container');
                 // Fallback: use event
-                Livewire.emit('initializeBerkas', rm);
-                if (typeof Livewire.dispatch !== 'undefined') {
-                    Livewire.dispatch('initializeBerkas', rm);
-                }
+                Livewire.dispatch('initializeBerkas', { rm: rm });
                 return false;
             }
             
@@ -2457,19 +2451,13 @@
                 } else {
                     console.log('Component found but call method not available');
                     // Fallback: use event
-                    Livewire.emit('initializeBerkas', rm);
-                    if (typeof Livewire.dispatch !== 'undefined') {
-                        Livewire.dispatch('initializeBerkas', rm);
-                    }
+                    Livewire.dispatch('initializeBerkas', { rm: rm });
                     return false;
                 }
             } catch(e) {
                 console.log('Error calling component:', e);
                 // Fallback: use event
-                Livewire.emit('initializeBerkas', rm);
-                if (typeof Livewire.dispatch !== 'undefined') {
-                    Livewire.dispatch('initializeBerkas', rm);
-                }
+                Livewire.dispatch('initializeBerkas', { rm: rm });
                 return false;
             }
         }
@@ -2551,32 +2539,34 @@
     });
     
     // Re-apply view preference and reinitialize lazy loading after Livewire update
-    if (typeof Livewire !== 'undefined') {
-        document.addEventListener('livewire:load', function() {
-            Livewire.hook('message.processed', function() {
-                setTimeout(function() {
-                    // Reset observed flag untuk elemen baru setelah Livewire update
-                    $('.thumbnail-image img.lazy-image:not([data-loaded="true"])').removeData('observed');
-                    $('.pdf-thumb-iframe.lazy-pdf-iframe:not([src])').removeData('observed');
-                    
-                    // Reinitialize lazy loading setelah Livewire update
-                    initLazyLoading();
-                    
-                    // Restore view preference
-                    try {
-                        var savedView = localStorage.getItem('berkas-view-mode');
-                        if (savedView === 'list') {
-                            var $container = $('#berkasContainer');
-                            if ($container.length && !$container.hasClass('list-view')) {
-                                $container.addClass('list-view');
-                                $('.view-toggle .btn').removeClass('active');
-                                $('.view-toggle .btn[data-view="list"]').addClass('active');
+    document.addEventListener('livewire:init', function() {
+        Livewire.hook('commit', ({ succeed }) => {
+            succeed(() => {
+                queueMicrotask(() => {
+                    setTimeout(function() {
+                        // Reset observed flag untuk elemen baru setelah Livewire update
+                        $('.thumbnail-image img.lazy-image:not([data-loaded="true"])').removeData('observed');
+                        $('.pdf-thumb-iframe.lazy-pdf-iframe:not([src])').removeData('observed');
+
+                        // Reinitialize lazy loading setelah Livewire update
+                        initLazyLoading();
+
+                        // Restore view preference
+                        try {
+                            var savedView = localStorage.getItem('berkas-view-mode');
+                            if (savedView === 'list') {
+                                var $container = $('#berkasContainer');
+                                if ($container.length && !$container.hasClass('list-view')) {
+                                    $container.addClass('list-view');
+                                    $('.view-toggle .btn').removeClass('active');
+                                    $('.view-toggle .btn[data-view="list"]').addClass('active');
+                                }
                             }
-                        }
-                    } catch(e) {}
-                }, 200);
+                        } catch(e) {}
+                    }, 200);
+                });
             });
         });
-    }
+    });
 </script>
 @endpush

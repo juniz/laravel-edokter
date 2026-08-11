@@ -118,7 +118,7 @@
 
 @push('js')
 <script>
-    window.livewire.on('openModalEditPemeriksaan', () => {
+    Livewire.on('modalEditPemeriksaanReady', () => {
         $('#edit-pemeriksaan').modal({backdrop: false, keyboard: false});
     });
     window.addEventListener('closeModalEditPemeriksaan', () => {
@@ -126,4 +126,3 @@
     });
 </script>
 @endpush
-

@@ -100,7 +100,7 @@ class ChangeUmur extends Component
             $umurFormat = $this->tahun . ' Th ' . $this->bulan . ' Bl ' . $this->hari . ' Hr';
             
             $this->alert('success', 'Umur berhasil diubah');
-            $this->dispatchBrowserEvent('refreshUmur', ['umur' => $umurFormat]);
+            $this->dispatch('refreshUmur', umur: $umurFormat);
             $this->reset();
 
         }catch(\Exception $e){
@@ -118,4 +118,3 @@ class ChangeUmur extends Component
         }
     }
 }
-

@@ -86,10 +86,10 @@ class Diagnosa extends Component
                         ]);
                 }
                 DB::commit();
-                $this->dispatchBrowserEvent('resetSelect2');
-                $this->dispatchBrowserEvent('resetSelect2Prosedur');
+                $this->dispatch('resetSelect2');
+                $this->dispatch('resetSelect2Prosedur');
                 $this->reset(['diagnosa', 'prioritas']);
-                $this->emit('refreshDiagnosa');
+                $this->dispatch('refreshDiagnosa');
                 $this->alert('success', 'Diagnosa berhasil ditambahkan');
             }
         } catch (\Exception $e) {
@@ -127,11 +127,11 @@ class Diagnosa extends Component
                 ->where('no_rawat', $this->noRawat)
                 ->delete();
             DB::commit();
-            $this->dispatchBrowserEvent('resetSelect2');
-            $this->dispatchBrowserEvent('resetSelect2Prosedur');
+            $this->dispatch('resetSelect2');
+            $this->dispatch('resetSelect2Prosedur');
             $this->reset(['diagnosa', 'prioritas']);
             $this->alert('success', 'Diagnosa berhasil dihapus');
-            $this->emit('refreshDiagnosa');
+            $this->dispatch('refreshDiagnosa');
         } catch (\Exception $e) {
             DB::rollback();
             $this->alert('error', $e->getMessage());

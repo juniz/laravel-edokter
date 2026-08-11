@@ -16,7 +16,7 @@ class Resep extends Component
         $this->noRawat = $noRawat;
         $this->noRm = $noRm;
         $this->poli = session()->get('kd_poli');
-        $this->dispatchBrowserEvent('poli-id', ['poli' => $this->poli]);
+        $this->dispatch('poli-id', poli: $this->poli);
     }
 
     public function render()
@@ -32,7 +32,7 @@ class Resep extends Component
     public function tambahForm()
     {
         $this->jmlForm++;
-        $this->emit('tambahForm', ['jml' => $this->jmlForm]);
+        $this->dispatch('tambahForm', jml: $this->jmlForm);
     }
 
     public function kurangiForm()

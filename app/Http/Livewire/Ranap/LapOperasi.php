@@ -55,7 +55,7 @@ class LapOperasi extends Component
         $this->diagnosa_pasca_bedah = $data->diagnosa_postop;
         $this->uraian_bedah = $data->laporan_operasi;
 
-        $this->dispatchBrowserEvent('closeModalTemplateOperasi');
+        $this->dispatch('closeModalTemplateOperasi');
     }
 
     public function confirmHapus($tglOperasi, $tglSelesai)
@@ -147,7 +147,7 @@ class LapOperasi extends Component
             $this->tindakan_bedah = $data->tindakan_bedah;
 
             $this->modeEdit = true;
-            $this->emit('editLapOperasi');
+            $this->dispatch('editLapOperasi');
         } else {
 
             $this->alert('warning', 'Gagal', [
@@ -165,7 +165,7 @@ class LapOperasi extends Component
     {
         $this->reset(['tanggal_operasi', 'tanggal_selesai', 'diagnosa_pra_bedah', 'diagnosa_pasca_bedah', 'uraian_bedah', 'tindakan_bedah']);
         $this->modeEdit = false;
-        $this->emit('resetInput');
+        $this->dispatch('resetInput');
     }
 
     public function simpan()

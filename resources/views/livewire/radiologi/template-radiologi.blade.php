@@ -15,7 +15,7 @@
                 </div>
                 <div class="list-group">
                     @forelse ($datas as $item)
-                        <button wire:click='$emit("pilihTemplateRadiologi", "{{ $item->no_template ?? '' }}")' type="button" class="list-group-item list-group-item-action">{{ $item->nama_pemeriksaan ?? '' }}</button>
+                        <button wire:click='$dispatch("pilihTemplateRadiologi", { id: "{{ $item->no_template ?? "" }}" })' type="button" class="list-group-item list-group-item-action">{{ $item->nama_pemeriksaan ?? '' }}</button>
                     @empty
                         
                     @endforelse

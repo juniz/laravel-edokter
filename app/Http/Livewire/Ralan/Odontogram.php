@@ -81,18 +81,18 @@ class Odontogram extends Component
                 ]);
             $this->getPemeriksaanOdontogram();
             DB::commit();
-            $this->dispatchBrowserEvent($this->swal, $this->toastResponse('Pemeriksaan Odontogram berhasil disimpan'));
+            $this->dispatch($this->swal, ...$this->toastResponse('Pemeriksaan Odontogram berhasil disimpan'));
             $this->reset(['gigi', 'penyakit', 'catatan']);
-            $this->dispatchBrowserEvent('odontogram:saved');
+            $this->dispatch('odontogram:saved');
         }catch(\Illuminate\Database\QueryException $ex){
             DB::rollBack();
-            $this->dispatchBrowserEvent($this->swal, $this->toastResponse($ex->getMessage() ?? 'Pemeriksaan Odontogram gagal disimpan', 'error'));
+            $this->dispatch($this->swal, ...$this->toastResponse($ex->getMessage() ?? 'Pemeriksaan Odontogram gagal disimpan', 'error'));
         }
     }
 
     public function delete($id, $tgl)
     {
-        $this->dispatchBrowserEvent($this->swal.':confirm', $this->swalConfirmDialog('hapusOdontogram', [$id, $tgl]));
+        $this->dispatch($this->swal.':confirm', ...$this->swalConfirmDialog('hapusOdontogram', [$id, $tgl]));
     }
 
     public function hapusOdontogram($id)
@@ -106,12 +106,11 @@ class Odontogram extends Component
 
             $this->getPemeriksaanOdontogram();
             DB::commit();
-            $this->dispatchBrowserEvent($this->swal, $this->toastResponse('Pemeriksaan Odontogram berhasil dihapus'));
-            $this->dispatchBrowserEvent('odontogram:deleted');
+            $this->dispatch($this->swal, ...$this->toastResponse('Pemeriksaan Odontogram berhasil dihapus'));
+            $this->dispatch('odontogram:deleted');
         }catch(\Illuminate\Database\QueryException $ex){
             DB::rollBack();
-            $this->dispatchBrowserEvent($this->swal, $this->toastResponse($ex->getMessage() ?? 'Pemeriksaan Odontogram gagal dihapus', 'error'));
+            $this->dispatch($this->swal, ...$this->toastResponse($ex->getMessage() ?? 'Pemeriksaan Odontogram gagal dihapus', 'error'));
         }
     }
 }
-

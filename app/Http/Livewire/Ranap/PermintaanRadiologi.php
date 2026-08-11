@@ -80,12 +80,12 @@ class PermintaanRadiologi extends Component
             }
             DB::commit();
             $this->getPermintaanRadiologi();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi berhasil ditambahkab"));
-            $this->emit('select2Rad');
+            $this->dispatch('swal', ...$this->toastResponse("Permintaan Radiologi berhasil ditambahkab"));
+            $this->dispatch('select2Rad');
         } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
 
-            $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi gagal ditambahkan", 'error'));
+            $this->dispatch('swal', ...$this->toastResponse("Permintaan Radiologi gagal ditambahkan", 'error'));
         }
     }
 
@@ -120,10 +120,10 @@ class PermintaanRadiologi extends Component
 
             $this->getPermintaanRadiologi();
             DB::commit();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi berhasil dihapus"));
+            $this->dispatch('swal', ...$this->toastResponse("Permintaan Radiologi berhasil dihapus"));
         } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse("Permintaan Radiologi gagal dihapus", 'error'));
+            $this->dispatch('swal', ...$this->toastResponse("Permintaan Radiologi gagal dihapus", 'error'));
         }
     }
 }

@@ -39,7 +39,7 @@ class BacaanRadiologi extends Component
 
         $this->bacaanRadiologi = $data->template_hasil_radiologi;
 
-        $this->dispatchBrowserEvent('closeModalTemplateRadiologi');
+        $this->dispatch('closeModalTemplateRadiologi');
     }
 
     public function simpan()

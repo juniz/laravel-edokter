@@ -93,12 +93,12 @@ class PermintaanLab extends Component
             }
             DB::commit();
             $this->getPermintaanLab();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse('Permintaan Lab berhasil ditambahkan'));
-            $this->emit('select2Lab');
+            $this->dispatch('swal', ...$this->toastResponse('Permintaan Lab berhasil ditambahkan'));
+            $this->dispatch('select2Lab');
         } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
 
-            $this->dispatchBrowserEvent('swal', $this->toastResponse($ex->getMessage() ?? 'Permintaan Lab gagal ditambahkan', 'error'));
+            $this->dispatch('swal', ...$this->toastResponse($ex->getMessage() ?? 'Permintaan Lab gagal ditambahkan', 'error'));
         }
     }
 
@@ -125,7 +125,7 @@ class PermintaanLab extends Component
 
     public function konfirmasiHapus($id)
     {
-        $this->dispatchBrowserEvent('swal:confirm', [
+        $this->dispatch('swal:confirm', ...[
             'title' => 'Konfirmasi Hapus Data',
             'text' => 'Apakah anda yakin ingin menghapus data ini?',
             'type' => 'warning',
@@ -146,10 +146,10 @@ class PermintaanLab extends Component
 
             $this->getPermintaanLab();
             DB::commit();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse('Permintaan Lab berhasil dihapus'));
+            $this->dispatch('swal', ...$this->toastResponse('Permintaan Lab berhasil dihapus'));
         } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse($ex->getMessage() ?? 'Permintaan Lab gagal dihapus', 'error'));
+            $this->dispatch('swal', ...$this->toastResponse($ex->getMessage() ?? 'Permintaan Lab gagal dihapus', 'error'));
         }
     }
 }

@@ -203,7 +203,7 @@ class Form extends Component
                 ], ['no_rawat'], ['tanggal', 'kd_dokter', 'anamnesis', 'hubungan', 'keluhan_utama', 'rps', 'rpk', 'rpd', 'rpo', 'alergi', 'keadaan', 'kesadaran', 'gcs', 'tb', 'bb', 'td', 'nadi', 'rr', 'suhu', 'spo', 'kepala', 'mata', 'thoraks', 'abdomen', 'gigi', 'genital', 'leher', 'ekstremitas', 'ket_fisik', 'ket_lokalis', 'ekg', 'rad', 'lab', 'diagnosis', 'tata']);
 
             $this->alert('success', 'Data berhasil disimpan');
-            $this->emit('closeModalMedisIgd');
+            $this->dispatch('closeModalMedisIgd');
         } catch (\Exception $e) {
             $this->alert('error', 'Gagal', [
                 'position' =>  'center',
@@ -237,7 +237,7 @@ class Form extends Component
             } else {
                 $this->resetInput();
                 $this->alert('success', 'Data berhasil dihapus');
-                // $this->emit('closeModalMedisIgd');
+                // $this->dispatch('closeModalMedisIgd');
             }
         } catch (\Exception $e) {
             $this->alert('error', 'Gagal', [

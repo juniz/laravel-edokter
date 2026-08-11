@@ -76,7 +76,7 @@ class FormMasterOperasi extends Component
                 ];
                 DB::table('template_laporan_operasi')->where('no_template', $this->no_template)->update($data);
                 $this->resetInput();
-                $this->emit('refreshTable');
+                $this->dispatch('refreshTable');
                 $this->alert('success', 'Berhasil ubah data');
             }else{
                 $no = DB::table('template_laporan_operasi')->selectRaw("ifnull(MAX(CONVERT(RIGHT(no_template,4),signed)),0) as template")->first();
@@ -95,7 +95,7 @@ class FormMasterOperasi extends Component
                 ];
                 DB::table('template_laporan_operasi')->insert($data);
                 $this->resetInput();
-                $this->emit('refreshTable');
+                $this->dispatch('refreshTable');
                 $this->alert('success', 'Berhasil tambah data');
             }
 

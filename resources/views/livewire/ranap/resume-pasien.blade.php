@@ -690,19 +690,19 @@
             @this.listLabPending = [];
         });
 
-        window.livewire.on('closeLabPendingModal', () => {
+        Livewire.on('closeLabPendingModal', () => {
             $('#labPendingModal').modal('hide');
         });
 
-        window.livewire.on('openLabPendingModal', () => {
+        Livewire.on('openLabPendingModal', () => {
             $('#labPendingModal').modal('show');
         });
 
-        window.livewire.on('closeDietModal', () => {
+        Livewire.on('closeDietModal', () => {
             $('#dietModal').modal('hide');
         });
 
-        window.livewire.on('openDietModal', () => {
+        Livewire.on('openDietModal', () => {
             $('#dietModal').modal('show');
         });
 
@@ -722,43 +722,43 @@
             $('#tindakanModal').modal('show');
         });
 
-        window.livewire.on('getPemeriksaanFisik', () => {
+        Livewire.on('getPemeriksaanFisik', () => {
             $('#pemeriksaanModal').modal('show');
         });
 
-        window.livewire.on('closePemeriksaanFisikModal', () => {
+        Livewire.on('closePemeriksaanFisikModal', () => {
             $('#pemeriksaanModal').modal('hide');
         });
 
-        window.livewire.on('getKeluhanUtama',() => {
+        Livewire.on('getKeluhanUtama',() => {
             $('#keluhanModal').modal('show');
         });
 
-        window.livewire.on('closeKeluhanModal',() => {
+        Livewire.on('closeKeluhanModal',() => {
             $('#keluhanModal').modal('hide');
         });
 
-        window.livewire.on('getPemeriksaanRadiologi',() => {
+        Livewire.on('getPemeriksaanRadiologi',() => {
             $('#radiologiModal').modal('show');
         });
 
-        window.livewire.on('closePemeriksaanRadiologiModal',() => {
+        Livewire.on('closePemeriksaanRadiologiModal',() => {
             $('#radiologiModal').modal('hide');
         });
 
-        window.livewire.on('getPemeriksaanLab',() => {
+        Livewire.on('getPemeriksaanLab',() => {
             $('#labModal').modal('show');
         });
 
-        window.livewire.on('closePemeriksaanLabModal',() => {
+        Livewire.on('closePemeriksaanLabModal',() => {
             $('#labModal').modal('hide');
         });
 
-        window.livewire.on('getTerapi',() => {
+        Livewire.on('getTerapi',() => {
             $('#terapiModal').modal('show');
         });
 
-        window.livewire.on('closeTerapiModal',() => {
+        Livewire.on('closeTerapiModal',() => {
             $('#terapiModal').modal('hide');
         });
     </script>

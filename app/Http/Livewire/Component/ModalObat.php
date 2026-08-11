@@ -20,6 +20,6 @@ class ModalObat extends Component
 
     public function openModal()
     {
-        $this->dispatchBrowserEvent('openModalObat');
+        $this->dispatch('openModalObat');
     }
 }

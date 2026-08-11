@@ -395,49 +395,33 @@
         });
 
         // Handle Livewire events - lebih agresif untuk memastikan select2 muncul
-        if (typeof Livewire !== 'undefined') {
-            // Reinitialize setelah Livewire update
-            Livewire.hook('message.processed', function(message, component) {
-                setTimeout(function() {
-                    window.reinitializeAllSelect2();
-                }, 500);
+        document.addEventListener('livewire:init', function() {
+            Livewire.hook('commit', ({ succeed }) => {
+                succeed(() => {
+                    queueMicrotask(() => {
+                        setTimeout(function() {
+                            window.reinitializeAllSelect2();
+                        }, 500);
+                    });
+                });
             });
-            
-            // Reinitialize setelah Livewire component di-update
-            Livewire.hook('element.updated', function(el, component) {
-                // Check jika ada select2 di dalam element yang di-update
-                var hasSelect2 = $(el).find('.jenis-radiologi-select').length > 0 || 
-                                 $(el).hasClass('select2-item-wrapper') ||
-                                 $(el).closest('.select2-item-wrapper').length > 0;
-                
+
+            Livewire.hook('morph.updated', ({ el }) => {
+                var $el = $(el);
+                var hasSelect2 = $el.find('.jenis-radiologi-select').length > 0 ||
+                    $el.hasClass('select2-item-wrapper') ||
+                    $el.closest('.select2-item-wrapper').length > 0;
+
                 if (hasSelect2) {
                     setTimeout(function() {
                         window.reinitializeAllSelect2();
                     }, 500);
                 }
             });
-            
-            // Hook untuk setelah DOM di-update
-            Livewire.hook('morph.updated', function(el) {
-                if ($(el).find('.jenis-radiologi-select').length > 0) {
-                    setTimeout(function() {
-                        window.reinitializeAllSelect2();
-                    }, 500);
-                }
-            });
-        }
-        
-        // Handle Livewire DOM updates
-        document.addEventListener('livewire:load', function() {
+
             setTimeout(function() {
                 window.reinitializeAllSelect2();
             }, 800);
-        });
-        
-        document.addEventListener('livewire:update', function() {
-            setTimeout(function() {
-                window.reinitializeAllSelect2();
-            }, 500);
         });
         
         // Observer untuk mendeteksi perubahan DOM

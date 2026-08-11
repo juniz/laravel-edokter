@@ -775,7 +775,7 @@
                 cancelButtonText: e.detail.cancelButtonText,
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.livewire.emit(e.detail.function, e.detail.params[0]);
+                    Livewire.dispatch(e.detail.function, { id: e.detail.params[0] });
                 }
             });
         });
@@ -788,7 +788,7 @@
             $('.condition-pill').removeClass('active');
         });
 
-        window.livewire.on('select2', () => {
+        Livewire.on('select2', () => {
             initOdontogramSelect2();
         });
     </script>

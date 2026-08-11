@@ -96,7 +96,7 @@
                 cancelButtonText: e.detail.cancelButtonText,
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.livewire.emit(e.detail.function, e.detail.params[0]);
+                    Livewire.dispatch(e.detail.function, { noOrder: e.detail.params[0] });
                 }
             });
         });
@@ -130,11 +130,11 @@
             @this.set('jns_pemeriksaan', data);
         });
 
-        window.livewire.on('select2Lab:reset', () => {
+        Livewire.on('select2Lab:reset', () => {
             $('#jenis_lab').val("").trigger('change');
         });
 
-        window.livewire.on('select2Lab', () => {
+        Livewire.on('select2Lab', () => {
             $('#jenis_lab').select2({
             placeholder: 'Pilih Jenis',
             ajax: {

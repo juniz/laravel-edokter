@@ -29,7 +29,7 @@ class Pemeriksaan extends Component
 
     public function openModal()
     {
-        $this->emit('openModalRehabMedik');
+        $this->dispatch('openModalRehabMedik');
     }
 
     public function render()
@@ -186,10 +186,10 @@ class Pemeriksaan extends Component
             $this->getListPemeriksaan();
 
             // Tampilkan notifikasi sukses
-            $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse('Pemeriksaan berhasil ditambahkan', 'success'));
+            $this->dispatch('swal:pemeriksaan', ...$this->toastResponse('Pemeriksaan berhasil ditambahkan', 'success'));
         } catch (\Exception $ex) {
             DB::rollback();
-            $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse($ex->getMessage() ?? 'Pemeriksaan gagal ditambahkan', 'error'));
+            $this->dispatch('swal:pemeriksaan', ...$this->toastResponse($ex->getMessage() ?? 'Pemeriksaan gagal ditambahkan', 'error'));
         }
     }
 
@@ -234,16 +234,14 @@ class Pemeriksaan extends Component
     public function loadDataTerakhir()
     {
         $this->getPemeriksaan();
-        $this->dispatchBrowserEvent('swal:pemeriksaan', $this->toastResponse('Data pemeriksaan terakhir berhasil dimuat', 'info'));
+        $this->dispatch('swal:pemeriksaan', ...$this->toastResponse('Data pemeriksaan terakhir berhasil dimuat', 'info'));
     }
 
     public function openModalStatistik()
     {
         $this->getStatistikPemeriksaan();
         // Pass data directly to JavaScript via browser event
-        $this->dispatchBrowserEvent('openModalStatistikPemeriksaan', [
-            'statistikData' => $this->statistikData
-        ]);
+        $this->dispatch('openModalStatistikPemeriksaan', statistikData: $this->statistikData);
     }
 
     public function getStatistikPemeriksaan()

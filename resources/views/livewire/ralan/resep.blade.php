@@ -70,7 +70,7 @@
             return $data;
         };
 
-        window.addEventListener('livewire:load', function () {
+        document.addEventListener('livewire:init', function () {
             poli = @this.poli;
             console.log(poli);
             $('.obat-1').select2({
@@ -96,8 +96,8 @@
             });
         })
         
-        window.livewire.on('tambahForm', (e) => {
-            var i = e.jml;
+        Livewire.on('tambahForm', ({ jml }) => {
+            var i = jml;
             $('.obat-'+i).select2({
                 placeholder: 'Pilih Obat',
                 ajax: {

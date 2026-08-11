@@ -102,7 +102,7 @@ class Resume extends Component
 
     public function getKeluhanUtama()
     {
-        // $this->emit('getKeluhanUtama');
+        // Keluhan data is loaded directly in this method.
         $data = DB::table('pemeriksaan_ralan')
             ->where('no_rawat', $this->noRawat)
             ->select('keluhan')
@@ -137,17 +137,17 @@ class Resume extends Component
 
     public function getPemeriksaanRadiologi()
     {
-        $this->emit('getPemeriksaanRadiologi');
+        $this->dispatch('getPemeriksaanRadiologi');
     }
 
     public function getPemeriksaanLab()
     {
-        $this->emit('getPemeriksaanLab');
+        $this->dispatch('getPemeriksaanLab');
     }
 
     public function getTerapi()
     {
-        // $this->emit('getTerapi');
+        // Terapi data is loaded directly in this method.
         $terapi = DB::table('resep_dokter')
             ->join('resep_obat', 'resep_dokter.no_resep', '=', 'resep_obat.no_resep')
             ->join('databarang', 'resep_dokter.kode_brng', '=', 'databarang.kode_brng')
@@ -188,7 +188,7 @@ class Resume extends Component
         } else {
             $this->keluhan = '';
         }
-        $this->emit('closeKeluhanModal');
+        $this->dispatch('closeKeluhanModal');
     }
 
     public function tambahPemeriksaanRadiologi()
@@ -201,7 +201,7 @@ class Resume extends Component
         } else {
             $this->penunjang = '';
         }
-        $this->emit('closePemeriksaanRadiologiModal');
+        $this->dispatch('closePemeriksaanRadiologiModal');
     }
 
     public function tambahPemeriksaanLab()
@@ -214,7 +214,7 @@ class Resume extends Component
         } else {
             $this->lab = '';
         }
-        $this->emit('closePemeriksaanLabModal');
+        $this->dispatch('closePemeriksaanLabModal');
     }
 
     public function tambahTerapi()
@@ -227,7 +227,7 @@ class Resume extends Component
         } else {
             $this->terapi = '';
         }
-        $this->emit('closeTerapiModal');
+        $this->dispatch('closeTerapiModal');
     }
 
     public function simpanResume()
@@ -287,16 +287,16 @@ class Resume extends Component
             // DB::table('resume_pasien')->insert($data);
             DB::commit();
             $this->listResume = DB::table('resume_pasien')->where('no_rawat', $this->noRawat)->get();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse("Resume pasien berhasil disimpan"));
+            $this->dispatch('swal', ...$this->toastResponse("Resume pasien berhasil disimpan"));
         } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse($ex->getMessage() ?? "Resume pasien gagal disimpan", 'error'));
+            $this->dispatch('swal', ...$this->toastResponse($ex->getMessage() ?? "Resume pasien gagal disimpan", 'error'));
         }
     }
 
     public function konfirmasiHapus($id)
     {
-        $this->dispatchBrowserEvent('swal:confirm', [
+        $this->dispatch('swal:confirm', ...[
             'title' => 'Konfirmasi Hapus Data',
             'text' => 'Apakah anda yakin ingin menghapus data ini?',
             'type' => 'warning',
@@ -314,10 +314,10 @@ class Resume extends Component
             DB::table('resume_pasien')->where('no_rawat', $noRawat)->delete();
             DB::commit();
             $this->listResume = DB::table('resume_pasien')->where('no_rawat', $this->noRawat)->get();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse("Resume pasien berhasil dihapus"));
+            $this->dispatch('swal', ...$this->toastResponse("Resume pasien berhasil dihapus"));
         } catch (\Illuminate\Database\QueryException $ex) {
             DB::rollBack();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse($ex->getMessage() ?? "Resume pasien gagal dihapus", 'error'));
+            $this->dispatch('swal', ...$this->toastResponse($ex->getMessage() ?? "Resume pasien gagal dihapus", 'error'));
         }
     }
 }

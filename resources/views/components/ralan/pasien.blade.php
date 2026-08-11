@@ -1086,14 +1086,14 @@
     $('#btn-phone').on('click', function(event){
         event.preventDefault();
         var phone = $('#data-phone').text();
-        Livewire.emit('setRmPhone', "{{$data->no_rkm_medis}}", phone.trim());
+        Livewire.dispatch('setRmPhone', { noRm: "{{$data->no_rkm_medis}}", noHp: phone.trim() });
         $('#change-phone').modal('show');
     });
 
-    Livewire.on('refreshPhone', function(event){
+    Livewire.on('refreshPhone', function({ noHp }){
         $('#change-phone').modal('hide');
-        console.log(event);
-        $('#data-phone').text(event);
+        console.log(noHp);
+        $('#data-phone').text(noHp);
     });
 
     function uploadFile() {
@@ -1218,11 +1218,6 @@
         }
 
         function openRiwayatTab() {
-            // Trigger event untuk membuka tab riwayat di pasien-tabs component
-            if (typeof Livewire !== 'undefined') {
-                // Dispatch Livewire event
-                Livewire.emit('openRiwayatTab');
-            }
             // Atau langsung trigger click pada tab riwayat
             const riwayatTab = document.getElementById('riwayat-pasien-tab');
             if (riwayatTab) {

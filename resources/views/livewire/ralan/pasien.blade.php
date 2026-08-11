@@ -870,7 +870,7 @@
 
     function openModalUmur(noRm, umur, tglLahir) {
         @if(config('livewire.inject_assets', true))
-        Livewire.emit('setRmUmur', noRm, umur, tglLahir);
+        Livewire.dispatch('setRmUmur', { noRm: noRm, umur: umur, tglLahir: tglLahir });
         @endif
         setTimeout(function() {
             $('#change-umur').modal('show');
@@ -891,11 +891,11 @@
                 @if(config('livewire.inject_assets', true))
                 if (typeof Livewire !== 'undefined') {
                     // Emit global event - ini akan diterima oleh semua komponen yang mendengarkan
-                    Livewire.emit('loadRiwayatPasien');
+                    Livewire.dispatch('loadRiwayatPasien');
                     
                     // Juga coba dengan cara lain untuk memastikan event terpanggil
                     setTimeout(function() {
-                        Livewire.emit('loadRiwayatPasien');
+                        Livewire.dispatch('loadRiwayatPasien');
                     }, 200);
                 }
                 @endif
@@ -930,44 +930,15 @@
         });
     });
 
-    // Juga attach setelah Livewire update
-    document.addEventListener('livewire:load', function () {
-        console.log('Livewire loaded, attaching button handlers');
-        
-        // Handler untuk I-Care
-        $(document).on('click', '#icare-button', function(event) {
-            event.preventDefault();
-            console.log('I-Care button clicked after Livewire load');
-            if (typeof window.openIcareModal === 'function') {
-                window.openIcareModal();
-            } else {
-                console.error('openIcareModal function not found');
-            }
-        });
-        
-        // Handler untuk Retensi
-        $(document).on('click', 'button[onclick="getBerkasRetensi()"]', function(event) {
-            event.preventDefault();
-            console.log('Retensi button clicked after Livewire load');
-            if (typeof window.getBerkasRetensi === 'function') {
-                window.getBerkasRetensi();
-            } else {
-                console.error('getBerkasRetensi function not found');
-            }
-        });
-    });
-
-    document.addEventListener('livewire:load', function () {
-        window.addEventListener('refreshUmur', function (event) {
-            var umurDisplay = document.getElementById('umur-display');
-            if (umurDisplay && event.detail && event.detail.umur) {
-                umurDisplay.textContent = event.detail.umur;
-            }
-            $('#change-umur').modal('hide');
-            // Reload halaman untuk refresh data
-            setTimeout(function() {
-                location.reload();
-            }, 500);
-        });
+    window.addEventListener('refreshUmur', function (event) {
+        var umurDisplay = document.getElementById('umur-display');
+        if (umurDisplay && event.detail && event.detail.umur) {
+            umurDisplay.textContent = event.detail.umur;
+        }
+        $('#change-umur').modal('hide');
+        // Reload halaman untuk refresh data
+        setTimeout(function() {
+            location.reload();
+        }, 500);
     });
 </script>

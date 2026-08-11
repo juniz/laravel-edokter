@@ -405,7 +405,7 @@
         @if(config('livewire.inject_assets', true))
         if (typeof Livewire !== 'undefined') {
             setTimeout(function() {
-                Livewire.emit('loadRiwayatPasien');
+                Livewire.dispatch('loadRiwayatPasien');
             }, 100);
         }
         @endif
@@ -415,7 +415,7 @@
     $('#modalRiwayatPemeriksaanRalan').on('show.bs.modal', function(){
         @if(config('livewire.inject_assets', true))
         if (typeof Livewire !== 'undefined') {
-            Livewire.emit('loadRiwayatPasien');
+            Livewire.dispatch('loadRiwayatPasien');
         }
         @endif
     });

@@ -186,7 +186,7 @@ class ResumePasien extends Component
 
         $data = $dataRalan->merge($dataRanap);
         $this->listTindakanOperasi = $data;
-        $this->dispatchBrowserEvent('openTindakanOperasiModal');
+        $this->dispatch('openTindakanOperasiModal');
     }
 
     public function getObat()
@@ -211,7 +211,7 @@ class ResumePasien extends Component
             ->get();
 
         $this->listObat = $data;
-        $this->dispatchBrowserEvent('openObatModal');
+        $this->dispatch('openObatModal');
     }
 
     public function getKeluhanUtama()
@@ -219,7 +219,7 @@ class ResumePasien extends Component
         $this->listKeluhan = DB::table('pemeriksaan_ranap')
             ->where('no_rawat', $this->noRawat)
             ->get();
-        $this->emit('getKeluhanUtama');
+        $this->dispatch('getKeluhanUtama');
     }
 
     public function getPemeriksaanFisik()
@@ -227,7 +227,7 @@ class ResumePasien extends Component
         $this->listPemeriksaan = DB::table('pemeriksaan_ranap')
             ->where('no_rawat', $this->noRawat)
             ->get();
-        $this->emit('getPemeriksaanFisik');
+        $this->dispatch('getPemeriksaanFisik');
     }
 
     public function getPemeriksaanRadiologi()
@@ -235,7 +235,7 @@ class ResumePasien extends Component
         $this->listRadiologi = DB::table('hasil_radiologi')
             ->where('no_rawat', $this->noRawat)
             ->get();
-        $this->emit('getPemeriksaanRadiologi');
+        $this->dispatch('getPemeriksaanRadiologi');
     }
 
     public function getPemeriksaanLab()
@@ -245,7 +245,7 @@ class ResumePasien extends Component
             ->where('detail_periksa_lab.no_rawat', $this->noRawat)
             ->select('template_laboratorium.Pemeriksaan', 'detail_periksa_lab.nilai')
             ->get();
-        $this->emit('getPemeriksaanLab');
+        $this->dispatch('getPemeriksaanLab');
     }
 
     public function getDiet()
@@ -257,7 +257,7 @@ class ResumePasien extends Component
             ->orderBy('detail_beri_diet.waktu', 'desc')
             ->select('detail_beri_diet.tanggal', 'detail_beri_diet.waktu', 'diet_jenis.nama_jenis as nama_diet')
             ->get();
-        $this->emit('openDietModal');
+        $this->dispatch('openDietModal');
     }
 
     public function getLabPending()
@@ -271,7 +271,7 @@ class ResumePasien extends Component
             ->orderBy('permintaan_lab.jam_permintaan', 'desc')
             ->select('permintaan_lab.tgl_permintaan', 'permintaan_lab.jam_permintaan', 'template_laboratorium.Pemeriksaan')
             ->get();
-        $this->emit('openLabPendingModal');
+        $this->dispatch('openLabPendingModal');
     }
 
     public function tambahPemeriksaanLabPending()
@@ -289,7 +289,7 @@ class ResumePasien extends Component
             $this->labPending = '';
         }
         $this->reset('listLabPending', 'checkLabPending');
-        $this->emit('closeLabPendingModal');
+        $this->dispatch('closeLabPendingModal');
     }
 
     public function tambahDiet()
@@ -307,7 +307,7 @@ class ResumePasien extends Component
             $this->diet = '';
         }
         $this->reset('listDiet', 'checkDiet');
-        $this->emit('closeDietModal');
+        $this->dispatch('closeDietModal');
     }
 
     public function tambahObat()
@@ -325,7 +325,7 @@ class ResumePasien extends Component
             $this->obat = '';
         }
         $this->reset('listObat', 'checkObat');
-        $this->dispatchBrowserEvent('closeObatModal');
+        $this->dispatch('closeObatModal');
     }
 
     public function tambahTindakanOperasi()
@@ -343,7 +343,7 @@ class ResumePasien extends Component
             $this->operasi = '';
         }
         $this->reset('listTindakanOperasi', 'checkTindakanOperasi');
-        $this->dispatchBrowserEvent('closeTindakanOperasiModal');
+        $this->dispatch('closeTindakanOperasiModal');
     }
 
     public function tambahPemeriksaanFisik()
@@ -362,7 +362,7 @@ class ResumePasien extends Component
             $this->fisik = '';
         }
         $this->reset('listPemeriksaan', 'checkFisik');
-        $this->emit('closePemeriksaanFisikModal');
+        $this->dispatch('closePemeriksaanFisikModal');
     }
 
     public function tambahKeluhan()
@@ -380,7 +380,7 @@ class ResumePasien extends Component
             $this->keluhan = '';
         }
         $this->reset('listKeluhan', 'checkKeluhan');
-        $this->emit('closeKeluhanModal');
+        $this->dispatch('closeKeluhanModal');
     }
 
     public function tambahPemeriksaanRadiologi()
@@ -398,7 +398,7 @@ class ResumePasien extends Component
             $this->penunjang = '';
         }
         $this->reset('listRadiologi', 'checkRadiologi');
-        $this->emit('closePemeriksaanRadiologiModal');
+        $this->dispatch('closePemeriksaanRadiologiModal');
     }
 
     public function tambahPemeriksaanLab()
@@ -416,7 +416,7 @@ class ResumePasien extends Component
             $this->lab = '';
         }
         $this->reset('listLab', 'checkLab');
-        $this->emit('closePemeriksaanLabModal');
+        $this->dispatch('closePemeriksaanLabModal');
     }
 
     public function getPerawatan()
@@ -487,7 +487,7 @@ class ResumePasien extends Component
             }
             DB::commit();
             $this->listResume = DB::table('resume_pasien_ranap')->where('no_rawat', $this->noRawat)->get();
-            // $this->dispatchBrowserEvent('swal', $this->toastResponse("Resume pasien berhasil disimpan"));
+            // Success notification is handled by LivewireAlert below.
             $this->reset('diagnosa_awal', 'alasan', 'keluhan', 'fisik', 'perawatan', 'penunjang', 'lab', 'obat', 'diagnosa', 'diagnosa1', 'diagnosa2', 'diagnosa3', 'diagnosa4', 'prosedur', 'prosedur1', 'prosedur2', 'prosedur3', 'alergi', 'diet', 'labPending', 'instruksi', 'caraKeluar', 'caraKeluarKet', 'keadaanPulang', 'keadaanPulangKet', 'dilanjutkan', 'dilanjutkanKet', 'obatPulang');
             $this->alert('success', 'Resume pasien berhasil disimpan');
         } catch (\Illuminate\Database\QueryException $ex) {

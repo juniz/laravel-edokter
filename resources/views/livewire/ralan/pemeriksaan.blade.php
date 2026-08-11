@@ -243,7 +243,7 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-end mt-3">
-                        <button wire:click='$emit("openModalEditPemeriksaan", "{{$item->no_rawat}}", "{{$item->tgl_perawatan}}","{{$item->jam_rawat}}")'
+                        <button wire:click='$dispatch("openModalEditPemeriksaan", { noRawat: "{{$item->no_rawat}}", tgl: "{{$item->tgl_perawatan}}", jam: "{{$item->jam_rawat}}" })'
                             class="btn btn-sm btn-outline-warning me-1">
                             <i class="fas fa-edit"></i> Edit
                         </button>

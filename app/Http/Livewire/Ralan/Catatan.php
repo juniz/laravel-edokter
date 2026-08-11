@@ -61,11 +61,11 @@ class Catatan extends Component
             DB::commit();
             $this->getCatatan();
             $this->catatan = '';
-            $this->dispatchBrowserEvent('swal', $this->toastResponse('Catatan Pasien berhasil ditambahkan'));
+            $this->dispatch('swal', ...$this->toastResponse('Catatan Pasien berhasil ditambahkan'));
             
         }catch(\Illuminate\Database\QueryException $ex){
             DB::rollBack();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse($ex->getMessage() ?? 'Catatan Pasien gagal ditambahkan', 'error'));
+            $this->dispatch('swal', ...$this->toastResponse($ex->getMessage() ?? 'Catatan Pasien gagal ditambahkan', 'error'));
         }
     }
 
@@ -79,11 +79,11 @@ class Catatan extends Component
             
             DB::commit();
             $this->getCatatan();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse('Catatan Pasien berhasil dihapus'));
+            $this->dispatch('swal', ...$this->toastResponse('Catatan Pasien berhasil dihapus'));
             
         }catch(\Illuminate\Database\QueryException $ex){
             DB::rollBack();
-            $this->dispatchBrowserEvent('swal', $this->toastResponse($ex->getMessage() ?? 'Catatan Pasien gagal dihapus', 'error'));
+            $this->dispatch('swal', ...$this->toastResponse($ex->getMessage() ?? 'Catatan Pasien gagal dihapus', 'error'));
         }
     }
 }

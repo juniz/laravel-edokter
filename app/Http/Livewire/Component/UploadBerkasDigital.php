@@ -100,8 +100,7 @@ class UploadBerkasDigital extends Component
             $this->reset(['file', 'fileName']);
 
             // Close the modal
-            $this->dispatchBrowserEvent('close-modal', ['id' => 'modal-upload-berkas']);
-            $this->emit('close-modal', ['id' => 'modal-upload-berkas']);
+            $this->dispatch('close-modal', id: 'modal-upload-berkas');
             $this->alert('success', 'Berkas berhasil diupload');
         } catch (\Exception $e) {
             $this->alert('error', 'Gagal Upload', [

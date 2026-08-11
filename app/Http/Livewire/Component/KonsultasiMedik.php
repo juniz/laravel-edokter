@@ -159,7 +159,7 @@ class KonsultasiMedik extends Component
 
         $this->jawaban_diagnosa_kerja = $data->diagnosa_kerja;
         $this->jawaban_uraian_konsultasi = $data->uraian_jawaban;
-        $this->emit('openJawabanKonsultasi', $no_permintaan);
+        $this->dispatch('openJawabanKonsultasi', noPermintaan: $no_permintaan);
     }
 
     public function simpan()

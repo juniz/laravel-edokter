@@ -723,7 +723,7 @@
         diagrams.forEach(initializeCanvas);
         showDiagram(0);
 
-        Livewire.on('loadPenandaanCanvases', function (images) {
+        Livewire.on('loadPenandaanCanvases', function ({ images }) {
             loadSavedImages(images);
         });
     })();

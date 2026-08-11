@@ -83,17 +83,3 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('livewire:load', function () {
-        @if(config('livewire.inject_assets', true))
-        Livewire.on('setRmUmur', function (noRm, umur, tglLahir) {
-            // Panggil method setUmur di backend yang akan menghitung umur otomatis dari tanggal lahir
-            @this.call('setUmur', noRm, umur, tglLahir);
-            setTimeout(function() {
-                $('#change-umur').modal('show');
-            }, 100);
-        });
-        @endif
-    });
-</script>
-

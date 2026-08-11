@@ -42,7 +42,7 @@
     <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.min.js"></script>
     <script src="https://unpkg.com/filepond/locale/id-id.js"></script>
     <script>
-        document.addEventListener('livewire:load', function () {
+        document.addEventListener('livewire:init', function () {
             // Initialize FilePond
             const inputElement = document.querySelector('.filepond');
             const pond = FilePond.create(inputElement);
@@ -60,8 +60,8 @@
                 },
             });
         });
-        Livewire.on('close-modal', (event) => {
-            $('#'+event.id).modal('hide');
+        Livewire.on('close-modal', ({ id }) => {
+            $('#'+id).modal('hide');
         });
     </script>
 @endpush

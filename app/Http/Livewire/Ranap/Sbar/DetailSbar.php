@@ -29,7 +29,7 @@ class DetailSbar extends Component
     public function updatedPetugas()
     {
         if (empty($this->petugas)) {
-            $this->emit('resetPetugas');
+            $this->dispatch('resetPetugas');
         }
     }
 
@@ -71,7 +71,7 @@ class DetailSbar extends Component
                 ], ['no_sbar'], ['advis', 'nip', 'kd_dokter', 'tanggal_validasi']);
 
             $this->reset();
-            $this->emit('loadSbar');
+            $this->dispatch('loadSbar');
             $this->alert('success', 'Data berhasil disimpan');
         } catch (\Exception $e) {
 

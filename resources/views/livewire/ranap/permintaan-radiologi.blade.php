@@ -113,7 +113,7 @@
                  @this.set('jns_pemeriksaan', data);
         });
 
-        window.livewire.on('select2Rad', () => {
+        Livewire.on('select2Rad', () => {
             $('#jenis_rad').select2({
             placeholder: 'Pilih Jenis Perawatan',
             ajax: {

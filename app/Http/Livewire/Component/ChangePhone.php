@@ -41,7 +41,7 @@ class ChangePhone extends Component
             ]);
 
             $this->alert('success', 'No HP berhasil diubah');
-            $this->emit('refreshPhone', $this->no_hp);
+            $this->dispatch('refreshPhone', noHp: $this->no_hp);
             $this->reset();
 
         }catch(\Exception $e){

@@ -117,7 +117,7 @@
 
 @push('js')
 <script>
-    Livewire.on('openJawabanKonsultasi', function(event){
+    Livewire.on('openJawabanKonsultasi', function(){
         $('#modal-jawaban-konsul').modal('show');
     })
 </script>

@@ -384,40 +384,40 @@
                 cancelButtonText: e.detail.cancelButtonText,
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.livewire.emit(e.detail.function, e.detail.params[0]);
+                    Livewire.dispatch(e.detail.function, { noRawat: e.detail.params[0] });
                 }
             });
         });
 
-        window.livewire.on('getKeluhanUtama',() => {
+        Livewire.on('getKeluhanUtama',() => {
             $('#keluhanModal').modal('show');
         });
 
-        window.livewire.on('closeKeluhanModal',() => {
+        Livewire.on('closeKeluhanModal',() => {
             $('#keluhanModal').modal('hide');
         });
 
-        window.livewire.on('getPemeriksaanRadiologi',() => {
+        Livewire.on('getPemeriksaanRadiologi',() => {
             $('#radiologiModal').modal('show');
         });
 
-        window.livewire.on('closePemeriksaanRadiologiModal',() => {
+        Livewire.on('closePemeriksaanRadiologiModal',() => {
             $('#radiologiModal').modal('hide');
         });
 
-        window.livewire.on('getPemeriksaanLab',() => {
+        Livewire.on('getPemeriksaanLab',() => {
             $('#labModal').modal('show');
         });
 
-        window.livewire.on('closePemeriksaanLabModal',() => {
+        Livewire.on('closePemeriksaanLabModal',() => {
             $('#labModal').modal('hide');
         });
 
-        window.livewire.on('getTerapi',() => {
+        Livewire.on('getTerapi',() => {
             $('#terapiModal').modal('show');
         });
 
-        window.livewire.on('closeTerapiModal',() => {
+        Livewire.on('closeTerapiModal',() => {
             $('#terapiModal').modal('hide');
         });
 </script>

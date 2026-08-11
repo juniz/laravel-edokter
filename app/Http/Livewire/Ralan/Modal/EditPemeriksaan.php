@@ -44,7 +44,7 @@ class EditPemeriksaan extends Component
         $this->kesadaran = $pemeriksaan->kesadaran;
         $this->lingkar = $pemeriksaan->lingkar_perut;
         $this->spo2 = $pemeriksaan->spo2;
-        $this->dispatchBrowserEvent('openModalEditPemeriksaan');
+        $this->dispatch('modalEditPemeriksaanReady');
     }
 
     public function simpan()
@@ -73,9 +73,9 @@ class EditPemeriksaan extends Component
                     'lingkar_perut' => $this->lingkar,
                     'spo2' => $this->spo2,
                 ]);
-            $this->emit('refreshData');
+            $this->dispatch('refreshData');
             $this->reset();
-            $this->dispatchBrowserEvent('closeModalEditPemeriksaan');
+            $this->dispatch('closeModalEditPemeriksaan');
             $this->alert('success', 'Data berhasil diubah', [
                 'position' =>  'center',
                 'timer' =>  3000,

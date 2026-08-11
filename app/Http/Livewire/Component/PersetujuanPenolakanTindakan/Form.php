@@ -118,7 +118,7 @@ class Form extends Component
 
     public function updatedSaksi2()
     {
-        $this->emit('saksi2', $this->saksi2);
+        $this->dispatch('saksi2', saksi2: $this->saksi2);
     }
 
     public function updatedTglLahir()
@@ -172,7 +172,7 @@ class Form extends Component
                 ], ['no_rawat', 'no_pernyataan'], ['diagnosa', 'tindakan', 'indikasi_tindakan', 'tata_cara', 'tujuan', 'risiko', 'komplikasi', 'prognosis', 'alternatif_dan_risikonya', 'lain_lain', 'biaya', 'hubungan_penerima_informasi', 'alamat_penerima_informasi', 'alasan_diwakilkan_penerima_informasi', 'tanggal_lahir_penerima_informasi', 'no_hp', 'penerima_informasi', 'jk_penerima_informasi', 'umur_penerima_informasi', 'nip', 'saksi_keluarga']);
 
             $this->nopernyataan = $no;
-            // $this->emit('closeModalPersetujuanTindakan');
+            // $this->dispatch('closeModalPersetujuanTindakan');
             $this->alert('success', 'Data berhasil disimpan');
         } catch (\Exception $e) {
             $this->alert('error', 'Gagal menyimpan data', [
@@ -204,7 +204,7 @@ class Form extends Component
                 ->where('no_rawat', $this->no_rawat)
                 ->delete();
             $this->alert('success', 'Data berhasil dihapus');
-            $this->emit('closeModalPersetujuanTindakan');
+            $this->dispatch('closeModalPersetujuanTindakan');
         } catch (\Exception $e) {
             $this->alert('error', 'Gagal menghapus data', [
                 'timer' =>  '',
@@ -221,7 +221,7 @@ class Form extends Component
 
     public function fotoPersetujuan()
     {
-        $this->dispatchBrowserEvent('ambilFotoPersetujuan', ['no_rawat' => $this->no_rawat, 'nopernyataan' => $this->nopernyataan]);
+        $this->dispatch('ambilFotoPersetujuan', no_rawat: $this->no_rawat, nopernyataan: $this->nopernyataan);
         // return redirect()->to('/persetujuan-penolakan-tindakan')->with(['no_rawat' => $this->no_rawat, 'nopernyataan' => $this->nopernyataan]);
     }
 }

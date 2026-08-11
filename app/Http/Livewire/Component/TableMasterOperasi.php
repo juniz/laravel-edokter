@@ -54,7 +54,7 @@ class TableMasterOperasi extends Component
 
             DB::table('template_laporan_operasi')->where('no_template', $this->no_template)->delete();
             $this->alert('success', 'Data berhasil dihapus');
-            $this->emit('refreshTable');
+            $this->dispatch('refreshTable');
 
         }catch(\Exception $e){
             $this->alert('error', 'Gagal menghapus data', [
@@ -71,6 +71,6 @@ class TableMasterOperasi extends Component
 
     public function edit($id)
     {
-        $this->emit('edit', $id);
+        $this->dispatch('edit', id: $id);
     }
 }
