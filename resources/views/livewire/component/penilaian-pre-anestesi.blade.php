@@ -182,61 +182,64 @@
                     </div>
 
                     <!-- Merokok -->
-                    <div class="col-md-2">
+                    <div class="col-md-4">
                         <div class="form-group">
-                            <label>Merokok</label>
-                            <select class="form-control @error('riwayat_kebiasaan_merokok') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_merokok">
-                                <option value="Tidak">Tidak</option>
-                                <option value="Ya">Ya</option>
-                            </select>
-                            @error('riwayat_kebiasaan_merokok') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label>Ket. Merokok</label>
-                            <input type="text" class="form-control @error('riwayat_kebiasaan_ket_merokok') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_ket_merokok" placeholder="Ket" maxlength="5">
-                            @error('riwayat_kebiasaan_ket_merokok') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            <label>Kebiasaan Merokok</label>
+                            <div class="row no-gutters">
+                                <div class="col-5 pr-1">
+                                    <select class="form-control @error('riwayat_kebiasaan_merokok') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_merokok">
+                                        <option value="Tidak">Tidak</option>
+                                        <option value="Ya">Ya</option>
+                                    </select>
+                                    @error('riwayat_kebiasaan_merokok') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-7 pl-1">
+                                    <input type="text" class="form-control @error('riwayat_kebiasaan_ket_merokok') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_ket_merokok" placeholder="Ket" maxlength="5">
+                                    @error('riwayat_kebiasaan_ket_merokok') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Alkohol -->
-                    <div class="col-md-2">
+                    <div class="col-md-4">
                         <div class="form-group">
-                            <label>Alkohol</label>
-                            <select class="form-control @error('riwayat_kebiasaan_alkohol') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_alkohol">
-                                <option value="Tidak">Tidak</option>
-                                <option value="Ya">Ya</option>
-                            </select>
-                            @error('riwayat_kebiasaan_alkohol') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label>Ket. Alkohol</label>
-                            <input type="text" class="form-control @error('riwayat_kebiasaan_ket_alkohol') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_ket_alkohol" placeholder="Ket" maxlength="5">
-                            @error('riwayat_kebiasaan_ket_alkohol') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            <label>Kebiasaan Alkohol</label>
+                            <div class="row no-gutters">
+                                <div class="col-5 pr-1">
+                                    <select class="form-control @error('riwayat_kebiasaan_alkohol') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_alkohol">
+                                        <option value="Tidak">Tidak</option>
+                                        <option value="Ya">Ya</option>
+                                    </select>
+                                    @error('riwayat_kebiasaan_alkohol') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-7 pl-1">
+                                    <input type="text" class="form-control @error('riwayat_kebiasaan_ket_alkohol') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_ket_alkohol" placeholder="Ket" maxlength="5">
+                                    @error('riwayat_kebiasaan_ket_alkohol') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Kebiasaan Obat -->
-                    <div class="col-md-2">
+                    <div class="col-md-4">
                         <div class="form-group">
-                            <label>Konsumsi Obat</label>
-                            <select class="form-control @error('riwayat_kebiasaan_obat') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_obat">
-                                <option value="-">-</option>
-                                <option value="Obat Obatan">Obat Obatan</option>
-                                <option value="Vitamin">Vitamin</option>
-                                <option value="Jamu Jamuan">Jamu Jamuan</option>
-                            </select>
-                            @error('riwayat_kebiasaan_obat') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label>Ket. Obat</label>
-                            <input type="text" class="form-control @error('riwayat_kebiasaan_ket_obat') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_ket_obat" placeholder="Ket obat" maxlength="100">
-                            @error('riwayat_kebiasaan_ket_obat') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            <label>Konsumsi Obat / Jamu</label>
+                            <div class="row no-gutters">
+                                <div class="col-5 pr-1">
+                                    <select class="form-control @error('riwayat_kebiasaan_obat') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_obat">
+                                        <option value="-">-</option>
+                                        <option value="Obat Obatan">Obat Obatan</option>
+                                        <option value="Vitamin">Vitamin</option>
+                                        <option value="Jamu Jamuan">Jamu Jamuan</option>
+                                    </select>
+                                    @error('riwayat_kebiasaan_obat') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-7 pl-1">
+                                    <input type="text" class="form-control @error('riwayat_kebiasaan_ket_obat') is-invalid @enderror" wire:model.defer="riwayat_kebiasaan_ket_obat" placeholder="Ket obat" maxlength="100">
+                                    @error('riwayat_kebiasaan_ket_obat') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
