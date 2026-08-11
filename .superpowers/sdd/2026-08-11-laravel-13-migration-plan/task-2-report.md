@@ -293,3 +293,93 @@ These failures match the preserved baseline concern that the sandbox cannot reac
 - `php artisan` and PHPUnit emit `mockery/mockery` deprecation notices on PHP 8.4 from vendor code, but those notices did not block Laravel 10 boot or package discovery.
 - PHPUnit 10 still warns that `phpunit.xml` validates against a deprecated schema; the blocking coverage attribute was removed, but the file was not fully migrated because the task only required concrete compatibility fixes.
 - Commit hash for this retry is recorded in the task handoff/final status rather than embedded here, to avoid self-referential drift inside the committed report file itself.
+
+---
+
+## Review round 1 correction and verification
+
+Correction status: DONE_WITH_CONCERNS
+
+### Correction 1: ext-imagick platform bypass scope
+
+The retained Laravel 10 `composer.lock` was produced on this machine using a whole-resolver Composer update command with:
+
+```bash
+--ignore-platform-req=ext-imagick
+```
+
+This was not limited to a single package install step; it applied to the full dependency resolution for the Laravel 10 checkpoint update command. The resulting lockfile still retains a non-dev runtime package that requires `ext-imagick`:
+
+- `spatie/pdf-to-image` `^3.1`
+
+That means this machine cannot perform a normal `composer install` or pass `composer check-platform-reqs --no-dev` without `ext-imagick` being available. The Laravel 10 checkpoint remains valid as a boot/package-discovery checkpoint, but not as a fully reproducible no-bypass install on this PHP CLI environment.
+
+Fresh verification command:
+
+```bash
+rtk composer check-platform-reqs --no-dev
+```
+
+Fresh result:
+
+```text
+Checking non-dev platform requirements for packages in the vendor dir
+composer-plugin-api  2.6.0                                                                                              success
+composer-runtime-api 2.2.2                                                                                              success
+ext-ctype            *                                                                                                  success provided by symfony/polyfill-ctype
+ext-dom              20031129                                                                                           success
+ext-fileinfo         8.4.8                                                                                              success
+ext-filter           8.4.8                                                                                              success
+ext-hash             8.4.8                                                                                              success
+ext-iconv            8.4.8                                                                                              success
+ext-imagick          n/a      spatie/pdf-to-image requires ext-imagick (*) spatie/pdf-to-image requires ext-imagick (*) missing
+ext-json             8.4.8                                                                                              success
+ext-libxml           8.4.8                                                                                              success
+ext-mbstring         *                                                                                                  success provided by symfony/polyfill-mbstring
+ext-openssl          8.4.8                                                                                              success
+ext-pcre             8.4.8                                                                                              success
+ext-session          8.4.8                                                                                              success
+ext-tokenizer        8.4.8                                                                                              success
+php                  8.4.8                                                                                              success
+```
+
+### Correction 2: minimum-stability retention
+
+The report previously overstated `minimum-stability` as a retained change. That was inaccurate.
+
+- A transient command was run during the upgrade attempt:
+
+```bash
+rtk composer config minimum-stability stable
+```
+
+- Final retained `composer.json` state after the successful Laravel 10 checkpoint commit remains:
+
+```json
+"minimum-stability": "dev",
+"prefer-stable": true
+```
+
+So `minimum-stability` must not be listed as a retained package constraint change for Task 2. The retained direct constraint changes are limited to the Laravel 10-related package/version updates and the PHP floor.
+
+### Corrected task conclusion
+
+- Laravel 10 checkpoint status on this repository: `DONE_WITH_CONCERNS`
+- Validated on this machine:
+  - Laravel 10 dependency graph resolved
+  - app boots
+  - package discovery passes
+  - artisan about passes
+- Not validated as a normal no-bypass install on this machine:
+  - `composer install` / `composer check-platform-reqs --no-dev` without `ext-imagick`
+
+### Follow-up concerns
+
+- The repository now contains a Laravel 10 lockfile that is operational for this workspace but still depends on `ext-imagick` being present for a normal non-ignored Composer platform check.
+- Production/runtime requirements were not weakened and `spatie/pdf-to-image` was not removed.
+- The pre-existing MySQL-backed feature-test limitation in the sandbox remains unchanged from the earlier checkpoint verification.
+
+### Follow-up commit
+
+- Initial report-correction commit before final amend: `6303ef9d513a380ee3dbfd0a4afc81213edfb04e`
+- Final amended commit hash is reported in the task handoff, because writing that final hash into this file would require another amend and change it again.
