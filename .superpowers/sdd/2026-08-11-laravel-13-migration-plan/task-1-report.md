@@ -95,3 +95,38 @@ No code commit was required for a harness fix; this task produced a report artif
 
 - PHPUnit emits extensive PHP 8.4 deprecation noise from Laravel 9 / Symfony / PHPUnit / PHPUnit-adjacent packages. The noise is not the first failure, but it will make later migration checkpoints harder to read unless suppressed or upgraded.
 - The application’s default configuration still points at a MySQL database, so feature coverage that touches the database is not reproducible in the current sandbox without a reachable database service or a dedicated test database strategy.
+
+## Fix round 1 correction
+
+The reviewer was right: the initial report overstated the harness state by saying the checked-in PHPUnit harness already pinned `APP_DEBUG=true`. It did not. The command-line injection masked that gap.
+
+### Files changed in the fix
+
+- `phpunit.xml`
+- `tests/CreatesApplication.php`
+
+### Harness fix applied
+
+- Added `APP_DEBUG=true` to the checked-in PHPUnit environment.
+- Forced the test application bootstrap to normalize `APP_ENV=testing` before and after the Laravel bootstrap so the environment guard does not depend on ad hoc invocation-time injection.
+
+### Commands run and outcome after the fix
+
+- `rtk php artisan test tests/Feature/SanitizeInputMiddlewareTest.php --no-coverage` — passed, 4 tests.
+- `rtk php artisan test tests/Feature/PenandaanAreaOperasiTest.php --no-coverage --stop-on-failure` — still failed, but now for the documented database access reason:
+  - first failure reached the database guard in `tests/Feature/PenandaanAreaOperasiTest.php:93`
+  - exception remained `SQLSTATE[HY000] [2002] Operation not permitted`
+
+### Baseline failure classification after the fix
+
+Still an environment/database access failure, not a Laravel 13 regression. The harness is now deterministic enough to surface the real database constraint instead of relying on invocation-time environment injection.
+
+### Commit hashes
+
+- Baseline report commit: `0760d92`
+- Harness fix commit: `c9e7837`
+
+### Remaining concerns
+
+- The database-touching baseline still cannot run to completion in this sandbox because the application’s MySQL target is not reachable here.
+- PHP 8.4 deprecation noise remains extensive and will continue to obscure future migration checkpoints until dependency upgrades reduce it.
