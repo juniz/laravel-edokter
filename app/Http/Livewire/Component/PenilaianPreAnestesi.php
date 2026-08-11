@@ -79,6 +79,7 @@ class PenilaianPreAnestesi extends Component
         $this->no_rm = $noRm;
         $this->kd_dokter = session()->get('username');
         $this->tanggal_operasi = Carbon::now()->format('Y-m-d\TH:i');
+        $this->puasa = Carbon::now()->format('Y-m-d\TH:i');
         $this->getData();
         $this->autofillVitalSigns();
     }
@@ -277,6 +278,7 @@ class PenilaianPreAnestesi extends Component
         $this->riwayat_kebiasaan_obat = '-';
         $this->riwayat_kebiasaan_ket_obat = '';
         $this->tanggal_operasi = Carbon::now()->format('Y-m-d\TH:i');
+        $this->puasa = Carbon::now()->format('Y-m-d\TH:i');
         $this->modeEdit = false;
         $this->tanggalEdit = null;
         $this->resetErrorBag();
