@@ -229,3 +229,190 @@ rtk proxy git diff --check
 - Normal platform verification remains blocked by missing `ext-imagick`; the Laravel 11 Composer resolution required the narrow flag `--ignore-platform-req=ext-imagick` and `composer check-platform-reqs` still reports only that missing extension.
 - The full PHPUnit run in this sandbox still cannot pass because the test suite depends on the unavailable MySQL-backed `sik` database.
 - PHPUnit emits a deprecated XML schema warning during test execution; it is non-fatal and was not changed as part of this checkpoint.
+
+---
+
+## Fix round 1 — Livewire 3 transition completion (August 11, 2026)
+
+### Scope handled
+
+- Completed the required Livewire 3 API transition across the allowed scope:
+  - `app/Http/Livewire/**`
+  - `resources/views/**`
+  - `config/livewire.php`
+  - `tests/**`
+- Kept the previously approved controller-side route fix untouched; no additional controller edits were required in this fix round, and `php artisan route:list` still succeeds with the retained `app/Http/Controllers/Ralan/RujukInternalPasien.php` change from the earlier checkpoint.
+- Did not run any forbidden database migration or seeding commands.
+
+### Context7 guidance used
+
+Read Livewire 3 upgrade guidance through Context7 and applied the following points directly:
+
+- `emit()` / `dispatchBrowserEvent()` consolidate to `dispatch()`
+- Blade `$emit(...)` changes to `$dispatch(...)`
+- JavaScript `Livewire.emit(...)` changes to `Livewire.dispatch(...)`
+- JavaScript `window.livewire.on(...)` changes to `Livewire.on(...)`
+- `livewire:load` changes to `livewire:init`
+- `message.processed` / `element.updated` hooks are no longer used; replaced with Livewire 3 hook patterns (`commit`, `morph.updated`) where the old lifecycle wiring mattered
+- Livewire 3 config shape requires removing legacy keys like `asset_url`, `app_url`, `middleware_group`, `manifest_path`, and `back_button_cache`
+
+### Package / config state
+
+- Laravel remains at `11.55.0`
+- Livewire remains at `3.8.4`
+- Rappasoft Livewire Tables remains at `3.8.0`
+- `config/livewire.php` was rewritten to the Livewire 3 config shape while preserving the legacy component namespace:
+  - kept `class_namespace => 'App\\Http\\Livewire'`
+  - kept `layout => 'layouts.app'`
+  - set `pagination_theme => 'bootstrap'` to preserve the existing Bootstrap pagination/table UI
+
+### Files changed in this fix round
+
+- `app/Http/Livewire/Component/AwalIgd/Form.php`
+- `app/Http/Livewire/Component/AwalMedisRanap/Form.php`
+- `app/Http/Livewire/Component/ChangePhone.php`
+- `app/Http/Livewire/Component/ChangeUmur.php`
+- `app/Http/Livewire/Component/FormMasterOperasi.php`
+- `app/Http/Livewire/Component/KonsultasiMedik.php`
+- `app/Http/Livewire/Component/ModalObat.php`
+- `app/Http/Livewire/Component/PenandaanAreaOperasi.php`
+- `app/Http/Livewire/Component/PersetujuanPenolakanTindakan/Form.php`
+- `app/Http/Livewire/Component/TableMasterOperasi.php`
+- `app/Http/Livewire/Component/UploadBerkasDigital.php`
+- `app/Http/Livewire/Radiologi/BacaanRadiologi.php`
+- `app/Http/Livewire/Ralan/Catatan.php`
+- `app/Http/Livewire/Ralan/Diagnosa.php`
+- `app/Http/Livewire/Ralan/Modal/EditPemeriksaan.php`
+- `app/Http/Livewire/Ralan/Odontogram.php`
+- `app/Http/Livewire/Ralan/PasienTabs.php`
+- `app/Http/Livewire/Ralan/Pemeriksaan.php`
+- `app/Http/Livewire/Ralan/PermintaanLab.php`
+- `app/Http/Livewire/Ralan/PermintaanRadiologi.php`
+- `app/Http/Livewire/Ralan/Resep.php`
+- `app/Http/Livewire/Ralan/Resume.php`
+- `app/Http/Livewire/Ralan/UjiFungsiKfr.php`
+- `app/Http/Livewire/Ranap/CatatanPasien.php`
+- `app/Http/Livewire/Ranap/LapOperasi.php`
+- `app/Http/Livewire/Ranap/Modal/EditPemeriksaan.php`
+- `app/Http/Livewire/Ranap/Pemeriksaan.php`
+- `app/Http/Livewire/Ranap/PermintaanLab.php`
+- `app/Http/Livewire/Ranap/PermintaanRadiologi.php`
+- `app/Http/Livewire/Ranap/ResumePasien.php`
+- `app/Http/Livewire/Ranap/Sbar/DetailSbar.php`
+- `app/Http/Livewire/Ranap/Sbar/TableSbar.php`
+- `config/livewire.php`
+- `resources/views/components/ralan/pasien.blade.php`
+- `resources/views/igd.blade.php`
+- `resources/views/livewire/component/berkas-rm.blade.php`
+- `resources/views/livewire/component/change-umur.blade.php`
+- `resources/views/livewire/component/konsultasi-medik.blade.php`
+- `resources/views/livewire/component/penandaan-area-operasi.blade.php`
+- `resources/views/livewire/component/persetujuan-penolakan-tindakan/form.blade.php`
+- `resources/views/livewire/component/riwayat.blade.php`
+- `resources/views/livewire/component/upload-berkas-digital.blade.php`
+- `resources/views/livewire/radiologi/template-radiologi.blade.php`
+- `resources/views/livewire/ralan/modal/edit-pemeriksaan.blade.php`
+- `resources/views/livewire/ralan/odontogram.blade.php`
+- `resources/views/livewire/ralan/pasien.blade.php`
+- `resources/views/livewire/ralan/pemeriksaan.blade.php`
+- `resources/views/livewire/ralan/permintaan-lab.blade.php`
+- `resources/views/livewire/ralan/permintaan-radiologi.blade.php`
+- `resources/views/livewire/ralan/resep.blade.php`
+- `resources/views/livewire/ralan/resume.blade.php`
+- `resources/views/livewire/ranap/catatan-pasien.blade.php`
+- `resources/views/livewire/ranap/modal/edit-pemeriksaan.blade.php`
+- `resources/views/livewire/ranap/pemeriksaan.blade.php`
+- `resources/views/livewire/ranap/permintaan-lab.blade.php`
+- `resources/views/livewire/ranap/permintaan-radiologi.blade.php`
+- `resources/views/livewire/ranap/resume-pasien.blade.php`
+- `resources/views/livewire/ranap/sbar/table-sbar.blade.php`
+- `resources/views/livewire/ranap/template-lap-operasi.blade.php`
+- `resources/views/livewire/rekap/tindakan-dokter.blade.php`
+- `resources/views/ralan/pasien-ralan.blade.php`
+- `tests/Feature/LivewireThreeUpgradeTest.php`
+
+### Commands run and outcomes
+
+Inventory and guidance:
+
+```bash
+rtk sed -n '1,260p' .superpowers/sdd/2026-08-11-laravel-13-migration-plan/task-3-brief.md
+rtk rg -n "dispatchBrowserEvent\\(|\\$this->emit(Self|To)?\\(|Livewire\\.emit\\(|window\\.livewire\\.|livewire:load|livewire:update|livewire:dom-updated|message\\.processed|element\\.updated|\\$emit\\(" app/Http/Livewire resources/views config tests
+rtk sed -n '1,260p' config/livewire.php
+rtk sed -n '1,260p' vendor/livewire/livewire/config/livewire.php
+```
+
+- Outcome: confirmed the revised scope, identified the remaining Livewire 2-era APIs, and aligned the checked-in config with the Livewire 3 config shape while preserving the legacy namespace/layout.
+
+Focused verification:
+
+```bash
+rtk proxy env APP_ENV=testing php artisan test tests/Feature/LivewireThreeUpgradeTest.php tests/Feature/RouteListCommandTest.php tests/Feature/SanitizeInputMiddlewareTest.php --no-coverage
+rtk proxy git diff --check
+```
+
+- Outcome:
+  - focused tests passed (`7` tests / `28` assertions)
+  - `git diff --check` passed
+
+Framework boot verification:
+
+```bash
+rtk php artisan package:discover
+rtk php artisan about
+rtk php artisan route:list
+rtk php artisan optimize:clear
+```
+
+- Outcome: all four commands passed after the Livewire 3 transition work
+
+Platform verification:
+
+```bash
+rtk composer check-platform-reqs
+```
+
+- Outcome: still fails only for missing `ext-imagick`; no new platform blockers appeared
+
+Full suite verification:
+
+```bash
+rtk proxy env APP_ENV=testing php artisan test --no-coverage
+```
+
+- Outcome: Laravel 11 + Livewire 3 booted successfully, but the full suite still cannot pass in this sandbox because of the known MySQL restriction
+- Passing tests in this environment:
+  - `Tests\Unit\ExampleTest`
+  - `Tests\Feature\LivewireThreeUpgradeTest`
+  - `Tests\Feature\RouteListCommandTest`
+  - `Tests\Feature\SanitizeInputMiddlewareTest`
+- Failing tests in this environment:
+  - `Tests\Feature\ExampleTest`
+  - all `Tests\Feature\PenandaanAreaOperasiTest` cases
+- Failure mode:
+  - `/` still hits MySQL in `LoginController@index`
+  - `PenandaanAreaOperasiTest` still needs the MySQL-backed `sik` schema
+  - all current failures remain `SQLSTATE[HY000] [2002] Operation not permitted`
+
+### Livewire 3 migration notes
+
+- Replaced deprecated component-side `dispatchBrowserEvent()` and `$this->emit()` usage with `dispatch()`
+- Replaced deprecated Blade `$emit(...)` calls with `$dispatch(...)`
+- Replaced deprecated JavaScript `Livewire.emit(...)` / `window.livewire.on(...)` usage with `Livewire.dispatch(...)` / `Livewire.on(...)`
+- Updated the old `livewire:load` listeners to `livewire:init`
+- Replaced the old `message.processed` / `element.updated` usage in the affected JS glue code with Livewire 3 hook wiring
+- Preserved public component properties, upload flows, pagination/table behavior, and existing Blade method entry points
+- Added a focused non-database regression test file, `tests/Feature/LivewireThreeUpgradeTest.php`, to lock the Livewire 3 config and API surface in place
+
+### Commits
+
+- Prior Laravel 11 checkpoint: `7d25f7dabb491e8904b71e9a646ce0f061f252cf`
+- Prior task 3 report update: `7d84a3cfbbba1146813977fd24eaa1e271e976ff`
+- Prior revised-brief docs update: `172d741`
+- Fix round 1 implementation commit: `a9844bff3d2227cf3d7d71203f65123015dfe470`
+
+### Concerns
+
+- Normal Composer/platform verification is still blocked only by the missing `ext-imagick` extension required by `spatie/pdf-to-image`; no broader `--ignore-platform-reqs` usage was introduced.
+- The full PHPUnit suite is still blocked by the sandbox’s unavailable MySQL backend and cannot be completed here without a reachable database.
+- PHPUnit still emits the deprecated XML schema warning; it remains non-fatal and out of scope for this task.
