@@ -453,6 +453,24 @@ class PenilaianPreAnestesi extends Component
         ]);
 
         try {
+            $data = DB::table('penilaian_pre_anestesi')
+                ->where('no_rawat', $this->no_rawat)
+                ->where('tanggal', $this->tanggalEdit)
+                ->first();
+
+            $userDokter = session()->get('username') ?? $this->kd_dokter;
+            if (! $data || $data->kd_dokter != $userDokter) {
+                $this->alert('warning', 'Gagal', [
+                    'position' => 'center',
+                    'timer' => '',
+                    'toast' => false,
+                    'text' => 'Anda tidak memiliki akses untuk mengubah data ini',
+                    'confirmButtonText' => 'Ok',
+                    'showConfirmButton' => true,
+                ]);
+                return;
+            }
+
             DB::table('penilaian_pre_anestesi')
                 ->where('no_rawat', $this->no_rawat)
                 ->where('tanggal', $this->tanggalEdit)
