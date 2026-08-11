@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SanitizeInputMiddlewareTest extends TestCase
@@ -20,7 +21,7 @@ class SanitizeInputMiddlewareTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_sanitizes_special_characters_in_request_inputs()
     {
         $payload = [
@@ -53,7 +54,7 @@ class SanitizeInputMiddlewareTest extends TestCase
                  ->assertExactJson($expected);
     }
 
-    /** @test */
+    #[Test]
     public function it_excludes_sensitive_fields_from_sanitization()
     {
         $payload = [
@@ -89,7 +90,7 @@ class SanitizeInputMiddlewareTest extends TestCase
                  ->assertExactJson($expected);
     }
 
-    /** @test */
+    #[Test]
     public function it_sanitizes_livewire_payloads_selectively_without_corrupting_metadata()
     {
         $payload = [
@@ -189,7 +190,7 @@ class SanitizeInputMiddlewareTest extends TestCase
                  ->assertExactJson($expected);
     }
 
-    /** @test */
+    #[Test]
     public function it_preserves_base64_marking_data_in_a_livewire_sync_input_request()
     {
         $image = 'data:image/png;base64,a+/b=c==';
