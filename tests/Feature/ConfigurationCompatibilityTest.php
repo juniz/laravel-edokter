@@ -78,6 +78,16 @@ class ConfigurationCompatibilityTest extends TestCase
         $this->assertSame('resources/js/app.js', $config['laravel_js_path']);
     }
 
+    public function test_adminlte_override_keeps_the_iframe_preloader_removal_workaround(): void
+    {
+        $contents = file_get_contents(resource_path('views/vendor/adminlte/master.blade.php'));
+
+        $this->assertIsString($contents);
+        $this->assertStringContainsString('{{-- IFrame Preloader Removal Workaround --}}', $contents);
+        $this->assertStringContainsString('body.iframe-mode .preloader {', $contents);
+        $this->assertStringContainsString('display: none !important;', $contents);
+    }
+
     /**
      * @param  array<string, string|null>  $variables
      */

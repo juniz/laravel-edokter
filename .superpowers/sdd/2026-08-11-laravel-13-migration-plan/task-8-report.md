@@ -98,3 +98,22 @@ Date: 2026-08-11
 - The application still defaults to file-based cache and session storage. That is intentionally preserved as local behavior, even though the Laravel 13 skeleton defaults differ.
 - `public/storage` remains unlinked according to `php artisan about`; this was not changed because it is outside Task 8's scoped config/frontend work.
 - The full PHP test suite is not green in this sandbox because some pre-existing feature tests require a live MySQL connection. No database migration or seeding command was run.
+
+## Fix round 1 — AdminLTE iframe preloader regression
+
+- Review follow-up found that the local `resources/views/vendor/adminlte/master.blade.php` override dropped the installed AdminLTE iframe preloader workaround during the earlier rebase.
+- Restored the exact workaround block:
+  - `{{-- IFrame Preloader Removal Workaround --}}`
+  - `body.iframe-mode .preloader { display: none !important; }`
+- Added focused non-DB coverage in `tests/Feature/ConfigurationCompatibilityTest.php` to assert that the override keeps this workaround in place.
+
+### Fix round 1 verification
+
+- `rtk php artisan test --filter=iframe_preloader_removal_workaround` ✅
+  - 1 passed, 4 assertions
+- `rtk php artisan test --filter=ConfigurationCompatibilityTest` ✅
+  - 5 passed, 17 assertions
+- `rtk php artisan optimize:clear` ✅
+- `rtk php artisan view:cache` ✅
+- `rtk php artisan optimize:clear` ✅
+- `rtk git diff --check` ✅
