@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Ralan;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\DB;
 use App\Traits\EnkripsiData;
 
@@ -15,12 +16,22 @@ class RujukInternalPasien extends Controller
     {
         $this->middleware('loginauth');
         $this->middleware('decrypt');
-        // dd($request->get('no_rawat'));
         $this->encryptNoRawat = $request->get('no_rawat');
-        $this->noRawat = @$this->decryptData($request->get('no_rawat'));
-        // dd($this->encryptNoRawat);
+        $this->noRawat = $this->safeDecryptNoRawat($request->get('no_rawat'));
         $this->noRM = $request->get('no_rm');
-        // dd($this->noRM);
+    }
+
+    protected function safeDecryptNoRawat(?string $noRawat): ?string
+    {
+        if ($noRawat === null || $noRawat === '') {
+            return $noRawat;
+        }
+
+        try {
+            return $this->decryptData($noRawat);
+        } catch (DecryptException $e) {
+            return $noRawat;
+        }
     }
 
     public function index()
