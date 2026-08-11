@@ -5,7 +5,7 @@ namespace App\Http\Livewire\Ralan;
 use App\Traits\SwalResponse;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Gemini\Laravel\Facades\Gemini;
 
 class Pemeriksaan extends Component

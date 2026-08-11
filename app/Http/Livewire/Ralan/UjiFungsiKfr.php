@@ -4,7 +4,7 @@ namespace App\Http\Livewire\Ralan;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 
 class UjiFungsiKfr extends Component
 {

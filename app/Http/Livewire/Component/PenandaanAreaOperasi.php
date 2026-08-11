@@ -3,7 +3,7 @@
 namespace App\Http\Livewire\Component;
 
 use Illuminate\Support\Facades\DB;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Livewire\Component;
 
 class PenandaanAreaOperasi extends Component

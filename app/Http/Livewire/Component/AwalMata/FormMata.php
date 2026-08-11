@@ -2,7 +2,7 @@
 
 namespace App\Http\Livewire\Component\AwalMata;
 
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;

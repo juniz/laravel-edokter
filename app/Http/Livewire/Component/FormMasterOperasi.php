@@ -5,7 +5,7 @@ namespace App\Http\Livewire\Component;
 use Illuminate\Support\Facades\App;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 
 class FormMasterOperasi extends Component
 {

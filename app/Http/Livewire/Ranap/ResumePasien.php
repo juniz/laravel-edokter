@@ -5,7 +5,7 @@ namespace App\Http\Livewire\Ranap;
 use App\Traits\SwalResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Livewire\Component;
 
 class ResumePasien extends Component

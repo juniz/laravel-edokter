@@ -6,7 +6,7 @@ use Illuminate\Support\Arr;
 use Livewire\Component;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Illuminate\Support\Facades\DB;
 
 class Form extends Component

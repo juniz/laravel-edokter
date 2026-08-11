@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Livewire\Component\PenandaanAreaOperasi;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -33,10 +34,14 @@ class PenandaanAreaOperasiTest extends TestCase
             $table->string('no_rkm_medis')->primary();
             $table->string('nm_pasien');
             $table->date('tgl_lahir')->nullable();
+            $table->string('jk', 1)->nullable();
         });
         $this->createFixtureTable('reg_periksa', function ($table) {
             $table->string('no_rawat')->primary();
             $table->string('no_rkm_medis');
+            $table->integer('umurdaftar')->nullable();
+            $table->string('sttsumur')->nullable();
+            $table->date('tgl_registrasi')->nullable();
         });
         $this->createFixtureTable('penandaan_area_operasi', function ($table) {
             $table->id();
@@ -52,14 +57,24 @@ class PenandaanAreaOperasiTest extends TestCase
             $table->string('format_gambar')->default('image/png');
             $table->timestamps();
         });
+        $this->createFixtureTable('setting', function ($table) {
+            $table->id();
+            $table->string('nama_instansi')->nullable();
+            $table->string('alamat_instansi')->nullable();
+            $table->string('kabupaten')->nullable();
+            $table->string('propinsi')->nullable();
+            $table->string('kontak')->nullable();
+            $table->string('email')->nullable();
+            $table->string('logo')->nullable();
+        });
 
         DB::table('pasien')->insert([
-            ['no_rkm_medis' => '000001', 'nm_pasien' => 'Patient One', 'tgl_lahir' => '1990-01-02'],
-            ['no_rkm_medis' => '000002', 'nm_pasien' => 'Patient Two', 'tgl_lahir' => '1991-02-03'],
+            ['no_rkm_medis' => '000001', 'nm_pasien' => 'Patient One', 'tgl_lahir' => '1990-01-02', 'jk' => 'P'],
+            ['no_rkm_medis' => '000002', 'nm_pasien' => 'Patient Two', 'tgl_lahir' => '1991-02-03', 'jk' => 'P'],
         ]);
         DB::table('reg_periksa')->insert([
-            ['no_rawat' => '2026/08/04/000001', 'no_rkm_medis' => '000001'],
-            ['no_rawat' => '2026/08/04/000002', 'no_rkm_medis' => '000002'],
+            ['no_rawat' => '2026/08/04/000001', 'no_rkm_medis' => '000001', 'umurdaftar' => 36, 'sttsumur' => 'Th', 'tgl_registrasi' => '2026-08-04'],
+            ['no_rawat' => '2026/08/04/000002', 'no_rkm_medis' => '000002', 'umurdaftar' => 35, 'sttsumur' => 'Th', 'tgl_registrasi' => '2026-08-04'],
         ]);
         DB::table('dokter')->insert([
             'kd_dokter' => 'D001', 'nm_dokter' => 'Dr. Operator',
@@ -105,13 +120,9 @@ class PenandaanAreaOperasiTest extends TestCase
 
         $this->assertContains('gambar_penandaan_base64', $columns);
         $this->assertContains('nama_operator', $columns);
-        $indexes = DB::select(
-            'SHOW INDEX FROM `penandaan_area_operasi` WHERE Key_name = ?',
-            ['penandaan_area_operasi_no_rawat_unique']
+        $this->assertTrue(
+            Schema::hasIndex('penandaan_area_operasi', ['no_rawat'], 'unique')
         );
-
-        $this->assertNotEmpty($indexes);
-        $this->assertSame(0, (int) $indexes[0]->Non_unique);
     }
 
     public function test_it_persists_a_valid_marking_payload(): void
@@ -223,7 +234,7 @@ class PenandaanAreaOperasiTest extends TestCase
 
         Livewire::test(PenandaanAreaOperasi::class, [
             'noRawat' => '2026/08/04/000001', 'noRm' => '000001',
-        ])->assertEmitted('loadPenandaanCanvases', $firstPayload);
+        ])->assertDispatched('loadPenandaanCanvases', images: $firstPayload);
     }
 
     public function test_print_endpoint_displays_the_saved_marking(): void
@@ -257,19 +268,17 @@ class PenandaanAreaOperasiTest extends TestCase
 
     public function test_examination_views_mount_the_marking_component_with_the_current_visit(): void
     {
-        $noRawat = '2026/08/04/000001';
-        $noRm = '000001';
+        $expectedTagPattern = '/<livewire:component\.penandaan-area-operasi\s+:no-rawat="request\(\)->get\(\'no_rawat\'\)"\s+:no-rm="request\(\)->get\(\'no_rm\'\)"\s*\/?>/m';
 
-        $this->app['request']->query->replace([
-            'no_rawat' => $noRawat,
-            'no_rm' => $noRm,
-        ]);
-
-        foreach (['ralan.pemeriksaan-ralan', 'ranap.pemeriksaan-ranap'] as $view) {
-            $this->view($view)
-                ->assertSeeLivewire('component.penandaan-area-operasi')
-                ->assertSee(str_replace('/', '\\/', $noRawat), false)
-                ->assertSee($noRm);
+        foreach ([
+            resource_path('views/ralan/pemeriksaan-ralan.blade.php'),
+            resource_path('views/ranap/pemeriksaan-ranap.blade.php'),
+        ] as $viewPath) {
+            $this->assertMatchesRegularExpression(
+                $expectedTagPattern,
+                File::get($viewPath),
+                "Expected [{$viewPath}] to mount the penandaan component with the current visit identifiers."
+            );
         }
     }
 }

@@ -5,7 +5,7 @@ namespace App\Http\Livewire\Component;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Livewire\Component;
 
 class PenilaianPreOperasi extends Component

@@ -4,7 +4,7 @@ namespace App\Http\Livewire\Component\PersetujuanPenolakanTindakan;
 
 use Illuminate\Support\Facades\App;
 use Livewire\Component;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 

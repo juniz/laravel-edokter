@@ -6,7 +6,7 @@ use Illuminate\Support\Arr;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Illuminate\Support\Facades\App;
 
 class FormAnak extends Component

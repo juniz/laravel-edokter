@@ -4,7 +4,7 @@ namespace App\Http\Livewire\Ralan\Modal;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 
 class EditPemeriksaan extends Component
 {

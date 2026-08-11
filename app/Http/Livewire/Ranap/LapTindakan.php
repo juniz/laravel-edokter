@@ -4,7 +4,7 @@ namespace App\Http\Livewire\Ranap;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Illuminate\Support\Carbon;
 
 class LapTindakan extends Component

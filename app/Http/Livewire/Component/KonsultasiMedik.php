@@ -7,7 +7,7 @@ use App\Models\RegPeriksa;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Illuminate\Support\Facades\URL;
 
 class KonsultasiMedik extends Component

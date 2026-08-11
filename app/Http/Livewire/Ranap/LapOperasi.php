@@ -5,7 +5,7 @@ namespace App\Http\Livewire\Ranap;
 use Illuminate\Support\Arr;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Http\Livewire\Concerns\LivewireAlert;
 use Illuminate\Support\Carbon;
 
 class LapOperasi extends Component
