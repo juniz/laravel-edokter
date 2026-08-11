@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Facades\Facade;
 
+$appUrl = env('APP_URL', 'http://localhost');
+
+if ($appUrl && ! preg_match('~^https?://~i', $appUrl)) {
+    $appUrl = 'http://'.$appUrl;
+}
+
 return [
 
     /*
@@ -54,7 +60,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => $appUrl,
 
     'asset_url' => env('ASSET_URL'),
 
