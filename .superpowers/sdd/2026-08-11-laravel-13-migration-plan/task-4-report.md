@@ -205,7 +205,7 @@ Further lock analysis showed the broader cause was not Sail alone. The lock had 
 
 Composer proof after investigation:
 
-- `composer prohibits php 8.3 --locked -t`
+- `rtk composer prohibits php 8.3 --locked -t`
   - identified PHP-8.3 blockers in the locked graph through:
     - `symfony/clock`
     - `symfony/css-selector`
@@ -308,4 +308,10 @@ This verifies the final synced lockfile has no PHP 8.3 blockers.
 ### Fix Round 2: Report command correction
 
 - Corrected the remaining bare Composer example in the PHP 8.3 compatibility section to the actual command form used in this task: `rtk composer prohibits php 8.3 --locked`.
+- No code, dependency, or database-related changes were made in this round.
+
+### Fix Round 3: Report command sweep
+
+- Searched the full report for remaining bare Composer command examples.
+- Corrected the blocker-tree command to the actual command form used in this task: `rtk composer prohibits php 8.3 --locked -t`.
 - No code, dependency, or database-related changes were made in this round.
