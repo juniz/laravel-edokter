@@ -198,7 +198,7 @@ Retry status: DONE_WITH_CONCERNS
 
 ### Additional package constraints changed
 
-Applied through Composer and retained:
+Applied through Composer and retained in the final committed `composer.json`:
 
 - `php`: `^8.0.2` → `^8.1`
 - `laravel/framework`: `^9.19` → `^10.0`
@@ -208,7 +208,11 @@ Applied through Composer and retained:
 - `nunomaduro/collision`: `^6.1` → `^7.0`
 - `phpunit/phpunit`: `^9.5.10` → `^10.0`
 - `spatie/laravel-ignition`: `^1.0` → `^2.0`
-- `minimum-stability`: `dev` → `stable`
+
+Transient / non-retained Composer config attempt during the retry:
+
+- `minimum-stability`: `dev` → `stable` via `rtk composer config minimum-stability stable`
+- Final retained `composer.json` after the successful Task 2 checkpoint still has `"minimum-stability": "dev"`
 
 Resolver-required lock updates retained:
 
@@ -383,3 +387,8 @@ So `minimum-stability` must not be listed as a retained package constraint chang
 
 - Initial report-correction commit before final amend: `6303ef9d513a380ee3dbfd0a4afc81213edfb04e`
 - Final amended commit hash is reported in the task handoff, because writing that final hash into this file would require another amend and change it again.
+
+### Fix round 2 note
+
+- Corrected the retry section so the retained constraint list no longer claims `minimum-stability` changed from `dev` to `stable`.
+- Labeled the `minimum-stability` update explicitly as a transient / non-retained Composer config attempt.
