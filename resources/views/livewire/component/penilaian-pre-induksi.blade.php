@@ -171,85 +171,97 @@
                 <!-- Section 6: Tatalaksana Jalan Napas & Intubasi -->
                 <h5 class="text-primary border-bottom pb-2 mb-3 mt-4"><i class="fas fa-head-side-mask mr-1"></i> Tatalaksana Jalan Napas & Intubasi</h5>
                 <div class="row">
-                    <div class="col-md-2 col-6">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Face Mask No</label>
                             <input type="text" class="form-control @error('face_mask_no') is-invalid @enderror" wire:model.defer="face_mask_no" placeholder="No" maxlength="20">
                             @error('face_mask_no') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-2 col-6">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Nasopharing No</label>
                             <input type="text" class="form-control @error('nasopharing_no') is-invalid @enderror" wire:model.defer="nasopharing_no" placeholder="No" maxlength="20">
                             @error('nasopharing_no') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-2 col-6">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>ETT No</label>
                             <input type="text" class="form-control @error('ett_no') is-invalid @enderror" wire:model.defer="ett_no" placeholder="No" maxlength="20">
                             @error('ett_no') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-3 col-6">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>ETT Jenis</label>
                             <input type="text" class="form-control @error('ett_jenis') is-invalid @enderror" wire:model.defer="ett_jenis" placeholder="Jenis ETT" maxlength="20">
                             @error('ett_jenis') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-3 col-6">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>ETT Fiksasi</label>
                             <input type="text" class="form-control @error('ett_viksasi') is-invalid @enderror" wire:model.defer="ett_viksasi" placeholder="Fiksasi (cm)" maxlength="25">
                             @error('ett_viksasi') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-3 col-6">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>LMA No</label>
                             <input type="text" class="form-control @error('lma_no') is-invalid @enderror" wire:model.defer="lma_no" placeholder="No" maxlength="20">
                             @error('lma_no') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-3 col-6">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>LMA Jenis</label>
                             <input type="text" class="form-control @error('lma_jenis') is-invalid @enderror" wire:model.defer="lma_jenis" placeholder="Jenis LMA" maxlength="20">
                             @error('lma_jenis') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-3 col-6">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Tracheostomi</label>
                             <input type="text" class="form-control @error('tracheostomi') is-invalid @enderror" wire:model.defer="tracheostomi" placeholder="Tracheostomi" maxlength="60">
                             @error('tracheostomi') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-3 col-6">
-                        <div class="form-group">
-                            <label>Bronchoscopi Fiberoptik</label>
-                            <input type="text" class="form-control @error('bronchoscopi_fiberoptik') is-invalid @enderror" wire:model.defer="bronchoscopi_fiberoptik" placeholder="Bronchoscopi" maxlength="60">
-                            @error('bronchoscopi_fiberoptik') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-6">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Glidescopi</label>
                             <input type="text" class="form-control @error('glidescopi') is-invalid @enderror" wire:model.defer="glidescopi" placeholder="Glidescopi" maxlength="60">
                             @error('glidescopi') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-9 col-12">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-12">
+                        <div class="form-group">
+                            <label>Bronchoscopi Fiberoptik</label>
+                            <input type="text" class="form-control @error('bronchoscopi_fiberoptik') is-invalid @enderror" wire:model.defer="bronchoscopi_fiberoptik" placeholder="Bronchoscopi" maxlength="60">
+                            @error('bronchoscopi_fiberoptik') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-8 col-12">
                         <div class="form-group">
                             <label>Lain-lain Tatalaksana Jalan Napas</label>
                             <input type="text" class="form-control @error('lain_lain_tatalaksana') is-invalid @enderror" wire:model.defer="lain_lain_tatalaksana" placeholder="Keterangan tambahan" maxlength="100">
                             @error('lain_lain_tatalaksana') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
+                </div>
 
-                    <!-- Evaluasi Intubasi & Ventilasi -->
+                <!-- Evaluasi Intubasi & Ventilasi -->
+                <h6 class="text-secondary font-weight-bold border-bottom pb-1 mt-3 mb-3"><i class="fas fa-lungs mr-1"></i> Evaluasi Intubasi & Ventilasi</h6>
+                <div class="row">
                     <div class="col-md-3 col-6">
                         <div class="form-group">
                             <label>Intubasi Sesudah Tidur</label>
@@ -290,6 +302,9 @@
                             @error('ventilasi') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
+                </div>
+
+                <div class="row">
                     <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Sulit Ventilasi</label>
@@ -316,28 +331,31 @@
                 <!-- Section 7: Teknik Regional -->
                 <h5 class="text-primary border-bottom pb-2 mb-3 mt-4"><i class="fas fa-band-aid mr-1"></i> Teknik Regional</h5>
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Jenis Teknik Regional</label>
                             <input type="text" class="form-control @error('teknik_regional_jenis') is-invalid @enderror" wire:model.defer="teknik_regional_jenis" placeholder="Jenis teknik regional" maxlength="100">
                             @error('teknik_regional_jenis') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Lokasi Regional</label>
                             <input type="text" class="form-control @error('teknik_regional_lokasi') is-invalid @enderror" wire:model.defer="teknik_regional_lokasi" placeholder="Lokasi anatomis" maxlength="40">
                             @error('teknik_regional_lokasi') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Jenis Jarum</label>
                             <input type="text" class="form-control @error('teknik_regional_jenis_jarum') is-invalid @enderror" wire:model.defer="teknik_regional_jenis_jarum" placeholder="Jenis & ukuran jarum" maxlength="30">
                             @error('teknik_regional_jenis_jarum') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-3">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Kateter</label>
                             <select class="form-control @error('teknik_regional_kateter') is-invalid @enderror" wire:model.defer="teknik_regional_kateter">
@@ -348,34 +366,35 @@
                             @error('teknik_regional_kateter') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Fiksasi Kateter</label>
                             <input type="text" class="form-control @error('teknik_regional_kateter_viksasi') is-invalid @enderror" wire:model.defer="teknik_regional_kateter_viksasi" placeholder="Kedalaman fiksasi" maxlength="40">
                             @error('teknik_regional_kateter_viksasi') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Obat-obatan Regional</label>
-                            <textarea class="form-control @error('teknik_regional_obat_obatan') is-invalid @enderror" wire:model.defer="teknik_regional_obat_obatan" rows="2" placeholder="Nama obat & dosis" maxlength="400"></textarea>
-                            @error('teknik_regional_obat_obatan') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Komplikasi Regional</label>
-                            <input type="text" class="form-control @error('teknik_regional_komplikasi') is-invalid @enderror" wire:model.defer="teknik_regional_komplikasi" placeholder="Komplikasi yang terjadi" maxlength="200">
-                            @error('teknik_regional_komplikasi') <span class="invalid-feedback">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4 col-12">
                         <div class="form-group">
                             <label>Hasil Regional</label>
                             <input type="text" class="form-control @error('teknik_regional_hasil') is-invalid @enderror" wire:model.defer="teknik_regional_hasil" placeholder="Hasil blokade/anestesi" maxlength="100">
                             @error('teknik_regional_hasil') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 col-12">
+                        <div class="form-group">
+                            <label>Obat-obatan Regional</label>
+                            <textarea class="form-control @error('teknik_regional_obat_obatan') is-invalid @enderror" wire:model.defer="teknik_regional_obat_obatan" rows="2" placeholder="Nama obat & dosis" maxlength="400"></textarea>
+                            @error('teknik_regional_obat_obatan') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-12">
+                        <div class="form-group">
+                            <label>Komplikasi Regional</label>
+                            <textarea class="form-control @error('teknik_regional_komplikasi') is-invalid @enderror" wire:model.defer="teknik_regional_komplikasi" rows="2" placeholder="Komplikasi yang terjadi" maxlength="200"></textarea>
+                            @error('teknik_regional_komplikasi') <span class="invalid-feedback">{{ $message }}</span> @enderror
                 </div>
             </div>
 
