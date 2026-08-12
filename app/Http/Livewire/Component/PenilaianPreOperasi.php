@@ -28,6 +28,10 @@ class PenilaianPreOperasi extends Component
     public $modeEdit = false;
     public $tanggalEdit = null;
 
+    public $listSoap = [];
+    public $listLab = [];
+    public $listRadiologi = [];
+
     protected $listeners = [
         'hapusPenilaianPreOperasi' => 'hapus',
     ];
@@ -38,6 +42,7 @@ class PenilaianPreOperasi extends Component
         $this->no_rm = $noRm;
         $this->kd_dokter = session()->get('username');
         $this->getData();
+        $this->loadDataImportPasien();
     }
 
     public function hydrate(): void
@@ -58,6 +63,8 @@ class PenilaianPreOperasi extends Component
             ->select('penilaian_pre_operasi.*', 'dokter.nm_dokter')
             ->orderBy('penilaian_pre_operasi.tanggal', 'desc')
             ->get();
+
+        $this->loadDataImportPasien();
     }
 
     public function edit($tanggal): void
@@ -315,6 +322,229 @@ class PenilaianPreOperasi extends Component
                 'showConfirmButton' => true,
             ]);
         }
+    }
+
+    public function loadDataImportPasien(): void
+    {
+        if (empty($this->no_rawat)) {
+            $this->listSoap = collect([]);
+            $this->listLab = collect([]);
+            $this->listRadiologi = collect([]);
+            return;
+        }
+
+        $ranap = DB::table('pemeriksaan_ranap')
+            ->where('no_rawat', $this->no_rawat)
+            ->select(
+                'tgl_perawatan', 'jam_rawat', 'keluhan', 'pemeriksaan',
+                'suhu_tubuh', 'tensi', 'nadi', 'respirasi', 'spo2', 'gcs',
+                'tinggi', 'berat', DB::raw("'ranap' as sumber")
+            );
+
+        $ralan = DB::table('pemeriksaan_ralan')
+            ->where('no_rawat', $this->no_rawat)
+            ->select(
+                'tgl_perawatan', 'jam_rawat', 'keluhan', 'pemeriksaan',
+                'suhu_tubuh', 'tensi', 'nadi', 'respirasi', 'spo2', 'gcs',
+                'tinggi', 'berat', DB::raw("'ralan' as sumber")
+            );
+
+        $this->listSoap = $ranap->unionAll($ralan)
+            ->orderBy('tgl_perawatan', 'desc')
+            ->orderBy('jam_rawat', 'desc')
+            ->get();
+
+        $this->listLab = DB::table('detail_periksa_lab')
+            ->join('template_laboratorium', 'detail_periksa_lab.id_template', '=', 'template_laboratorium.id_template')
+            ->where('detail_periksa_lab.no_rawat', $this->no_rawat)
+            ->select(
+                'template_laboratorium.Pemeriksaan',
+                'detail_periksa_lab.nilai',
+                'template_laboratorium.satuan',
+                'detail_periksa_lab.tgl_periksa',
+                'detail_periksa_lab.jam'
+            )
+            ->get();
+
+        $this->listRadiologi = DB::table('hasil_radiologi')
+            ->where('no_rawat', $this->no_rawat)
+            ->get();
+    }
+
+    public function importKeluhan($text): void
+    {
+        if (empty($text)) {
+            return;
+        }
+        $this->ringkasan_klinik = mb_substr($text, 0, 500);
+    }
+
+    public function importPemeriksaanFisik($index): void
+    {
+        if (! isset($this->listSoap[$index])) {
+            return;
+        }
+
+        $item = $this->listSoap[$index];
+        $parts = [];
+
+        if (! empty($item->pemeriksaan)) {
+            $parts[] = $item->pemeriksaan;
+        }
+
+        $ttv = [];
+        if (! empty($item->suhu_tubuh)) {
+            $ttv[] = "Suhu: {$item->suhu_tubuh} °C";
+        }
+        if (! empty($item->tensi)) {
+            $ttv[] = "TD: {$item->tensi} mmHg";
+        }
+        if (! empty($item->nadi)) {
+            $ttv[] = "Nadi: {$item->nadi} x/m";
+        }
+        if (! empty($item->respirasi)) {
+            $ttv[] = "RR: {$item->respirasi} x/m";
+        }
+        if (! empty($item->spo2)) {
+            $ttv[] = "SpO2: {$item->spo2} %";
+        }
+        if (! empty($item->gcs)) {
+            $ttv[] = "GCS: {$item->gcs}";
+        }
+
+        if (! empty($ttv)) {
+            $parts[] = "TTV: " . implode(', ', $ttv);
+        }
+
+        $formatted = implode("\n", $parts);
+        $this->pemeriksaan_fisik = mb_substr($formatted, 0, 500);
+    }
+
+    public function importDiagnostikLab($index = null): void
+    {
+        if (empty($this->listLab) || (is_object($this->listLab) && $this->listLab->isEmpty())) {
+            return;
+        }
+
+        if ($index !== null) {
+            if (! isset($this->listLab[$index])) {
+                return;
+            }
+            $lab = $this->listLab[$index];
+            $satuan = ! empty($lab->satuan) ? " {$lab->satuan}" : '';
+            $tglJam = (! empty($lab->tgl_periksa) && ! empty($lab->jam))
+                ? Carbon::parse("{$lab->tgl_periksa} {$lab->jam}")->format('d/m/Y H:i')
+                : Carbon::now()->format('d/m/Y H:i');
+            $itemText = "[{$tglJam}] {$lab->Pemeriksaan}: {$lab->nilai}{$satuan}";
+
+            if (empty($this->pemeriksaan_diagnostik)) {
+                $this->pemeriksaan_diagnostik = mb_substr($itemText, 0, 500);
+            } else {
+                $combined = $this->pemeriksaan_diagnostik . "\n" . $itemText;
+                $this->pemeriksaan_diagnostik = mb_substr($combined, 0, 500);
+            }
+            return;
+        }
+
+        $firstLab = is_object($this->listLab) ? $this->listLab->first() : ($this->listLab[0] ?? null);
+        $tglJam = ($firstLab && ! empty($firstLab->tgl_periksa) && ! empty($firstLab->jam))
+            ? Carbon::parse("{$firstLab->tgl_periksa} {$firstLab->jam}")->format('d/m/Y H:i')
+            : Carbon::now()->format('d/m/Y H:i');
+
+        $labTexts = [];
+        foreach ($this->listLab as $lab) {
+            $satuan = ! empty($lab->satuan) ? " {$lab->satuan}" : '';
+            $labTexts[] = "- {$lab->Pemeriksaan}: {$lab->nilai}{$satuan}";
+        }
+
+        $labFormatted = "Lab ({$tglJam}):\n" . implode("\n", $labTexts);
+
+        if (empty($this->pemeriksaan_diagnostik)) {
+            $this->pemeriksaan_diagnostik = mb_substr($labFormatted, 0, 500);
+        } else {
+            if (strpos($this->pemeriksaan_diagnostik, 'Lab') === false) {
+                $combined = $this->pemeriksaan_diagnostik . "\n\n" . $labFormatted;
+                $this->pemeriksaan_diagnostik = mb_substr($combined, 0, 500);
+            } else {
+                $this->pemeriksaan_diagnostik = mb_substr($labFormatted, 0, 500);
+            }
+        }
+    }
+
+    public function importDiagnostikRadiologi($index = null): void
+    {
+        if (empty($this->listRadiologi) || (is_object($this->listRadiologi) && $this->listRadiologi->isEmpty())) {
+            return;
+        }
+
+        if ($index !== null) {
+            if (! isset($this->listRadiologi[$index])) {
+                return;
+            }
+            $rad = $this->listRadiologi[$index];
+            if (empty($rad->hasil)) {
+                return;
+            }
+            $tglJam = (! empty($rad->tgl_periksa) && ! empty($rad->jam))
+                ? Carbon::parse("{$rad->tgl_periksa} {$rad->jam}")->format('d/m/Y H:i')
+                : Carbon::now()->format('d/m/Y H:i');
+            $itemText = "[{$tglJam}] Radiologi: " . trim($rad->hasil);
+
+            if (empty($this->pemeriksaan_diagnostik)) {
+                $this->pemeriksaan_diagnostik = mb_substr($itemText, 0, 500);
+            } else {
+                $combined = $this->pemeriksaan_diagnostik . "\n" . $itemText;
+                $this->pemeriksaan_diagnostik = mb_substr($combined, 0, 500);
+            }
+            return;
+        }
+
+        $radTexts = [];
+        foreach ($this->listRadiologi as $rad) {
+            if (! empty($rad->hasil)) {
+                $radTexts[] = trim($rad->hasil);
+            }
+        }
+
+        if (empty($radTexts)) {
+            return;
+        }
+
+        $firstRad = is_object($this->listRadiologi) ? $this->listRadiologi->first() : ($this->listRadiologi[0] ?? null);
+        $tglJam = ($firstRad && ! empty($firstRad->tgl_periksa) && ! empty($firstRad->jam))
+            ? Carbon::parse("{$firstRad->tgl_periksa} {$firstRad->jam}")->format('d/m/Y H:i')
+            : Carbon::now()->format('d/m/Y H:i');
+
+        $radFormatted = "Radiologi ({$tglJam}):\n" . implode("\n", $radTexts);
+
+        if (empty($this->pemeriksaan_diagnostik)) {
+            $this->pemeriksaan_diagnostik = mb_substr($radFormatted, 0, 500);
+        } else {
+            if (strpos($this->pemeriksaan_diagnostik, 'Radiologi') === false) {
+                $combined = $this->pemeriksaan_diagnostik . "\n\n" . $radFormatted;
+                $this->pemeriksaan_diagnostik = mb_substr($combined, 0, 500);
+            } else {
+                $this->pemeriksaan_diagnostik = mb_substr($radFormatted, 0, 500);
+            }
+        }
+    }
+
+    public function autoFillSemua(): void
+    {
+        $this->loadDataImportPasien();
+
+        if (! empty($this->listSoap) && count($this->listSoap) > 0) {
+            $latestSoap = $this->listSoap->first();
+            if (! empty($latestSoap->keluhan)) {
+                $this->importKeluhan($latestSoap->keluhan);
+            }
+            $this->importPemeriksaanFisik(0);
+        }
+
+        $this->importDiagnostikLab();
+        $this->importDiagnostikRadiologi();
+
+        $this->alert('success', 'Berhasil mengambil data pasien terbaru');
     }
 
     public function render()

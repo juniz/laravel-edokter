@@ -1,8 +1,37 @@
 <div>
+    <div class="alert alert-info border-info d-flex justify-content-between align-items-center mb-3 py-2 px-3 shadow-sm rounded">
+        <div>
+            <i class="fas fa-magic mr-2"></i>
+            <strong>Impor Data Pasien:</strong> Salin data SOAP, TTV, Lab, dan Radiologi tanpa perlu ketik manual.
+        </div>
+        <button type="button" wire:click="autoFillSemua" class="btn btn-sm btn-info text-white font-weight-bold">
+            <i class="fas fa-sync-alt mr-1"></i> Ambil Data Pasien Terbaru
+        </button>
+    </div>
+
     <form wire:submit.prevent="{{ $modeEdit ? 'update' : 'simpan' }}">
         <div class="form-group">
-            <div class="d-flex justify-content-between align-items-center">
-                <label for="ringkasan_klinik">Ringkasan Klinik</label>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="d-flex align-items-center">
+                    <label for="ringkasan_klinik" class="mb-0 mr-2">Ringkasan Klinik</label>
+                    @if(!empty($listSoap) && count($listSoap) > 0)
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-xs btn-outline-info dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-download mr-1"></i> Pilih Keluhan SOAP
+                            </button>
+                            <div class="dropdown-menu shadow dropdown-menu-right" style="max-height: 250px; overflow-y: auto;">
+                                @foreach($listSoap as $soap)
+                                    @if(!empty($soap->keluhan))
+                                        <a class="dropdown-item py-2 border-bottom" href="#" wire:click.prevent="importKeluhan('{{ addslashes($soap->keluhan) }}')">
+                                            <small class="text-muted d-block">{{ \Carbon\Carbon::parse($soap->tgl_perawatan)->format('d/m/Y') }} {{ $soap->jam_rawat }} ({{ strtoupper($soap->sumber) }})</small>
+                                            <span>{{ \Illuminate\Support\Str::limit($soap->keluhan, 80) }}</span>
+                                        </a>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
                 <small class="text-muted">{{ strlen($ringkasan_klinik ?? '') }}/500</small>
             </div>
             <textarea wire:model.defer="ringkasan_klinik" id="ringkasan_klinik" class="form-control @error('ringkasan_klinik') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan ringkasan klinik..."></textarea>
@@ -10,8 +39,25 @@
         </div>
 
         <div class="form-group">
-            <div class="d-flex justify-content-between align-items-center">
-                <label for="pemeriksaan_fisik">Pemeriksaan Fisik</label>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="d-flex align-items-center">
+                    <label for="pemeriksaan_fisik" class="mb-0 mr-2">Pemeriksaan Fisik</label>
+                    @if(!empty($listSoap) && count($listSoap) > 0)
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-xs btn-outline-info dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-download mr-1"></i> Pilih Fisik & TTV
+                            </button>
+                            <div class="dropdown-menu shadow dropdown-menu-right" style="max-height: 250px; overflow-y: auto;">
+                                @foreach($listSoap as $idx => $soap)
+                                    <a class="dropdown-item py-2 border-bottom" href="#" wire:click.prevent="importPemeriksaanFisik({{ $idx }})">
+                                        <small class="text-muted d-block">{{ \Carbon\Carbon::parse($soap->tgl_perawatan)->format('d/m/Y') }} {{ $soap->jam_rawat }} ({{ strtoupper($soap->sumber) }})</small>
+                                        <span>{{ \Illuminate\Support\Str::limit(($soap->pemeriksaan ? $soap->pemeriksaan . ' | ' : '') . 'TD:' . $soap->tensi . ' Nadi:' . $soap->nadi . ' Suhu:' . $soap->suhu_tubuh, 80) }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
                 <small class="text-muted">{{ strlen($pemeriksaan_fisik ?? '') }}/500</small>
             </div>
             <textarea wire:model.defer="pemeriksaan_fisik" id="pemeriksaan_fisik" class="form-control @error('pemeriksaan_fisik') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan pemeriksaan fisik..."></textarea>
@@ -19,8 +65,52 @@
         </div>
 
         <div class="form-group">
-            <div class="d-flex justify-content-between align-items-center">
-                <label for="pemeriksaan_diagnostik">Pemeriksaan Diagnostik</label>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="d-flex align-items-center">
+                    <label for="pemeriksaan_diagnostik" class="mb-0 mr-2">Pemeriksaan Diagnostik</label>
+                    <div class="dropdown d-inline-block mr-1">
+                        <button class="btn btn-xs btn-outline-info dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-flask mr-1"></i> Pilih Hasil Lab
+                        </button>
+                        <div class="dropdown-menu shadow" style="max-height: 250px; overflow-y: auto;">
+                            <a class="dropdown-item py-2 font-weight-bold border-bottom" href="#" wire:click.prevent="importDiagnostikLab">
+                                <i class="fas fa-check-double mr-1 text-info"></i> Semua Hasil Lab
+                            </a>
+                            @if(!empty($listLab) && count($listLab) > 0)
+                                @foreach($listLab as $idx => $lab)
+                                    <a class="dropdown-item py-2 border-bottom" href="#" wire:click.prevent="importDiagnostikLab({{ $idx }})">
+                                        @if(!empty($lab->tgl_periksa))
+                                            <small class="text-muted d-block">{{ \Carbon\Carbon::parse($lab->tgl_periksa)->format('d/m/Y') }} {{ $lab->jam ?? '' }}</small>
+                                        @endif
+                                        <span><strong>{{ $lab->Pemeriksaan }}:</strong> {{ $lab->nilai }} {{ $lab->satuan }}</span>
+                                    </a>
+                                @endforeach
+                            @endif
+                        </div>
+                    </div>
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-xs btn-outline-info dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-x-ray mr-1"></i> Pilih Hasil Radiologi
+                        </button>
+                        <div class="dropdown-menu shadow" style="max-height: 250px; overflow-y: auto;">
+                            <a class="dropdown-item py-2 font-weight-bold border-bottom" href="#" wire:click.prevent="importDiagnostikRadiologi">
+                                <i class="fas fa-check-double mr-1 text-info"></i> Semua Hasil Radiologi
+                            </a>
+                            @if(!empty($listRadiologi) && count($listRadiologi) > 0)
+                                @foreach($listRadiologi as $idx => $rad)
+                                    @if(!empty($rad->hasil))
+                                        <a class="dropdown-item py-2 border-bottom" href="#" wire:click.prevent="importDiagnostikRadiologi({{ $idx }})">
+                                            @if(!empty($rad->tgl_periksa))
+                                                <small class="text-muted d-block">{{ \Carbon\Carbon::parse($rad->tgl_periksa)->format('d/m/Y') }} {{ $rad->jam ?? '' }}</small>
+                                            @endif
+                                            <span>{{ \Illuminate\Support\Str::limit(trim($rad->hasil), 80) }}</span>
+                                        </a>
+                                    @endif
+                                @endforeach
+                            @endif
+                        </div>
+                    </div>
+                </div>
                 <small class="text-muted">{{ strlen($pemeriksaan_diagnostik ?? '') }}/500</small>
             </div>
             <textarea wire:model.defer="pemeriksaan_diagnostik" id="pemeriksaan_diagnostik" class="form-control @error('pemeriksaan_diagnostik') is-invalid @enderror" rows="3" maxlength="500" placeholder="Masukkan pemeriksaan diagnostik..."></textarea>
