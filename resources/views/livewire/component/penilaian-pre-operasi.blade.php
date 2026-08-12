@@ -11,6 +11,12 @@
 
     <form wire:submit.prevent="{{ $modeEdit ? 'update' : 'simpan' }}">
         <div class="form-group">
+            <label for="tanggal_assessment"><i class="fas fa-clock mr-1 text-primary"></i> Tanggal & Jam Assessment</label>
+            <input type="datetime-local" id="tanggal_assessment" class="form-control @error('tanggal') is-invalid @enderror" wire:model.defer="tanggal">
+            @error('tanggal') <span class="text-danger small">{{ $message }}</span> @enderror
+        </div>
+
+        <div class="form-group">
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <div class="d-flex align-items-center">
                     <label for="ringkasan_klinik" class="mb-0 mr-2">Ringkasan Klinik</label>

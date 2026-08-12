@@ -16,6 +16,7 @@ class PenilaianPreOperasi extends Component
     public $no_rm;
     public $kd_dokter;
 
+    public $tanggal;
     public $ringkasan_klinik;
     public $pemeriksaan_fisik;
     public $pemeriksaan_diagnostik;
@@ -41,6 +42,7 @@ class PenilaianPreOperasi extends Component
         $this->no_rawat = $noRawat;
         $this->no_rm = $noRm;
         $this->kd_dokter = session()->get('username');
+        $this->tanggal = Carbon::now()->format('Y-m-d\TH:i');
         $this->getData();
         $this->loadDataImportPasien();
     }
@@ -100,6 +102,7 @@ class PenilaianPreOperasi extends Component
         }
 
         $this->tanggalEdit = $data->tanggal;
+        $this->tanggal = Carbon::parse($data->tanggal)->format('Y-m-d\TH:i');
         $this->ringkasan_klinik = $data->ringkasan_klinik;
         $this->pemeriksaan_fisik = $data->pemeriksaan_fisik;
         $this->pemeriksaan_diagnostik = $data->pemeriksaan_diagnostik;
@@ -122,6 +125,7 @@ class PenilaianPreOperasi extends Component
             'hal_hal_yang_perludi_persiapkan',
             'terapi_pre_operasi',
         ]);
+        $this->tanggal = Carbon::now()->format('Y-m-d\TH:i');
         $this->modeEdit = false;
         $this->tanggalEdit = null;
         $this->resetErrorBag();
@@ -130,6 +134,7 @@ class PenilaianPreOperasi extends Component
     public function simpan(): void
     {
         $this->validate([
+            'tanggal' => 'required',
             'ringkasan_klinik' => 'nullable|string|max:500',
             'pemeriksaan_fisik' => 'nullable|string|max:500',
             'pemeriksaan_diagnostik' => 'nullable|string|max:500',
@@ -157,9 +162,13 @@ class PenilaianPreOperasi extends Component
         }
 
         try {
+            $formattedTanggal = ! empty($this->tanggal)
+                ? Carbon::parse($this->tanggal)->format('Y-m-d H:i:s')
+                : Carbon::now()->format('Y-m-d H:i:s');
+
             DB::table('penilaian_pre_operasi')->insert([
                 'no_rawat' => $this->no_rawat,
-                'tanggal' => Carbon::now()->format('Y-m-d H:i:s'),
+                'tanggal' => $formattedTanggal,
                 'kd_dokter' => $userDokter,
                 'ringkasan_klinik' => $this->ringkasan_klinik,
                 'pemeriksaan_fisik' => $this->pemeriksaan_fisik,
@@ -200,6 +209,7 @@ class PenilaianPreOperasi extends Component
         }
 
         $this->validate([
+            'tanggal' => 'required',
             'ringkasan_klinik' => 'nullable|string|max:500',
             'pemeriksaan_fisik' => 'nullable|string|max:500',
             'pemeriksaan_diagnostik' => 'nullable|string|max:500',
@@ -212,10 +222,15 @@ class PenilaianPreOperasi extends Component
         ]);
 
         try {
+            $formattedTanggal = ! empty($this->tanggal)
+                ? Carbon::parse($this->tanggal)->format('Y-m-d H:i:s')
+                : $this->tanggalEdit;
+
             DB::table('penilaian_pre_operasi')
                 ->where('no_rawat', $this->no_rawat)
                 ->where('tanggal', $this->tanggalEdit)
                 ->update([
+                    'tanggal' => $formattedTanggal,
                     'ringkasan_klinik' => $this->ringkasan_klinik,
                     'pemeriksaan_fisik' => $this->pemeriksaan_fisik,
                     'pemeriksaan_diagnostik' => $this->pemeriksaan_diagnostik,
