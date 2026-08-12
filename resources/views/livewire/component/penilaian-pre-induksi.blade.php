@@ -1,4 +1,13 @@
 <div>
+    <style>
+        .form-aligned-label label {
+            min-height: 2.6rem;
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+    </style>
     <form wire:submit.prevent="{{ $modeEdit ? 'update' : 'simpan' }}">
         <div class="card card-outline card-primary">
             <div class="card-header">
@@ -7,7 +16,7 @@
                     {{ $modeEdit ? 'Edit Penilaian Pre Induksi' : 'Input Penilaian Pre Induksi' }}
                 </h3>
             </div>
-            <div class="card-body">
+            <div class="card-body form-aligned-label">
                 <!-- Section 1: Informasi Waktu Assessment -->
                 <h5 class="text-primary border-bottom pb-2 mb-3"><i class="fas fa-clock mr-1"></i> Informasi Waktu Assessment</h5>
                 <div class="row">
