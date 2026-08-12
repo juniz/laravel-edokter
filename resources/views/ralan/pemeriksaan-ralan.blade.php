@@ -82,9 +82,9 @@
                 <x-adminlte-card title="Penilaian Pre Anestesi" icon="fas fa-syringe" theme="info" maximizable collapsible="collapsed">
                     <livewire:component.penilaian-pre-anestesi :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" :key="'penilaian-pre-anestesi-ralan-'.request()->get('no_rawat')" />
                 </x-adminlte-card>
-                <x-adminlte-card title="Penilaian Pre Induksi" icon="fas fa-syringe" theme="info" maximizable collapsible="collapsed">
+                {{-- <x-adminlte-card title="Penilaian Pre Induksi" icon="fas fa-syringe" theme="info" maximizable collapsible="collapsed">
                     <livewire:component.penilaian-pre-induksi :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" :key="'penilaian-pre-induksi-ralan-'.request()->get('no_rawat')" />
-                </x-adminlte-card>
+                </x-adminlte-card> --}}
     </div>
 </div>
 <x-adminlte-modal id="modalPurple" title="Tanya AI" theme="secondary"
