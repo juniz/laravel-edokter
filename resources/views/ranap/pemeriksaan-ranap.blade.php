@@ -42,6 +42,9 @@
             <x-adminlte-card title="Penilaian Pre Anestesi" icon="fas fa-syringe" theme="info" maximizable collapsible="collapsed">
                 <livewire:component.penilaian-pre-anestesi :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" :key="'penilaian-pre-anestesi-ranap-'.request()->get('no_rawat')" />
             </x-adminlte-card>
+            <x-adminlte-card title="Penilaian Pre Induksi" icon="fas fa-syringe" theme="info" maximizable collapsible="collapsed">
+                <livewire:component.penilaian-pre-induksi :no-rawat="request()->get('no_rawat')" :no-rm="request()->get('no_rm')" :key="'penilaian-pre-induksi-ranap-'.request()->get('no_rawat')" />
+            </x-adminlte-card>
             <x-adminlte-card title="SBAR" icon='fas fa-stethoscope' theme="info" maximizable collapsible="collapsed">
                 <livewire:ranap.sbar.detail-sbar />
                 <livewire:ranap.sbar.table-sbar :noRawat="request()->get('no_rawat')" />
