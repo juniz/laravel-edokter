@@ -20,9 +20,9 @@
                                 <i class="fas fa-download mr-1"></i> Pilih Keluhan SOAP
                             </button>
                             <div class="dropdown-menu shadow dropdown-menu-right" style="max-height: 250px; overflow-y: auto;">
-                                @foreach($listSoap as $soap)
+                                @foreach($listSoap as $idx => $soap)
                                     @if(!empty($soap->keluhan))
-                                        <a class="dropdown-item py-2 border-bottom" href="#" wire:click.prevent="importKeluhan('{{ addslashes($soap->keluhan) }}')">
+                                        <a class="dropdown-item py-2 border-bottom" href="#" wire:click.prevent="importKeluhan({{ $idx }})">
                                             <small class="text-muted d-block">{{ \Carbon\Carbon::parse($soap->tgl_perawatan)->format('d/m/Y') }} {{ $soap->jam_rawat }} ({{ strtoupper($soap->sumber) }})</small>
                                             <span>{{ \Illuminate\Support\Str::limit($soap->keluhan, 80) }}</span>
                                         </a>

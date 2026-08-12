@@ -371,8 +371,14 @@ class PenilaianPreOperasi extends Component
             ->get();
     }
 
-    public function importKeluhan($text): void
+    public function importKeluhan($index): void
     {
+        if (is_numeric($index) && isset($this->listSoap[$index])) {
+            $text = $this->listSoap[$index]->keluhan ?? '';
+        } else {
+            $text = $index;
+        }
+
         if (empty($text)) {
             return;
         }
