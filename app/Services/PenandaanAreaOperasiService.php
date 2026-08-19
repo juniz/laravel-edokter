@@ -253,12 +253,18 @@ class PenandaanAreaOperasiService
     protected function generateQrBase64(string $url): string
     {
         try {
+            return QrCodeGenerator::pngDataUri($url, 150, 2);
+        } catch (\Throwable $e) {
+            Log::warning('Local QR code generator exception: ' . $e->getMessage());
+        }
+
+        try {
             $response = Http::timeout(3)->get('https://api.qrserver.com/v1/create-qr-code/?size=150x150&format=png&data=' . urlencode($url));
             if ($response->successful() && ! empty($response->body())) {
                 return 'data:image/png;base64,' . base64_encode($response->body());
             }
         } catch (\Throwable $e) {
-            Log::warning('Failed to generate QR code via online service: ' . $e->getMessage());
+            Log::warning('Failed to generate QR code via online service fallback: ' . $e->getMessage());
         }
 
         return '';
