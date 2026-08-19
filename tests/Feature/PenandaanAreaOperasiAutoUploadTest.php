@@ -402,4 +402,20 @@ class PenandaanAreaOperasiAutoUploadTest extends TestCase
         $this->assertNull($result['pdf_url']);
         $this->assertStringContainsString('Data penandaan area operasi tidak ditemukan', $result['message']);
     }
+
+    /**
+     * Test 7: Controller downloadPdf generates and streams PDF response.
+     */
+    public function test_controller_download_pdf_success(): void
+    {
+        $response = $this->withSession(['username' => 'D001', 'password' => 'secret'])
+            ->get(route('penandaan-area-operasi.download-pdf', [
+                'no_rawat' => '2026/08/19/000001',
+            ]));
+
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+    }
 }
+

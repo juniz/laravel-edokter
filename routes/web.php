@@ -221,6 +221,10 @@ Route::get('/penandaan-area-operasi/cetak', [PenandaanAreaOperasiController::cla
     ->middleware('loginauth')
     ->name('penandaan-area-operasi.cetak');
 
+Route::get('/penandaan-area-operasi/download-pdf', [PenandaanAreaOperasiController::class, 'downloadPdf'])
+    ->middleware('loginauth')
+    ->name('penandaan-area-operasi.download-pdf');
+
 Route::match(['get', 'post'], '/penandaan-area-operasi/upload-pdf', [PenandaanAreaOperasiController::class, 'uploadPdf'])
     ->middleware('loginauth')
     ->name('penandaan-area-operasi.upload-pdf');

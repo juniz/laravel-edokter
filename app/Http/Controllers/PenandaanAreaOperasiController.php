@@ -219,6 +219,24 @@ class PenandaanAreaOperasiController extends Controller
         ));
     }
 
+    public function downloadPdf(Request $request, ?PenandaanAreaOperasiService $service = null)
+    {
+        $service = $service ?? app(PenandaanAreaOperasiService::class);
+        $noRawat = $request->input('no_rawat') ?? $request->route('no_rawat');
+
+        if (! $noRawat || ! is_string($noRawat)) {
+            abort(400, 'Parameter no_rawat is required.');
+        }
+
+        $pdfBinary = $service->generatePdf($noRawat);
+        $filename = 'PENANDAAN_OPERASI_' . str_replace('/', '-', $noRawat) . '_' . date('YmdHis') . '.pdf';
+
+        return response($pdfBinary, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
+    }
+
     public function uploadPdf(Request $request, ?PenandaanAreaOperasiService $service = null)
     {
         $service = $service ?? app(PenandaanAreaOperasiService::class);

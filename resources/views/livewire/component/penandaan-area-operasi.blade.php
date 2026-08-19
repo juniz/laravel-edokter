@@ -93,6 +93,10 @@
                 <i class="fas fa-print mr-1" aria-hidden="true"></i>
                 Cetak
             </a>
+            <a href="{{ route('penandaan-area-operasi.download-pdf', ['no_rawat' => $noRawat]) }}" target="_blank" class="btn btn-secondary ml-2" id="download-pdf-penandaan" title="Generate dan Download / Preview PDF DomPDF (A4)">
+                <i class="fas fa-file-pdf mr-1" aria-hidden="true"></i>
+                Download PDF
+            </a>
         </div>
     </div>
 </div>
