@@ -221,6 +221,10 @@ Route::get('/penandaan-area-operasi/cetak', [PenandaanAreaOperasiController::cla
     ->middleware('loginauth')
     ->name('penandaan-area-operasi.cetak');
 
+Route::match(['get', 'post'], '/penandaan-area-operasi/upload-pdf', [PenandaanAreaOperasiController::class, 'uploadPdf'])
+    ->middleware('loginauth')
+    ->name('penandaan-area-operasi.upload-pdf');
+
 Route::get('/penandaan-area-operasi/verifikasi/{token?}', [PenandaanAreaOperasiController::class, 'verifikasi'])
     ->middleware('throttle:60,1')
     ->name('penandaan-area-operasi.verifikasi');

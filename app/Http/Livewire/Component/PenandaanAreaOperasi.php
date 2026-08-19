@@ -2,7 +2,9 @@
 
 namespace App\Http\Livewire\Component;
 
+use App\Services\PenandaanAreaOperasiService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Livewire\Component;
 
@@ -104,8 +106,23 @@ class PenandaanAreaOperasi extends Component
             );
 
             $this->savedGambarPenandaanBase64 = $this->gambarPenandaanBase64;
-            $this->alert('success', 'Penandaan area operasi berhasil disimpan');
+
+            $uploadResult = app(PenandaanAreaOperasiService::class)->generateAndUploadPdf($this->noRawat);
+
+            if (! empty($uploadResult['success'])) {
+                $this->alert('success', 'Penandaan area operasi berhasil disimpan dan diunggah ke berkas digital.');
+            } else {
+                $errorMessage = $uploadResult['message'] ?? 'Error upload';
+                Log::warning('Penandaan area operasi automatic upload failed: ' . $errorMessage, [
+                    'no_rawat' => $this->noRawat,
+                ]);
+                $this->alert('warning', 'Penandaan area operasi berhasil disimpan, namun gagal diunggah otomatis: ' . $errorMessage);
+            }
         } catch (\Throwable $e) {
+            Log::error('Gagal menyimpan penandaan area operasi: ' . $e->getMessage(), [
+                'no_rawat' => $this->noRawat,
+                'exception' => $e,
+            ]);
             $this->alert('error', 'Gagal menyimpan penandaan area operasi: ' . $e->getMessage());
         }
     }

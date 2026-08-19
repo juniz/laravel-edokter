@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\PenandaanAreaOperasiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -216,6 +217,36 @@ class PenandaanAreaOperasiController extends Controller
             'jenisKelaminTitle',
             'tanggalPenandaan'
         ));
+    }
+
+    public function uploadPdf(Request $request, ?PenandaanAreaOperasiService $service = null)
+    {
+        $service = $service ?? app(PenandaanAreaOperasiService::class);
+        $noRawat = $request->input('no_rawat') ?? $request->route('no_rawat');
+
+        if (! $noRawat || ! is_string($noRawat)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Parameter no_rawat is required.',
+                'pdf_url' => null,
+            ], 400);
+        }
+
+        try {
+            $result = $service->generateAndUploadPdf($noRawat);
+
+            return response()->json([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'pdf_url' => $result['pdf_url'] ?? null,
+            ], $result['success'] ? 200 : 500);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses dan menyimpan PDF: ' . $e->getMessage(),
+                'pdf_url' => null,
+            ], 500);
+        }
     }
 }
 
