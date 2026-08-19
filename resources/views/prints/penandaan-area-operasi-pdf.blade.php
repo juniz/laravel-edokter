@@ -6,7 +6,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 5mm 8mm;
+            margin: 6mm 10mm;
         }
 
         * {
@@ -17,7 +17,7 @@
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 8.5px;
+            font-size: 9px;
             color: #000;
             line-height: 1.15;
             background: #fff;
@@ -365,6 +365,7 @@
                 <td class="meta-label">NO. RM</td>
                 <td class="meta-val" style="width: 40%;">: <strong>{{ $noRm }}</strong></td>
                 <td rowspan="3" class="barcode-cell" style="width: 35%;">
+                    <div class="barcode-lines"></div>
                     <div class="barcode-text">*{{ $noRm }}*</div>
                 </td>
             </tr>
