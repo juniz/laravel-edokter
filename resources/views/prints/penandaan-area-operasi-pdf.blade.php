@@ -16,11 +16,11 @@
         }
 
         body {
-            margin: 8mm 15mm;
+            margin: 5mm 10mm;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 9px;
+            font-size: 9.5px;
             color: #000;
-            line-height: 1.15;
+            line-height: 1.2;
             background: #fff;
         }
 
@@ -40,28 +40,29 @@
         }
 
         .hospital-logo {
-            max-width: 48px;
-            max-height: 48px;
+            max-width: 50px;
+            max-height: 50px;
             height: auto;
             display: block;
+            margin: 0 auto 2px;
         }
 
         .kop-text {
-            font-size: 9px;
+            font-size: 9.5px;
             font-weight: bold;
-            line-height: 1.2;
+            line-height: 1.25;
             text-align: center;
         }
 
         .kop-text .hospital-name {
-            font-size: 10px;
+            font-size: 10.5px;
             text-decoration: underline;
         }
 
         .doc-box {
             border: 1.5px solid #000;
             padding: 3px 6px;
-            font-size: 8.5px;
+            font-size: 9px;
             font-weight: bold;
             text-align: center;
             float: right;
@@ -71,10 +72,10 @@
         /* Form Title */
         .form-title {
             text-align: center;
-            font-size: 10.5px;
+            font-size: 11.5px;
             font-weight: bold;
             text-decoration: underline;
-            margin: 2px 0 4px;
+            margin: 3px 0 5px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -84,20 +85,20 @@
             width: 100%;
             border-collapse: collapse;
             border: 1px solid #000;
-            margin-bottom: 4px;
-            font-size: 8.5px;
+            margin-bottom: 5px;
+            font-size: 9px;
         }
 
         .meta-table td {
             border: 1px solid #000;
-            padding: 1.5px 4px;
+            padding: 2px 5px;
             vertical-align: middle;
         }
 
         .meta-label {
             font-weight: bold;
-            width: 120px;
-            background-color: #f2f2f2;
+            width: 125px;
+            background-color: #f9f9f9;
         }
 
         .meta-val {
@@ -111,9 +112,16 @@
             background-color: #fff;
         }
 
+        .barcode-img {
+            width: 130px;
+            height: 24px;
+            display: block;
+            margin: 0 auto 2px;
+        }
+
         .barcode-text {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 8.5px;
+            font-size: 9px;
             font-weight: bold;
             letter-spacing: 1px;
         }
@@ -122,46 +130,46 @@
         .diagram-main-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 3px;
-            margin-bottom: 4px;
+            border-spacing: 4px;
+            margin-bottom: 5px;
             table-layout: fixed;
         }
 
         .diagram-box {
             border: 1px solid #000;
-            padding: 2px;
+            padding: 3px;
             background: #fff;
             vertical-align: top;
         }
 
         .box-title {
-            font-size: 8.5px;
+            font-size: 9px;
             font-weight: bold;
             text-align: center;
             background-color: #eee;
             border-bottom: 1px solid #000;
-            padding: 1.5px 3px;
-            margin-bottom: 2px;
+            padding: 2px 4px;
+            margin-bottom: 3px;
             text-transform: uppercase;
         }
 
         .sub-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 2px;
+            border-spacing: 3px;
             table-layout: fixed;
         }
 
         .diagram-item {
             border: 1px solid #ddd;
-            padding: 1.5px;
+            padding: 2px;
             background: #fafafa;
             vertical-align: top;
             text-align: center;
         }
 
         .diagram-item-header {
-            font-size: 8px;
+            font-size: 8.5px;
             font-weight: bold;
             text-align: center;
             margin-bottom: 1px;
@@ -171,7 +179,7 @@
         .direction-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7px;
+            font-size: 7.5px;
             font-weight: bold;
             color: #444;
             border-bottom: 1px dashed #ccc;
@@ -185,7 +193,7 @@
         .direction-center {
             text-align: center;
             width: 100%;
-            font-size: 7px;
+            font-size: 7.5px;
             font-weight: bold;
             color: #444;
             border-bottom: 1px dashed #ccc;
@@ -200,27 +208,27 @@
         }
 
         .img-badan {
-            height: 150px;
+            height: 240px;
             max-width: 95%;
         }
 
         .img-kepala {
-            height: 64px;
+            height: 100px;
             max-width: 95%;
         }
 
         .img-pair {
-            height: 85px;
+            height: 105px;
             max-width: 95%;
         }
 
         /* Declaration Section */
         .declaration-box {
             border: 1px solid #000;
-            padding: 3px 6px;
+            padding: 4px 8px;
             text-align: center;
-            font-size: 8.5px;
-            margin-bottom: 4px;
+            font-size: 9px;
+            margin-bottom: 5px;
             background-color: #fcfcfc;
         }
 
@@ -232,11 +240,11 @@
 
         .signature-table td {
             vertical-align: top;
-            font-size: 8.5px;
+            font-size: 9px;
         }
 
         .tte-box-table {
-            margin: 2px auto;
+            margin: 3px auto;
             border: 1px dashed #666;
             border-radius: 4px;
             background-color: #fafafa;
@@ -244,25 +252,25 @@
         }
 
         .tte-box-table td {
-            padding: 2px 4px;
+            padding: 3px 6px;
             vertical-align: middle;
         }
 
         .tte-qr-img {
-            width: 48px;
-            height: 48px;
+            width: 50px;
+            height: 50px;
             display: block;
         }
 
         .tte-meta {
-            font-size: 7.5px;
-            line-height: 1.25;
+            font-size: 8px;
+            line-height: 1.3;
             color: #222;
             text-align: left;
         }
 
         .tte-title {
-            font-size: 7px;
+            font-size: 7.5px;
             color: #555;
             font-style: italic;
         }
@@ -270,13 +278,13 @@
         .tte-doc-name {
             font-weight: bold;
             color: #000;
-            font-size: 8px;
+            font-size: 8.5px;
         }
 
         .tte-footer-name {
             font-weight: bold;
-            margin-top: 2px;
-            font-size: 8.5px;
+            margin-top: 3px;
+            font-size: 9px;
         }
     </style>
 </head>
@@ -319,35 +327,32 @@
         $tglLahirRaw = $marking->pasien_tgl_lahir ?? $marking->tgl_lahir ?? null;
         $tglLahirFormatted = $tglLahirRaw ? \Carbon\Carbon::parse($tglLahirRaw)->format('d-m-Y') : '-';
         $noRm = $marking->no_rkm_medis ?? $marking->no_rm ?? '-';
+        
+        $barcodeSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="130" height="24" viewBox="0 0 130 24"><rect x="0" width="2" height="24" fill="#000"/><rect x="4" width="3" height="24" fill="#000"/><rect x="9" width="2" height="24" fill="#000"/><rect x="13" width="3" height="24" fill="#000"/><rect x="18" width="1" height="24" fill="#000"/><rect x="21" width="3" height="24" fill="#000"/><rect x="26" width="2" height="24" fill="#000"/><rect x="30" width="4" height="24" fill="#000"/><rect x="36" width="2" height="24" fill="#000"/><rect x="40" width="3" height="24" fill="#000"/><rect x="45" width="1" height="24" fill="#000"/><rect x="48" width="4" height="24" fill="#000"/><rect x="54" width="2" height="24" fill="#000"/><rect x="58" width="3" height="24" fill="#000"/><rect x="63" width="2" height="24" fill="#000"/><rect x="67" width="4" height="24" fill="#000"/><rect x="73" width="1" height="24" fill="#000"/><rect x="76" width="3" height="24" fill="#000"/><rect x="81" width="2" height="24" fill="#000"/><rect x="85" width="4" height="24" fill="#000"/><rect x="91" width="2" height="24" fill="#000"/><rect x="95" width="3" height="24" fill="#000"/><rect x="100" width="1" height="24" fill="#000"/><rect x="103" width="4" height="24" fill="#000"/><rect x="109" width="2" height="24" fill="#000"/><rect x="113" width="3" height="24" fill="#000"/><rect x="118" width="2" height="24" fill="#000"/><rect x="122" width="3" height="24" fill="#000"/><rect x="127" width="2" height="24" fill="#000"/></svg>';
+        $barcodeBase64 = 'data:image/svg+xml;base64,' . base64_encode($barcodeSvg);
     @endphp
 
     <div class="print-container">
         {{-- Header / Kop --}}
         <table class="header-table">
             <tr>
-                <td style="width: 75%;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td style="width: 55px; vertical-align: middle; text-align: center;">
-                                @if(!empty($setting->logo_base64))
-                                    <img src="{{ $setting->logo_base64 }}" class="hospital-logo" alt="Logo">
-                                @elseif(file_exists(public_path('img/logo/logo-kop.png')))
-                                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/logo/logo-kop.png'))) }}" class="hospital-logo" alt="Logo">
-                                @elseif(file_exists(public_path('img/logo/logo.png')))
-                                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/logo/logo.png'))) }}" class="hospital-logo" alt="Logo">
-                                @endif
-                            </td>
-                            <td style="vertical-align: middle; padding-left: 6px;">
-                                <div class="kop-text">
-                                    <div>{{ $setting->header_title_1 ?? 'POLRI DAERAH JAWA TIMUR' }}</div>
-                                    <div>{{ $setting->header_title_2 ?? 'BIDANG KEDOKTERAN DAN KESEHATAN' }}</div>
-                                    <div class="hospital-name">{{ $setting->hospital_name ?? 'RUMAH SAKIT BHAYANGKARA TK. III NGANJUK' }}</div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
+                <td style="width: 70%; text-align: center;">
+                    <div style="text-align: center;">
+                        @if(!empty($setting->logo_base64))
+                            <img src="{{ $setting->logo_base64 }}" class="hospital-logo" alt="Logo">
+                        @elseif(file_exists(public_path('img/logo/logo-kop.png')))
+                            <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/logo/logo-kop.png'))) }}" class="hospital-logo" alt="Logo">
+                        @elseif(file_exists(public_path('img/logo/logo.png')))
+                            <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/logo/logo.png'))) }}" class="hospital-logo" alt="Logo">
+                        @endif
+                        <div class="kop-text">
+                            <div>{{ $setting->header_title_1 ?? 'POLRI DAERAH JAWA TIMUR' }}</div>
+                            <div>{{ $setting->header_title_2 ?? 'BIDANG KEDOKTERAN DAN KESEHATAN' }}</div>
+                            <div class="hospital-name">{{ $setting->hospital_name ?? 'RUMAH SAKIT BHAYANGKARA TK. III NGANJUK' }}</div>
+                        </div>
+                    </div>
                 </td>
-                <td style="width: 25%; vertical-align: top; text-align: right;">
+                <td style="width: 30%; vertical-align: top; text-align: right;">
                     <div class="doc-box">
                         RM. 41 / Halaman 2
                     </div>
@@ -366,7 +371,7 @@
                 <td class="meta-label">NO. RM</td>
                 <td class="meta-val" style="width: 40%;">: <strong>{{ $noRm }}</strong></td>
                 <td rowspan="3" class="barcode-cell" style="width: 35%;">
-                    <div class="barcode-lines"></div>
+                    <img src="{{ $barcodeBase64 }}" class="barcode-img" alt="Barcode">
                     <div class="barcode-text">*{{ $noRm }}*</div>
                 </td>
             </tr>
@@ -571,8 +576,8 @@
         {{-- Signature Footer --}}
         <table class="signature-table">
             <tr>
-                <td style="width: 50%;"></td>
-                <td style="width: 50%; text-align: center;">
+                <td style="width: 48%;"></td>
+                <td style="width: 52%; text-align: center;">
                     <div>Nganjuk, {{ $tanggalPenandaan }}</div>
                     <div style="font-weight: bold; margin-bottom: 2px;">Dokter Operator</div>
                     <table class="tte-box-table">
