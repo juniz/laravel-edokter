@@ -114,6 +114,12 @@ class PenandaanAreaOperasiAutoUploadTest extends TestCase
             $table->timestamps();
         });
 
+        $this->createFixtureTable('berkas_digital_perawatan', function ($table) {
+            $table->string('no_rawat');
+            $table->string('kode');
+            $table->string('lokasi_file');
+        });
+
         $this->createFixtureTable('setting', function ($table) {
             $table->id();
             $table->string('nama_instansi')->nullable();
@@ -416,6 +422,134 @@ class PenandaanAreaOperasiAutoUploadTest extends TestCase
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/pdf');
         $this->assertStringStartsWith('%PDF-', $response->getContent());
+    }
+
+    /**
+     * Test 8: Upload replaces old penandaan operasi files based on filename prefix and preserves other A05 documents.
+     */
+    public function test_upload_replaces_old_penandaan_operasi_files_and_preserves_other_a05_documents(): void
+    {
+        $pngBinary = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+
+        // Pre-populate berkas_digital_perawatan with:
+        // 1. Old penandaan area operasi file for patient 000001
+        // 2. Another A05 surgical document for patient 000001 (e.g. LAPORAN_OPERASI_...)
+        // 3. Penandaan file for a different patient 000002
+        DB::table('berkas_digital_perawatan')->insert([
+            [
+                'no_rawat' => '2026/08/19/000001',
+                'kode' => 'A05',
+                'lokasi_file' => 'pages/upload/PENANDAAN_OPERASI_2026-08-19-000001_20260819080000.pdf',
+            ],
+            [
+                'no_rawat' => '2026/08/19/000001',
+                'kode' => 'A05',
+                'lokasi_file' => 'pages/upload/LAPORAN_OPERASI_2026-08-19-000001.pdf',
+            ],
+            [
+                'no_rawat' => '2026/08/19/000002',
+                'kode' => 'A05',
+                'lokasi_file' => 'pages/upload/PENANDAAN_OPERASI_2026-08-19-000002_20260819080000.pdf',
+            ],
+        ]);
+
+        Http::fake([
+            'https://api.qrserver.com/*' => Http::response($pngBinary, 200),
+            'https://simrs.rsbhayangkaranganjuk.com/webapps/upload-berkas-edokter.php' => function ($request) {
+                // Simulate webapps server inserting the new file into berkas_digital_perawatan
+                $data = $request->data();
+                DB::table('berkas_digital_perawatan')->insert([
+                    'no_rawat' => $data['no_rawat'],
+                    'kode' => $data['kd_berkas'],
+                    'lokasi_file' => 'pages/upload/' . $data['nama_file'] . '.pdf',
+                ]);
+
+                return Http::response([
+                    'success' => true,
+                    'message' => 'Upload berhasil',
+                ], 200);
+            },
+        ]);
+
+        $service = app(PenandaanAreaOperasiService::class);
+        $result = $service->generateAndUploadPdf('2026/08/19/000001');
+
+        $this->assertTrue($result['success']);
+        $this->assertTrue($result['is_replaced']);
+        $this->assertSame('Berkas penandaan area operasi berhasil disimpan dan berkas digital diperbarui.', $result['message']);
+
+        // Assert old penandaan file for 000001 was deleted
+        $this->assertDatabaseMissing('berkas_digital_perawatan', [
+            'no_rawat' => '2026/08/19/000001',
+            'kode' => 'A05',
+            'lokasi_file' => 'pages/upload/PENANDAAN_OPERASI_2026-08-19-000001_20260819080000.pdf',
+        ]);
+
+        // Assert other A05 surgical document for 000001 is PRESERVED
+        $this->assertDatabaseHas('berkas_digital_perawatan', [
+            'no_rawat' => '2026/08/19/000001',
+            'kode' => 'A05',
+            'lokasi_file' => 'pages/upload/LAPORAN_OPERASI_2026-08-19-000001.pdf',
+        ]);
+
+        // Assert penandaan file for patient 000002 is PRESERVED
+        $this->assertDatabaseHas('berkas_digital_perawatan', [
+            'no_rawat' => '2026/08/19/000002',
+            'kode' => 'A05',
+            'lokasi_file' => 'pages/upload/PENANDAAN_OPERASI_2026-08-19-000002_20260819080000.pdf',
+        ]);
+
+        // Assert exactly 1 penandaan record remains for patient 000001
+        $countPenandaan001 = DB::table('berkas_digital_perawatan')
+            ->where('no_rawat', '2026/08/19/000001')
+            ->where('kode', 'A05')
+            ->where('lokasi_file', 'like', '%PENANDAAN_OPERASI_2026-08-19-000001_%')
+            ->count();
+        $this->assertSame(1, $countPenandaan001);
+    }
+
+    /**
+     * Test 9: Livewire simpan shows updated alert when replacing existing file.
+     */
+    public function test_livewire_simpan_shows_updated_alert_when_replacing_existing_file(): void
+    {
+        $pngBinary = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+
+        DB::table('berkas_digital_perawatan')->insert([
+            'no_rawat' => '2026/08/19/000001',
+            'kode' => 'A05',
+            'lokasi_file' => 'pages/upload/PENANDAAN_OPERASI_2026-08-19-000001_20260819080000.pdf',
+        ]);
+
+        Http::fake([
+            'https://api.qrserver.com/*' => Http::response($pngBinary, 200),
+            'https://simrs.rsbhayangkaranganjuk.com/webapps/upload-berkas-edokter.php' => function ($request) {
+                $data = $request->data();
+                DB::table('berkas_digital_perawatan')->insert([
+                    'no_rawat' => $data['no_rawat'],
+                    'kode' => $data['kd_berkas'],
+                    'lokasi_file' => 'pages/upload/' . $data['nama_file'] . '.pdf',
+                ]);
+
+                return Http::response([
+                    'success' => true,
+                    'message' => 'Upload berhasil',
+                ], 200);
+            },
+        ]);
+
+        Livewire::test(PenandaanAreaOperasi::class, [
+            'noRawat' => '2026/08/19/000001',
+            'noRm' => '000001',
+        ])
+            ->set('prosedurOperasi', 'Appendectomy Update')
+            ->set('gambarPenandaanBase64', ['body_front' => self::VALID_PNG_BASE64])
+            ->call('simpan')
+            ->assertHasNoErrors()
+            ->assertDispatchedBrowserEvent('alert', function ($eventName, $data) {
+                return ($data['type'] ?? '') === 'success'
+                    && str_contains($data['message'] ?? '', 'berkas digital diperbarui');
+            });
     }
 }
 

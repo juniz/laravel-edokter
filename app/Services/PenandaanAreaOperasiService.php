@@ -158,7 +158,17 @@ class PenandaanAreaOperasiService
     public function uploadPdf(string $noRawat, string $pdfBinary): array
     {
         $pdfBase64 = base64_encode($pdfBinary);
-        $namaFile = 'PENANDAAN_OPERASI_' . str_replace('/', '-', $noRawat) . '_' . date('YmdHis');
+        $sanitizedNoRawat = str_replace('/', '-', $noRawat);
+        $filePrefix = 'PENANDAAN_OPERASI_' . $sanitizedNoRawat . '_';
+        $namaFile = $filePrefix . date('YmdHis');
+        $filename = $namaFile . '.pdf';
+        $newLocation = 'pages/upload/' . $filename;
+
+        $hasExistingOldFiles = DB::table('berkas_digital_perawatan')
+            ->where('no_rawat', $noRawat)
+            ->where('kode', 'A05')
+            ->where('lokasi_file', 'like', '%' . $filePrefix . '%')
+            ->exists();
 
         try {
             $response = Http::timeout(30)->post('https://simrs.rsbhayangkaranganjuk.com/webapps/upload-berkas-edokter.php', [
@@ -179,6 +189,7 @@ class PenandaanAreaOperasiService
                     'success' => false,
                     'message' => 'Gagal menghubungi server webapps upload (HTTP ' . $response->status() . ').',
                     'pdf_url' => null,
+                    'is_replaced' => false,
                 ];
             }
 
@@ -194,16 +205,28 @@ class PenandaanAreaOperasiService
                     'success' => false,
                     'message' => $errorMsg,
                     'pdf_url' => null,
+                    'is_replaced' => false,
                 ];
             }
 
-            $filename = $namaFile . '.pdf';
+            // Clean up old penandaan operasi digital records to prevent duplicates,
+            // while preserving other A05 surgical documents.
+            DB::table('berkas_digital_perawatan')
+                ->where('no_rawat', $noRawat)
+                ->where('kode', 'A05')
+                ->where('lokasi_file', 'like', '%' . $filePrefix . '%')
+                ->where('lokasi_file', '<>', $newLocation)
+                ->delete();
+
             $pdfUrl = 'https://simrs.rsbhayangkaranganjuk.com/webapps/berkasrawat/pages/upload/' . $filename;
 
             return [
                 'success' => true,
-                'message' => 'Berkas penandaan area operasi berhasil disimpan dan diunggah.',
+                'message' => $hasExistingOldFiles
+                    ? 'Berkas penandaan area operasi berhasil disimpan dan berkas digital diperbarui.'
+                    : 'Berkas penandaan area operasi berhasil disimpan dan diunggah.',
                 'pdf_url' => $pdfUrl,
+                'is_replaced' => $hasExistingOldFiles,
             ];
         } catch (\Throwable $e) {
             Log::error('PenandaanAreaOperasiService upload exception: ' . $e->getMessage(), [
@@ -215,6 +238,7 @@ class PenandaanAreaOperasiService
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat mengunggah berkas: ' . $e->getMessage(),
                 'pdf_url' => null,
+                'is_replaced' => false,
             ];
         }
     }

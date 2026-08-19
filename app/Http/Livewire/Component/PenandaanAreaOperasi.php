@@ -110,7 +110,10 @@ class PenandaanAreaOperasi extends Component
             $uploadResult = app(PenandaanAreaOperasiService::class)->generateAndUploadPdf($this->noRawat);
 
             if (! empty($uploadResult['success'])) {
-                $this->alert('success', 'Penandaan area operasi berhasil disimpan dan diunggah ke berkas digital.');
+                $successMsg = ! empty($uploadResult['is_replaced'])
+                    ? 'Penandaan area operasi berhasil disimpan dan berkas digital diperbarui.'
+                    : 'Penandaan area operasi berhasil disimpan dan diunggah ke berkas digital.';
+                $this->alert('success', $successMsg);
             } else {
                 $errorMessage = $uploadResult['message'] ?? 'Error upload';
                 Log::warning('Penandaan area operasi automatic upload failed: ' . $errorMessage, [

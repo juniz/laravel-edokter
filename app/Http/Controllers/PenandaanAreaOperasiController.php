@@ -257,12 +257,14 @@ class PenandaanAreaOperasiController extends Controller
                 'success' => $result['success'],
                 'message' => $result['message'],
                 'pdf_url' => $result['pdf_url'] ?? null,
+                'is_replaced' => $result['is_replaced'] ?? false,
             ], $result['success'] ? 200 : 500);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal memproses dan menyimpan PDF: ' . $e->getMessage(),
                 'pdf_url' => null,
+                'is_replaced' => false,
             ], 500);
         }
     }
