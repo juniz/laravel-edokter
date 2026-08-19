@@ -336,21 +336,25 @@
         {{-- Header / Kop --}}
         <table class="header-table">
             <tr>
-                <td style="width: 70%; text-align: center;">
-                    <div style="text-align: center;">
-                        @if(!empty($setting->logo_base64))
-                            <img src="{{ $setting->logo_base64 }}" class="hospital-logo" alt="Logo">
-                        @elseif(file_exists(public_path('img/logo/logo-kop.png')))
-                            <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/logo/logo-kop.png'))) }}" class="hospital-logo" alt="Logo">
-                        @elseif(file_exists(public_path('img/logo/logo.png')))
-                            <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/logo/logo.png'))) }}" class="hospital-logo" alt="Logo">
-                        @endif
-                        <div class="kop-text">
-                            <div>{{ $setting->header_title_1 ?? 'POLRI DAERAH JAWA TIMUR' }}</div>
-                            <div>{{ $setting->header_title_2 ?? 'BIDANG KEDOKTERAN DAN KESEHATAN' }}</div>
-                            <div class="hospital-name">{{ $setting->hospital_name ?? 'RUMAH SAKIT BHAYANGKARA TK. III NGANJUK' }}</div>
-                        </div>
-                    </div>
+                <td style="width: 70%; vertical-align: top; text-align: left;">
+                    <table style="border-collapse: collapse; margin-left: 0; text-align: center;">
+                        <tr>
+                            <td style="text-align: center; padding: 0;">
+                                @if(!empty($setting->logo_base64))
+                                    <img src="{{ $setting->logo_base64 }}" class="hospital-logo" alt="Logo">
+                                @elseif(file_exists(public_path('img/logo/logo-kop.png')))
+                                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/logo/logo-kop.png'))) }}" class="hospital-logo" alt="Logo">
+                                @elseif(file_exists(public_path('img/logo/logo.png')))
+                                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('img/logo/logo.png'))) }}" class="hospital-logo" alt="Logo">
+                                @endif
+                                <div class="kop-text">
+                                    <div>{{ $setting->header_title_1 ?? 'POLRI DAERAH JAWA TIMUR' }}</div>
+                                    <div>{{ $setting->header_title_2 ?? 'BIDANG KEDOKTERAN DAN KESEHATAN' }}</div>
+                                    <div class="hospital-name">{{ $setting->hospital_name ?? 'RUMAH SAKIT BHAYANGKARA TK. III NGANJUK' }}</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
                 <td style="width: 30%; vertical-align: top; text-align: right;">
                     <div class="doc-box">
