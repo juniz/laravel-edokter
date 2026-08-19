@@ -54,6 +54,8 @@
             max-height: 55px;
             height: auto;
             display: block;
+            border: none;
+            outline: none;
         }
 
         .kop-text {
