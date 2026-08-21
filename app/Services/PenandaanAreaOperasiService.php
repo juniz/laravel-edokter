@@ -12,6 +12,70 @@ use Illuminate\Support\Facades\Log;
 class PenandaanAreaOperasiService
 {
     /**
+     * Find a marking record robustly, either by ID or no_rawat fallback.
+     *
+     * @param string $noRawat
+     * @param int|null $id
+     * @return object|null
+     */
+    public static function findMarking(string $noRawat, ?int $id = null): ?object
+    {
+        $marking = null;
+        if ($id) {
+            $marking = DB::table('penandaan_area_operasi')->where('id', $id)->first();
+        } else {
+            $altNoRawat = str_contains($noRawat, '/')
+                ? str_replace('/', '-', $noRawat)
+                : str_replace('-', '/', $noRawat);
+
+            $marking = DB::table('penandaan_area_operasi')
+                ->where(function ($q) use ($noRawat, $altNoRawat) {
+                    $q->where('no_rawat', $noRawat)->orWhere('no_rawat', $altNoRawat);
+                })
+                ->orderByDesc('tanggal_penandaan')
+                ->orderByDesc('id')
+                ->first();
+        }
+
+        if (! $marking) {
+            return null;
+        }
+
+        $rawatNo = $marking->no_rawat ?? $noRawat;
+        $altRawatNo = str_contains($rawatNo, '/')
+            ? str_replace('/', '-', $rawatNo)
+            : str_replace('-', '/', $rawatNo);
+
+        $regPeriksa = DB::table('reg_periksa')
+            ->where(function ($q) use ($rawatNo, $altRawatNo) {
+                $q->where('no_rawat', $rawatNo)->orWhere('no_rawat', $altRawatNo);
+            })
+            ->first();
+
+        $noRm = $regPeriksa->no_rkm_medis ?? $marking->no_rm ?? null;
+        $pasien = $noRm ? DB::table('pasien')->where('no_rkm_medis', $noRm)->first() : null;
+        $dokter = ! empty($marking->operator_id) ? DB::table('dokter')->where('kd_dokter', $marking->operator_id)->first() : null;
+
+        $marking->no_rkm_medis = $noRm;
+        $marking->umurdaftar = $regPeriksa->umurdaftar ?? null;
+        $marking->sttsumur = $regPeriksa->sttsumur ?? null;
+        $marking->tgl_registrasi = $regPeriksa->tgl_registrasi ?? null;
+        $marking->nm_pasien = $pasien->nm_pasien ?? $marking->nama_pasien ?? '';
+        $marking->pasien_tgl_lahir = $pasien->tgl_lahir ?? $marking->tgl_lahir ?? null;
+        $marking->jk = $pasien->jk ?? null;
+        $marking->nm_dokter = $dokter->nm_dokter ?? $marking->nama_operator ?? '';
+
+        if (empty($marking->nama_pasien)) {
+            $marking->nama_pasien = $marking->nm_pasien;
+        }
+        if (empty($marking->nama_operator)) {
+            $marking->nama_operator = $marking->nm_dokter;
+        }
+
+        return $marking;
+    }
+
+    /**
      * Generate PDF binary content for penandaan area operasi.
      *
      * @param string $noRawat
@@ -21,62 +85,7 @@ class PenandaanAreaOperasiService
      */
     public function generatePdf(string $noRawat, ?int $id = null): string
     {
-        $query = DB::table('penandaan_area_operasi')
-            ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
-            ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-            ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
-            ->where('penandaan_area_operasi.no_rawat', $noRawat);
-
-        if ($id) {
-            $query->where('penandaan_area_operasi.id', $id);
-        } else {
-            $query->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
-                ->orderByDesc('penandaan_area_operasi.id');
-        }
-
-        $marking = $query->select([
-            'penandaan_area_operasi.*',
-            'reg_periksa.no_rkm_medis',
-            'reg_periksa.umurdaftar',
-            'reg_periksa.sttsumur',
-            'reg_periksa.tgl_registrasi',
-            'pasien.nm_pasien',
-            'pasien.tgl_lahir as pasien_tgl_lahir',
-            'pasien.jk',
-            'dokter.nm_dokter',
-        ])->first();
-
-        // Fallback for dash-formatted no_rawat if not found
-        if (! $marking) {
-            $altNoRawat = str_contains($noRawat, '/')
-                ? str_replace('/', '-', $noRawat)
-                : str_replace('-', '/', $noRawat);
-
-            $altQuery = DB::table('penandaan_area_operasi')
-                ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
-                ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-                ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
-                ->where('penandaan_area_operasi.no_rawat', $altNoRawat);
-
-            if ($id) {
-                $altQuery->where('penandaan_area_operasi.id', $id);
-            } else {
-                $altQuery->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
-                    ->orderByDesc('penandaan_area_operasi.id');
-            }
-
-            $marking = $altQuery->select([
-                'penandaan_area_operasi.*',
-                'reg_periksa.no_rkm_medis',
-                'reg_periksa.umurdaftar',
-                'reg_periksa.sttsumur',
-                'reg_periksa.tgl_registrasi',
-                'pasien.nm_pasien',
-                'pasien.tgl_lahir as pasien_tgl_lahir',
-                'pasien.jk',
-                'dokter.nm_dokter',
-            ])->first();
-        }
+        $marking = self::findMarking($noRawat, $id);
 
         if (! $marking) {
             throw new \Exception("Data penandaan area operasi tidak ditemukan untuk no_rawat: {$noRawat}" . ($id ? " (ID: {$id})" : ''));

@@ -25,61 +25,7 @@ class PenandaanAreaOperasiController extends Controller
             abort(400, 'Parameter no_rawat is required.');
         }
 
-        $query = DB::table('penandaan_area_operasi')
-            ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
-            ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-            ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
-            ->where('penandaan_area_operasi.no_rawat', $noRawat);
-
-        if ($id) {
-            $query->where('penandaan_area_operasi.id', $id);
-        } else {
-            $query->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
-                ->orderByDesc('penandaan_area_operasi.id');
-        }
-
-        $marking = $query->select([
-            'penandaan_area_operasi.*',
-            'reg_periksa.no_rkm_medis',
-            'reg_periksa.umurdaftar',
-            'reg_periksa.sttsumur',
-            'reg_periksa.tgl_registrasi',
-            'pasien.nm_pasien',
-            'pasien.tgl_lahir as pasien_tgl_lahir',
-            'pasien.jk',
-            'dokter.nm_dokter',
-        ])->first();
-
-        if (! $marking) {
-            $altNoRawat = str_contains($noRawat, '/')
-                ? str_replace('/', '-', $noRawat)
-                : str_replace('-', '/', $noRawat);
-
-            $altQuery = DB::table('penandaan_area_operasi')
-                ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
-                ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-                ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
-                ->where('penandaan_area_operasi.no_rawat', $altNoRawat);
-
-            if ($id) {
-                $altQuery->where('penandaan_area_operasi.id', $id);
-            } else {
-                $altQuery->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
-                    ->orderByDesc('penandaan_area_operasi.id');
-            }
-
-            $marking = $altQuery->select([
-                'penandaan_area_operasi.*',
-                'reg_periksa.no_rkm_medis',
-                'reg_periksa.umurdaftar',
-                'reg_periksa.sttsumur',
-                'reg_periksa.tgl_registrasi',
-                'pasien.nm_pasien',
-                'pasien.tgl_lahir as pasien_tgl_lahir',
-                'pasien.jk',
-                'dokter.nm_dokter',
-            ])->first();
-        }
+        $marking = PenandaanAreaOperasiService::findMarking($noRawat, $id);
 
         if (! $marking) {
             abort(404, 'Data penandaan area operasi tidak ditemukan.');
@@ -196,64 +142,10 @@ class PenandaanAreaOperasiController extends Controller
             }
         }
 
-        $query = DB::table('penandaan_area_operasi')
-            ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
-            ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-            ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter');
-
-        if ($targetId) {
-            $query->where('penandaan_area_operasi.id', $targetId);
-        } else {
-            $query->where('penandaan_area_operasi.no_rawat', $cleanParam)
-                ->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
-                ->orderByDesc('penandaan_area_operasi.id');
-        }
-
-        $marking = $query->select([
-            'penandaan_area_operasi.*',
-            'reg_periksa.no_rkm_medis',
-            'reg_periksa.umurdaftar',
-            'reg_periksa.sttsumur',
-            'reg_periksa.tgl_registrasi',
-            'pasien.nm_pasien',
-            'pasien.tgl_lahir as pasien_tgl_lahir',
-            'pasien.jk',
-            'dokter.nm_dokter',
-        ])->first();
-
-        if (! $marking && ! $targetId) {
-            $altParam = str_contains($cleanParam, '/') ? str_replace('/', '-', $cleanParam) : str_replace('-', '/', $cleanParam);
-            $marking = DB::table('penandaan_area_operasi')
-                ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
-                ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-                ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
-                ->where('penandaan_area_operasi.no_rawat', $altParam)
-                ->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
-                ->orderByDesc('penandaan_area_operasi.id')
-                ->select([
-                    'penandaan_area_operasi.*',
-                    'reg_periksa.no_rkm_medis',
-                    'reg_periksa.umurdaftar',
-                    'reg_periksa.sttsumur',
-                    'reg_periksa.tgl_registrasi',
-                    'pasien.nm_pasien',
-                    'pasien.tgl_lahir as pasien_tgl_lahir',
-                    'pasien.jk',
-                    'dokter.nm_dokter',
-                ])
-                ->first();
-        }
+        $marking = PenandaanAreaOperasiService::findMarking($cleanParam, $targetId);
 
         if (! $marking) {
             abort(404, 'Data penandaan area operasi tidak ditemukan.');
-        }
-
-        if (empty($marking->nama_pasien) && ! empty($marking->nm_pasien)) {
-            $marking->nama_pasien = $marking->nm_pasien;
-        }
-
-        if (empty($marking->nama_operator) && ! empty($marking->nm_dokter)) {
-            $marking->nama_operator = $marking->nm_dokter;
         }
 
         $setting = DB::table('setting')->first();
