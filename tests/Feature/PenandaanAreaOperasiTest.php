@@ -94,7 +94,7 @@ class PenandaanAreaOperasiTest extends TestCase
         });
         $this->createFixtureTable('penandaan_area_operasi', function ($table) {
             $table->id();
-            $table->string('no_rawat')->unique();
+            $table->string('no_rawat');
             $table->string('no_rm');
             $table->string('nama_pasien');
             $table->date('tgl_lahir')->nullable();
@@ -105,6 +105,11 @@ class PenandaanAreaOperasiTest extends TestCase
             $table->longText('gambar_penandaan_base64');
             $table->string('format_gambar')->default('image/png');
             $table->timestamps();
+        });
+        $this->createFixtureTable('berkas_digital_perawatan', function ($table) {
+            $table->string('no_rawat');
+            $table->string('kode');
+            $table->string('lokasi_file');
         });
         $this->createFixtureTable('setting', function ($table) {
             $table->id();
@@ -290,7 +295,7 @@ class PenandaanAreaOperasiTest extends TestCase
             ->assertHasErrors(['operator']);
     }
 
-    public function test_it_updates_the_existing_visit_instead_of_creating_another_row(): void
+    public function test_it_updates_the_existing_marking(): void
     {
         $pngBinary = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
 
@@ -310,16 +315,20 @@ class PenandaanAreaOperasiTest extends TestCase
         ]);
         $first->set('prosedurOperasi', 'First procedure')->set('gambarPenandaanBase64', $firstPayload)->call('simpan');
 
+        $saved = DB::table('penandaan_area_operasi')->where('no_rawat', '2026/08/04/000001')->first();
+
         Livewire::test(PenandaanAreaOperasi::class, [
             'noRawat' => '2026/08/04/000001', 'noRm' => '000001',
         ])
+            ->call('edit', $saved->id)
             ->set('prosedurOperasi', 'Updated procedure')
             ->set('gambarPenandaanBase64', $updatedPayload)
-            ->call('simpan')
+            ->call('update')
             ->assertHasNoErrors();
 
         $this->assertSame(1, DB::table('penandaan_area_operasi')->where('no_rawat', '2026/08/04/000001')->count());
         $this->assertDatabaseHas('penandaan_area_operasi', [
+            'id' => $saved->id,
             'no_rawat' => '2026/08/04/000001',
             'prosedur_operasi' => 'Updated procedure',
             'gambar_penandaan_base64' => json_encode($updatedPayload),
@@ -360,9 +369,13 @@ class PenandaanAreaOperasiTest extends TestCase
             'no_rawat' => '2026/08/04/000002', 'gambar_penandaan_base64' => json_encode($secondPayload),
         ]);
 
+        $firstSaved = DB::table('penandaan_area_operasi')->where('no_rawat', '2026/08/04/000001')->first();
+
         Livewire::test(PenandaanAreaOperasi::class, [
             'noRawat' => '2026/08/04/000001', 'noRm' => '000001',
-        ])->assertEmitted('loadPenandaanCanvases', $firstPayload);
+        ])
+            ->call('edit', $firstSaved->id)
+            ->assertEmitted('loadPenandaanCanvases', $firstPayload);
     }
 
     public function test_print_endpoint_displays_the_saved_marking(): void

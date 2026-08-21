@@ -101,7 +101,7 @@ class PenandaanAreaOperasiAutoUploadTest extends TestCase
 
         $this->createFixtureTable('penandaan_area_operasi', function ($table) {
             $table->id();
-            $table->string('no_rawat')->unique();
+            $table->string('no_rawat');
             $table->string('no_rm');
             $table->string('nama_pasien');
             $table->date('tgl_lahir')->nullable();
@@ -509,16 +509,18 @@ class PenandaanAreaOperasiAutoUploadTest extends TestCase
     }
 
     /**
-     * Test 9: Livewire simpan shows updated alert when replacing existing file.
+     * Test 9: Livewire update shows updated alert and synchronizes berkas digital.
      */
-    public function test_livewire_simpan_shows_updated_alert_when_replacing_existing_file(): void
+    public function test_livewire_update_shows_updated_alert_and_synchronizes_file(): void
     {
         $pngBinary = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+
+        $existing = DB::table('penandaan_area_operasi')->first();
 
         DB::table('berkas_digital_perawatan')->insert([
             'no_rawat' => '2026/08/19/000001',
             'kode' => 'A05',
-            'lokasi_file' => 'pages/upload/PENANDAAN_OPERASI_2026-08-19-000001_20260819080000.pdf',
+            'lokasi_file' => 'pages/upload/PENANDAAN_OPERASI_2026-08-19-000001_' . $existing->id . '_20260819080000.pdf',
         ]);
 
         Http::fake([
@@ -542,13 +544,14 @@ class PenandaanAreaOperasiAutoUploadTest extends TestCase
             'noRawat' => '2026/08/19/000001',
             'noRm' => '000001',
         ])
+            ->call('edit', $existing->id)
             ->set('prosedurOperasi', 'Appendectomy Update')
             ->set('gambarPenandaanBase64', ['body_front' => self::VALID_PNG_BASE64])
-            ->call('simpan')
+            ->call('update')
             ->assertHasNoErrors()
             ->assertDispatchedBrowserEvent('alert', function ($eventName, $data) {
                 return ($data['type'] ?? '') === 'success'
-                    && str_contains($data['message'] ?? '', 'berkas digital diperbarui');
+                    && str_contains($data['message'] ?? '', 'berkas digital disinkronkan');
             });
     }
 }
