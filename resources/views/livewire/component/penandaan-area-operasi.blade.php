@@ -1,5 +1,19 @@
 <div class="penandaan-area-operasi">
     <div class="form-group">
+        <label for="tanggal-penandaan"><i class="fas fa-clock mr-1 text-primary"></i> Tanggal & Jam Penandaan</label>
+        <input
+            type="datetime-local"
+            wire:model.defer="tanggalPenandaan"
+            id="tanggal-penandaan"
+            class="form-control @error('tanggalPenandaan') is-invalid @enderror"
+            required
+        >
+        @error('tanggalPenandaan')
+            <span class="invalid-feedback d-block" role="alert">{{ $message }}</span>
+        @enderror
+    </div>
+
+    <div class="form-group">
         <label for="prosedur-operasi">Prosedur operasi</label>
         <textarea
             wire:model.defer="prosedurOperasi"
@@ -85,18 +99,70 @@
             </button>
         </div>
         <div class="penandaan-submit-group d-flex align-items-center">
-            <button type="button" id="simpan-penandaan" class="btn btn-primary" disabled>
-                <i class="fas fa-save mr-1" aria-hidden="true"></i>
-                <span class="penandaan-btn-label">Simpan</span>
-            </button>
-            <a href="{{ route('penandaan-area-operasi.cetak', ['no_rawat' => $noRawat]) }}" target="_blank" class="btn btn-info ml-2" id="cetak-penandaan" title="Cetak Formulir Penandaan Area Operasi (A4)">
-                <i class="fas fa-print mr-1" aria-hidden="true"></i>
-                Cetak
-            </a>
-            <a href="{{ route('penandaan-area-operasi.download-pdf', ['no_rawat' => $noRawat]) }}" target="_blank" class="btn btn-secondary ml-2" id="download-pdf-penandaan" title="Generate dan Download / Preview PDF DomPDF (A4)">
-                <i class="fas fa-file-pdf mr-1" aria-hidden="true"></i>
-                Download PDF
-            </a>
+            @if($modeEdit)
+                <button type="button" id="ubah-penandaan" class="btn btn-warning" disabled>
+                    <i class="fas fa-save mr-1" aria-hidden="true"></i>
+                    <span class="penandaan-btn-label">Ubah Penandaan</span>
+                </button>
+                <button type="button" wire:click="batalEdit" class="btn btn-secondary ml-2" id="batal-penandaan">
+                    <i class="fas fa-times mr-1" aria-hidden="true"></i>
+                    Batal
+                </button>
+            @else
+                <button type="button" id="simpan-penandaan" class="btn btn-primary" disabled>
+                    <i class="fas fa-save mr-1" aria-hidden="true"></i>
+                    <span class="penandaan-btn-label">Simpan</span>
+                </button>
+            @endif
+        </div>
+    </div>
+
+    <div class="card card-outline card-info mt-4">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-history mr-1"></i> Riwayat Penandaan Area Operasi</h3>
+        </div>
+        <div class="card-body p-0 table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="thead-dark">
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th style="width: 170px;">Tanggal Penandaan</th>
+                        <th>Prosedur Operasi</th>
+                        <th style="width: 200px;">Dokter Operator</th>
+                        <th style="width: 180px;" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($data as $index => $item)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->tanggal_penandaan)->format('d-m-Y H:i') }}</td>
+                            <td>{{ $item->prosedur_operasi }}</td>
+                            <td>{{ $item->nm_dokter ?? $item->nama_operator }}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" wire:click="edit({{ $item->id }})" class="btn btn-warning" title="Edit Penandaan">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" wire:click="confirmHapus({{ $item->id }})" class="btn btn-danger" title="Hapus Penandaan">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <a href="{{ route('penandaan-area-operasi.cetak', ['no_rawat' => $noRawat, 'id' => $item->id]) }}" target="_blank" class="btn btn-info" title="Cetak Form">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    <a href="{{ route('penandaan-area-operasi.download-pdf', ['no_rawat' => $noRawat, 'id' => $item->id]) }}" target="_blank" class="btn btn-secondary" title="Download PDF">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">Belum ada riwayat penandaan area operasi.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -235,7 +301,8 @@
     }
 
     #simpan-penandaan,
-    #cetak-penandaan {
+    #ubah-penandaan,
+    #batal-penandaan {
         min-height: 44px;
         min-width: 120px;
     }
@@ -311,11 +378,10 @@
         ];
 
         var root = document.getElementById('penandaan-area-operasi-canvas-root');
-        var saveButton = document.getElementById('simpan-penandaan');
         var resetActiveButton = document.getElementById('reset-penandaan-aktif');
         var resetAllButton = document.getElementById('reset-semua-penandaan');
 
-        if (!root || !saveButton || root.dataset.initialized === 'true') {
+        if (!root || root.dataset.initialized === 'true') {
             return;
         }
 
@@ -330,6 +396,17 @@
         var pendingSavedImages = (initialSavedImages && typeof initialSavedImages === 'object' && Object.keys(initialSavedImages).length > 0)
             ? initialSavedImages
             : null;
+
+        function getSubmitButton() {
+            return document.getElementById('simpan-penandaan') || document.getElementById('ubah-penandaan');
+        }
+
+        function setSubmitButtonDisabled(disabled) {
+            var btn = getSubmitButton();
+            if (btn) {
+                btn.disabled = disabled;
+            }
+        }
 
         function setStatus(key, message, isError) {
             var status = root.querySelector('[data-status-for="' + key + '"]');
@@ -516,7 +593,7 @@
             setStatus(state.key, '', false);
 
             if (readyCount === diagrams.length) {
-                saveButton.disabled = false;
+                setSubmitButtonDisabled(false);
 
                 if (pendingSavedImages) {
                     var payload = pendingSavedImages;
@@ -573,7 +650,7 @@
                 return Promise.resolve();
             }
 
-            saveButton.disabled = true;
+            setSubmitButtonDisabled(true);
             savedPinCounts = {};
 
             var loaders = diagrams.map(function (diagram) {
@@ -607,7 +684,7 @@
 
             return Promise.all(loaders).then(function () {
                 refreshNextPinNumber();
-                saveButton.disabled = false;
+                setSubmitButtonDisabled(false);
                 updateResetButtonsState();
             });
         }
@@ -629,6 +706,20 @@
             updateResetButtonsState();
         }
 
+        function resetAll() {
+            diagrams.forEach(function (diagram) {
+                var state = canvasStates[diagram.key];
+                if (state) {
+                    drawBase(state);
+                    setStatus(diagram.key, '', false);
+                }
+            });
+
+            savedPinCounts = {};
+            nextPinNumber = 1;
+            updateResetButtonsState();
+        }
+
         window.PenandaanAreaOperasi = {
             exportImages: function () {
                 return diagrams.reduce(function (images, diagram) {
@@ -636,7 +727,8 @@
                     return images;
                 }, {});
             },
-            loadImages: loadSavedImages
+            loadImages: loadSavedImages,
+            resetAll: resetAll
         };
 
         Array.prototype.forEach.call(root.querySelectorAll('.penandaan-nav'), function (button) {
@@ -663,44 +755,40 @@
         }
 
         if (resetAllButton) {
-            resetAllButton.addEventListener('click', function () {
-                diagrams.forEach(function (diagram) {
-                    var state = canvasStates[diagram.key];
-                    if (state) {
-                        drawBase(state);
-                        setStatus(diagram.key, '', false);
-                    }
-                });
-
-                savedPinCounts = {};
-                nextPinNumber = 1;
-                updateResetButtonsState();
-            });
+            resetAllButton.addEventListener('click', resetAll);
         }
 
-        saveButton.addEventListener('click', function () {
-            if (saveButton.disabled && saveButton.dataset.saving === 'true') {
+        document.addEventListener('click', function (event) {
+            var target = event.target ? event.target.closest('#simpan-penandaan, #ubah-penandaan') : null;
+            if (!target) {
                 return;
             }
 
-            var icon = saveButton.querySelector('.fas');
-            var label = saveButton.querySelector('.penandaan-btn-label') || saveButton.querySelector('span');
-            var originalIconClass = icon ? icon.className : 'fas fa-save mr-1';
-            var originalText = label ? label.textContent : 'Simpan';
+            var isEdit = target.id === 'ubah-penandaan';
+            var action = isEdit ? 'update' : 'simpan';
 
-            saveButton.disabled = true;
-            saveButton.dataset.saving = 'true';
+            if (target.disabled && target.dataset.saving === 'true') {
+                return;
+            }
+
+            var icon = target.querySelector('.fas');
+            var label = target.querySelector('.penandaan-btn-label') || target.querySelector('span');
+            var originalIconClass = icon ? icon.className : 'fas fa-save mr-1';
+            var originalText = label ? label.textContent : (isEdit ? 'Ubah Penandaan' : 'Simpan');
+
+            target.disabled = true;
+            target.dataset.saving = 'true';
 
             if (icon) {
                 icon.className = 'fas fa-spinner fa-spin mr-1';
             }
             if (label) {
-                label.textContent = 'Menyimpan...';
+                label.textContent = isEdit ? 'Menyimpan perubahan...' : 'Menyimpan...';
             }
 
             function restoreButton() {
-                saveButton.disabled = false;
-                delete saveButton.dataset.saving;
+                target.disabled = false;
+                delete target.dataset.saving;
                 if (icon) {
                     icon.className = originalIconClass;
                 }
@@ -713,7 +801,7 @@
             @this.set('gambarPenandaanBase64', images, false);
 
             if (typeof @this.call === 'function') {
-                var callResult = @this.call('simpan');
+                var callResult = @this.call(action);
                 if (callResult && typeof callResult.then === 'function') {
                     callResult.then(restoreButton).catch(restoreButton);
                 } else {
@@ -730,6 +818,21 @@
         Livewire.on('loadPenandaanCanvases', function (images) {
             loadSavedImages(images);
         });
+
+        Livewire.on('resetAllCanvases', function () {
+            resetAll();
+        });
+
+        if (window.Livewire && typeof window.Livewire.hook === 'function') {
+            window.Livewire.hook('message.processed', function () {
+                if (readyCount === diagrams.length) {
+                    var btn = getSubmitButton();
+                    if (btn && btn.dataset.saving !== 'true') {
+                        btn.disabled = false;
+                    }
+                }
+            });
+        }
     })();
 </script>
 @endpush
