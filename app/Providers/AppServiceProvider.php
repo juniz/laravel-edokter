@@ -93,6 +93,8 @@ class AppServiceProvider extends ServiceProvider
     protected function registerQueryListener(): void
     {
         DB::listen(function (QueryExecuted $q) {
+            if (app()->environment('testing')) return;
+
             $username = session()?->get('username');
 
             if (!preg_match('/^\s*(insert|update|delete)\s/i', $q->sql)) return;
@@ -153,7 +155,7 @@ class AppServiceProvider extends ServiceProvider
     protected function dispatchAudit(array $auditData): void
     {
         try {
-            ProcessAuditLog::dispatch($auditData);
+            ProcessAuditLog::dispatchAfterResponse($auditData);
         } catch (\Exception $e) {
             Log::error('Failed to dispatch audit log job: ' . $e->getMessage(), [
                 'query_hash' => $auditData['query_hash'] ?? null,

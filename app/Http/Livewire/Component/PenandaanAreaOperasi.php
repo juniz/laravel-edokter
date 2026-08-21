@@ -122,7 +122,7 @@ class PenandaanAreaOperasi extends Component
                 ? Carbon::parse($this->tanggalPenandaan)->format('Y-m-d H:i:s')
                 : Carbon::now()->format('Y-m-d H:i:s');
 
-            $insertedId = DB::table('penandaan_area_operasi')->insertGetId([
+            DB::table('penandaan_area_operasi')->insert([
                 'no_rawat' => $this->noRawat,
                 'no_rm' => $noRm,
                 'nama_pasien' => $namaPasien,
@@ -136,6 +136,14 @@ class PenandaanAreaOperasi extends Component
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            $newRecord = DB::table('penandaan_area_operasi')
+                ->where('no_rawat', $this->noRawat)
+                ->where('tanggal_penandaan', $formattedTanggal)
+                ->orderByDesc('id')
+                ->first();
+
+            $insertedId = $newRecord->id ?? null;
 
             $uploadResult = app(PenandaanAreaOperasiService::class)->generateAndUploadPdf($this->noRawat, $insertedId);
 
