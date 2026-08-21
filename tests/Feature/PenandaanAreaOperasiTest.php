@@ -181,7 +181,7 @@ class PenandaanAreaOperasiTest extends TestCase
         $this->createdFixtureTables[] = $table;
     }
 
-    public function test_penandaan_table_has_required_columns_and_unique_visit(): void
+    public function test_penandaan_table_has_required_columns(): void
     {
         $this->assertTrue(Schema::hasTable('penandaan_area_operasi'));
         $columns = Schema::getColumnListing('penandaan_area_operasi');
