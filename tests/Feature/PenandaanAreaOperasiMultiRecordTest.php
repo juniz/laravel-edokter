@@ -273,4 +273,22 @@ class PenandaanAreaOperasiMultiRecordTest extends TestCase
         $this->assertEquals($id2, $data[0]->id);
         $this->assertEquals($id1, $data[1]->id);
     }
+
+    public function test_it_renders_without_error_when_data_is_deserialized_as_array(): void
+    {
+        $component = Livewire::withQueryParams(['username' => 'D001'])
+            ->test(PenandaanAreaOperasi::class, ['noRawat' => '2026/08/21/000001', 'noRm' => '000001'])
+            ->set('data', [
+                [
+                    'id' => 999,
+                    'tanggal_penandaan' => '2026-08-21 15:30:00',
+                    'prosedur_operasi' => 'Prosedur Array Test',
+                    'nm_dokter' => 'dr. Bedah Array',
+                    'nama_operator' => 'dr. Bedah Array',
+                ],
+            ]);
+
+        $component->assertSee('Prosedur Array Test')
+            ->assertSee('21-08-2026 15:30');
+    }
 }

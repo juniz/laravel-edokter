@@ -56,6 +56,11 @@ class PenandaanAreaOperasi extends Component
         $this->getData();
     }
 
+    public function hydrate(): void
+    {
+        $this->getData();
+    }
+
     public function getData(): void
     {
         if (empty($this->noRawat)) {

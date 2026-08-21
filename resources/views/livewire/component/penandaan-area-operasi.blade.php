@@ -134,23 +134,30 @@
                 </thead>
                 <tbody>
                     @forelse($data as $index => $item)
+                        @php
+                            $item = (object) $item;
+                            $itemId = $item->id ?? null;
+                            $itemTanggal = !empty($item->tanggal_penandaan) ? \Carbon\Carbon::parse($item->tanggal_penandaan)->format('d-m-Y H:i') : '-';
+                            $itemProsedur = $item->prosedur_operasi ?? '-';
+                            $itemDokter = $item->nm_dokter ?? $item->nama_operator ?? '-';
+                        @endphp
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item->tanggal_penandaan)->format('d-m-Y H:i') }}</td>
-                            <td>{{ $item->prosedur_operasi }}</td>
-                            <td>{{ $item->nm_dokter ?? $item->nama_operator }}</td>
+                            <td>{{ $itemTanggal }}</td>
+                            <td>{{ $itemProsedur }}</td>
+                            <td>{{ $itemDokter }}</td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
-                                    <button type="button" wire:click="edit({{ $item->id }})" class="btn btn-warning" title="Edit Penandaan">
+                                    <button type="button" wire:click="edit({{ $itemId }})" class="btn btn-warning" title="Edit Penandaan">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button type="button" wire:click="confirmHapus({{ $item->id }})" class="btn btn-danger" title="Hapus Penandaan">
+                                    <button type="button" wire:click="confirmHapus({{ $itemId }})" class="btn btn-danger" title="Hapus Penandaan">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                    <a href="{{ route('penandaan-area-operasi.cetak', ['no_rawat' => $noRawat, 'id' => $item->id]) }}" target="_blank" class="btn btn-info" title="Cetak Form">
+                                    <a href="{{ route('penandaan-area-operasi.cetak', ['no_rawat' => $noRawat, 'id' => $itemId]) }}" target="_blank" class="btn btn-info" title="Cetak Form">
                                         <i class="fas fa-print"></i>
                                     </a>
-                                    <a href="{{ route('penandaan-area-operasi.download-pdf', ['no_rawat' => $noRawat, 'id' => $item->id]) }}" target="_blank" class="btn btn-secondary" title="Download PDF">
+                                    <a href="{{ route('penandaan-area-operasi.download-pdf', ['no_rawat' => $noRawat, 'id' => $itemId]) }}" target="_blank" class="btn btn-secondary" title="Download PDF">
                                         <i class="fas fa-file-pdf"></i>
                                     </a>
                                 </div>
