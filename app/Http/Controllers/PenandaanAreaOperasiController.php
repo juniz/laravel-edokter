@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\DB;
 
 class PenandaanAreaOperasiController extends Controller
 {
-    public static function generateToken(string $noRawat): string
+    public static function generateToken(string $noRawat, ?int $id = null): string
     {
-        $normalized = str_replace('-', '/', $noRawat);
+        $normalized = str_replace('-', '/', $noRawat) . ($id ? '#' . $id : '');
         $key = config('app.key', 'laravel-edokter-secret-key-2026');
         return substr(hash_hmac('sha256', $normalized, $key), 0, 32);
     }
@@ -19,17 +19,56 @@ class PenandaanAreaOperasiController extends Controller
     public function cetak(Request $request)
     {
         $noRawat = $request->input('no_rawat') ?? $request->route('no_rawat');
+        $id = $request->input('id') ? (int) $request->input('id') : null;
 
         if (! $noRawat || ! is_string($noRawat)) {
             abort(400, 'Parameter no_rawat is required.');
         }
 
-        $marking = DB::table('penandaan_area_operasi')
+        $query = DB::table('penandaan_area_operasi')
             ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
             ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
             ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
-            ->where('penandaan_area_operasi.no_rawat', $noRawat)
-            ->select([
+            ->where('penandaan_area_operasi.no_rawat', $noRawat);
+
+        if ($id) {
+            $query->where('penandaan_area_operasi.id', $id);
+        } else {
+            $query->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
+                ->orderByDesc('penandaan_area_operasi.id');
+        }
+
+        $marking = $query->select([
+            'penandaan_area_operasi.*',
+            'reg_periksa.no_rkm_medis',
+            'reg_periksa.umurdaftar',
+            'reg_periksa.sttsumur',
+            'reg_periksa.tgl_registrasi',
+            'pasien.nm_pasien',
+            'pasien.tgl_lahir as pasien_tgl_lahir',
+            'pasien.jk',
+            'dokter.nm_dokter',
+        ])->first();
+
+        if (! $marking) {
+            $altNoRawat = str_contains($noRawat, '/')
+                ? str_replace('/', '-', $noRawat)
+                : str_replace('-', '/', $noRawat);
+
+            $altQuery = DB::table('penandaan_area_operasi')
+                ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
+                ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+                ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
+                ->where('penandaan_area_operasi.no_rawat', $altNoRawat);
+
+            if ($id) {
+                $altQuery->where('penandaan_area_operasi.id', $id);
+            } else {
+                $altQuery->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
+                    ->orderByDesc('penandaan_area_operasi.id');
+            }
+
+            $marking = $altQuery->select([
                 'penandaan_area_operasi.*',
                 'reg_periksa.no_rkm_medis',
                 'reg_periksa.umurdaftar',
@@ -39,8 +78,8 @@ class PenandaanAreaOperasiController extends Controller
                 'pasien.tgl_lahir as pasien_tgl_lahir',
                 'pasien.jk',
                 'dokter.nm_dokter',
-            ])
-            ->first();
+            ])->first();
+        }
 
         if (! $marking) {
             abort(404, 'Data penandaan area operasi tidak ditemukan.');
@@ -96,7 +135,7 @@ class PenandaanAreaOperasiController extends Controller
             ? Carbon::parse($marking->tanggal_penandaan)->isoFormat('D MMMM Y')
             : Carbon::now()->isoFormat('D MMMM Y');
 
-        $verificationToken = self::generateToken($marking->no_rawat);
+        $verificationToken = self::generateToken($marking->no_rawat, $marking->id ?? null);
 
         return view('prints.penandaan-area-operasi', compact(
             'marking',
@@ -119,14 +158,16 @@ class PenandaanAreaOperasiController extends Controller
 
         $marking = null;
         $cleanParam = trim(str_replace('-', '/', $param));
+        $targetId = null;
 
         if (strlen($param) === 32 && ctype_xdigit($param)) {
-            // Find record matching HMAC token
-            $allMarkings = DB::table('penandaan_area_operasi')->select('no_rawat')->get();
+            // Find record matching HMAC token (with id or legacy without id)
+            $allMarkings = DB::table('penandaan_area_operasi')->select(['id', 'no_rawat'])->get();
             $targetNoRawat = null;
 
             foreach ($allMarkings as $item) {
-                if (self::generateToken($item->no_rawat) === $param) {
+                if (self::generateToken($item->no_rawat, $item->id) === $param || self::generateToken($item->no_rawat) === $param) {
+                    $targetId = $item->id;
                     $targetNoRawat = $item->no_rawat;
                     break;
                 }
@@ -140,30 +181,68 @@ class PenandaanAreaOperasiController extends Controller
         } else {
             // Legacy / direct no_rawat check - require valid HMAC token or session authentication
             $tokenParam = $request->input('t');
-            $expectedToken = self::generateToken($cleanParam);
+            $idParam = $request->input('id') ? (int) $request->input('id') : null;
+            $expectedTokenWithId = $idParam ? self::generateToken($cleanParam, $idParam) : null;
+            $expectedTokenNoId = self::generateToken($cleanParam);
 
-            if ($tokenParam !== $expectedToken && ! session()->has('username')) {
+            $hasValidToken = ($tokenParam && ($tokenParam === $expectedTokenWithId || $tokenParam === $expectedTokenNoId));
+
+            if (! $hasValidToken && ! session()->has('username')) {
                 abort(403, 'Akses verifikasi memerlukan token HMAC yang sah.');
+            }
+
+            if ($idParam) {
+                $targetId = $idParam;
             }
         }
 
-        $marking = DB::table('penandaan_area_operasi')
+        $query = DB::table('penandaan_area_operasi')
             ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
             ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-            ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
-            ->where('penandaan_area_operasi.no_rawat', $cleanParam)
-            ->select([
-                'penandaan_area_operasi.*',
-                'reg_periksa.no_rkm_medis',
-                'reg_periksa.umurdaftar',
-                'reg_periksa.sttsumur',
-                'reg_periksa.tgl_registrasi',
-                'pasien.nm_pasien',
-                'pasien.tgl_lahir as pasien_tgl_lahir',
-                'pasien.jk',
-                'dokter.nm_dokter',
-            ])
-            ->first();
+            ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter');
+
+        if ($targetId) {
+            $query->where('penandaan_area_operasi.id', $targetId);
+        } else {
+            $query->where('penandaan_area_operasi.no_rawat', $cleanParam)
+                ->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
+                ->orderByDesc('penandaan_area_operasi.id');
+        }
+
+        $marking = $query->select([
+            'penandaan_area_operasi.*',
+            'reg_periksa.no_rkm_medis',
+            'reg_periksa.umurdaftar',
+            'reg_periksa.sttsumur',
+            'reg_periksa.tgl_registrasi',
+            'pasien.nm_pasien',
+            'pasien.tgl_lahir as pasien_tgl_lahir',
+            'pasien.jk',
+            'dokter.nm_dokter',
+        ])->first();
+
+        if (! $marking && ! $targetId) {
+            $altParam = str_contains($cleanParam, '/') ? str_replace('/', '-', $cleanParam) : str_replace('-', '/', $cleanParam);
+            $marking = DB::table('penandaan_area_operasi')
+                ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
+                ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+                ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
+                ->where('penandaan_area_operasi.no_rawat', $altParam)
+                ->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
+                ->orderByDesc('penandaan_area_operasi.id')
+                ->select([
+                    'penandaan_area_operasi.*',
+                    'reg_periksa.no_rkm_medis',
+                    'reg_periksa.umurdaftar',
+                    'reg_periksa.sttsumur',
+                    'reg_periksa.tgl_registrasi',
+                    'pasien.nm_pasien',
+                    'pasien.tgl_lahir as pasien_tgl_lahir',
+                    'pasien.jk',
+                    'dokter.nm_dokter',
+                ])
+                ->first();
+        }
 
         if (! $marking) {
             abort(404, 'Data penandaan area operasi tidak ditemukan.');
@@ -223,13 +302,14 @@ class PenandaanAreaOperasiController extends Controller
     {
         $service = $service ?? app(PenandaanAreaOperasiService::class);
         $noRawat = $request->input('no_rawat') ?? $request->route('no_rawat');
+        $id = $request->input('id') ? (int) $request->input('id') : null;
 
         if (! $noRawat || ! is_string($noRawat)) {
             abort(400, 'Parameter no_rawat is required.');
         }
 
-        $pdfBinary = $service->generatePdf($noRawat);
-        $filename = 'PENANDAAN_OPERASI_' . str_replace('/', '-', $noRawat) . '_' . date('YmdHis') . '.pdf';
+        $pdfBinary = $service->generatePdf($noRawat, $id);
+        $filename = 'PENANDAAN_OPERASI_' . str_replace('/', '-', $noRawat) . ($id ? '_' . $id : '') . '_' . date('YmdHis') . '.pdf';
 
         return response($pdfBinary, 200, [
             'Content-Type' => 'application/pdf',
@@ -241,6 +321,7 @@ class PenandaanAreaOperasiController extends Controller
     {
         $service = $service ?? app(PenandaanAreaOperasiService::class);
         $noRawat = $request->input('no_rawat') ?? $request->route('no_rawat');
+        $id = $request->input('id') ? (int) $request->input('id') : null;
 
         if (! $noRawat || ! is_string($noRawat)) {
             return response()->json([
@@ -251,7 +332,7 @@ class PenandaanAreaOperasiController extends Controller
         }
 
         try {
-            $result = $service->generateAndUploadPdf($noRawat);
+            $result = $service->generateAndUploadPdf($noRawat, $id);
 
             return response()->json([
                 'success' => $result['success'],

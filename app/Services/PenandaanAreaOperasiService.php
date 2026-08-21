@@ -15,17 +15,57 @@ class PenandaanAreaOperasiService
      * Generate PDF binary content for penandaan area operasi.
      *
      * @param string $noRawat
+     * @param int|null $id
      * @return string
      * @throws \Exception
      */
-    public function generatePdf(string $noRawat): string
+    public function generatePdf(string $noRawat, ?int $id = null): string
     {
-        $marking = DB::table('penandaan_area_operasi')
+        $query = DB::table('penandaan_area_operasi')
             ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
             ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
             ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
-            ->where('penandaan_area_operasi.no_rawat', $noRawat)
-            ->select([
+            ->where('penandaan_area_operasi.no_rawat', $noRawat);
+
+        if ($id) {
+            $query->where('penandaan_area_operasi.id', $id);
+        } else {
+            $query->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
+                ->orderByDesc('penandaan_area_operasi.id');
+        }
+
+        $marking = $query->select([
+            'penandaan_area_operasi.*',
+            'reg_periksa.no_rkm_medis',
+            'reg_periksa.umurdaftar',
+            'reg_periksa.sttsumur',
+            'reg_periksa.tgl_registrasi',
+            'pasien.nm_pasien',
+            'pasien.tgl_lahir as pasien_tgl_lahir',
+            'pasien.jk',
+            'dokter.nm_dokter',
+        ])->first();
+
+        // Fallback for dash-formatted no_rawat if not found
+        if (! $marking) {
+            $altNoRawat = str_contains($noRawat, '/')
+                ? str_replace('/', '-', $noRawat)
+                : str_replace('-', '/', $noRawat);
+
+            $altQuery = DB::table('penandaan_area_operasi')
+                ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
+                ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+                ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
+                ->where('penandaan_area_operasi.no_rawat', $altNoRawat);
+
+            if ($id) {
+                $altQuery->where('penandaan_area_operasi.id', $id);
+            } else {
+                $altQuery->orderByDesc('penandaan_area_operasi.tanggal_penandaan')
+                    ->orderByDesc('penandaan_area_operasi.id');
+            }
+
+            $marking = $altQuery->select([
                 'penandaan_area_operasi.*',
                 'reg_periksa.no_rkm_medis',
                 'reg_periksa.umurdaftar',
@@ -35,36 +75,11 @@ class PenandaanAreaOperasiService
                 'pasien.tgl_lahir as pasien_tgl_lahir',
                 'pasien.jk',
                 'dokter.nm_dokter',
-            ])
-            ->first();
-
-        // Fallback for dash-formatted no_rawat if not found
-        if (! $marking) {
-            $altNoRawat = str_contains($noRawat, '/')
-                ? str_replace('/', '-', $noRawat)
-                : str_replace('-', '/', $noRawat);
-
-            $marking = DB::table('penandaan_area_operasi')
-                ->leftJoin('reg_periksa', 'penandaan_area_operasi.no_rawat', '=', 'reg_periksa.no_rawat')
-                ->leftJoin('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-                ->leftJoin('dokter', 'penandaan_area_operasi.operator_id', '=', 'dokter.kd_dokter')
-                ->where('penandaan_area_operasi.no_rawat', $altNoRawat)
-                ->select([
-                    'penandaan_area_operasi.*',
-                    'reg_periksa.no_rkm_medis',
-                    'reg_periksa.umurdaftar',
-                    'reg_periksa.sttsumur',
-                    'reg_periksa.tgl_registrasi',
-                    'pasien.nm_pasien',
-                    'pasien.tgl_lahir as pasien_tgl_lahir',
-                    'pasien.jk',
-                    'dokter.nm_dokter',
-                ])
-                ->first();
+            ])->first();
         }
 
         if (! $marking) {
-            throw new \Exception("Data penandaan area operasi tidak ditemukan untuk no_rawat: {$noRawat}");
+            throw new \Exception("Data penandaan area operasi tidak ditemukan untuk no_rawat: {$noRawat}" . ($id ? " (ID: {$id})" : ''));
         }
 
         if (empty($marking->nama_pasien) && ! empty($marking->nm_pasien)) {
@@ -129,7 +144,7 @@ class PenandaanAreaOperasiService
             ? Carbon::parse($marking->tanggal_penandaan)->isoFormat('D MMMM Y')
             : Carbon::now()->isoFormat('D MMMM Y');
 
-        $verificationToken = PenandaanAreaOperasiController::generateToken($marking->no_rawat);
+        $verificationToken = PenandaanAreaOperasiController::generateToken($marking->no_rawat, $marking->id ?? null);
         $qrUrl = url('/penandaan-area-operasi/verifikasi/' . $verificationToken);
         $qrBase64 = $this->generateQrBase64($qrUrl);
 
@@ -153,13 +168,14 @@ class PenandaanAreaOperasiService
      *
      * @param string $noRawat
      * @param string $pdfBinary
+     * @param int|null $id
      * @return array
      */
-    public function uploadPdf(string $noRawat, string $pdfBinary): array
+    public function uploadPdf(string $noRawat, string $pdfBinary, ?int $id = null): array
     {
         $pdfBase64 = base64_encode($pdfBinary);
         $sanitizedNoRawat = str_replace('/', '-', $noRawat);
-        $filePrefix = 'PENANDAAN_OPERASI_' . $sanitizedNoRawat . '_';
+        $filePrefix = 'PENANDAAN_OPERASI_' . $sanitizedNoRawat . '_' . ($id ? $id . '_' : '');
         $namaFile = $filePrefix . date('YmdHis');
         $filename = $namaFile . '.pdf';
         $newLocation = 'pages/upload/' . $filename;
@@ -181,6 +197,7 @@ class PenandaanAreaOperasiService
             if (! $response->successful()) {
                 Log::error('PenandaanAreaOperasiService upload failed with HTTP status ' . $response->status(), [
                     'no_rawat' => $noRawat,
+                    'id' => $id,
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
@@ -198,6 +215,7 @@ class PenandaanAreaOperasiService
                 $errorMsg = $resJson['message'] ?? 'Gagal upload berkas di server webapps.';
                 Log::error('PenandaanAreaOperasiService upload rejected by webapps server', [
                     'no_rawat' => $noRawat,
+                    'id' => $id,
                     'response' => $resJson,
                 ]);
 
@@ -231,6 +249,7 @@ class PenandaanAreaOperasiService
         } catch (\Throwable $e) {
             Log::error('PenandaanAreaOperasiService upload exception: ' . $e->getMessage(), [
                 'no_rawat' => $noRawat,
+                'id' => $id,
                 'exception' => $e,
             ]);
 
@@ -247,16 +266,18 @@ class PenandaanAreaOperasiService
      * Coordinate PDF generation and upload for penandaan area operasi.
      *
      * @param string $noRawat
+     * @param int|null $id
      * @return array
      */
-    public function generateAndUploadPdf(string $noRawat): array
+    public function generateAndUploadPdf(string $noRawat, ?int $id = null): array
     {
         try {
-            $pdfBinary = $this->generatePdf($noRawat);
-            return $this->uploadPdf($noRawat, $pdfBinary);
+            $pdfBinary = $this->generatePdf($noRawat, $id);
+            return $this->uploadPdf($noRawat, $pdfBinary, $id);
         } catch (\Throwable $e) {
             Log::error('PenandaanAreaOperasiService generateAndUploadPdf error: ' . $e->getMessage(), [
                 'no_rawat' => $noRawat,
+                'id' => $id,
                 'trace' => $e->getTraceAsString(),
             ]);
 
