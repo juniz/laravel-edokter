@@ -407,7 +407,7 @@
                 </div>
             </div>
 
-            <div class="card-footer text-right">
+            <div class="text-right">
                 @if($modeEdit)
                     <button type="button" class="btn btn-secondary mr-2" wire:click="batal">
                         <i class="fas fa-times mr-1"></i> Batal
