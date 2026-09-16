@@ -462,6 +462,9 @@
                             <td>{{ $item->posisi ?? '-' }}</td>
                             <td>{{ $item->induksi ?? '-' }}</td>
                             <td>
+                                <a href="{{ route('penilaian-pre-induksi.download-pdf', ['no_rawat' => $item->no_rawat, 'tanggal' => $item->tanggal]) }}" target="_blank" class="btn btn-xs btn-info" title="Cetak / Download PDF">
+                                    <i class="fas fa-print"></i> Cetak
+                                </a>
                                 <button type="button" class="btn btn-xs btn-warning" wire:click="edit('{{ $item->tanggal }}')">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>

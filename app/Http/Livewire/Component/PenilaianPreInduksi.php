@@ -2,8 +2,10 @@
 
 namespace App\Http\Livewire\Component;
 
+use App\Services\PenilaianPreInduksiService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Livewire\Component;
 
@@ -246,9 +248,24 @@ class PenilaianPreInduksi extends Component
                 'teknik_regional_hasil' => $this->teknik_regional_hasil ?: null,
             ]);
 
-            $this->alert('success', 'Penilaian Pre Induksi berhasil disimpan!');
+            $uploadResult = app(PenilaianPreInduksiService::class)->generateAndUploadPdf($this->no_rawat, $formattedTanggal);
             $this->batal();
             $this->getData();
+
+            if (! empty($uploadResult['success'])) {
+                if (! empty($uploadResult['is_replaced'])) {
+                    $this->alert('success', 'Penilaian Pre Induksi berhasil disimpan dan berkas digital diperbarui.');
+                } else {
+                    $this->alert('success', 'Penilaian Pre Induksi berhasil disimpan dan diunggah ke berkas digital.');
+                }
+            } else {
+                Log::warning('Penilaian Pre Induksi auto upload failed on save', [
+                    'no_rawat' => $this->no_rawat,
+                    'tanggal' => $formattedTanggal,
+                    'result' => $uploadResult,
+                ]);
+                $this->alert('warning', 'Penilaian Pre Induksi berhasil disimpan, namun gagal diunggah otomatis: ' . ($uploadResult['message'] ?? 'Error upload'));
+            }
         } catch (\Exception $e) {
             $this->alert('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
@@ -345,9 +362,20 @@ class PenilaianPreInduksi extends Component
                     'teknik_regional_hasil' => $this->teknik_regional_hasil ?: null,
                 ]);
 
-            $this->alert('success', 'Penilaian Pre Induksi berhasil diperbarui!');
+            $uploadResult = app(PenilaianPreInduksiService::class)->generateAndUploadPdf($this->no_rawat, $formattedTanggal);
             $this->batal();
             $this->getData();
+
+            if (! empty($uploadResult['success'])) {
+                $this->alert('success', 'Penilaian Pre Induksi berhasil diperbarui dan berkas digital diperbarui.');
+            } else {
+                Log::warning('Penilaian Pre Induksi auto upload failed on update', [
+                    'no_rawat' => $this->no_rawat,
+                    'tanggal' => $formattedTanggal,
+                    'result' => $uploadResult,
+                ]);
+                $this->alert('warning', 'Penilaian Pre Induksi berhasil diperbarui, namun gagal diunggah otomatis: ' . ($uploadResult['message'] ?? 'Error upload'));
+            }
         } catch (\Exception $e) {
             $this->alert('error', 'Gagal memperbarui: ' . $e->getMessage());
         }
@@ -378,6 +406,8 @@ class PenilaianPreInduksi extends Component
                 ->where('no_rawat', $this->no_rawat)
                 ->where('tanggal', $tanggal)
                 ->delete();
+
+            app(PenilaianPreInduksiService::class)->deleteDigitalFile($this->no_rawat);
 
             $this->alert('success', 'Penilaian Pre Induksi berhasil dihapus!');
             $this->getData();
