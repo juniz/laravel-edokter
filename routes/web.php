@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\OdontogramPrintController;
 use App\Http\Controllers\PenandaanAreaOperasiController;
+use App\Http\Controllers\PenilaianPreOperasiController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -232,6 +233,14 @@ Route::match(['get', 'post'], '/penandaan-area-operasi/upload-pdf', [PenandaanAr
 Route::get('/penandaan-area-operasi/verifikasi/{token?}', [PenandaanAreaOperasiController::class, 'verifikasi'])
     ->middleware('throttle:60,1')
     ->name('penandaan-area-operasi.verifikasi');
+
+Route::get('/penilaian-pre-operasi/download-pdf', [PenilaianPreOperasiController::class, 'downloadPdf'])
+    ->middleware('loginauth')
+    ->name('penilaian-pre-operasi.download-pdf');
+
+Route::match(['get', 'post'], '/penilaian-pre-operasi/upload-pdf', [PenilaianPreOperasiController::class, 'uploadPdf'])
+    ->middleware('loginauth')
+    ->name('penilaian-pre-operasi.upload-pdf');
 
 Route::get('/persetujuan-penolakan-tindakan', [
     App\Http\Controllers\PersetujuanPenolakanTindakan::class,
