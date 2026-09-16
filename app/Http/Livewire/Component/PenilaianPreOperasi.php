@@ -2,9 +2,11 @@
 
 namespace App\Http\Livewire\Component;
 
+use App\Services\PenilaianPreOperasiService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Livewire\Component;
 
@@ -179,10 +181,30 @@ class PenilaianPreOperasi extends Component
                 'terapi_pre_operasi' => $this->terapi_pre_operasi,
             ]);
 
+            $uploadResult = app(PenilaianPreOperasiService::class)->generateAndUploadPdf($this->no_rawat, $formattedTanggal);
+
             $this->resetInput();
             $this->getData();
-            $this->alert('success', 'Berhasil input penilaian pre operasi');
+
+            if (! empty($uploadResult['success'])) {
+                if (! empty($uploadResult['is_replaced'])) {
+                    $this->alert('success', 'Penilaian pre operasi berhasil disimpan dan berkas digital diperbarui.');
+                } else {
+                    $this->alert('success', 'Penilaian pre operasi berhasil disimpan dan diunggah ke berkas digital.');
+                }
+            } else {
+                $errorMessage = $uploadResult['message'] ?? 'Error upload berkas digital';
+                Log::warning('Penilaian pre operasi auto upload failed: ' . $errorMessage, [
+                    'no_rawat' => $this->no_rawat,
+                    'tanggal' => $formattedTanggal,
+                ]);
+                $this->alert('warning', 'Penilaian pre operasi berhasil disimpan, namun gagal diunggah otomatis: ' . $errorMessage);
+            }
         } catch (\Exception $e) {
+            Log::error('Gagal menyimpan penilaian pre operasi: ' . $e->getMessage(), [
+                'no_rawat' => $this->no_rawat,
+                'exception' => $e,
+            ]);
             $this->alert('error', 'Gagal', [
                 'position' => 'center',
                 'timer' => '',
@@ -240,10 +262,26 @@ class PenilaianPreOperasi extends Component
                     'terapi_pre_operasi' => $this->terapi_pre_operasi,
                 ]);
 
+            $uploadResult = app(PenilaianPreOperasiService::class)->generateAndUploadPdf($this->no_rawat, $formattedTanggal);
+
             $this->resetInput();
             $this->getData();
-            $this->alert('success', 'Berhasil ubah penilaian pre operasi');
+
+            if (! empty($uploadResult['success'])) {
+                $this->alert('success', 'Penilaian pre operasi berhasil diubah dan berkas digital diperbarui.');
+            } else {
+                $errorMessage = $uploadResult['message'] ?? 'Error upload berkas digital';
+                Log::warning('Penilaian pre operasi auto upload update failed: ' . $errorMessage, [
+                    'no_rawat' => $this->no_rawat,
+                    'tanggal' => $formattedTanggal,
+                ]);
+                $this->alert('warning', 'Penilaian pre operasi berhasil diubah, namun gagal diunggah otomatis: ' . $errorMessage);
+            }
         } catch (\Exception $e) {
+            Log::error('Gagal mengubah penilaian pre operasi: ' . $e->getMessage(), [
+                'no_rawat' => $this->no_rawat,
+                'exception' => $e,
+            ]);
             $this->alert('error', 'Gagal', [
                 'position' => 'center',
                 'timer' => '',
@@ -324,10 +362,17 @@ class PenilaianPreOperasi extends Component
                 ->where('tanggal', $this->tanggalEdit)
                 ->delete();
 
+            app(PenilaianPreOperasiService::class)->deleteDigitalFile($this->no_rawat);
+
             $this->resetInput();
             $this->getData();
             $this->alert('success', 'Berhasil hapus penilaian pre operasi');
         } catch (\Exception $e) {
+            Log::error('Gagal menghapus penilaian pre operasi: ' . $e->getMessage(), [
+                'no_rawat' => $this->no_rawat,
+                'tanggal' => $this->tanggalEdit,
+                'exception' => $e,
+            ]);
             $this->alert('error', 'Gagal', [
                 'position' => 'center',
                 'timer' => '',

@@ -204,18 +204,21 @@
                                 <div><strong>Terapi Pre Operasi:</strong> {{ $item->terapi_pre_operasi ?: '-' }}</div>
                             </td>
                             <td class="text-center">
-                                @if($item->kd_dokter == session('username'))
-                                    <div class="btn-group btn-group-sm">
+                                <div class="btn-group btn-group-sm">
+                                    @if($item->kd_dokter == session('username'))
                                         <button type="button" wire:click="edit('{{ $item->tanggal }}')" class="btn btn-warning" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <button type="button" wire:click="confirmHapus('{{ $item->tanggal }}')" class="btn btn-danger" title="Hapus">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                    </div>
-                                @else
-                                    <span class="badge badge-secondary" title="Hanya dokter pembuat yang dapat mengubah/menghapus">Read-only</span>
-                                @endif
+                                    @else
+                                        <span class="badge badge-secondary mr-1 d-inline-flex align-items-center" title="Hanya dokter pembuat yang dapat mengubah/menghapus">Read-only</span>
+                                    @endif
+                                    <a href="{{ route('penilaian-pre-operasi.download-pdf', ['no_rawat' => $item->no_rawat, 'tanggal' => $item->tanggal]) }}" target="_blank" class="btn btn-info" title="Cetak / Download PDF">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     @empty
