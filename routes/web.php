@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\OdontogramPrintController;
 use App\Http\Controllers\PenandaanAreaOperasiController;
+use App\Http\Controllers\PenilaianPreInduksiController;
 use App\Http\Controllers\PenilaianPreOperasiController;
 use Illuminate\Support\Facades\Route;
 
@@ -241,6 +242,14 @@ Route::get('/penilaian-pre-operasi/download-pdf', [PenilaianPreOperasiController
 Route::match(['get', 'post'], '/penilaian-pre-operasi/upload-pdf', [PenilaianPreOperasiController::class, 'uploadPdf'])
     ->middleware('loginauth')
     ->name('penilaian-pre-operasi.upload-pdf');
+
+Route::get('/penilaian-pre-induksi/download-pdf', [PenilaianPreInduksiController::class, 'downloadPdf'])
+    ->middleware('loginauth')
+    ->name('penilaian-pre-induksi.download-pdf');
+
+Route::match(['get', 'post'], '/penilaian-pre-induksi/upload-pdf', [PenilaianPreInduksiController::class, 'uploadPdf'])
+    ->middleware('loginauth')
+    ->name('penilaian-pre-induksi.upload-pdf');
 
 Route::get('/persetujuan-penolakan-tindakan', [
     App\Http\Controllers\PersetujuanPenolakanTindakan::class,
