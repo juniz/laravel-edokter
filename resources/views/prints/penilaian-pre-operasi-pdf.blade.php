@@ -262,11 +262,7 @@
                         </tr>
                     </table>
                 </td>
-                <td style="width: 30%; vertical-align: top; text-align: right;">
-                    <div class="doc-box">
-                        RM. 41 / Halaman 1
-                    </div>
-                </td>
+                <td style="width: 30%;"></td>
             </tr>
         </table>
 
