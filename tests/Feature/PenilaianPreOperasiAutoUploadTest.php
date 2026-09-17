@@ -651,4 +651,41 @@ class PenilaianPreOperasiAutoUploadTest extends TestCase
         $response->assertHeader('Content-Type', 'application/pdf');
         $this->assertStringStartsWith('%PDF-', $response->getContent());
     }
+
+    /**
+     * Test 8: test_pdf_template_omits_tanggal_penilaian_row_but_keeps_signature_timestamp
+     * Verifies TANGGAL PENILAIAN row is omitted while signature timestamp is kept.
+     */
+    public function test_pdf_template_omits_tanggal_penilaian_row_but_keeps_signature_timestamp(): void
+    {
+        $penilaian = (object) [
+            'no_rawat' => '2026/08/19/000001',
+            'no_rkm_medis' => '000001',
+            'nama_pasien' => 'Tn. Pasien Uji',
+            'tgl_lahir' => '1990-01-02',
+            'jk' => 'L',
+            'nama_dokter' => 'Dr. Operator Bedah',
+            'kd_dokter' => 'D001',
+            'tanggal' => '2026-08-19 08:30:00',
+            'ringkasan_klinik' => 'Ringkasan klinik uji',
+            'pemeriksaan_fisik' => 'Fisik uji',
+            'pemeriksaan_diagnostik' => 'Diagnostik uji',
+            'diagnosa_pre_operasi' => 'Diagnosa uji',
+            'rencana_tindakan_bedah' => 'Tindakan uji',
+            'hal_hal_yang_perludi_persiapkan' => 'Persiapan uji',
+            'terapi_pre_operasi' => 'Terapi uji',
+        ];
+
+        $view = view('prints.penilaian-pre-operasi-pdf', [
+            'penilaian' => $penilaian,
+            'setting' => (object) [
+                'nama_instansi' => 'RUMAH SAKIT BHAYANGKARA TK. III NGANJUK',
+            ],
+            'tanggalPenilaian' => '19 Agustus 2026 08:30',
+            'qrBase64' => 'data:image/png;base64,test',
+        ])->render();
+
+        $this->assertStringNotContainsString('TANGGAL PENILAIAN', $view);
+        $this->assertStringContainsString('Waktu TTD: 19 Agustus 2026 08:30', $view);
+    }
 }

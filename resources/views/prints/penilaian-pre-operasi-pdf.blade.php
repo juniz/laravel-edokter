@@ -293,10 +293,12 @@
                 <td class="meta-label">NO. RAWAT</td>
                 <td class="meta-val" colspan="2">: {{ $penilaian->no_rawat ?? '-' }}</td>
             </tr>
+            {{-- 
             <tr>
                 <td class="meta-label">TANGGAL PENILAIAN</td>
                 <td class="meta-val" colspan="2">: {{ $tanggalAss }}</td>
             </tr>
+            --}}
             <tr>
                 <td class="meta-label">DOKTER OPERATOR</td>
                 <td class="meta-val" colspan="2">: {{ $namaDokter }}</td>
