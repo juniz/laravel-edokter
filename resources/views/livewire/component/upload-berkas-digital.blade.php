@@ -62,6 +62,12 @@
         });
         Livewire.on('close-modal', (event) => {
             $('#'+event.id).modal('hide');
+            if (window.FilePond) {
+                const pond = FilePond.find(document.querySelector('.filepond'));
+                if (pond) {
+                    pond.removeFiles();
+                }
+            }
         });
     </script>
 @endpush

@@ -404,22 +404,24 @@
                             <label>Komplikasi Regional</label>
                             <textarea class="form-control @error('teknik_regional_komplikasi') is-invalid @enderror" wire:model.defer="teknik_regional_komplikasi" rows="2" placeholder="Komplikasi yang terjadi" maxlength="200"></textarea>
                             @error('teknik_regional_komplikasi') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="text-right">
-                @if($modeEdit)
-                    <button type="button" class="btn btn-secondary mr-2" wire:click="batal">
-                        <i class="fas fa-times mr-1"></i> Batal
-                    </button>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-save mr-1"></i> Update
-                    </button>
-                @else
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-1"></i> Simpan
-                    </button>
-                @endif
+                <div class="text-right">
+                    @if($modeEdit)
+                        <button type="button" class="btn btn-secondary mr-2" wire:click="batal">
+                            <i class="fas fa-times mr-1"></i> Batal
+                        </button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save mr-1"></i> Update
+                        </button>
+                    @else
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-1"></i> Simpan
+                        </button>
+                    @endif
+                </div>
             </div>
         </div>
     </form>

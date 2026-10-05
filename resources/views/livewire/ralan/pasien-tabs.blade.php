@@ -1278,8 +1278,9 @@
                                                 </div>
                                             </div>
                                             <div class="card-body p-0">
-                                                <div class="table-responsive">
-                                                    <table class="table table-hover">
+                                                {{-- Desktop --}}
+                                                <div class="table-responsive d-none d-md-block">
+                                                    <table class="table table-hover mb-0">
                                                         <thead>
                                                             <tr>
                                                                 <th>Diagnosa</th>
@@ -1298,6 +1299,18 @@
                                                         </tbody>
                                                     </table>
                                                 </div>
+                                                {{-- Mobile --}}
+                                                <div class="d-block d-md-none p-2">
+                                                    @foreach($this->getDiagnosa($no_rawat) as $diagnosa)
+                                                    <div class="border rounded p-2 mb-2 bg-light">
+                                                        <div class="d-flex align-items-center mb-1">
+                                                            <span class="badge badge-primary mr-2">{{ $diagnosa->kd_penyakit }}</span>
+                                                            <span class="badge badge-{{ $diagnosa->status === 'Utama' ? 'danger' : 'secondary' }} ml-auto">{{ $diagnosa->status }}</span>
+                                                        </div>
+                                                        <div class="small font-weight-bold text-dark">{{ $diagnosa->nm_penyakit }}</div>
+                                                    </div>
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         </div>
                                         @endif
@@ -1313,8 +1326,9 @@
                                                 </div>
                                             </div>
                                             <div class="card-body p-0">
-                                                <div class="table-responsive">
-                                                    <table class="table table-hover">
+                                                {{-- Desktop --}}
+                                                <div class="table-responsive d-none d-md-block">
+                                                    <table class="table table-hover mb-0">
                                                         <thead>
                                                             <tr>
                                                                 <th>Nama Obat</th>
@@ -1332,6 +1346,20 @@
                                                             @endforeach
                                                         </tbody>
                                                     </table>
+                                                </div>
+                                                {{-- Mobile --}}
+                                                <div class="d-block d-md-none p-2">
+                                                    @foreach($obatRalan as $obat)
+                                                    <div class="border rounded p-2 mb-2 bg-light">
+                                                        <div class="font-weight-bold text-dark small">
+                                                            <i class="fas fa-capsules text-success mr-1"></i>{{ $obat->nama_brng }}
+                                                        </div>
+                                                        <div class="d-flex mt-1" style="gap: 0.5rem;">
+                                                            <span class="badge badge-success">{{ $obat->jml }} pcs</span>
+                                                            <span class="text-muted small">{{ $obat->aturan }}</span>
+                                                        </div>
+                                                    </div>
+                                                    @endforeach
                                                 </div>
                                             </div>
                                         </div>
@@ -1351,54 +1379,78 @@
                                                 @php
                                                     $obatByDate = $obatRanap->groupBy('tgl_perawatan');
                                                 @endphp
-                                                
-                                                <div class="card card-primary card-outline card-tabs">
-                                                    <div class="card-header p-0 pt-1 border-bottom-0">
-                                                        <ul class="nav nav-tabs" role="tablist">
-                                                            @foreach($obatByDate as $tanggal => $obatList)
-                                                                <li class="nav-item">
-                                                                    <a class="nav-link {{ $loop->first ? 'active' : '' }}" 
-                                                                    data-toggle="pill" 
-                                                                    href="#tab_{{ \Carbon\Carbon::parse($tanggal)->format('Y-m-d') }}" 
-                                                                    role="tab">
-                                                                        {{ \Carbon\Carbon::parse($tanggal)->format('d-m-Y') }}
-                                                                    </a>
-                                                                </li>
-                                                            @endforeach
-                                                        </ul>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <div class="tab-content">
-                                                            @foreach($obatByDate as $tanggal => $obatList)
-                                                                <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" 
-                                                                    id="tab_{{ \Carbon\Carbon::parse($tanggal)->format('Y-m-d') }}" 
-                                                                    role="tabpanel">
-                                                                    <div class="table-responsive">
-                                                                        <table class="table table-hover">
-                                                                            <thead>
-                                                                                <tr>
-                                                                                    <th>Jam</th>
-                                                                                    <th>Nama Obat</th>
-                                                                                    <th>Jumlah</th>
-                                                                                    <th>Aturan Pakai</th>
-                                                                                </tr>
-                                                                            </thead>
-                                                                            <tbody>
-                                                                                @foreach($obatList as $obat)
+                                                {{-- Desktop: Tabs --}}
+                                                <div class="d-none d-md-block">
+                                                    <div class="card card-primary card-outline card-tabs mb-0">
+                                                        <div class="card-header p-0 pt-1 border-bottom-0">
+                                                            <ul class="nav nav-tabs" role="tablist">
+                                                                @foreach($obatByDate as $tanggal => $obatList)
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link {{ $loop->first ? 'active' : '' }}"
+                                                                        data-toggle="pill"
+                                                                        href="#tab_{{ \Carbon\Carbon::parse($tanggal)->format('Y-m-d') }}"
+                                                                        role="tab">
+                                                                            {{ \Carbon\Carbon::parse($tanggal)->format('d-m-Y') }}
+                                                                        </a>
+                                                                    </li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="tab-content">
+                                                                @foreach($obatByDate as $tanggal => $obatList)
+                                                                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
+                                                                        id="tab_{{ \Carbon\Carbon::parse($tanggal)->format('Y-m-d') }}"
+                                                                        role="tabpanel">
+                                                                        <div class="table-responsive">
+                                                                            <table class="table table-hover mb-0">
+                                                                                <thead>
                                                                                     <tr>
-                                                                                        <td>{{ $obat->jam }}</td>
-                                                                                        <td>{{ $obat->nama_brng }}</td>
-                                                                                        <td>{{ $obat->jml }}</td>
-                                                                                        <td>{{ $obat->aturan }}</td>
+                                                                                        <th>Jam</th>
+                                                                                        <th>Nama Obat</th>
+                                                                                        <th>Jumlah</th>
+                                                                                        <th>Aturan Pakai</th>
                                                                                     </tr>
-                                                                                @endforeach
-                                                                            </tbody>
-                                                                        </table>
+                                                                                </thead>
+                                                                                <tbody>
+                                                                                    @foreach($obatList as $obat)
+                                                                                        <tr>
+                                                                                            <td>{{ $obat->jam }}</td>
+                                                                                            <td>{{ $obat->nama_brng }}</td>
+                                                                                            <td>{{ $obat->jml }}</td>
+                                                                                            <td>{{ $obat->aturan }}</td>
+                                                                                        </tr>
+                                                                                    @endforeach
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            @endforeach
+                                                                @endforeach
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                </div>
+                                                {{-- Mobile: Accordion per Tanggal --}}
+                                                <div class="d-block d-md-none p-2">
+                                                    @foreach($obatByDate as $tanggal => $obatList)
+                                                    <div class="mb-2">
+                                                        <div class="bg-success text-white rounded px-2 py-1 small font-weight-bold mb-1">
+                                                            <i class="fas fa-calendar-day mr-1"></i>{{ \Carbon\Carbon::parse($tanggal)->format('d M Y') }}
+                                                        </div>
+                                                        @foreach($obatList as $obat)
+                                                        <div class="border rounded p-2 mb-1 bg-light ml-2">
+                                                            <div class="font-weight-bold small text-dark">
+                                                                <i class="fas fa-capsules text-success mr-1"></i>{{ $obat->nama_brng }}
+                                                            </div>
+                                                            <div class="d-flex align-items-center mt-1" style="gap: 0.5rem;">
+                                                                <span class="badge badge-secondary">{{ $obat->jam }}</span>
+                                                                <span class="badge badge-success">{{ $obat->jml }} pcs</span>
+                                                                <span class="text-muted small">{{ $obat->aturan }}</span>
+                                                            </div>
+                                                        </div>
+                                                        @endforeach
+                                                    </div>
+                                                    @endforeach
                                                 </div>
                                             </div>
                                         </div>
