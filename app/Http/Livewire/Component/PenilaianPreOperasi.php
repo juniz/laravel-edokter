@@ -200,7 +200,7 @@ class PenilaianPreOperasi extends Component
                 ]);
                 $this->alert('warning', 'Penilaian pre operasi berhasil disimpan, namun gagal diunggah otomatis: ' . $errorMessage);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Gagal menyimpan penilaian pre operasi: ' . $e->getMessage(), [
                 'no_rawat' => $this->no_rawat,
                 'exception' => $e,
@@ -277,7 +277,7 @@ class PenilaianPreOperasi extends Component
                 ]);
                 $this->alert('warning', 'Penilaian pre operasi berhasil diubah, namun gagal diunggah otomatis: ' . $errorMessage);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Gagal mengubah penilaian pre operasi: ' . $e->getMessage(), [
                 'no_rawat' => $this->no_rawat,
                 'exception' => $e,

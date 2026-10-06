@@ -2,9 +2,9 @@
     {{-- ===== FORM INPUT ===== --}}
     <form wire:submit.prevent="simpan">
 
-        {{-- Row 1: Tanggal Pemasangan & Pelepasan --}}
+        {{-- Row 1: Tanggal Pemasangan, Tanggal Pelepasan & Durasi --}}
         <div class="row">
-            <div class="col-sm-6">
+            <div class="col-sm-4">
                 <div class="form-group">
                     <label for="tanggalpemasangan">
                         <i class="fas fa-calendar-plus mr-1 text-info"></i>
@@ -19,7 +19,7 @@
                     @enderror
                 </div>
             </div>
-            <div class="col-sm-6">
+            <div class="col-sm-4">
                 <div class="form-group">
                     <label for="tanggalpelepasan">
                         <i class="fas fa-calendar-minus mr-1 text-warning"></i>
@@ -34,10 +34,6 @@
                     @enderror
                 </div>
             </div>
-        </div>
-
-        {{-- Row 2: Durasi (auto) & Dokter --}}
-        <div class="row">
             <div class="col-sm-4">
                 <div class="form-group">
                     <label for="durasi">
@@ -59,50 +55,7 @@
                             </span>
                         </div>
                     </div>
-                    <small class="text-muted">Dihitung otomatis dari selisih tanggal</small>
-                </div>
-            </div>
-            <div class="col-sm-8">
-                <div class="form-group">
-                    <label for="kd_dokter">
-                        <i class="fas fa-user-md mr-1 text-primary"></i>
-                        Dokter Penanggung Jawab <span class="text-danger">*</span>
-                    </label>
-                    <select wire:model.defer="kd_dokter"
-                            id="kd_dokter"
-                            class="form-control @error('kd_dokter') is-invalid @enderror">
-                        <option value="">-- Pilih Dokter --</option>
-                        @foreach($dokterList as $dokter)
-                            <option value="{{ $dokter->kd_dokter }}">
-                                {{ $dokter->nm_dokter }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('kd_dokter')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-            </div>
-        </div>
-
-        {{-- Row 3: Petugas (NIP) --}}
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="form-group">
-                    <label for="nip">
-                        <i class="fas fa-user-nurse mr-1 text-success"></i>
-                        Petugas / Perawat
-                    </label>
-                    <select wire:model.defer="nip"
-                            id="nip"
-                            class="form-control">
-                        <option value="">-- Pilih Petugas (Opsional) --</option>
-                        @foreach($petugasList as $petugas)
-                            <option value="{{ $petugas->nip }}">
-                                {{ $petugas->nama }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <small class="text-muted">Dihitung otomatis</small>
                 </div>
             </div>
         </div>

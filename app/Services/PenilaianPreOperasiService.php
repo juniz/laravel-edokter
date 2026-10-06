@@ -79,6 +79,8 @@ class PenilaianPreOperasiService
      */
     public function generatePdf(string $noRawat, ?string $tanggal = null): string
     {
+        ini_set('memory_limit', '512M');
+
         $penilaian = self::findPenilaian($noRawat, $tanggal);
 
         if (! $penilaian) {

@@ -85,6 +85,8 @@ class PenandaanAreaOperasiService
      */
     public function generatePdf(string $noRawat, ?int $id = null): string
     {
+        ini_set('memory_limit', '512M');
+
         $marking = self::findMarking($noRawat, $id);
 
         if (! $marking) {

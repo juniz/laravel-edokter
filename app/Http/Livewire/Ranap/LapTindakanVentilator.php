@@ -64,15 +64,7 @@ class LapTindakanVentilator extends Component
 
     public function loadDependencies()
     {
-        $this->dokterList = DB::table('dokter')
-            ->select('kd_dokter', 'nm_dokter')
-            ->orderBy('nm_dokter')
-            ->get();
-
-        $this->petugasList = DB::table('petugas')
-            ->select('nip', 'nama')
-            ->orderBy('nama')
-            ->get();
+        // Dropdown dokter & petugas dihapus dari form
     }
 
     public function updatedTanggalpemasangan()
@@ -216,6 +208,8 @@ class LapTindakanVentilator extends Component
 
     public function simpan()
     {
+        $this->kd_dokter = session()->get('username');
+
         $this->validate([
             'tanggalpemasangan'      => 'required|date',
             'tanggalpelepasan'       => 'required|date|after:tanggalpemasangan',
