@@ -18,6 +18,7 @@ class PenilaianAwalMedisIGD extends Component
     {
         return view('components.ralan.penilaian-awal-medis-i-g-d', [
             'data' => $this->getPenilaianIGD($this->noRawat),
+            'listPemeriksaan' => $this->getPemeriksaanRalan($this->noRawat),
         ]);
     }
 
@@ -30,5 +31,18 @@ class PenilaianAwalMedisIGD extends Component
             ->where('penilaian_awal_keperawatan_igd.no_rawat', $noRawat)
             ->select('penilaian_awal_keperawatan_igd.*', 'petugas.nama as nama_petugas')
             ->first();
+    }
+
+    public function getPemeriksaanRalan($noRawat)
+    {
+        if (!$noRawat) return collect();
+
+        return DB::table('pemeriksaan_ralan')
+            ->leftJoin('pegawai', 'pemeriksaan_ralan.nip', '=', 'pegawai.nik')
+            ->where('pemeriksaan_ralan.no_rawat', $noRawat)
+            ->select('pemeriksaan_ralan.*', 'pegawai.nama as nama_petugas')
+            ->orderBy('pemeriksaan_ralan.tgl_perawatan', 'desc')
+            ->orderBy('pemeriksaan_ralan.jam_rawat', 'desc')
+            ->get();
     }
 }
