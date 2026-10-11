@@ -291,6 +291,81 @@
         </div>
     </form>
 
+    <!-- Tabel Riwayat Penilaian Medis IGD Pasien -->
+    <div class="card card-outline card-info mt-4 shadow-sm">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <h6 class="card-title text-sm mb-0">
+                <i class="fas fa-history text-info mr-1"></i> <strong>Riwayat Penilaian Awal Medis IGD Pasien</strong>
+            </h6>
+            <span class="badge badge-info">{{ count($dataRiwayat) }} Catatan</span>
+        </div>
+        <div class="card-body p-0 table-responsive">
+            <table class="table table-hover table-striped mb-0 text-sm">
+                <thead class="thead-light">
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th style="width: 170px;">Waktu & No. Rawat</th>
+                        <th style="width: 180px;">Dokter Pemeriksa</th>
+                        <th>Keluhan & TTV</th>
+                        <th>Diagnosis & Tatalaksana</th>
+                        <th class="text-center" style="width: 120px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($dataRiwayat as $index => $row)
+                    @php
+                        $isCurrentVisit = (data_get($row, 'no_rawat') === $no_rawat);
+                        $tglRow = data_get($row, 'tanggal');
+                    @endphp
+                    <tr class="{{ $isCurrentVisit ? 'table-info' : '' }}">
+                        <td>{{ $index + 1 }}</td>
+                        <td>
+                            <strong>{{ !empty($tglRow) ? date('d/m/Y H:i', strtotime($tglRow)) : '-' }}</strong>
+                            <small class="text-muted d-block">{{ data_get($row, 'no_rawat') }}</small>
+                            @if($isCurrentVisit)
+                                <span class="badge badge-success">Kunjungan Ini</span>
+                            @else
+                                <span class="badge badge-secondary">Kunjungan Lalu</span>
+                            @endif
+                        </td>
+                        <td>
+                            <strong>{{ data_get($row, 'nm_dokter') ?? data_get($row, 'kd_dokter') ?? '-' }}</strong>
+                            <div class="text-xs text-muted">{{ data_get($row, 'anamnesis') ?? '-' }}</div>
+                        </td>
+                        <td>
+                            <div class="font-weight-bold mb-1">{{ data_get($row, 'keluhan_utama') ?: '-' }}</div>
+                            <div class="text-xs text-muted">
+                                TD: {{ data_get($row, 'td') ?: '-' }} | N: {{ data_get($row, 'nadi') ?: '-' }} | S: {{ data_get($row, 'suhu') ?: '-' }} | RR: {{ data_get($row, 'rr') ?: '-' }} | SpO2: {{ data_get($row, 'spo') ?: '-' }}
+                            </div>
+                        </td>
+                        <td>
+                            <div><strong>Diagnosis:</strong> {{ data_get($row, 'diagnosis') ?: '-' }}</div>
+                            <div class="text-xs text-muted"><strong>Tatalaksana:</strong> {{ \Illuminate\Support\Str::limit(data_get($row, 'tata') ?: '-', 80) }}</div>
+                        </td>
+                        <td class="text-center align-middle">
+                            @if($isCurrentVisit)
+                                <button type="button" class="btn btn-xs btn-warning mb-1" wire:click="editRiwayat('{{ data_get($row, 'no_rawat') }}')" title="Muat ke Form">
+                                    <i class="fas fa-edit mr-1"></i> Edit
+                                </button>
+                            @else
+                                <button type="button" class="btn btn-xs btn-outline-primary" wire:click="salinDariRiwayat('{{ data_get($row, 'no_rawat') }}')" title="Salin Data Riwayat ke Form">
+                                    <i class="fas fa-copy mr-1"></i> Salin
+                                </button>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">
+                            <i class="fas fa-info-circle mr-1"></i> Belum ada riwayat penilaian medis IGD untuk pasien ini.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Modal Selector SOAP Pemeriksaan Ralan -->
     <div wire:ignore.self class="modal fade" id="modal-soap-picker-igd" tabindex="-1" role="dialog" aria-labelledby="modalSoapPickerIgdLabel" aria-hidden="true" style="z-index: 1060; background: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
