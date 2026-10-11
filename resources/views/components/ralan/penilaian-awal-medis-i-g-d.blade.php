@@ -4,7 +4,7 @@
 @endphp
 <div x-data="{
     listSoap: @js($listPemeriksaan ?? []),
-    selectedSoap: @js(isset($listPemeriksaan) && count($listPemeriksaan) > 0 ? $listPemeriksaan->first() : null),
+    selectedSoap: @js(isset($listPemeriksaan) && count($listPemeriksaan) > 0 ? (is_array($listPemeriksaan) ? ($listPemeriksaan[0] ?? null) : $listPemeriksaan->first()) : null),
     selectSoap(soap) {
         this.selectedSoap = soap;
         $('#{{ $modalId }}').modal('hide');
@@ -437,7 +437,7 @@
                                     <td class="text-center align-middle">
                                         <button type="button"
                                             class="btn btn-xs btn-primary"
-                                            @click="selectSoap(listSoap[{{ $idx }}])">
+                                            @click="selectSoap(listSoap[{{ $loop->index }}])">
                                             <i class="fas fa-check"></i> Pilih
                                         </button>
                                     </td>
