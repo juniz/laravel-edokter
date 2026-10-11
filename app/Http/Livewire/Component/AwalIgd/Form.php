@@ -48,6 +48,7 @@ class Form extends Component
     public $diagnosis;
     public $tatalaksana;
     public $listSoap = [];
+    public $dataPerawat = null;
 
     protected $listeners = ['hapusMedisIgd' => 'hapus'];
 
@@ -102,6 +103,26 @@ class Form extends Component
         }
     }
 
+    public function salinDariPerawat()
+    {
+        if (!$this->dataPerawat) {
+            $this->alert('warning', 'Data asesmen keperawatan tidak ditemukan');
+            return;
+        }
+
+        if (!empty($this->dataPerawat->keluhan_utama)) {
+            $this->keluhan_utama = $this->dataPerawat->keluhan_utama;
+        }
+        if (!empty($this->dataPerawat->rpd)) {
+            $this->rpd = $this->dataPerawat->rpd;
+        }
+        if (!empty($this->dataPerawat->rpo)) {
+            $this->rpo = $this->dataPerawat->rpo;
+        }
+
+        $this->alert('success', 'Data keluhan & riwayat berhasil disalin dari perawat');
+    }
+
     public function mount()
     {
         $this->tanggal = Carbon::now()->format('Y-m-d H:i:s');
@@ -124,6 +145,7 @@ class Form extends Component
 
     public function resetInput()
     {
+        $this->dataPerawat = null;
         $this->tanggal = Carbon::now()->format('Y-m-d H:i:s');
         $this->anamnesis = 'Autoanamnesis';
         $this->hubungan = '';
@@ -166,6 +188,13 @@ class Form extends Component
         // dd($this->no_rawat);
         try {
             $this->resetInput();
+
+            $this->dataPerawat = DB::table('penilaian_awal_keperawatan_igd')
+                ->leftJoin('petugas', 'penilaian_awal_keperawatan_igd.nip', '=', 'petugas.nip')
+                ->where('penilaian_awal_keperawatan_igd.no_rawat', $this->no_rawat)
+                ->select('penilaian_awal_keperawatan_igd.*', 'petugas.nama as nama_petugas')
+                ->first();
+
             $data = DB::table('penilaian_medis_igd')
                 ->where('no_rawat', $this->no_rawat)
                 ->first();
