@@ -1,5 +1,5 @@
 @php
-    $modalId = 'modalPilihSoap-' . md5($data->no_rawat ?? ($noRawat ?? uniqid()));
+    $modalId = 'modalPilihSoap-' . md5($data->no_rawat ?? ($dataMedis->no_rawat ?? ($noRawat ?? uniqid())));
     $soapCount = isset($listPemeriksaan) ? count($listPemeriksaan) : 0;
 @endphp
 <div x-data="{
@@ -10,29 +10,38 @@
         $('#{{ $modalId }}').modal('hide');
     }
 }">
-    @if(!empty($data))
-    <x-adminlte-card theme="info" title="Penilaian Awal Keperawatan IGD" icon="fas fa-ambulance" theme-mode="outline" collapsible class="mb-4">
-        @php
-        $tglPenilaian = date_create($data->tanggal ?? '0000-00-00');
-        $datePenilaian = date_format($tglPenilaian, "d M Y H:i");
-        @endphp
-
-        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+    @if(!empty($data) || !empty($dataMedis))
+    <x-adminlte-card theme="info" title="Penilaian Awal IGD (Medis & Keperawatan)" icon="fas fa-ambulance" theme-mode="outline" collapsible class="mb-4">
+        <!-- Metadata Header: Dokter & Perawat -->
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom flex-wrap">
             <div class="row flex-grow-1">
-                <div class="col-md-4">
-                    <small class="text-muted d-block">Tanggal Penilaian</small>
-                    <strong><i class="fas fa-calendar"></i> {{ $datePenilaian }}</strong>
+                @if(!empty($dataMedis))
+                <div class="col-md-5 mb-2">
+                    <small class="text-muted d-block">Dokter Pemeriksa</small>
+                    <strong><i class="fas fa-user-md text-primary"></i> {{ $dataMedis->nm_dokter ?? $dataMedis->kd_dokter ?? '-' }}</strong>
+                    <div class="text-xs text-muted mt-1">
+                        <i class="fas fa-calendar-alt"></i> {{ !empty($dataMedis->tanggal) ? date('d M Y H:i', strtotime($dataMedis->tanggal)) : '-' }}
+                        &bull; Anamnesis: <span class="badge badge-light border">{{ $dataMedis->anamnesis ?? '-' }}</span>
+                        @if(!empty($dataMedis->hubungan))
+                        <span class="text-muted">({{ $dataMedis->hubungan }})</span>
+                        @endif
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <small class="text-muted d-block">Informasi</small>
-                    <strong><i class="fas fa-info-circle"></i> {{ $data->informasi ?? '-' }}</strong>
-                </div>
-                <div class="col-md-4">
+                @endif
+
+                @if(!empty($data))
+                <div class="col-md-5 mb-2">
                     <small class="text-muted d-block">Petugas / Perawat</small>
-                    <strong><i class="fas fa-user-nurse"></i> {{ $data->nama_petugas ?? $data->nip ?? '-' }}</strong>
+                    <strong><i class="fas fa-user-nurse text-success"></i> {{ $data->nama_petugas ?? $data->nip ?? '-' }}</strong>
+                    <div class="text-xs text-muted mt-1">
+                        <i class="fas fa-calendar-alt"></i> {{ !empty($data->tanggal) ? date('d M Y H:i', strtotime($data->tanggal)) : '-' }}
+                        &bull; Sumber: <span class="badge badge-light border">{{ $data->informasi ?? '-' }}</span>
+                    </div>
                 </div>
+                @endif
             </div>
-            <div>
+
+            <div class="ml-auto my-1">
                 <button type="button" class="btn btn-sm btn-outline-info" data-toggle="modal" data-target="#{{ $modalId }}" title="Pilih Data SOAP / Pemeriksaan Ralan">
                     <i class="fas fa-paperclip"></i> SOAP Ralan
                     <span class="badge badge-info ml-1">{{ $soapCount }}</span>
@@ -122,27 +131,57 @@
             </div>
         </template>
 
-        <!-- 1. Informasi Umum & Anamnesis -->
+        <!-- 1. Riwayat Kesehatan & Anamnesis -->
         <div class="card mb-3 border-left-info" style="border-left-width: 4px;">
             <div class="card-header bg-info text-white">
-                <h6 class="mb-0"><i class="fas fa-notes-medical"></i> Riwayat Kesehatan & Anamnesis</h6>
+                <h6 class="mb-0"><i class="fas fa-notes-medical"></i> I. Riwayat Kesehatan & Anamnesis</h6>
             </div>
             <div class="card-body">
-                <div class="mb-2">
-                    <small class="text-muted d-block">Keluhan Utama</small>
-                    <div class="border rounded p-2 bg-light">{!! nl2br(e($data->keluhan_utama ?? '-')) !!}</div>
+                <div class="row mb-2">
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted d-block">Keluhan Utama (Dokter)</small>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->keluhan_utama ?? ($data->keluhan_utama ?? '-'))) !!}</div>
+                    </div>
+                    @if(!empty($data->keluhan_utama) && !empty($dataMedis->keluhan_utama) && $data->keluhan_utama !== $dataMedis->keluhan_utama)
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted d-block">Keluhan Utama (Keperawatan)</small>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($data->keluhan_utama)) !!}</div>
+                    </div>
+                    @endif
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted d-block">Riwayat Penyakit Sekarang (RPS)</small>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->rps ?? '-')) !!}</div>
+                    </div>
                 </div>
-                <div class="row mt-2">
+                <div class="row">
                     <div class="col-md-6 mb-2">
                         <small class="text-muted d-block">Riwayat Penyakit Dahulu (RPD)</small>
-                        <div class="border rounded p-2 bg-light">{!! nl2br(e($data->rpd ?? '-')) !!}</div>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->rpd ?? ($data->rpd ?? '-'))) !!}</div>
                     </div>
                     <div class="col-md-6 mb-2">
-                        <small class="text-muted d-block">Riwayat Pengobatan (RPO)</small>
-                        <div class="border rounded p-2 bg-light">{!! nl2br(e($data->rpo ?? '-')) !!}</div>
+                        <small class="text-muted d-block">Riwayat Penyakit Keluarga (RPK)</small>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->rpk ?? '-')) !!}</div>
                     </div>
                 </div>
-                <div class="row mt-2">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted d-block">Riwayat Pengobatan (RPO)</small>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->rpo ?? ($data->rpo ?? '-'))) !!}</div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted d-block">Riwayat Alergi</small>
+                        <div class="border rounded p-2 bg-light">
+                            @php $alergiVal = $dataMedis->alergi ?? '-'; @endphp
+                            @if(!empty($alergiVal) && $alergiVal !== '-' && strtolower($alergiVal) !== 'tidak ada')
+                                <span class="badge badge-danger p-1"><i class="fas fa-exclamation-triangle"></i> {{ $alergiVal }}</span>
+                            @else
+                                {{ $alergiVal ?: '-' }}
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @if(!empty($data->status_kehamilan) && $data->status_kehamilan !== '-')
+                <div class="row mt-2 pt-2 border-top">
                     <div class="col-md-3 mb-2">
                         <small class="text-muted d-block">Status Kehamilan</small>
                         <strong>{{ $data->status_kehamilan ?? '-' }}</strong>
@@ -166,83 +205,189 @@
                     </div>
                     @endif
                 </div>
+                @endif
             </div>
         </div>
 
-        <!-- 2. Pemeriksaan Fisik & Eliminasi -->
+        <!-- 2. Pemeriksaan Fisik & Tanda Vital -->
         <div class="card mb-3 border-left-primary" style="border-left-width: 4px;">
             <div class="card-header bg-primary text-white">
-                <h6 class="mb-0"><i class="fas fa-stethoscope"></i> Pemeriksaan Fisik & Eliminasi</h6>
+                <h6 class="mb-0"><i class="fas fa-stethoscope"></i> II. Pemeriksaan Fisik & Tanda Vital</h6>
             </div>
             <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-4 mb-2">
-                        <small class="text-muted d-block">Tekanan</small>
-                        <strong>{{ $data->tekanan ?? '-' }}</strong>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <small class="text-muted d-block">Pupil</small>
-                        <strong>{{ $data->pupil ?? '-' }}</strong>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <small class="text-muted d-block">Neurosensorik</small>
-                        <strong>{{ $data->neurosensorik ?? '-' }}</strong>
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-3 mb-2">
-                        <small class="text-muted d-block">Integumen</small>
-                        <strong>{{ $data->integumen ?? '-' }}</strong>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <small class="text-muted d-block">Turgor</small>
-                        <strong>{{ $data->turgor ?? '-' }}</strong>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <small class="text-muted d-block">Edema</small>
-                        <strong>{{ $data->edema ?? '-' }}</strong>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <small class="text-muted d-block">Mukosa</small>
-                        <strong>{{ $data->mukosa ?? '-' }}</strong>
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4 mb-2">
-                        <small class="text-muted d-block">Perdarahan</small>
-                        <strong>{{ $data->perdarahan ?? '-' }}</strong>
-                        @if(($data->perdarahan ?? '') == 'Ada')
-                        <span class="ml-2">({{ $data->jumlah_perdarahan ?? '0' }} cc, Warna: {{ $data->warna_perdarahan ?? '-' }})</span>
-                        @endif
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <small class="text-muted d-block">Intoksikasi</small>
-                        <strong>{{ $data->intoksikasi ?? '-' }}</strong>
+                @if(!empty($dataMedis))
+                <!-- TTV & Status Generalis Dokter -->
+                <div class="mb-3">
+                    <h6 class="font-weight-bold text-secondary mb-2"><i class="fas fa-heartbeat"></i> Tanda-Tanda Vital & Status Generalis (Dokter)</h6>
+                    <div class="row">
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">Keadaan Umum</small>
+                            <strong>{{ $dataMedis->keadaan ?? '-' }}</strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">Kesadaran</small>
+                            <strong>{{ $dataMedis->kesadaran ?? '-' }}</strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">GCS (E,V,M)</small>
+                            <strong>{{ $dataMedis->gcs ?? '-' }}</strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">TD</small>
+                            <strong>{{ $dataMedis->td ?? '-' }} mmHg</strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">Nadi</small>
+                            <strong>{{ $dataMedis->nadi ?? '-' }} x/m</strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">RR</small>
+                            <strong>{{ $dataMedis->rr ?? '-' }} x/m</strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">Suhu</small>
+                            <strong>{{ $dataMedis->suhu ?? '-' }} °C</strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">SpO2</small>
+                            <strong>{{ $dataMedis->spo ?? '-' }} %</strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">TB / BB</small>
+                            <strong>{{ $dataMedis->tb ?? '-' }} cm / {{ $dataMedis->bb ?? '-' }} kg</strong>
+                        </div>
                     </div>
                 </div>
-                <div class="row border-top pt-2">
+
+                <!-- 8 Organ Sistemik (Dokter) -->
+                <div class="mb-3 pt-2 border-top">
+                    <h6 class="font-weight-bold text-secondary mb-2"><i class="fas fa-child"></i> Pemeriksaan Sistemik Organ (Dokter)</h6>
+                    <div class="row">
+                        @php
+                            $organList = [
+                                'Kepala' => $dataMedis->kepala ?? null,
+                                'Mata' => $dataMedis->mata ?? null,
+                                'Gigi & Mulut' => $dataMedis->gigi ?? null,
+                                'Leher' => $dataMedis->leher ?? null,
+                                'Thoraks' => $dataMedis->thoraks ?? null,
+                                'Abdomen' => $dataMedis->abdomen ?? null,
+                                'Genital' => $dataMedis->genital ?? null,
+                                'Ekstremitas' => $dataMedis->ekstremitas ?? null,
+                            ];
+                        @endphp
+                        @foreach($organList as $organName => $organVal)
+                        <div class="col-6 col-md-3 mb-2">
+                            <small class="text-muted d-block">{{ $organName }}</small>
+                            @if(empty($organVal) || $organVal === '-')
+                                <span class="text-muted">-</span>
+                            @elseif($organVal === 'Normal')
+                                <span class="badge badge-success px-2 py-1"><i class="fas fa-check"></i> Normal</span>
+                            @elseif($organVal === 'Abnormal')
+                                <span class="badge badge-danger px-2 py-1"><i class="fas fa-exclamation-circle"></i> Abnormal</span>
+                            @elseif($organVal === 'Tidak Diperiksa')
+                                <span class="badge badge-secondary px-2 py-1">Tidak Diperiksa</span>
+                            @else
+                                <span class="badge badge-light border px-2 py-1">{{ $organVal }}</span>
+                            @endif
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Keterangan Fisik & Status Lokalis (Dokter) -->
+                @if(!empty($dataMedis->ket_fisik) || !empty($dataMedis->ket_lokalis))
+                <div class="row pt-2 border-top mb-3">
+                    @if(!empty($dataMedis->ket_fisik))
                     <div class="col-md-6 mb-2">
-                        <small class="text-muted d-block"><i class="fas fa-toilet"></i> BAB</small>
-                        <strong>{{ $data->bab ?? '-' }} x/hari</strong>
-                        @if($data->xbab || $data->kbab || $data->wbab)
-                        <div><small>Ket: {{ $data->xbab ?? '-' }}, Konsistensi: {{ $data->kbab ?? '-' }}, Warna: {{ $data->wbab ?? '-' }}</small></div>
-                        @endif
+                        <small class="text-muted d-block font-weight-bold">Keterangan Pemeriksaan Fisik</small>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->ket_fisik)) !!}</div>
                     </div>
+                    @endif
+                    @if(!empty($dataMedis->ket_lokalis))
                     <div class="col-md-6 mb-2">
-                        <small class="text-muted d-block"><i class="fas fa-restroom"></i> BAK</small>
-                        <strong>{{ $data->bak ?? '-' }} x/hari</strong>
-                        @if($data->xbak || $data->wbak || $data->lbak)
-                        <div><small>Ket: {{ $data->xbak ?? '-' }}, Warna: {{ $data->wbak ?? '-' }}, Lain: {{ $data->lbak ?? '-' }}</small></div>
-                        @endif
+                        <small class="text-muted d-block font-weight-bold">Status Lokalis</small>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->ket_lokalis)) !!}</div>
+                    </div>
+                    @endif
+                </div>
+                @endif
+                @endif
+
+                <!-- Fisik & Eliminasi Perawat -->
+                @if(!empty($data))
+                <div class="pt-2 {{ !empty($dataMedis) ? 'border-top' : '' }}">
+                    <h6 class="font-weight-bold text-secondary mb-2"><i class="fas fa-user-nurse"></i> Pemeriksaan Fisik & Eliminasi (Keperawatan)</h6>
+                    <div class="row mb-2">
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted d-block">Tekanan</small>
+                            <strong>{{ $data->tekanan ?? '-' }}</strong>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted d-block">Pupil</small>
+                            <strong>{{ $data->pupil ?? '-' }}</strong>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted d-block">Neurosensorik</small>
+                            <strong>{{ $data->neurosensorik ?? '-' }}</strong>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-3 mb-2">
+                            <small class="text-muted d-block">Integumen</small>
+                            <strong>{{ $data->integumen ?? '-' }}</strong>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <small class="text-muted d-block">Turgor</small>
+                            <strong>{{ $data->turgor ?? '-' }}</strong>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <small class="text-muted d-block">Edema</small>
+                            <strong>{{ $data->edema ?? '-' }}</strong>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <small class="text-muted d-block">Mukosa</small>
+                            <strong>{{ $data->mukosa ?? '-' }}</strong>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted d-block">Perdarahan</small>
+                            <strong>{{ $data->perdarahan ?? '-' }}</strong>
+                            @if(($data->perdarahan ?? '') == 'Ada')
+                            <span class="ml-2">({{ $data->jumlah_perdarahan ?? '0' }} cc, Warna: {{ $data->warna_perdarahan ?? '-' }})</span>
+                            @endif
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted d-block">Intoksikasi</small>
+                            <strong>{{ $data->intoksikasi ?? '-' }}</strong>
+                        </div>
+                    </div>
+                    <div class="row border-top pt-2">
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block"><i class="fas fa-toilet"></i> BAB</small>
+                            <strong>{{ $data->bab ?? '-' }} x/hari</strong>
+                            @if($data->xbab || $data->kbab || $data->wbab)
+                            <div><small>Ket: {{ $data->xbab ?? '-' }}, Konsistensi: {{ $data->kbab ?? '-' }}, Warna: {{ $data->wbab ?? '-' }}</small></div>
+                            @endif
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block"><i class="fas fa-restroom"></i> BAK</small>
+                            <strong>{{ $data->bak ?? '-' }} x/hari</strong>
+                            @if($data->xbak || $data->wbak || $data->lbak)
+                            <div><small>Ket: {{ $data->xbak ?? '-' }}, Warna: {{ $data->wbak ?? '-' }}, Lain: {{ $data->lbak ?? '-' }}</small></div>
+                            @endif
+                        </div>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
 
+        @if(!empty($data))
         <!-- 3. Pengkajian Nyeri -->
         <div class="card mb-3 border-left-warning" style="border-left-width: 4px;">
             <div class="card-header bg-warning text-dark">
-                <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Pengkajian Nyeri</h6>
+                <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> III. Pengkajian Nyeri</h6>
             </div>
             <div class="card-body">
                 <div class="row mb-2">
@@ -293,7 +438,7 @@
         <!-- 4. Pengkajian Risiko Jatuh & Fungsional -->
         <div class="card mb-3 border-left-danger" style="border-left-width: 4px;">
             <div class="card-header bg-danger text-white">
-                <h6 class="mb-0"><i class="fas fa-user-shield"></i> Risiko Jatuh & Fungsional</h6>
+                <h6 class="mb-0"><i class="fas fa-user-shield"></i> III.B Risiko Jatuh & Fungsional</h6>
             </div>
             <div class="card-body">
                 <div class="row mb-3">
@@ -333,7 +478,7 @@
         <!-- 5. Psikososial, Budaya & Edukasi -->
         <div class="card mb-3 border-left-secondary" style="border-left-width: 4px;">
             <div class="card-header bg-secondary text-white">
-                <h6 class="mb-0"><i class="fas fa-brain"></i> Psikososial, Budaya & Edukasi</h6>
+                <h6 class="mb-0"><i class="fas fa-brain"></i> III.C Psikososial, Budaya & Edukasi</h6>
             </div>
             <div class="card-body">
                 <div class="row mb-2">
@@ -376,15 +521,64 @@
                 </div>
             </div>
         </div>
+        @endif
 
-        <!-- 6. Rencana Keperawatan -->
-        @if($data->rencana)
-        <div class="card mb-2 border-left-success" style="border-left-width: 4px;">
-            <div class="card-header bg-success text-white">
-                <h6 class="mb-0"><i class="fas fa-tasks"></i> Rencana Keperawatan</h6>
+        <!-- IV. Pemeriksaan Penunjang (Dokter) -->
+        @if(!empty($dataMedis) && (!empty($dataMedis->ekg) || !empty($dataMedis->rad) || !empty($dataMedis->lab)))
+        <div class="card mb-3 border-left-secondary" style="border-left-width: 4px;">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="fas fa-x-ray"></i> IV. Pemeriksaan Penunjang (EKG, Radiologi, Lab)</h6>
             </div>
             <div class="card-body">
-                <div class="border rounded p-2 bg-light">{!! nl2br(e($data->rencana)) !!}</div>
+                <div class="row">
+                    @if(!empty($dataMedis->ekg))
+                    <div class="col-md-4 mb-2">
+                        <small class="text-muted d-block font-weight-bold"><i class="fas fa-heartbeat text-danger"></i> EKG</small>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->ekg)) !!}</div>
+                    </div>
+                    @endif
+                    @if(!empty($dataMedis->rad))
+                    <div class="col-md-4 mb-2">
+                        <small class="text-muted d-block font-weight-bold"><i class="fas fa-radiation text-warning"></i> Radiologi</small>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->rad)) !!}</div>
+                    </div>
+                    @endif
+                    @if(!empty($dataMedis->lab))
+                    <div class="col-md-4 mb-2">
+                        <small class="text-muted d-block font-weight-bold"><i class="fas fa-vial text-info"></i> Laboratorium</small>
+                        <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->lab)) !!}</div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- V. Diagnosis, Tatalaksana & Rencana Asuhan -->
+        @if((!empty($dataMedis) && (!empty($dataMedis->diagnosis) || !empty($dataMedis->tata))) || (!empty($data) && !empty($data->rencana)))
+        <div class="card mb-2 border-left-success" style="border-left-width: 4px;">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="fas fa-file-medical-alt"></i> V. Diagnosis, Tatalaksana & Rencana Asuhan</h6>
+            </div>
+            <div class="card-body">
+                @if(!empty($dataMedis->diagnosis))
+                <div class="mb-3">
+                    <small class="text-muted d-block font-weight-bold"><i class="fas fa-diagnoses text-primary"></i> Diagnosis / Asesmen Medis (Dokter)</small>
+                    <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->diagnosis)) !!}</div>
+                </div>
+                @endif
+                @if(!empty($dataMedis->tata))
+                <div class="mb-3">
+                    <small class="text-muted d-block font-weight-bold"><i class="fas fa-prescription-bottle-alt text-warning"></i> Tatalaksana / Instruksi Medis (Dokter)</small>
+                    <div class="border rounded p-2 bg-light">{!! nl2br(e($dataMedis->tata)) !!}</div>
+                </div>
+                @endif
+                @if(!empty($data->rencana))
+                <div class="mb-2">
+                    <small class="text-muted d-block font-weight-bold"><i class="fas fa-user-nurse text-success"></i> Rencana Asuhan Keperawatan</small>
+                    <div class="border rounded p-2 bg-light">{!! nl2br(e($data->rencana)) !!}</div>
+                </div>
+                @endif
             </div>
         </div>
         @endif
@@ -425,8 +619,8 @@
                                     <td>{{ $soap->nama_petugas ?? $soap->nip ?? '-' }}</td>
                                     <td>
                                         <small>
-                                            TD: {{ $soap->tensi ?: '-' }} | N: {{ $soap->nadi ?: '-' }}<br>
-                                            S: {{ $soap->suhu_tubuh ?: '-' }} | RR: {{ $soap->respirasi ?: '-' }}
+                                             TD: {{ $soap->tensi ?: '-' }} | N: {{ $soap->nadi ?: '-' }}<br>
+                                             S: {{ $soap->suhu_tubuh ?: '-' }} | RR: {{ $soap->respirasi ?: '-' }}
                                         </small>
                                     </td>
                                     <td>
