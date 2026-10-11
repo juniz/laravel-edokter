@@ -252,30 +252,43 @@
                             </thead>
                             <tbody>
                                 @foreach($listSoap as $soap)
+                                @php
+                                    $tglPerawatan = data_get($soap, 'tgl_perawatan');
+                                    $jamRawat = data_get($soap, 'jam_rawat');
+                                    $namaPetugas = data_get($soap, 'nama_petugas') ?? data_get($soap, 'nip') ?? '-';
+                                    $tensi = data_get($soap, 'tensi') ?: '-';
+                                    $nadi = data_get($soap, 'nadi') ?: '-';
+                                    $suhuTubuh = data_get($soap, 'suhu_tubuh') ?: '-';
+                                    $respirasi = data_get($soap, 'respirasi') ?: '-';
+                                    $spo2Val = data_get($soap, 'spo2') ?: '-';
+                                    $gcsVal = data_get($soap, 'gcs') ?: '-';
+                                    $keluhanVal = data_get($soap, 'keluhan');
+                                    $pemeriksaanVal = data_get($soap, 'pemeriksaan');
+                                @endphp
                                 <tr>
                                     <td>
-                                        <strong>{{ date('d-m-Y', strtotime($soap->tgl_perawatan)) }}</strong><br>
-                                        <small class="text-muted">{{ $soap->jam_rawat }}</small>
+                                        <strong>{{ $tglPerawatan ? date('d-m-Y', strtotime($tglPerawatan)) : '-' }}</strong><br>
+                                        <small class="text-muted">{{ $jamRawat }}</small>
                                     </td>
-                                    <td>{{ $soap->nama_petugas ?? $soap->nip ?? '-' }}</td>
+                                    <td>{{ $namaPetugas }}</td>
                                     <td>
                                         <small>
-                                            TD: {{ $soap->tensi ?: '-' }} | N: {{ $soap->nadi ?: '-' }}<br>
-                                            S: {{ $soap->suhu_tubuh ?: '-' }} | RR: {{ $soap->respirasi ?: '-' }}<br>
-                                            SpO2: {{ $soap->spo2 ?: '-' }} | GCS: {{ $soap->gcs ?: '-' }}
+                                            TD: {{ $tensi }} | N: {{ $nadi }}<br>
+                                            S: {{ $suhuTubuh }} | RR: {{ $respirasi }}<br>
+                                            SpO2: {{ $spo2Val }} | GCS: {{ $gcsVal }}
                                         </small>
                                     </td>
                                     <td>
-                                        <small class="d-block text-truncate" style="max-width: 250px;" title="{{ $soap->keluhan }}">
-                                            <strong>K:</strong> {{ $soap->keluhan ?: '-' }}
+                                        <small class="d-block text-truncate" style="max-width: 250px;" title="{{ $keluhanVal }}">
+                                            <strong>K:</strong> {{ $keluhanVal ?: '-' }}
                                         </small>
-                                        <small class="d-block text-truncate" style="max-width: 250px;" title="{{ $soap->pemeriksaan }}">
-                                            <strong>P:</strong> {{ $soap->pemeriksaan ?: '-' }}
+                                        <small class="d-block text-truncate" style="max-width: 250px;" title="{{ $pemeriksaanVal }}">
+                                            <strong>P:</strong> {{ $pemeriksaanVal ?: '-' }}
                                         </small>
                                     </td>
                                     <td class="text-center align-middle">
                                         <button type="button"
-                                            wire:click="pilihSoap('{{ $soap->tgl_perawatan }}', '{{ $soap->jam_rawat }}')"
+                                            wire:click="pilihSoap('{{ $tglPerawatan }}', '{{ $jamRawat }}')"
                                             class="btn btn-sm btn-primary">
                                             <i class="fas fa-check"></i> Salin
                                         </button>
