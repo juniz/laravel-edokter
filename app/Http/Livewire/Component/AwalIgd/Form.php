@@ -105,19 +105,23 @@ class Form extends Component
 
     public function salinDariPerawat()
     {
-        if (!$this->dataPerawat) {
+        if (empty($this->dataPerawat)) {
             $this->alert('warning', 'Data asesmen keperawatan tidak ditemukan');
             return;
         }
 
-        if (!empty($this->dataPerawat->keluhan_utama)) {
-            $this->keluhan_utama = $this->dataPerawat->keluhan_utama;
+        $keluhan = data_get($this->dataPerawat, 'keluhan_utama');
+        $rpd = data_get($this->dataPerawat, 'rpd');
+        $rpo = data_get($this->dataPerawat, 'rpo');
+
+        if (!empty($keluhan)) {
+            $this->keluhan_utama = $keluhan;
         }
-        if (!empty($this->dataPerawat->rpd)) {
-            $this->rpd = $this->dataPerawat->rpd;
+        if (!empty($rpd)) {
+            $this->rpd = $rpd;
         }
-        if (!empty($this->dataPerawat->rpo)) {
-            $this->rpo = $this->dataPerawat->rpo;
+        if (!empty($rpo)) {
+            $this->rpo = $rpo;
         }
 
         $this->alert('success', 'Data keluhan & riwayat berhasil disalin dari perawat');
@@ -189,11 +193,13 @@ class Form extends Component
         try {
             $this->resetInput();
 
-            $this->dataPerawat = DB::table('penilaian_awal_keperawatan_igd')
+            $rawatPerawat = DB::table('penilaian_awal_keperawatan_igd')
                 ->leftJoin('petugas', 'penilaian_awal_keperawatan_igd.nip', '=', 'petugas.nip')
                 ->where('penilaian_awal_keperawatan_igd.no_rawat', $this->no_rawat)
                 ->select('penilaian_awal_keperawatan_igd.*', 'petugas.nama as nama_petugas')
                 ->first();
+
+            $this->dataPerawat = $rawatPerawat ? (array) $rawatPerawat : null;
 
             $data = DB::table('penilaian_medis_igd')
                 ->where('no_rawat', $this->no_rawat)

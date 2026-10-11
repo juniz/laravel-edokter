@@ -34,12 +34,24 @@
         </div>
 
         @if(!empty($dataPerawat))
+        @php
+            $namaPerawat = data_get($dataPerawat, 'nama_petugas') ?: data_get($dataPerawat, 'nip');
+            $tglPerawat = data_get($dataPerawat, 'tanggal');
+            $keluhanPerawat = data_get($dataPerawat, 'keluhan_utama');
+            $rpdPerawat = data_get($dataPerawat, 'rpd');
+            $rpoPerawat = data_get($dataPerawat, 'rpo');
+            $nyeriPerawat = data_get($dataPerawat, 'nyeri');
+            $skalaNyeriPerawat = data_get($dataPerawat, 'skala_nyeri');
+            $hasilJatuhPerawat = data_get($dataPerawat, 'hasil');
+            $kehamilanPerawat = data_get($dataPerawat, 'status_kehamilan');
+            $rencanaPerawat = data_get($dataPerawat, 'rencana');
+        @endphp
         <div class="card card-outline card-success mb-3 shadow-sm">
             <div class="card-header py-2 d-flex justify-content-between align-items-center">
                 <h6 class="card-title text-sm mb-0">
                     <i class="fas fa-user-nurse text-success mr-1"></i> <strong>Asesmen Awal Keperawatan IGD</strong>
-                    <span class="badge badge-light border ml-1">{{ $dataPerawat->nama_petugas ?? $dataPerawat->nip }}</span>
-                    <small class="text-muted ml-2">({{ !empty($dataPerawat->tanggal) ? date('d/m/Y H:i', strtotime($dataPerawat->tanggal)) : '-' }})</small>
+                    <span class="badge badge-light border ml-1">{{ $namaPerawat ?: '-' }}</span>
+                    <small class="text-muted ml-2">({{ !empty($tglPerawat) ? date('d/m/Y H:i', strtotime($tglPerawat)) : '-' }})</small>
                 </h6>
                 <div class="card-tools">
                     <button type="button" class="btn btn-xs btn-outline-success mr-2" wire:click="salinDariPerawat" title="Salin Keluhan, RPD & RPO ke Form Dokter">
@@ -54,33 +66,33 @@
                 <div class="row">
                     <div class="col-md-6 mb-2">
                         <small class="text-muted d-block">Keluhan Utama (Perawat):</small>
-                        <div class="font-weight-bold text-dark">{{ $dataPerawat->keluhan_utama ?: '-' }}</div>
+                        <div class="font-weight-bold text-dark">{{ $keluhanPerawat ?: '-' }}</div>
                     </div>
                     <div class="col-md-3 mb-2">
                         <small class="text-muted d-block">Riwayat Penyakit Dahulu:</small>
-                        <div>{{ $dataPerawat->rpd ?: '-' }}</div>
+                        <div>{{ $rpdPerawat ?: '-' }}</div>
                     </div>
                     <div class="col-md-3 mb-2">
                         <small class="text-muted d-block">Riwayat Pengobatan:</small>
-                        <div>{{ $dataPerawat->rpo ?: '-' }}</div>
+                        <div>{{ $rpoPerawat ?: '-' }}</div>
                     </div>
                 </div>
                 <div class="row pt-2 border-top">
                     <div class="col-6 col-md-3 mb-1">
                         <small class="text-muted d-block">Pengkajian Nyeri:</small>
-                        <span>{{ $dataPerawat->nyeri ?: 'Tidak' }} (Skala: {{ $dataPerawat->skala_nyeri ?: '0' }})</span>
+                        <span>{{ $nyeriPerawat ?: 'Tidak' }} (Skala: {{ $skalaNyeriPerawat ?: '0' }})</span>
                     </div>
                     <div class="col-6 col-md-3 mb-1">
                         <small class="text-muted d-block">Risiko Jatuh:</small>
-                        <span>{{ $dataPerawat->hasil ?: '-' }}</span>
+                        <span>{{ $hasilJatuhPerawat ?: '-' }}</span>
                     </div>
                     <div class="col-6 col-md-3 mb-1">
                         <small class="text-muted d-block">Status Kehamilan:</small>
-                        <span>{{ $dataPerawat->status_kehamilan ?: '-' }}</span>
+                        <span>{{ $kehamilanPerawat ?: '-' }}</span>
                     </div>
                     <div class="col-6 col-md-3 mb-1">
                         <small class="text-muted d-block">Rencana Keperawatan:</small>
-                        <span>{{ $dataPerawat->rencana ?: '-' }}</span>
+                        <span>{{ $rencanaPerawat ?: '-' }}</span>
                     </div>
                 </div>
             </div>
