@@ -1,4 +1,15 @@
-<div>
+@php
+    $modalId = 'modalPilihSoap-' . md5($data->no_rawat ?? ($noRawat ?? uniqid()));
+    $soapCount = isset($listPemeriksaan) ? count($listPemeriksaan) : 0;
+@endphp
+<div x-data="{
+    listSoap: @js($listPemeriksaan ?? []),
+    selectedSoap: @js(isset($listPemeriksaan) && count($listPemeriksaan) > 0 ? $listPemeriksaan->first() : null),
+    selectSoap(soap) {
+        this.selectedSoap = soap;
+        $('#{{ $modalId }}').modal('hide');
+    }
+}">
     @if(!empty($data))
     <x-adminlte-card theme="info" title="Penilaian Awal Keperawatan IGD" icon="fas fa-ambulance" theme-mode="outline" collapsible class="mb-4">
         @php
@@ -6,8 +17,8 @@
         $datePenilaian = date_format($tglPenilaian, "d M Y H:i");
         @endphp
 
-        <div class="mb-3 pb-3 border-bottom">
-            <div class="row">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+            <div class="row flex-grow-1">
                 <div class="col-md-4">
                     <small class="text-muted d-block">Tanggal Penilaian</small>
                     <strong><i class="fas fa-calendar"></i> {{ $datePenilaian }}</strong>
@@ -21,7 +32,95 @@
                     <strong><i class="fas fa-user-nurse"></i> {{ $data->nama_petugas ?? $data->nip ?? '-' }}</strong>
                 </div>
             </div>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-info" data-toggle="modal" data-target="#{{ $modalId }}" title="Pilih Data SOAP / Pemeriksaan Ralan">
+                    <i class="fas fa-paperclip"></i> SOAP Ralan
+                    <span class="badge badge-info ml-1">{{ $soapCount }}</span>
+                </button>
+            </div>
         </div>
+
+        <!-- Data SOAP Terpilih (Pemeriksaan Ralan) -->
+        <template x-if="selectedSoap">
+            <div class="card mb-3 border-left-success" style="border-left-width: 4px;">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-2">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clipboard-check"></i> Data SOAP Terpilih (Pemeriksaan Ralan)
+                    </h6>
+                    <small>
+                        <i class="fas fa-calendar-day"></i> <span x-text="selectedSoap.tgl_perawatan"></span>
+                        <i class="fas fa-clock ml-2"></i> <span x-text="selectedSoap.jam_rawat"></span>
+                        <span class="ml-2 font-weight-bold" x-text="'| ' + (selectedSoap.nama_petugas || selectedSoap.nip)"></span>
+                    </small>
+                </div>
+                <div class="card-body">
+                    <!-- Tanda-tanda Vital -->
+                    <div class="row mb-3 pb-2 border-bottom">
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">Tensi</small>
+                            <strong x-text="(selectedSoap.tensi || '-') + ' mmHg'"></strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">Nadi</small>
+                            <strong x-text="(selectedSoap.nadi || '-') + ' x/m'"></strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">Suhu</small>
+                            <strong x-text="(selectedSoap.suhu_tubuh || '-') + ' °C'"></strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">Respirasi</small>
+                            <strong x-text="(selectedSoap.respirasi || '-') + ' x/m'"></strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">SpO2</small>
+                            <strong x-text="(selectedSoap.spo2 || '-') + ' %'"></strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">Kesadaran / GCS</small>
+                            <strong><span x-text="selectedSoap.kesadaran || '-'"></span> (<span x-text="selectedSoap.gcs || '-'"></span>)</strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">TB / BB</small>
+                            <strong><span x-text="selectedSoap.tinggi || '-'"></span> cm / <span x-text="selectedSoap.berat || '-'"></span> kg</strong>
+                        </div>
+                        <div class="col-6 col-md-2 mb-2">
+                            <small class="text-muted d-block">Lingkar Perut</small>
+                            <strong x-text="(selectedSoap.lingkar_perut || '-') + ' cm'"></strong>
+                        </div>
+                        <div class="col-12 col-md-4 mb-2" x-show="selectedSoap.alergi && selectedSoap.alergi !== '-' && selectedSoap.alergi !== 'Tidak Ada'">
+                            <small class="text-muted d-block">Alergi</small>
+                            <span class="badge badge-danger p-1"><i class="fas fa-exclamation-triangle"></i> <span x-text="selectedSoap.alergi"></span></span>
+                        </div>
+                    </div>
+
+                    <!-- Catatan S-O-A-P -->
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block font-weight-bold">Subjektif (Keluhan)</small>
+                            <div class="border rounded p-2 bg-light" style="white-space: pre-wrap;" x-text="selectedSoap.keluhan || '-'"></div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block font-weight-bold">Objektif (Pemeriksaan)</small>
+                            <div class="border rounded p-2 bg-light" style="white-space: pre-wrap;" x-text="selectedSoap.pemeriksaan || '-'"></div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block font-weight-bold">Asesmen (Penilaian)</small>
+                            <div class="border rounded p-2 bg-light" style="white-space: pre-wrap;" x-text="selectedSoap.penilaian || '-'"></div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block font-weight-bold">Plan (Instruksi / RTL)</small>
+                            <div class="border rounded p-2 bg-light">
+                                <div x-show="selectedSoap.instruksi"><strong>Instruksi:</strong> <span style="white-space: pre-wrap;" x-text="selectedSoap.instruksi"></span></div>
+                                <div x-show="selectedSoap.rtl" class="mt-1"><strong>RTL:</strong> <span style="white-space: pre-wrap;" x-text="selectedSoap.rtl"></span></div>
+                                <div x-show="selectedSoap.evaluasi" class="mt-1"><strong>Evaluasi:</strong> <span style="white-space: pre-wrap;" x-text="selectedSoap.evaluasi"></span></div>
+                                <div x-show="!selectedSoap.instruksi && !selectedSoap.rtl && !selectedSoap.evaluasi">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
 
         <!-- 1. Informasi Umum & Anamnesis -->
         <div class="card mb-3 border-left-info" style="border-left-width: 4px;">
@@ -290,5 +389,75 @@
         </div>
         @endif
     </x-adminlte-card>
+
+    <!-- Modal Selector SOAP Pemeriksaan Ralan -->
+    <div class="modal fade" id="{{ $modalId }}" tabindex="-1" role="dialog" aria-labelledby="{{ $modalId }}Label" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="{{ $modalId }}Label">
+                        <i class="fas fa-clipboard-list"></i> Pilih Data SOAP Pemeriksaan Ralan
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0">
+                    @if(isset($listPemeriksaan) && count($listPemeriksaan) > 0)
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0 text-sm">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>Petugas / Dokter</th>
+                                    <th>TTV (Td/Nd/Sh/Rr)</th>
+                                    <th>Keluhan</th>
+                                    <th class="text-center" style="width: 90px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($listPemeriksaan as $idx => $soap)
+                                <tr>
+                                    <td>
+                                        <strong>{{ date('d-m-Y', strtotime($soap->tgl_perawatan)) }}</strong><br>
+                                        <small class="text-muted">{{ $soap->jam_rawat }}</small>
+                                    </td>
+                                    <td>{{ $soap->nama_petugas ?? $soap->nip ?? '-' }}</td>
+                                    <td>
+                                        <small>
+                                            TD: {{ $soap->tensi ?: '-' }} | N: {{ $soap->nadi ?: '-' }}<br>
+                                            S: {{ $soap->suhu_tubuh ?: '-' }} | RR: {{ $soap->respirasi ?: '-' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="d-inline-block text-truncate" style="max-width: 250px;" title="{{ $soap->keluhan }}">
+                                            {{ $soap->keluhan ?: '-' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <button type="button"
+                                            class="btn btn-xs btn-primary"
+                                            @click="selectSoap(listSoap[{{ $idx }}])">
+                                            <i class="fas fa-check"></i> Pilih
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @else
+                    <div class="p-4 text-center text-muted">
+                        <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
+                        Belum ada riwayat data SOAP pemeriksaan ralan pada nomor rawat ini.
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
     @endif
 </div>
