@@ -1077,8 +1077,9 @@
                                 <div class="card-body p-2 p-md-3">
                                         @php
                                         $penilaianIGDVisit = $this->getPenilaianAwalKeperawatanIGD($no_rawat);
+                                        $penilaianMedisVisit = $this->getPenilaianMedisIGD($no_rawat);
                                         @endphp
-                                        @if($penilaianIGDVisit)
+                                        @if($penilaianIGDVisit || $penilaianMedisVisit)
                                             <x-ralan.penilaian-awal-medis-i-g-d :no-rawat="$no_rawat" />
                                         @endif
 
