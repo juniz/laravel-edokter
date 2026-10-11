@@ -33,6 +33,60 @@
             </div>
         </div>
 
+        @if(!empty($dataPerawat))
+        <div class="card card-outline card-success mb-3 shadow-sm">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <h6 class="card-title text-sm mb-0">
+                    <i class="fas fa-user-nurse text-success mr-1"></i> <strong>Asesmen Awal Keperawatan IGD</strong>
+                    <span class="badge badge-light border ml-1">{{ $dataPerawat->nama_petugas ?? $dataPerawat->nip }}</span>
+                    <small class="text-muted ml-2">({{ !empty($dataPerawat->tanggal) ? date('d/m/Y H:i', strtotime($dataPerawat->tanggal)) : '-' }})</small>
+                </h6>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-xs btn-outline-success mr-2" wire:click="salinDariPerawat" title="Salin Keluhan, RPD & RPO ke Form Dokter">
+                        <i class="fas fa-copy mr-1"></i> Salin ke Form Dokter
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body py-2 px-3 text-sm">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted d-block">Keluhan Utama (Perawat):</small>
+                        <div class="font-weight-bold text-dark">{{ $dataPerawat->keluhan_utama ?: '-' }}</div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <small class="text-muted d-block">Riwayat Penyakit Dahulu:</small>
+                        <div>{{ $dataPerawat->rpd ?: '-' }}</div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <small class="text-muted d-block">Riwayat Pengobatan:</small>
+                        <div>{{ $dataPerawat->rpo ?: '-' }}</div>
+                    </div>
+                </div>
+                <div class="row pt-2 border-top">
+                    <div class="col-6 col-md-3 mb-1">
+                        <small class="text-muted d-block">Pengkajian Nyeri:</small>
+                        <span>{{ $dataPerawat->nyeri ?: 'Tidak' }} (Skala: {{ $dataPerawat->skala_nyeri ?: '0' }})</span>
+                    </div>
+                    <div class="col-6 col-md-3 mb-1">
+                        <small class="text-muted d-block">Risiko Jatuh:</small>
+                        <span>{{ $dataPerawat->hasil ?: '-' }}</span>
+                    </div>
+                    <div class="col-6 col-md-3 mb-1">
+                        <small class="text-muted d-block">Status Kehamilan:</small>
+                        <span>{{ $dataPerawat->status_kehamilan ?: '-' }}</span>
+                    </div>
+                    <div class="col-6 col-md-3 mb-1">
+                        <small class="text-muted d-block">Rencana Keperawatan:</small>
+                        <span>{{ $dataPerawat->rencana ?: '-' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <div class="d-flex justify-content-between align-items-center mt-2 mb-2">
             <h6 class="text-bold mb-0">I. RIWAYAT KESEHATAN</h6>
             <button type="button" class="btn btn-xs btn-outline-info" wire:click="openModalSoap" wire:loading.attr="disabled">
