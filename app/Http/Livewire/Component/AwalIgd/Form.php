@@ -47,8 +47,60 @@ class Form extends Component
     public $laborat;
     public $diagnosis;
     public $tatalaksana;
+    public $listSoap = [];
 
     protected $listeners = ['hapusMedisIgd' => 'hapus'];
+
+    public function openModalSoap()
+    {
+        if (!$this->no_rawat) {
+            $this->alert('warning', 'Nomor rawat belum dipilih');
+            return;
+        }
+
+        $this->listSoap = DB::table('pemeriksaan_ralan')
+            ->leftJoin('pegawai', 'pemeriksaan_ralan.nip', '=', 'pegawai.nik')
+            ->where('pemeriksaan_ralan.no_rawat', $this->no_rawat)
+            ->select('pemeriksaan_ralan.*', 'pegawai.nama as nama_petugas')
+            ->orderByDesc('pemeriksaan_ralan.tgl_perawatan')
+            ->orderByDesc('pemeriksaan_ralan.jam_rawat')
+            ->get()
+            ->toArray();
+
+        if (empty($this->listSoap)) {
+            $this->alert('info', 'Belum ada data pemeriksaan SOAP ralan pada nomor rawat ini');
+            return;
+        }
+
+        $this->dispatchBrowserEvent('open-modal-soap-igd');
+    }
+
+    public function pilihSoap($tgl_perawatan, $jam_rawat)
+    {
+        $soap = DB::table('pemeriksaan_ralan')
+            ->where('no_rawat', $this->no_rawat)
+            ->where('tgl_perawatan', $tgl_perawatan)
+            ->where('jam_rawat', $jam_rawat)
+            ->first();
+
+        if ($soap) {
+            if (!empty($soap->keluhan)) $this->keluhan_utama = $soap->keluhan;
+            if (!empty($soap->alergi)) $this->alergi = $soap->alergi;
+            if (!empty($soap->kesadaran)) $this->kesadaran = $soap->kesadaran;
+            if (!empty($soap->gcs)) $this->gcs = $soap->gcs;
+            if (!empty($soap->tinggi)) $this->tb = $soap->tinggi;
+            if (!empty($soap->berat)) $this->bb = $soap->berat;
+            if (!empty($soap->tensi)) $this->td = $soap->tensi;
+            if (!empty($soap->nadi)) $this->nadi = $soap->nadi;
+            if (!empty($soap->respirasi)) $this->rr = $soap->respirasi;
+            if (!empty($soap->suhu_tubuh)) $this->suhu = $soap->suhu_tubuh;
+            if (!empty($soap->spo2)) $this->spo2 = $soap->spo2;
+            if (!empty($soap->pemeriksaan)) $this->ket_fisik = $soap->pemeriksaan;
+
+            $this->dispatchBrowserEvent('close-modal-soap-igd');
+            $this->alert('success', 'Data SOAP berhasil disalin ke form Penilaian Awal Medis IGD');
+        }
+    }
 
     public function mount()
     {

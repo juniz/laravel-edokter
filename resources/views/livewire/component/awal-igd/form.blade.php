@@ -1,5 +1,16 @@
 <div>
     <form wire:submit.prevent='simpan'>
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <div>
+                <span class="badge badge-secondary p-2">No. Rawat: {{ $no_rawat ?: '-' }}</span>
+            </div>
+            <div>
+                <button type="button" class="btn btn-sm btn-info" wire:click="openModalSoap" wire:loading.attr="disabled">
+                    <i class="fas fa-paperclip mr-1"></i> Salin SOAP Pemeriksaan Ralan
+                </button>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-6 col-md-6">
                 <x-ui.input-datetime label="Tanggal" id="tanggal_igd" model='tanggal' />
@@ -22,7 +33,12 @@
             </div>
         </div>
 
-        <h6 class="text-bold">I. RIWAYAT KESEHATAN</h6>
+        <div class="d-flex justify-content-between align-items-center mt-2 mb-2">
+            <h6 class="text-bold mb-0">I. RIWAYAT KESEHATAN</h6>
+            <button type="button" class="btn btn-xs btn-outline-info" wire:click="openModalSoap" wire:loading.attr="disabled">
+                <i class="fas fa-paperclip"></i> Ambil SOAP
+            </button>
+        </div>
         <div class="row">
             <div class="col-6 col-md-6">
                 <x-ui.textarea label="Keluhan Utama" id="keluhan_utama" model='keluhan_utama' />
@@ -48,7 +64,12 @@
             </div>
         </div>
 
-        <h6 class="mt-3 text-bold">II. PEMERIKSAAN FISIK</h6>
+        <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+            <h6 class="text-bold mb-0">II. PEMERIKSAAN FISIK</h6>
+            <button type="button" class="btn btn-xs btn-outline-info" wire:click="openModalSoap" wire:loading.attr="disabled">
+                <i class="fas fa-paperclip"></i> Ambil TTV / Fisik
+            </button>
+        </div>
         <div class="row">
             <div class="col-3 col-md-3">
                 <x-ui.select label="Keadaa Umum" id="keadaan_umum" model='keadaan_umum' >
@@ -203,6 +224,80 @@
             </div>
         </div>
     </form>
+
+    <!-- Modal Selector SOAP Pemeriksaan Ralan -->
+    <div wire:ignore.self class="modal fade" id="modal-soap-picker-igd" tabindex="-1" role="dialog" aria-labelledby="modalSoapPickerIgdLabel" aria-hidden="true" style="z-index: 1060; background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modalSoapPickerIgdLabel">
+                        <i class="fas fa-clipboard-list mr-1"></i> Pilih Data SOAP Pemeriksaan Ralan
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0">
+                    @if(!empty($listSoap) && count($listSoap) > 0)
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0 text-sm">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>Petugas / Dokter</th>
+                                    <th>TTV (TD/N/S/RR/SpO2)</th>
+                                    <th>Keluhan & Fisik</th>
+                                    <th class="text-center" style="width: 100px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($listSoap as $soap)
+                                <tr>
+                                    <td>
+                                        <strong>{{ date('d-m-Y', strtotime($soap->tgl_perawatan)) }}</strong><br>
+                                        <small class="text-muted">{{ $soap->jam_rawat }}</small>
+                                    </td>
+                                    <td>{{ $soap->nama_petugas ?? $soap->nip ?? '-' }}</td>
+                                    <td>
+                                        <small>
+                                            TD: {{ $soap->tensi ?: '-' }} | N: {{ $soap->nadi ?: '-' }}<br>
+                                            S: {{ $soap->suhu_tubuh ?: '-' }} | RR: {{ $soap->respirasi ?: '-' }}<br>
+                                            SpO2: {{ $soap->spo2 ?: '-' }} | GCS: {{ $soap->gcs ?: '-' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small class="d-block text-truncate" style="max-width: 250px;" title="{{ $soap->keluhan }}">
+                                            <strong>K:</strong> {{ $soap->keluhan ?: '-' }}
+                                        </small>
+                                        <small class="d-block text-truncate" style="max-width: 250px;" title="{{ $soap->pemeriksaan }}">
+                                            <strong>P:</strong> {{ $soap->pemeriksaan ?: '-' }}
+                                        </small>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <button type="button"
+                                            wire:click="pilihSoap('{{ $soap->tgl_perawatan }}', '{{ $soap->jam_rawat }}')"
+                                            class="btn btn-sm btn-primary">
+                                            <i class="fas fa-check"></i> Salin
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @else
+                    <div class="p-4 text-center text-muted">
+                        <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
+                        Belum ada riwayat data SOAP pemeriksaan ralan pada nomor rawat ini.
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('js')
@@ -211,6 +306,14 @@
         var id = $(this).attr('id');
         @this.set('no_rawat', id);
         $("#modal-awal-medis-igd").modal('show');
+    });
+
+    window.addEventListener('open-modal-soap-igd', function () {
+        $('#modal-soap-picker-igd').modal('show');
+    });
+
+    window.addEventListener('close-modal-soap-igd', function () {
+        $('#modal-soap-picker-igd').modal('hide');
     });
 </script>
 @endpush
