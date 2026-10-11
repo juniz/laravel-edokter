@@ -15,6 +15,15 @@ class AwalIgdFormTest extends TestCase
         $this->assertTrue(method_exists($component, 'salinDariPerawat'));
     }
 
+    public function test_component_has_data_riwayat_property_and_methods()
+    {
+        $component = new Form();
+        $this->assertTrue(property_exists($component, 'dataRiwayat'));
+        $this->assertTrue(method_exists($component, 'loadRiwayat'));
+        $this->assertTrue(method_exists($component, 'editRiwayat'));
+        $this->assertTrue(method_exists($component, 'salinDariRiwayat'));
+    }
+
     public function test_salin_dari_perawat_copies_fields_to_model()
     {
         $component = new Form();

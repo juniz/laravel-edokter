@@ -49,6 +49,7 @@ class Form extends Component
     public $tatalaksana;
     public $listSoap = [];
     public $dataPerawat = null;
+    public $dataRiwayat = [];
 
     protected $listeners = ['hapusMedisIgd' => 'hapus'];
 
@@ -127,6 +128,80 @@ class Form extends Component
         $this->alert('success', 'Data keluhan & riwayat berhasil disalin dari perawat');
     }
 
+    public function loadRiwayat()
+    {
+        if (!$this->no_rawat) {
+            $this->dataRiwayat = [];
+            return;
+        }
+
+        $noRm = DB::table('reg_periksa')->where('no_rawat', $this->no_rawat)->value('no_rkm_medis');
+        if (!$noRm) {
+            $this->dataRiwayat = [];
+            return;
+        }
+
+        $this->dataRiwayat = DB::table('penilaian_medis_igd')
+            ->join('reg_periksa', 'penilaian_medis_igd.no_rawat', '=', 'reg_periksa.no_rawat')
+            ->leftJoin('dokter', 'penilaian_medis_igd.kd_dokter', '=', 'dokter.kd_dokter')
+            ->where('reg_periksa.no_rkm_medis', $noRm)
+            ->select('penilaian_medis_igd.*', 'dokter.nm_dokter', 'reg_periksa.tgl_registrasi')
+            ->orderByDesc('penilaian_medis_igd.tanggal')
+            ->get()
+            ->map(fn($item) => (array) $item)
+            ->toArray();
+    }
+
+    public function editRiwayat($noRawat)
+    {
+        $this->no_rawat = $noRawat;
+        $this->updatedNoRawat();
+        $this->alert('info', 'Data penilaian medis IGD dimuat ke form');
+    }
+
+    public function salinDariRiwayat($noRawat)
+    {
+        $data = DB::table('penilaian_medis_igd')->where('no_rawat', $noRawat)->first();
+        if (!$data) {
+            $this->alert('warning', 'Data riwayat tidak ditemukan');
+            return;
+        }
+
+        if (!empty($data->keluhan_utama)) $this->keluhan_utama = $data->keluhan_utama;
+        if (!empty($data->rps)) $this->rps = $data->rps;
+        if (!empty($data->rpk)) $this->rpk = $data->rpk;
+        if (!empty($data->rpd)) $this->rpd = $data->rpd;
+        if (!empty($data->rpo)) $this->rpo = $data->rpo;
+        if (!empty($data->alergi)) $this->alergi = $data->alergi;
+        if (!empty($data->keadaan)) $this->keadaan_umum = $data->keadaan;
+        if (!empty($data->kesadaran)) $this->kesadaran = $data->kesadaran;
+        if (!empty($data->gcs)) $this->gcs = $data->gcs;
+        if (!empty($data->tb)) $this->tb = $data->tb;
+        if (!empty($data->bb)) $this->bb = $data->bb;
+        if (!empty($data->td)) $this->td = $data->td;
+        if (!empty($data->nadi)) $this->nadi = $data->nadi;
+        if (!empty($data->rr)) $this->rr = $data->rr;
+        if (!empty($data->suhu)) $this->suhu = $data->suhu;
+        if (!empty($data->spo)) $this->spo2 = $data->spo;
+        if (!empty($data->kepala)) $this->kepala = $data->kepala;
+        if (!empty($data->mata)) $this->mata = $data->mata;
+        if (!empty($data->thoraks)) $this->thoraks = $data->thoraks;
+        if (!empty($data->abdomen)) $this->abdomen = $data->abdomen;
+        if (!empty($data->gigi)) $this->gigi = $data->gigi;
+        if (!empty($data->genital)) $this->genital = $data->genital;
+        if (!empty($data->leher)) $this->leher = $data->leher;
+        if (!empty($data->ekstremitas)) $this->ekstremitas = $data->ekstremitas;
+        if (!empty($data->ket_fisik)) $this->ket_fisik = $data->ket_fisik;
+        if (!empty($data->ket_lokalis)) $this->ket_lokalis = $data->ket_lokalis;
+        if (!empty($data->ekg)) $this->ekg = $data->ekg;
+        if (!empty($data->rad)) $this->radiologi = $data->rad;
+        if (!empty($data->lab)) $this->laborat = $data->lab;
+        if (!empty($data->diagnosis)) $this->diagnosis = $data->diagnosis;
+        if (!empty($data->tata)) $this->tatalaksana = $data->tata;
+
+        $this->alert('success', 'Data berhasil disalin dari riwayat kunjungan lampau');
+    }
+
     public function mount()
     {
         $this->tanggal = Carbon::now()->format('Y-m-d H:i:s');
@@ -150,6 +225,7 @@ class Form extends Component
     public function resetInput()
     {
         $this->dataPerawat = null;
+        $this->dataRiwayat = [];
         $this->tanggal = Carbon::now()->format('Y-m-d H:i:s');
         $this->anamnesis = 'Autoanamnesis';
         $this->hubungan = '';
@@ -241,6 +317,8 @@ class Form extends Component
                 $this->diagnosis = $data->diagnosis;
                 $this->tatalaksana = $data->tata;
             }
+
+            $this->loadRiwayat();
         } catch (\Exception $e) {
             //
         }
@@ -289,6 +367,7 @@ class Form extends Component
                     'tata' => $this->tatalaksana ?? '',
                 ], ['no_rawat'], ['tanggal', 'kd_dokter', 'anamnesis', 'hubungan', 'keluhan_utama', 'rps', 'rpk', 'rpd', 'rpo', 'alergi', 'keadaan', 'kesadaran', 'gcs', 'tb', 'bb', 'td', 'nadi', 'rr', 'suhu', 'spo', 'kepala', 'mata', 'thoraks', 'abdomen', 'gigi', 'genital', 'leher', 'ekstremitas', 'ket_fisik', 'ket_lokalis', 'ekg', 'rad', 'lab', 'diagnosis', 'tata']);
 
+            $this->loadRiwayat();
             $this->alert('success', 'Data berhasil disimpan');
             $this->emit('closeModalMedisIgd');
         } catch (\Exception $e) {
@@ -323,6 +402,7 @@ class Form extends Component
                 $this->alert('error', 'Data tidak ditemukan');
             } else {
                 $this->resetInput();
+                $this->loadRiwayat();
                 $this->alert('success', 'Data berhasil dihapus');
                 // $this->emit('closeModalMedisIgd');
             }
