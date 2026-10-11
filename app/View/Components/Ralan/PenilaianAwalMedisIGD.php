@@ -18,6 +18,7 @@ class PenilaianAwalMedisIGD extends Component
     {
         return view('components.ralan.penilaian-awal-medis-i-g-d', [
             'data' => $this->getPenilaianIGD($this->noRawat),
+            'dataMedis' => $this->getPenilaianMedisIGD($this->noRawat),
             'listPemeriksaan' => $this->getPemeriksaanRalan($this->noRawat),
         ]);
     }
@@ -30,6 +31,17 @@ class PenilaianAwalMedisIGD extends Component
             ->leftJoin('petugas', 'penilaian_awal_keperawatan_igd.nip', '=', 'petugas.nip')
             ->where('penilaian_awal_keperawatan_igd.no_rawat', $noRawat)
             ->select('penilaian_awal_keperawatan_igd.*', 'petugas.nama as nama_petugas')
+            ->first();
+    }
+
+    public function getPenilaianMedisIGD($noRawat)
+    {
+        if (!$noRawat) return null;
+
+        return DB::table('penilaian_medis_igd')
+            ->leftJoin('dokter', 'penilaian_medis_igd.kd_dokter', '=', 'dokter.kd_dokter')
+            ->where('penilaian_medis_igd.no_rawat', $noRawat)
+            ->select('penilaian_medis_igd.*', 'dokter.nm_dokter')
             ->first();
     }
 

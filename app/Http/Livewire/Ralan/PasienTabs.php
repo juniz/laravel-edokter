@@ -570,4 +570,11 @@ class PasienTabs extends Component
             ->select('penilaian_awal_keperawatan_igd.*', 'petugas.nama as nama_petugas')
             ->first();
     }
+
+    public function getPenilaianMedisIGD($noRawat)
+    {
+        return DB::table('penilaian_medis_igd')
+            ->where('no_rawat', $noRawat)
+            ->exists();
+    }
 }
