@@ -204,20 +204,20 @@ Route::get('/master-operasi', fn() => view('master-laporan-operasi'))->name(
     'master-operasi'
 )->middleware('loginauth');
 
-Route::middleware('loginauth')->group(function () {
+Route::middleware(['loginauth', 'role:admin,dokter'])->group(function () {
     Route::resource('master-ekg', App\Http\Controllers\MasterEkgController::class);
     Route::get('template-ekg/{id}', [App\Http\Controllers\MasterEkgController::class, 'getTemplate'])->name('template-ekg.show');
 });
 Route::post('/print-ekg', [App\Http\Controllers\MasterEkgController::class, 'cetakEkg'])->name('print-ekg')->middleware('loginauth');
 Route::get('/view-pdf', [App\Http\Controllers\MasterEkgController::class, 'viewPdf'])->name('view-pdf')->middleware('loginauth');
 
-Route::get('/pegawai', [App\Http\Controllers\API\PemeriksaanController::class, 'getPegawai'])->name('pegawai');
+Route::get('/pegawai', [App\Http\Controllers\API\PemeriksaanController::class, 'getPegawai'])->name('pegawai')->middleware('loginauth');
 
 Route::get('/offline', function () {
     return view('modules/laravelpwa/offline');
 });
 
-Route::get('/echo-ar', fn() => view('prints.echo-ar'))->name('echo-ar');
+Route::get('/echo-ar', fn() => view('prints.echo-ar'))->name('echo-ar')->middleware('loginauth');
 
 Route::get('/penandaan-area-operasi/cetak', [PenandaanAreaOperasiController::class, 'cetak'])
     ->middleware('loginauth')
@@ -254,12 +254,12 @@ Route::match(['get', 'post'], '/penilaian-pre-induksi/upload-pdf', [PenilaianPre
 Route::get('/persetujuan-penolakan-tindakan', [
     App\Http\Controllers\PersetujuanPenolakanTindakan::class,
     'index',
-])->name('persetujuan-penolakan-tindakan');
+])->name('persetujuan-penolakan-tindakan')->middleware('loginauth');
 
 Route::post('/persetujuan-penolakan-tindakan', [
     App\Http\Controllers\PersetujuanPenolakanTindakan::class,
     'simpan',
-])->name('persetujuan-penolakan-tindaka.store');
+])->name('persetujuan-penolakan-tindaka.store')->middleware('loginauth');
 
 Route::get('/radiologi/ralan', [
     App\Http\Controllers\RadiologiController::class,
@@ -289,13 +289,13 @@ Route::match(['get', 'post'], '/botman', [App\Http\Controllers\BotManController:
 Route::get(
     'notifications/get',
     [App\Http\Controllers\NotificationController::class, 'getNotificationsData']
-)->name('notifications.get');
+)->name('notifications.get')->middleware('loginauth');
 
-Route::get('temp-konsultasi/', [App\Http\Controllers\KonsultasiMedikController::class, 'jawabanWa'])->name('temp-konsultasi');
+Route::get('temp-konsultasi/', [App\Http\Controllers\KonsultasiMedikController::class, 'jawabanWa'])->name('temp-konsultasi')->middleware('loginauth');
 
 // Routes for Dokumen Online
 Route::get('dokumen-online/folders', [App\Http\Controllers\DokumenOnlineController::class, 'getFolders'])->name('dokumen-online.folders');
 Route::get('dokumen-online/documents/{folder}', [App\Http\Controllers\DokumenOnlineController::class, 'getDocuments'])->name('dokumen-online.documents');
 Route::get('dokumen-online/stream', [App\Http\Controllers\DokumenOnlineController::class, 'streamDocument'])->name('dokumen-online.stream');
 
-Route::get('/odontogram/cetak', [OdontogramPrintController::class, 'cetak'])->name('odontogram.cetak');
+Route::get('/odontogram/cetak', [OdontogramPrintController::class, 'cetak'])->name('odontogram.cetak')->middleware('loginauth');

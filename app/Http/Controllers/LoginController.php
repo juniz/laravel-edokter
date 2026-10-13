@@ -50,7 +50,14 @@ class LoginController extends Controller
         if ($cek && $cek->password == $request->password) {
             RateLimiter::clear($throttleKey);
 
-            session(['username' => $cek->id_user, 'password' => $cek->password, 'kd_poli' => $request->poli, 'kd_sps' => $cek->kd_sps]);
+            $role = (strtolower((string) $cek->id_user) === 'admin') ? 'admin' : 'dokter';
+            session([
+                'username' => $cek->id_user,
+                'password' => $cek->password,
+                'kd_poli' => $request->poli,
+                'kd_sps' => $cek->kd_sps,
+                'role' => $role,
+            ]);
             return redirect()->intended('home')
                 ->withSuccess('Signed in');
         }
