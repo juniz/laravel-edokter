@@ -28,7 +28,7 @@ Route::get('/', [App\Http\Controllers\LoginController::class, 'index'])->name(
 Route::post('/customlogin', [
     App\Http\Controllers\LoginController::class,
     'customLogin',
-])->name('customlogin');
+])->name('customlogin')->middleware('throttle:10,1');
 Route::get('/logout', [
     App\Http\Controllers\HomeController::class,
     'logout',
