@@ -1,6 +1,6 @@
 <div>
     <div>
-        {!! $result !!}
+        {!! clean($result) !!}
     </div>
     <div wire:loading wire:target='gemini'>
         <div class="d-flex flex-row justify-content-center">

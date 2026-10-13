@@ -18,8 +18,17 @@ class SanitizeInputMiddleware extends TransformsRequest
         'api_token',
         '_token',
         'credential',
-        'isi',
         'gambarPenandaanBase64',
+    ];
+
+    /**
+     * The attributes that contain rich text / HTML to be purified via mews/purifier.
+     *
+     * @var array<int, string>
+     */
+    protected $purify = [
+        'isi',
+        'template',
     ];
 
     /**
@@ -47,6 +56,9 @@ class SanitizeInputMiddleware extends TransformsRequest
                 if (in_array($name, $this->except, true)) {
                     return $value;
                 }
+                if (in_array($name, $this->purify, true)) {
+                    return is_string($value) ? clean($value) : $value;
+                }
             }
 
             // Case 2: callMethod -> updates.0.payload.params.0
@@ -59,6 +71,11 @@ class SanitizeInputMiddleware extends TransformsRequest
                             return $value;
                         }
                     }
+                    foreach ($this->purify as $purifyKey) {
+                        if (stripos($method, $purifyKey) !== false) {
+                            return is_string($value) ? clean($value) : $value;
+                        }
+                    }
                 }
             }
         } else {
@@ -66,6 +83,13 @@ class SanitizeInputMiddleware extends TransformsRequest
             foreach ($this->except as $exceptKey) {
                 if ($key === $exceptKey || (strpos($key, '.') !== false && substr($key, -strlen('.' . $exceptKey)) === '.' . $exceptKey)) {
                     return $value;
+                }
+            }
+
+            // Standard (non-Livewire) requests: purify rich text keys
+            foreach ($this->purify as $purifyKey) {
+                if ($key === $purifyKey || (strpos($key, '.') !== false && substr($key, -strlen('.' . $purifyKey)) === '.' . $purifyKey)) {
+                    return is_string($value) ? clean($value) : $value;
                 }
             }
         }

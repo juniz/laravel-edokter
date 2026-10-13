@@ -31,7 +31,7 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $item->nama_template}}</td>
-                    <td>{!! $item->template !!}</td>
+                    <td>{!! clean($item->template) !!}</td>
                     <td>
                         <a type="button" class="btn btn-info" href="{{ route('master-ekg.edit', ['master_ekg' => $item->id]) }}">
                             Edit

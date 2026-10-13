@@ -30,8 +30,8 @@ class LoginController extends Controller
     {
         $this->validateLogin($request);
         $cek = DB::table('user')
-            ->join("dokter", "dokter.kd_dokter", "=", DB::Raw("AES_DECRYPT(id_user, 'nur')"))
-            ->whereRaw("id_user = AES_ENCRYPT('{$request->username}', 'nur')")
+            ->join("dokter", "dokter.kd_dokter", "=", DB::raw("AES_DECRYPT(id_user, 'nur')"))
+            ->whereRaw("id_user = AES_ENCRYPT(?, 'nur')", [$request->username])
             ->selectRaw("AES_DECRYPT(id_user, 'nur') as id_user, AES_DECRYPT(password, 'windi') as password, dokter.kd_sps")
             ->first();
         if ($cek) {
@@ -40,11 +40,11 @@ class LoginController extends Controller
                 return redirect()->intended('home')
                     ->withSuccess('Signed in');
             } else {
-                return back()->withErrors(['message' => 'Password salah']);
+                return back()->withErrors(['message' => 'Username atau password salah']);
             }
         }
 
-        return back()->withErrors(['message' => 'User tidak ditemukan']);
+        return back()->withErrors(['message' => 'Username atau password salah']);
     }
 
 

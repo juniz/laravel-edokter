@@ -47,7 +47,7 @@ class MasterEkgController extends Controller
 
             $template = new TemplateEKG();
             $template->nama_template = $request->nama;
-            $template->template = $request->isi;
+            $template->template = clean($request->isi);
             $template->save();
 
             return redirect()->back()->with('success', 'Data berhasil disimpan');
@@ -97,7 +97,7 @@ class MasterEkgController extends Controller
 
             $template = TemplateEKG::find($id);
             $template->nama_template = $request->nama;
-            $template->template = $request->isi;
+            $template->template = clean($request->isi);
             $template->save();
 
             return redirect()->to('master-ekg')->with('success', 'Data berhasil diubah');

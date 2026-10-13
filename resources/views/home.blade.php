@@ -143,7 +143,7 @@
                                     @foreach($pasienAktif as $row)
                                         <tr>
                                             @foreach($row as $cell)
-                                                <td>{!! $cell !!}</td>
+                                                <td>{{ $cell }}</td>
                                             @endforeach
                                         </tr>
                                     @endforeach
@@ -175,7 +175,7 @@
                                     @foreach($pasienTerakhir as $row)
                                         <tr>
                                             @foreach($row as $cell)
-                                                <td>{!! $cell !!}</td>
+                                                <td>{{ $cell }}</td>
                                             @endforeach
                                         </tr>
                                     @endforeach

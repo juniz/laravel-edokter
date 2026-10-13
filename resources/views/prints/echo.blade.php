@@ -147,7 +147,7 @@
     </table>
 
     <div class="content-section">
-        {!! $isi !!}
+        {!! clean($isi) !!}
     </div>
 
     <table class="ttd-section" cellspacing="0" cellpadding="0">
