@@ -397,7 +397,6 @@
         var canvasStates = {};
         var savedPinCounts = {};
         var activeIndex = 0;
-        var nextPinNumber = 1;
         var readyCount = 0;
         var initialSavedImages = @json($savedGambarPenandaanBase64);
         var pendingSavedImages = (initialSavedImages && typeof initialSavedImages === 'object' && Object.keys(initialSavedImages).length > 0)
@@ -544,14 +543,6 @@
             }
         }
 
-        function refreshNextPinNumber() {
-            var savedCount = Object.keys(savedPinCounts).reduce(function (total, key) {
-                return total + savedPinCounts[key];
-            }, 0);
-
-            nextPinNumber = savedCount + 1;
-        }
-
         function addPin(state, event) {
             if (!state.ready || event.button > 0) {
                 return;
@@ -568,7 +559,6 @@
             var x = (event.clientX - rect.left) * scaleX;
             var y = (event.clientY - rect.top) * scaleY;
             var radius = Math.max(16, Math.min(state.canvas.width, state.canvas.height) * .025);
-            var number = nextPinNumber;
 
             state.context.save();
             state.context.beginPath();
@@ -578,15 +568,9 @@
             state.context.lineWidth = Math.max(3, radius * .16);
             state.context.strokeStyle = '#8f1728';
             state.context.stroke();
-            state.context.fillStyle = '#ffffff';
-            state.context.font = '700 ' + Math.round(radius * 1.15) + 'px sans-serif';
-            state.context.textAlign = 'center';
-            state.context.textBaseline = 'middle';
-            state.context.fillText(String(number), x, y + (radius * .04));
             state.context.restore();
 
             savedPinCounts[state.key] = (savedPinCounts[state.key] || 0) + 1;
-            nextPinNumber += 1;
             updateResetButtonsState();
         }
 
@@ -690,7 +674,6 @@
             });
 
             return Promise.all(loaders).then(function () {
-                refreshNextPinNumber();
                 setSubmitButtonDisabled(false);
                 updateResetButtonsState();
             });
@@ -723,7 +706,6 @@
             });
 
             savedPinCounts = {};
-            nextPinNumber = 1;
             updateResetButtonsState();
         }
 
@@ -755,7 +737,6 @@
 
                 drawBase(activeState);
                 savedPinCounts[activeKey] = 0;
-                refreshNextPinNumber();
                 updateResetButtonsState();
                 setStatus(activeKey, '', false);
             });
