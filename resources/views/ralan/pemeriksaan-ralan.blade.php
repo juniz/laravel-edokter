@@ -87,10 +87,10 @@
                 </x-adminlte-card>
     </div>
 </div>
-<x-adminlte-modal id="modalPurple" title="Tanya AI" theme="secondary"
+<!-- <x-adminlte-modal id="modalPurple" title="Tanya AI" theme="secondary"
     icon="fas fa-bolt" size='xl' v-centered static-backdrop scrollable>
     <livewire:component.modal-ai />
-</x-adminlte-modal>
+</x-adminlte-modal> -->
 @stop
 
 @section('plugins.TempusDominusBs4', true)
