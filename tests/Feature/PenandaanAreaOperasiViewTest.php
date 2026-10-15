@@ -182,4 +182,13 @@ class PenandaanAreaOperasiViewTest extends TestCase
             ->assertSee('Batal')
             ->assertDontSeeHtml('id="simpan-penandaan"');
     }
+
+    public function test_view_renders_correct_instructions_for_red_circle_markers(): void
+    {
+        Livewire::withQueryParams(['username' => 'D001'])
+            ->test(PenandaanAreaOperasi::class, ['noRawat' => '2026/08/21/000001', 'noRm' => '000001'])
+            ->assertSee('Ketuk bagian tubuh untuk menambahkan penanda lingkaran merah.')
+            ->assertDontSee('Ketuk bagian tubuh untuk menambahkan penanda merah bernomor.');
+    }
 }
+

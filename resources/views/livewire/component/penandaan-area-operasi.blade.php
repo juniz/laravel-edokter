@@ -30,7 +30,7 @@
 
     <div class="penandaan-instructions" aria-label="Petunjuk penandaan">
         <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-        <span>Ketuk bagian tubuh untuk menambahkan penanda merah bernomor.</span>
+        <span>Ketuk bagian tubuh untuk menambahkan penanda lingkaran merah.</span>
     </div>
 
     <div wire:ignore id="penandaan-area-operasi-canvas-root">
